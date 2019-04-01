@@ -1,0 +1,144 @@
+Organs and tissues of the adult male reference computational phantom			
+
+Organ Organ                                          Tissue Density
+ID                                                   number
+1     Adrenal, left                                    43    1.030
+2     Adrenal, right                                   43    1.030
+3     Anterior nasal passage (ET1)                     45    1.030
+4     Posterior nasal passage down to larynx (ET2)     45    1.030
+5     Oral mucosa, tongue                              29    1.050
+6     Oral mucosa, lips and cheeks                     29    1.050
+7     Trachea                                          45    1.030
+8     Bronchi                                          45    1.030
+9     Blood vessels, head                              28    1.060
+10    Blood vessels, trunk                             28    1.060
+11    Blood vessels, arms                              28    1.060
+12    Blood vessels, legs                              28    1.060
+13    Humeri, upper half, cortical                      2    1.920
+14    Humeri, upper half, spongiosa                     3    1.205
+15    Humeri, upper half, medullary cavity             22    0.980
+16    Humeri, lower half, cortical                      2    1.920
+17    Humeri, lower half, spongiosa                     4    1.108
+18    Humeri, lower half, medullary cavity             23    0.980
+19    Ulnae and radii, cortical                         2    1.920
+20    Ulnae and radii, spongiosa                        5    1.108
+21    Ulnae and radii, medullary cavity                24    0.980
+22    Wrists and hand bones, cortical                   2    1.920
+23    Wrists and hand bones, spongiosa                  6    1.108
+24    Clavicles, cortical                               2    1.920
+25    Clavicles, spongiosa                              7    1.151
+26    Cranium, cortical                                 2    1.920
+27    Cranium, spongiosa                                8    1.157
+28    Femora, upper half, cortical                      2    1.920
+29    Femora, upper half, spongiosa                     9    1.124
+30    Femora, upper half, medullary cavity             22    0.980
+31    Femora, lower half, cortical                      2    1.920
+32    Femora, lower half, spongiosa                    10    1.108
+33    Femora, lower half, medullary cavity             23    0.980
+34    Tibiae, fibulae and patellae, cortical            2    1.920
+35    Tibiae, fibulae and patellae, spongiosa          11    1.108
+36    Tibiae, fibulae and patellae, medullary cavity   25    0.980
+37    Ankles and foot bones, cortical                   2    1.920
+38    Ankles and foot bones, spongiosa                 12    1.108
+39    Mandible, cortical                                2    1.920
+40    Mandible, spongiosa                              13    1.228
+41    Pelvis, cortical                                  2    1.920
+42    Pelvis, spongiosa                                14    1.123
+43    Ribs, cortical                                    2    1.920
+44    Ribs, spongiosa                                  15    1.165
+45    Scapulae, cortical                                2    1.920
+46    Scapulae, spongiosa                              16    1.183
+47    Cervical spine, cortical                          2    1.920
+48    Cervical spine, spongiosa                        17    1.050
+49    Thoracic spine, cortical                          2    1.920
+50    Thoracic spine, spongiosa                        18    1.074
+51    Lumbar spine, cortical                            2    1.920
+52    Lumbar spine, spongiosa                          19    1.112
+53    Sacrum, cortical                                  2    1.920
+54    Sacrum, spongiosa                                20    1.031
+55    Sternum, cortical                                 2    1.920
+56    Sternum, spongiosa                               21    1.041
+57    Cartilage, head                                  26    1.100
+58    Cartilage, trunk                                 26    1.100
+59    Cartilage, arms                                  26    1.100
+60    Cartilage, legs                                  26    1.100
+61    Brain                                            32    1.050
+62    Breast, left, adipose tissue                     49    0.950
+63    Breast, left, glandular tissue                   48    1.020
+64    Breast, right, adipose tissue                    49    0.950
+65    Breast, right, glandular tissue                  48    1.020
+66    Eye lense, left                                  34    1.050
+67    Eye bulb, left                                   34    1.050
+68    Eye lense, right                                 34    1.050
+69    Eye bulb, right                                  34    1.050
+70    Gall bladder wall                                45    1.030
+71    Gall bladder contents                            45    1.030
+72    Stomach wall                                     36    1.040
+73    Stomach contents                                 51    1.040
+74    Small intestine wall                             37    1.040
+75    Small intestine contents                         51    1.040
+76    Ascending colon wall                             38    1.040
+77    Ascending colon contents                         51    1.040
+78    Transverse colon wall, right                     38    1.040
+79    Transverse colon contents, right                 51    1.040
+80    Transverse colon wall, left                      38    1.040
+81    Transverse colon contents, left                  51    1.040
+82    Descending colon wall                            38    1.040
+83    Descending colon contents                        51    1.040
+84    Sigmoid colon wall                               38    1.040
+85    Sigmoid colon contents                           51    1.040
+86    Rectum wall                                      38    1.040
+87    Heart wall                                       33    1.050
+88    Heart contents (blood)                           28    1.060
+89    Kidney, left, cortex                             35    1.050
+90    Kidney, left, medulla                            35    1.050
+91    Kidney, left, pelvis                             35    1.050
+92    Kidney, right, cortex                            35    1.050
+93    Kidney, right, medulla                           35    1.050
+94    Kidney, right, pelvis                            35    1.050
+95    Liver                                            30    1.050
+96    Lung, left, blood                                28    1.060
+97    Lung, left, tissue                               50    0.382
+98    Lung, right, blood                               28    1.060
+99    Lung, right, tissue                              50    0.382
+100   Lymphatic nodes, extrathoracic airways           47    1.030
+101   Lymphatic nodes, thoracic airways                47    1.030
+102   Lymphatic nodes, head                            47    1.030
+103   Lymphatic nodes, trunk                           47    1.030
+104   Lymphatic nodes, arms                            47    1.030
+105   Lymphatic nodes, legs                            47    1.030
+106   Muscle, head                                     29    1.050
+107   Muscle, trunk                                    29    1.050
+108   Muscle, arms                                     29    1.050
+109   Muscle, legs                                     29    1.050
+110   Oesophagus                                       44    1.030
+111   Ovary, left                                      42    1.040
+112   Ovary, right                                     42    1.040
+113   Pancreas                                         31    1.050
+114   Pituitary gland                                  45    1.030
+115   Prostate                                         46    1.030
+116   Residual tissue, head                            49    0.950
+117   Residual tissue, trunk                           49    0.950
+118   Residual tissue, arms                            49    0.950
+119   Residual tissue, legs                            49    0.950
+120   Salivary glands, left                            45    1.030
+121   Salivary glands, right                           45    1.030
+122   Skin, head                                       27    1.090
+123   Skin, trunk                                      27    1.090
+124   Skin, arms                                       27    1.090
+125   Skin, legs                                       27    1.090
+126   Spinal cord                                      45    1.030
+127   Spleen                                           39    1.040
+128   Teeth                                             1    2.750
+129   Testis, left                                     42    1.040
+130   Testis, right                                    42    1.040
+131   Thymus                                           45    1.030
+132   Thyroid                                          40    1.040
+133   Tongue (inner part)                              29    1.050
+134   Tonsils                                          45    1.030
+135   Ureter, left                                     45    1.030
+136   Ureter, right                                    45    1.030
+137   Urinary bladder wall                             41    1.040
+138   Urinary bladder contents                         52    1.040
+139   Uterus                                           46    1.030
+140   Air inside body                                  53    0.001

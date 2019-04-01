@@ -1,13 +1,8 @@
 cmake_minimum_required(VERSION 3.9)
-project(dxmclib VERSION 0.0.1 DESCRIPTION "OpenDXMClib description" LANGUAGES CXX)
-
-
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
-#set(OPENDXMCLIB_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall") ## Want to show extra compiler warnings for our library
+project(dxmclib VERSION 0.0.1 DESCRIPTION "OpenDXMClib" LANGUAGES CXX)
 
 
 #Thirdparty libs
-#include(thirdparty/xraylib.cmake)
 IF(WIN32)
     set(XRAYLIB_INSTALL_PATH "C:/Program Files/xraylib 64-bit" CACHE PATH "Install path for xraylib (https://github.com/tschoonj/xraylib)")
     find_library(XRAYLIB_LIBRARY NAMES libxrl libxrl-7 xrl libxrl-7.dll HINTS "${XRAYLIB_INSTALL_PATH}/Lib" "C:/Windows/System32")
@@ -31,9 +26,6 @@ message(STATUS "Using xraylib header files in '${XRAYLIB_INCLUDES}'")
 IF(WIN32)
 MESSAGE(STATUS "Using xraylib shared library ${XRAYLIB_LIBRARY_SHARED_PATH}")
 ENDIF()
-
-# Enabling use of M_PI macros
-#add_definitions(-D_USE_MATH_DEFINES)
 
 include_directories(${XRAYLIB_INCLUDES})
 include_directories(include)

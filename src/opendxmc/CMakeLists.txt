@@ -1,11 +1,5 @@
 
 
-# Some other library that we import that was also built using CMake
-# and has an exported target.
-#set(VTK_DIR "C:/Users/ander/development/VTK/bin/VTK-8.1.1" CACHE FILEPATH "Path to VTK binary folder" )
-#set(VTK_DIR "C:/VTK/bin/VTK-8.1.2/" CACHE FILEPATH "Path to VTK binary folder" )
-#set(VTK_DIR "/home/erlend/Development/VTK/bin/VTK-8.1.1/" CACHE FILEPATH "Path to VTK binary folder" )
-
 
 find_package(VTK COMPONENTS
   vtkCommonColor
@@ -38,18 +32,12 @@ find_package(VTK COMPONENTS
 include(${VTK_USE_FILE})
 include_directories(${VTK_INCLUDE_DIRS})
 
-#including hdf5
-
-#find_package(HDF5 REQUIRED)
-#include_directories(${HDF5_INCLUDE_DIR})
-#set(_hdf5_libs hdf5 hdf5_cpp)
-
 
 ## QT specifics for CMake
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
-#find_package(Qt5Widgets CONFIG REQUIRED)
+
 find_package(Qt5 REQUIRED COMPONENTS Core Widgets Charts )
 find_package(Qt5Charts)
 IF(UNIX AND NOT APPLE)
@@ -103,7 +91,6 @@ add_executable(app WIN32
     )
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/opendxmc")
-##adding REQUIRED dlls to the binary folder of executable
 
 # Define the libraries this project depends upon
 target_link_libraries(app
@@ -116,6 +103,7 @@ target_link_libraries(app
 		Qt5::Charts
         )
 
+##adding REQUIRED dlls to the binary folder of executable
 #adding target to copy qt dlls 
 if (WIN32)
     get_target_property(QT5_QMAKE_EXECUTABLE Qt5::qmake IMPORTED_LOCATION)
@@ -202,13 +190,3 @@ foreach(fileresource ${fileresources})
 	)
 endforeach()
 
-
-#set(outpath "${CMAKE_BINARY_DIR}/${PROJECT_NAME}/resources/Human.vtp")
-#set(inpath "${CMAKE_CURRENT_SOURCE_DIR}/resources/Human.vtp")
-#add_custom_command(TARGET addresources POST_BUILD
-#	COMMENT "Copying file ${inpath} to ${outpath}."
-#	DEPENDS ${inpath}
-#	COMMAND ${CMAKE_COMMAND} -E copy_if_different 
-#	${inpath}
-#	${outpath}
-#	)

@@ -26,13 +26,47 @@ Copyright 2019 Erlend Andersen
 #include <memory>
 #include <algorithm>
 #include <mutex>
+#include <atomic>
+#include <chrono>
+#include <string>
 
 namespace transport {
 	
+	class ProgressBar
+	{
+	public:
+		ProgressBar();
+		void setTotalExposures(std::uint64_t totalExposures) 
+		{
+			m_totalExposures = totalExposures; 
+			m_currentExposures = 0; 
+		} //not thread safe
+		void exposureCompleted() // threadsafe
+		{
+			m_currentExposures++;
+			auto duration = std::chrono::system_clock::now() - m_startTime;
+			auto seconds = std::chrono::duration_cast<std::chrono::seconds>(duration).count();
+			m_secondsElapsed.exchange(static_cast<double>(seconds));
+		}
+		std::string getETA() const
+		{
+			auto secondsRemaining = m_secondsElapsed.load() / m_currentExposures.load() * (m_totalExposures.load() - m_currentExposures.load());
+			return makePrettyTime(secondsRemaining);
+		}
+	protected:
+		std::string makePrettyTime(double seconds) const { auto value = std::to_string(seconds); return "ETA: " + value+" seconds"; }
+	private:
+		std::atomic<std::uint64_t> m_totalExposures=0;
+		std::atomic<std::uint64_t> m_currentExposures=0;
+		std::chrono::system_clock::time_point m_startTime;
+		std::atomic<double> m_secondsElapsed;
+
+	};
+
 	double comptonScatter(Particle& particle, std::uint64_t seed[2], double& cosAngle);
 	double comptonScatterGeant(Particle& particle, std::uint64_t seed[2], double& cosAngle);
 	double comptonScatterEGS(Particle& particle, std::uint64_t seed[2], double& cosAngle);
 	void rayleightScatter(Particle& particle, unsigned char materialIdx, const AttenuationLut& attLut, std::uint64_t seed[2], double& cosAngle);
-	std::vector<double> run(const World& world, Source* source);
-	std::vector<double> run(const CTDIPhantom& world, CTSource* source);
+	std::vector<double> run(const World& world, Source* source, ProgressBar* progressBar = nullptr);
+	std::vector<double> run(const CTDIPhantom& world, CTSource* source, ProgressBar* progressBar = nullptr);
 }

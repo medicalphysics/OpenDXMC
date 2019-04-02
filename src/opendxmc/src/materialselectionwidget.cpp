@@ -274,7 +274,10 @@ MaterialSelectionWidget::MaterialSelectionWidget(QWidget *parent)
 	"Tissue, Soft (ICRP)" };
 	for (auto m : mats)
 	{
-		m_tableModel->addMaterial(m);
+		Material mat(m.toStdString());
+		if (m.compare("Bone, Compact (ICRU)") == 0) // adding more sane density for bone
+			mat.setStandardDensity(1.1);
+		m_tableModel->addMaterial(mat);
 	}
 
 	//trigger to send materials to simulationpipeline on startup

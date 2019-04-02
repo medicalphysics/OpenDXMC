@@ -107,7 +107,7 @@ private:
 				vtkSmartPointer<vtkImageGaussianSmooth> smoother = vtkSmartPointer<vtkImageGaussianSmooth>::New();
 				smoother->SetDimensionality(3);
 				smoother->SetStandardDeviations(1.0, 1.0, 1.0);
-				smoother->SetRadiusFactors(3.0, 3.0, 3.0);
+				smoother->SetRadiusFactors(2.0, 2.0, 2.0);
 				smoother->SetReleaseDataFlag(1);
 				smoother->SetInputConnection(importer->GetOutputPort());
 				smoother->Update();

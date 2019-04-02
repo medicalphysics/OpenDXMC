@@ -99,7 +99,12 @@ void SimulationPipeline::runSimulation(const std::vector<std::shared_ptr<Source>
 	std::array<double, 3> origin;
 	for (int i = 0; i < 3; ++i)
 		origin[i] = -(dimensions[i] * spacing[i] * 0.5);
-	
+	if (m_ignoreAirDose)
+	{
+		auto mat = m_world.materialIndexArray();
+		std::transform(std::execution::par_unseq, totalDose->begin(), totalDose->end(), mat->begin(), totalDose->begin(),
+			[](double e, unsigned char i)->double {return i == 0 ? 0.0 : e; });
+	}
 	auto doseContainer = std::make_shared<DoseImageContainer>(totalDose, dimensions, spacing, origin, m_smoothDose);
 	doseContainer->directionCosines = m_densityImage->directionCosines;
 	doseContainer->ID = m_densityImage->ID;
@@ -119,12 +124,7 @@ void SimulationPipeline::runSimulation(const std::vector<std::shared_ptr<Source>
 		emit doseDataChanged(cont);
 	}
 
-	if (m_ignoreAirDose)
-	{
-		auto mat = m_world.materialIndexArray();
-		std::transform(std::execution::par_unseq, totalDose->begin(), totalDose->end(), mat->begin(), totalDose->begin(),
-			[](double e, unsigned char i)->double {return i == 0 ? 0.0 : e; });
-	}	
+	
 	emit imageDataChanged(doseContainer);
 
 	emit processingDataEnded();

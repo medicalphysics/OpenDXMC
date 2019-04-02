@@ -100,7 +100,7 @@ void SimulationPipeline::runSimulation(const std::vector<std::shared_ptr<Source>
 	for (int i = 0; i < 3; ++i)
 		origin[i] = -(dimensions[i] * spacing[i] * 0.5);
 	
-	auto doseContainer = std::make_shared<DoseImageContainer>(totalDose, dimensions, spacing, origin);
+	auto doseContainer = std::make_shared<DoseImageContainer>(totalDose, dimensions, spacing, origin, m_smoothDose);
 	doseContainer->directionCosines = m_densityImage->directionCosines;
 	doseContainer->ID = m_densityImage->ID;
 

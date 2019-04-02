@@ -27,7 +27,7 @@ Copyright 2019 Erlend Andersen
 #include <vtkImageData.h>
 #include <vtkType.h>
 #include <vtkImageImport.h>
-
+#include <vtkImageGaussianSmooth.h>
 
 
 //used onlu for viz
@@ -67,28 +67,28 @@ public:
 protected:
 	
 
-	ImageContainer(ImageType imageType, std::shared_ptr<std::vector<double>> imageData, const std::array<std::size_t, 3> &dimensions, const std::array<double, 3> &dataSpacing, const std::array<double, 3> &origin)
+	ImageContainer(ImageType imageType, std::shared_ptr<std::vector<double>> imageData, const std::array<std::size_t, 3> &dimensions, const std::array<double, 3> &dataSpacing, const std::array<double, 3> &origin, bool smooth = false)
 	{
 		//image_data_double = imageData;
 		this->imageType = imageType;
-		registerVector(imageData, dimensions, dataSpacing, origin, VTK_DOUBLE);
+		registerVector(imageData, dimensions, dataSpacing, origin, VTK_DOUBLE, smooth);
 	}
-	ImageContainer(ImageType imageType, std::shared_ptr<std::vector<float>> imageData, const std::array<std::size_t, 3> &dimensions, const std::array<double, 3> &dataSpacing, const std::array<double, 3> &origin)
+	ImageContainer(ImageType imageType, std::shared_ptr<std::vector<float>> imageData, const std::array<std::size_t, 3> &dimensions, const std::array<double, 3> &dataSpacing, const std::array<double, 3> &origin, bool smooth = false)
 	{
 		//image_data_float = imageData;
 		this->imageType = imageType;
-		registerVector(imageData, dimensions, dataSpacing, origin, VTK_FLOAT);
+		registerVector(imageData, dimensions, dataSpacing, origin, VTK_FLOAT, smooth);
 	}
-	ImageContainer(ImageType imageType, std::shared_ptr<std::vector<unsigned char>> imageData, const std::array<std::size_t, 3> &dimensions, const std::array<double, 3> &dataSpacing, const std::array<double, 3> &origin)
+	ImageContainer(ImageType imageType, std::shared_ptr<std::vector<unsigned char>> imageData, const std::array<std::size_t, 3> &dimensions, const std::array<double, 3> &dataSpacing, const std::array<double, 3> &origin, bool smooth = false)
 	{
 		//image_data_uchar = imageData;
 		this->imageType = imageType;
-		registerVector(imageData, dimensions, dataSpacing, origin, VTK_UNSIGNED_CHAR);
+		registerVector(imageData, dimensions, dataSpacing, origin, VTK_UNSIGNED_CHAR, smooth);
 	}
 
 private:
 	template<typename T>
-	void registerVector(std::shared_ptr<std::vector<T>> imageData, const std::array<std::size_t, 3> &dimensions, const std::array<double, 3> &dataSpacing, const std::array<double, 3> &origin, int vtkType)
+	void registerVector(std::shared_ptr<std::vector<T>> imageData, const std::array<std::size_t, 3> &dimensions, const std::array<double, 3> &dataSpacing, const std::array<double, 3> &origin, int vtkType, bool smooth=false)
 	{
 		if (imageData)
 		{
@@ -102,8 +102,22 @@ private:
 			importer->SetImportVoidPointer(static_cast<void*>(imageData->data()));
 			importer->SetDataOrigin(origin[0], origin[1], origin[2]);
 			
-			importer->Update();
-			image = importer->GetOutput();
+			if (smooth)
+			{
+				vtkSmartPointer<vtkImageGaussianSmooth> smoother = vtkSmartPointer<vtkImageGaussianSmooth>::New();
+				smoother->SetDimensionality(3);
+				smoother->SetStandardDeviations(1.0, 1.0, 1.0);
+				smoother->SetRadiusFactors(3.0, 3.0, 3.0);
+				smoother->SetReleaseDataFlag(1);
+				smoother->SetInputConnection(importer->GetOutputPort());
+				smoother->Update();
+				image = smoother->GetOutput();
+			}
+			else
+			{
+				importer->Update();
+				image = importer->GetOutput();
+			}
 			image->GetDimensions();
 			auto* minmax = image->GetScalarRange();
 			minMax[0] = minmax[0];
@@ -120,8 +134,8 @@ class DensityImageContainer :public ImageContainer
 {
 public:
 	DensityImageContainer() :ImageContainer() { imageType = DensityImage; }
-	DensityImageContainer(std::shared_ptr<std::vector<double>> imageData, const std::array<std::size_t, 3> &dimensions, const std::array<double, 3> &dataSpacing, const std::array<double, 3> &origin)
-		:ImageContainer(DensityImage, imageData, dimensions, dataSpacing, origin)
+	DensityImageContainer(std::shared_ptr<std::vector<double>> imageData, const std::array<std::size_t, 3> &dimensions, const std::array<double, 3> &dataSpacing, const std::array<double, 3> &origin, bool smooth=false)
+		:ImageContainer(DensityImage, imageData, dimensions, dataSpacing, origin, smooth)
 	{
 		m_image_data = imageData;
 	}
@@ -138,8 +152,8 @@ class DoseImageContainer :public ImageContainer
 {
 public:
 	DoseImageContainer() :ImageContainer() { imageType = DoseImage; }
-	DoseImageContainer(std::shared_ptr<std::vector<double>> imageData, const std::array<std::size_t, 3> &dimensions, const std::array<double, 3> &dataSpacing, const std::array<double, 3> &origin)
-		:ImageContainer(DoseImage, imageData, dimensions, dataSpacing, origin)
+	DoseImageContainer(std::shared_ptr<std::vector<double>> imageData, const std::array<std::size_t, 3> &dimensions, const std::array<double, 3> &dataSpacing, const std::array<double, 3> &origin, bool smooth = false)
+		:ImageContainer(DoseImage, imageData, dimensions, dataSpacing, origin, smooth)
 	{
 		m_image_data = imageData;
 	}

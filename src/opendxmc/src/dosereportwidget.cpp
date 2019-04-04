@@ -62,8 +62,10 @@ QVariant DoseReportModel::headerData(int section, Qt::Orientation orientation, i
 		else if (section == 4)
 			return QString(tr("Dose [mGy]"));
 		else if (section == 5)
-			return QString(tr("Number of voxels [N]"));
+			return QString(tr("Dose std [mGy]"));
 		else if (section == 6)
+			return QString(tr("Number of voxels [N]"));
+		else if (section == 7)
 			return QString(tr("ID"));
 	}
 	return QVariant();
@@ -97,10 +99,15 @@ void DoseReportModel::sort(int column, Qt::SortOrder order)
 			std::sort(beg, end, [=](auto &left, auto &right) {return left.dose > right.dose; });
 	else if (column == 5)
 		if (order == Qt::AscendingOrder)
+			std::sort(beg, end, [=](auto &left, auto &right) {return left.doseStd < right.doseStd; });
+		else
+			std::sort(beg, end, [=](auto &left, auto &right) {return left.doseStd > right.doseStd; });
+	else if (column == 6)
+		if (order == Qt::AscendingOrder)
 			std::sort(beg, end, [=](auto &left, auto &right) {return left.voxels < right.voxels; });
 		else
 			std::sort(beg, end, [=](auto &left, auto &right) {return left.voxels > right.voxels; });
-	else if (column == 6)
+	else if (column == 7)
 		if (order == Qt::AscendingOrder)
 			std::sort(beg, end, [=](auto &left, auto &right) {return left.ID < right.ID; });
 		else
@@ -115,7 +122,7 @@ int DoseReportModel::rowCount(const QModelIndex & parent) const
 
 int DoseReportModel::columnCount(const QModelIndex & parent) const
 {
-	return 7;
+	return 8;
 }
 
 /*Qt::ItemFlags DoseReportModel::flags(const QModelIndex & index) const
@@ -136,8 +143,10 @@ QVariant DoseReportModel::data(const QModelIndex& index, int role) const
 		else if (index.column() == 4)
 			return (*m_data)[index.row()].dose;
 		else if (index.column() == 5)
-			return (*m_data)[index.row()].voxels;
+			return (*m_data)[index.row()].doseStd;
 		else if (index.column() == 6)
+			return (*m_data)[index.row()].voxels;
+		else if (index.column() == 7)
 			return (*m_data)[index.row()].ID;
 	}
 	else if (role == Qt::BackgroundRole) {

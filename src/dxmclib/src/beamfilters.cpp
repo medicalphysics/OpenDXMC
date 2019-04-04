@@ -126,7 +126,7 @@ XCareFilter::XCareFilter()
 	m_filterAngle = 0.0;
 	m_spanAngle = 120.0 * DEG_TO_RAD;
 	m_rampAngle = 20.0 * DEG_TO_RAD;
-	m_lowWeight = 0.3;
+	m_lowWeight = 0.6;
 }
 
 double XCareFilter::filterAngleDeg() const
@@ -171,7 +171,7 @@ double XCareFilter::rampAngleDeg() const
 
 void XCareFilter::setRampAngle(double angle)
 {
-	if ((angle >= 0.0) && (angle <= 0.5*m_filterAngle))
+	if ((angle >= 0.0) && (angle <= 0.5*m_spanAngle))
 	{
 		m_rampAngle = angle;
 	}
@@ -193,7 +193,9 @@ void XCareFilter::setLowWeight(double weight)
 
 double XCareFilter::highWeight() const
 {
-	return (2.0 * PI - m_lowWeight * (m_rampAngle + m_spanAngle)) / (2.0 * PI - m_spanAngle + m_rampAngle);
+	return (PI_2 - m_spanAngle * m_lowWeight + m_lowWeight * m_rampAngle) / (PI_2 - m_spanAngle + m_rampAngle);
+	//return (PI_2 + (-m_spanAngle + m_rampAngle)*m_lowWeight) / (PI_2 - m_spanAngle + m_rampAngle);
+	//return (2.0 * PI - m_lowWeight * (m_rampAngle + m_spanAngle)) / (2.0 * PI - m_spanAngle + m_rampAngle);
 }
 
 template<typename T>

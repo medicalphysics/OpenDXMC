@@ -59,7 +59,7 @@ signals:
 private:
 	World m_world;
 	bool m_ignoreAirDose = true;
-	bool m_smoothDose = true;
+	bool m_smoothDose = false;
 	std::shared_ptr<DensityImageContainer> m_densityImage;
 	std::shared_ptr<MaterialImageContainer> m_materialImage;
 	std::shared_ptr<OrganImageContainer> m_organImage;

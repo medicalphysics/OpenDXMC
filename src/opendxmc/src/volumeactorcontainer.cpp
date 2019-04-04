@@ -258,7 +258,7 @@ void CTSpiralSourceContainer::update()
 	std::array<double, 2> angles = { 
 		std::atan(m_src->fieldOfView() / sdd),
 		std::atan(m_src->collimation() / sdd) };
-	double lenght = std::sqrt(sdd * sdd * 0.25 + m_src->fieldOfView() * m_src->fieldOfView() * 0.25);
+	double lenght = -std::sqrt(sdd * sdd * 0.25 + m_src->fieldOfView() * m_src->fieldOfView() * 0.25);
 	for (int i = 0; i < 3; ++i)
 	{
 		p0[i] = start[i] + lenght * (direction[i] + std::tan(angles[0])*cosines[i] + std::tan(angles[1]) * cosines[i+3]);
@@ -364,7 +364,7 @@ void CTAxialSourceContainer::update()
 	std::array<double, 2> angles = {
 		std::atan(m_src->fieldOfView() / sdd),
 		std::atan(m_src->collimation() / sdd) };
-	double lenght = std::sqrt(sdd * sdd * 0.25 + m_src->fieldOfView() * m_src->fieldOfView() * 0.25);
+	double lenght = -std::sqrt(sdd * sdd * 0.25 + m_src->fieldOfView() * m_src->fieldOfView() * 0.25);
 	for (int i = 0; i < 3; ++i)
 	{
 		p0[i] = start[i] + lenght * (direction[i] + std::tan(angles[0])*cosines[i] + std::tan(angles[1]) * cosines[i + 3]);
@@ -491,7 +491,7 @@ void CTDualSourceContainer::updateTubeA()
 	std::array<double, 2> angles = {
 		std::atan(m_src->fieldOfView() / sdd),
 		std::atan(m_src->collimation() / sdd) };
-	double lenght = std::sqrt(sdd * sdd * 0.25 + m_src->fieldOfView() * m_src->fieldOfView() * 0.25);
+	double lenght = -std::sqrt(sdd * sdd * 0.25 + m_src->fieldOfView() * m_src->fieldOfView() * 0.25);
 	for (int i = 0; i < 3; ++i)
 	{
 		p0[i] = start[i] + lenght * (direction[i] + std::tan(angles[0])*cosines[i] + std::tan(angles[1]) * cosines[i + 3]);
@@ -574,7 +574,7 @@ void CTDualSourceContainer::updateTubeB()
 	std::array<double, 2> angles = {
 		std::atan(m_src->fieldOfViewB() / sdd),
 		std::atan(m_src->collimation() / sdd) };
-	double lenght = std::sqrt(sdd * sdd * 0.25 + m_src->fieldOfViewB() * m_src->fieldOfViewB() * 0.25);
+	double lenght = -std::sqrt(sdd * sdd * 0.25 + m_src->fieldOfViewB() * m_src->fieldOfViewB() * 0.25);
 	for (int i = 0; i < 3; ++i)
 	{
 		p0[i] = start[i] + lenght * (direction[i] + std::tan(angles[0])*cosines[i] + std::tan(angles[1]) * cosines[i + 3]);

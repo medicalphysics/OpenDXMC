@@ -577,11 +577,15 @@ void ImageImportPipeline::importCTDIPhantom(int mm)
 	for (std::size_t i = 0; i < 3; ++i)
 		origin[i] = -(dimensions[i] * spacing[i] * 0.5);
 
+	//copying organMap and organArray from materialMap and materialArray
 	std::vector<std::string> organMap;
 	auto organArray = std::make_shared<std::vector<unsigned char>>(materialArray->size());
-	organMap.push_back(materialMap[0].name());
-	organMap.push_back(materialMap[1].name());
 	std::copy(materialArray->begin(), materialArray->end(), organArray->begin());
+	for (const auto & m : materialMap)
+	{
+		organMap.push_back(m.name());
+	}
+	//adding measurement holes
 	std::array<CTDIPhantom::HolePosition, 5> CTDIpositions = { CTDIPhantom::West, CTDIPhantom::East , CTDIPhantom::North , CTDIPhantom::South, CTDIPhantom::Center };
 	organMap.push_back("CTDI measurement west");
 	organMap.push_back("CTDI measurement east");
@@ -589,11 +593,12 @@ void ImageImportPipeline::importCTDIPhantom(int mm)
 	organMap.push_back("CTDI measurement south");
 	organMap.push_back("CTDI measurement center");
 	auto organBuffer = organArray->data();
+	const auto nMaterials = static_cast<unsigned char>(materialMap.size());
 	for (std::size_t i = 0; i < 5; ++i)
 	{
 		auto idx = w.holeIndices(CTDIpositions[i]);
 		for (auto ind : idx)
-			organBuffer[ind] = static_cast<unsigned char>(i + 2);
+			organBuffer[ind] = static_cast<unsigned char>(i + nMaterials);
 	}
 
 

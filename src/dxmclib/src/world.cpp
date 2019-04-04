@@ -302,6 +302,7 @@ CTDIPhantom::CTDIPhantom(std::size_t diameter)
 	auto air = Material("Air, Dry (near sea level)");
 	auto pmma = Material("Polymethyl Methacralate (Lucite, Perspex)");
 	addMaterialToMap(air);
+	addMaterialToMap(air); // we want two to differentiate between air around phantom and air inside rods
 	addMaterialToMap(pmma);
 	m_airDensity = air.standardDensity();
 
@@ -320,16 +321,12 @@ CTDIPhantom::CTDIPhantom(std::size_t diameter)
 	setDensityArray(dBufferPtr);
 	setMaterialIndexArray(mBufferPtr);
 	
+	//filling with air
+	std::fill(dBufferPtr->begin(), dBufferPtr->end(), m_airDensity);
+	std::fill(mBufferPtr->begin(), mBufferPtr->end(), 0);
 	auto dBuffer = dBufferPtr->data();
 	auto mBuffer = mBufferPtr->data();
-	//filling with air
-
-	for (std::size_t i = 0; i < size(); ++i)
-	{
-		dBuffer[i] = m_airDensity;
-		mBuffer[i] = 0;
-	}
-
+	
 	//air holes indices
 	std::array<std::size_t, 2> fdim = { dim[0], dim[1] };
 	std::array<double, 2> fspacing = { sp[0], sp[1] };
@@ -366,7 +363,7 @@ CTDIPhantom::CTDIPhantom(std::size_t diameter)
 		for (auto idx : indices)
 		{
 			dBuffer[idx + offset] = pmma.standardDensity();
-			mBuffer[idx + offset] = 1;
+			mBuffer[idx + offset] = 2;
 		}
 
 		//air holes
@@ -376,7 +373,7 @@ CTDIPhantom::CTDIPhantom(std::size_t diameter)
 			for (auto idx : indicesHoles)
 			{
 				dBuffer[idx + offset] = air.standardDensity();
-				mBuffer[idx + offset] = 0;
+				mBuffer[idx + offset] = 1;
 			}
 		}
 	}

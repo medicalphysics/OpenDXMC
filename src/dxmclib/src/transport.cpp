@@ -563,9 +563,8 @@ double comptonScatterEGS(Particle& particle, std::uint64_t seed[2], double& cosA
 		
 		std::transform(std::execution::par_unseq, energyImparted.begin(), energyImparted.end(), density->begin(), energyImparted.begin(), 
 			[=](double ei, double de)->double {
-
-			const double voxelMass = de * voxelVolume * 0.001; //kg
-			return de > 0.0 ? calibrationValue * KEV_TO_MJ * ei / voxelMass : 0.0;
+				const double voxelMass = de * voxelVolume * 0.001; //kg
+				return de > 0.0 ? calibrationValue * KEV_TO_MJ * ei / voxelMass : 0.0;
 		});
 	}
 	

@@ -29,6 +29,8 @@ Copyright 2019 Erlend Andersen
 #include <atomic>
 #include <chrono>
 #include <string>
+#include <sstream>
+#include <iomanip> 
 
 namespace transport {
 	
@@ -37,10 +39,12 @@ namespace transport {
 	public:
 		ProgressBar();
 		ProgressBar(std::uint64_t totalExposures) { setTotalExposures(totalExposures); }
-		void setTotalExposures(std::uint64_t totalExposures) 
+		void setTotalExposures(std::uint64_t totalExposures, const std::string& message="") 
 		{
 			m_totalExposures = totalExposures; 
 			m_currentExposures = 0; 
+			m_message = message;
+			m_startTime = std::chrono::system_clock::now();
 		} //not thread safe
 		void exposureCompleted() // threadsafe
 		{
@@ -55,12 +59,22 @@ namespace transport {
 			return makePrettyTime(secondsRemaining);
 		}
 	protected:
-		std::string makePrettyTime(double seconds) const { auto value = std::to_string(seconds); return "ETA: " + value+" seconds"; }
+		std::string makePrettyTime(double seconds) const { 
+			std::stringstream ss;
+			ss << std::fixed << std::setprecision(0);
+			ss << m_message << " ETA: ";
+			if (seconds > 120.0)
+				ss << seconds / 60.0 << " minutes";
+			else
+				ss << seconds << " seconds";
+			return ss.str();
+		}
 	private:
 		std::atomic<std::uint64_t> m_totalExposures=0;
 		std::atomic<std::uint64_t> m_currentExposures=0;
 		std::chrono::system_clock::time_point m_startTime;
 		std::atomic<double> m_secondsElapsed;
+		std::string m_message;
 	};
 
 	double comptonScatter(Particle& particle, std::uint64_t seed[2], double& cosAngle);

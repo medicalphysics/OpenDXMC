@@ -270,6 +270,7 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 			writer->SetFileName(filename.toLatin1().data());
 			writer->SetInputConnection(windowToImageFilter->GetOutputPort());
 			writer->Write();
+			this->updateRendering();
 		}
 	});
 
@@ -328,7 +329,7 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume)
 		for (int i = 0; i < nColors; ++i)
 		{
 			auto arr = getColor(i);
-			m_lut->SetTableValue(i, arr[0], arr[1], arr[2]);
+			m_lut->SetTableValue(i, arr[0], arr[1], arr[2], i == 0 ? 0.0 : 1.0);
 			m_lut->SetAnnotation(vtkVariant(static_cast<unsigned char>(i)), "");
 			m_dctf->AddRGBPoint(static_cast<double>(i), arr[0], arr[1], arr[2]);
 		}
@@ -347,7 +348,7 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume)
 		m_dctf->SetNumberOfValues(256);
 		m_dctf->Build();
 
-		//using pet LUT
+		//using JET LUT
 		m_lut->IndexedLookupOff();
 		m_lut->SetSaturationRange(0, 0);
 		m_lut->SetValueRange(0, 1);
@@ -356,7 +357,7 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume)
 		m_lut->ForceBuild();
 		for (int i = 0; i < lut.size(); i += 3)
 		{
-			m_lut->SetTableValue(i / 3, lut[i], lut[i + 1], lut[i + 2]);
+			m_lut->SetTableValue(i / 3, lut[i], lut[i + 1], lut[i + 2], i == 0 ? 0.0 : 1.0);
 		}
 
 		m_imageProperty->SetLookupTable(m_lut);
@@ -386,6 +387,7 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume)
 		m_lut->SetValueRange(0, 1);
 		m_lut->SetNumberOfTableValues(256);
 		m_lut->ForceBuild();
+		m_lut->SetTableValue(0, 0.0, 0.0, 0.0, 0.0);
 		m_imageProperty->SetLookupTable(m_lut);
 		m_imageProperty->UseLookupTableScalarRangeOff();
 

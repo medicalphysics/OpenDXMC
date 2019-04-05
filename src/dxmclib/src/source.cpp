@@ -100,7 +100,7 @@ void PencilSource::setPhotonEnergy(double energy)
 		m_photonEnergy = energy;
 }
 
-double PencilSource::getCalibrationValue(std::uint64_t nHistories)
+double PencilSource::getCalibrationValue(std::uint64_t nHistories, transport::ProgressBar* progressBar)
 {
 	Material airMaterial("Air, Dry (near sea level)");
 	const double calcOutput = nHistories * m_photonEnergy * airMaterial.getMassEnergyAbsorbtion(m_photonEnergy) * KEV_TO_MJ;
@@ -197,7 +197,7 @@ double DXSource::sourceDetectorDistance() const
 	return m_sdd;
 }
 
-double DXSource::getCalibrationValue(std::uint64_t nHistories)
+double DXSource::getCalibrationValue(std::uint64_t nHistories, transport::ProgressBar* progressBar)
 {
 	
 	auto specter = tube().getSpecter();
@@ -380,7 +380,7 @@ void CTSource::updateSpecterDistribution()
 }
 
 
-double CTSource::getCalibrationValue(std::uint64_t nHistories)
+double CTSource::getCalibrationValue(std::uint64_t nHistories, transport::ProgressBar* progressBar)
 {
 
 	double meanWeight = 0;
@@ -416,7 +416,7 @@ double CTSource::getCalibrationValue(std::uint64_t nHistories)
 	do {
 		std::array<double, 5> measureDose;
 		measureDose.fill(0.0);
-		auto dose = transport::run(world, this);
+		auto dose = transport::run(world, this, progressBar);
 		for (std::size_t i = 0; i < 5; ++i)
 		{
 			auto holeIndices = world.holeIndices(position[i]);
@@ -529,10 +529,10 @@ std::uint64_t CTSpiralSource::totalExposures() const
 	return static_cast<std::uint64_t>(m_scanLenght * PI_2 / (m_collimation * m_pitch * m_exposureAngleStep));
 }
 
-double CTSpiralSource::getCalibrationValue(std::uint64_t nHistories)
+double CTSpiralSource::getCalibrationValue(std::uint64_t nHistories, transport::ProgressBar* progressBar)
 {
 
-	return CTSource::getCalibrationValue(nHistories) * m_pitch;
+	return CTSource::getCalibrationValue(nHistories, progressBar) * m_pitch;
 
 }
 
@@ -764,7 +764,7 @@ std::uint64_t CTDualSource::exposuresPerRotatition() const
 }
 
 
-double CTDualSource::getCalibrationValue(std::uint64_t nHistories)
+double CTDualSource::getCalibrationValue(std::uint64_t nHistories, transport::ProgressBar* progressBar)
 {
 	double meanWeight = 0;
 	for (std::size_t i = 0; i < totalExposures(); ++i)
@@ -799,7 +799,7 @@ double CTDualSource::getCalibrationValue(std::uint64_t nHistories)
 	do {
 		std::array<double, 5> measureDose;
 		measureDose.fill(0.0);
-		auto dose = transport::run(world, this);
+		auto dose = transport::run(world, this, progressBar);
 		for (std::size_t i = 0; i < 5; ++i)
 		{
 			auto holeIndices = world.holeIndices(position[i]);

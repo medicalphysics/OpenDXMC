@@ -596,7 +596,7 @@ double comptonScatterEGS(Particle& particle, std::uint64_t seed[2], double& cosA
 
 		auto nHistories = parallell_run(world, source, dose.data(), 0, totalExposures, nJobs, progressbar);
 		
-		double calibrationValue = source->getCalibrationValue(nHistories);
+		double calibrationValue = source->getCalibrationValue(nHistories, progressbar);
 		//energy imparted to dose
 		energyImpartedToDose(world, source, dose, calibrationValue);
 		return dose;
@@ -623,7 +623,7 @@ double comptonScatterEGS(Particle& particle, std::uint64_t seed[2], double& cosA
 		if (nJobs < 1)
 			nJobs = 1;
 		if (progressbar)
-			progressbar->setTotalExposures(totalExposures);
+			progressbar->setTotalExposures(totalExposures, "CTDI Calibration");
 		parallell_run_ctdi(world, source, dose.data(), 0, totalExposures, nJobs, progressbar);
 
 		energyImpartedToDose(world, source, dose, 1.0);

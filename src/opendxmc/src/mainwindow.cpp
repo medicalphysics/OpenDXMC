@@ -162,7 +162,7 @@ void MainWindow::setDisableEditing(void)
 	}
 }
 
-void MainWindow::setProgressBar(std::shared_ptr<transport::ProgressBar> progressBar)
+void MainWindow::setProgressBar(std::shared_ptr<ProgressBar> progressBar)
 {
 	m_progressBar = progressBar;
 	m_progressTimer->start(5000);

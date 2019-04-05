@@ -100,7 +100,7 @@ void PencilSource::setPhotonEnergy(double energy)
 		m_photonEnergy = energy;
 }
 
-double PencilSource::getCalibrationValue(std::uint64_t nHistories, transport::ProgressBar* progressBar)
+double PencilSource::getCalibrationValue(std::uint64_t nHistories, ProgressBar* progressBar)
 {
 	Material airMaterial("Air, Dry (near sea level)");
 	const double calcOutput = nHistories * m_photonEnergy * airMaterial.getMassEnergyAbsorbtion(m_photonEnergy) * KEV_TO_MJ;
@@ -197,7 +197,7 @@ double DXSource::sourceDetectorDistance() const
 	return m_sdd;
 }
 
-double DXSource::getCalibrationValue(std::uint64_t nHistories, transport::ProgressBar* progressBar)
+double DXSource::getCalibrationValue(std::uint64_t nHistories, ProgressBar* progressBar)
 {
 	
 	auto specter = tube().getSpecter();
@@ -380,7 +380,7 @@ void CTSource::updateSpecterDistribution()
 }
 
 
-double CTSource::getCalibrationValue(std::uint64_t nHistories, transport::ProgressBar* progressBar)
+double CTSource::getCalibrationValue(std::uint64_t nHistories, ProgressBar* progressBar)
 {
 
 	double meanWeight = 0;
@@ -529,7 +529,7 @@ std::uint64_t CTSpiralSource::totalExposures() const
 	return static_cast<std::uint64_t>(m_scanLenght * PI_2 / (m_collimation * m_pitch * m_exposureAngleStep));
 }
 
-double CTSpiralSource::getCalibrationValue(std::uint64_t nHistories, transport::ProgressBar* progressBar)
+double CTSpiralSource::getCalibrationValue(std::uint64_t nHistories, ProgressBar* progressBar)
 {
 
 	return CTSource::getCalibrationValue(nHistories, progressBar) * m_pitch;
@@ -616,7 +616,7 @@ std::array<double, 3> CTAxialSource::getExposurePosition(std::size_t exposureInd
 	const std::uint64_t rotationNumber = exposureIndex / anglesPerRotation;
 	const double angle = m_startAngle + m_exposureAngleStep * (exposureIndex - (rotationNumber*anglesPerRotation));
 
-	std::array<double, 3> rotationAxis, beamAxis, otherAxis;
+	std::array<double, 3> rotationAxis, otherAxis;
 	for (std::size_t i = 0; i < 3; ++i)
 	{
 		rotationAxis[i] = m_directionCosines[i + 3];
@@ -764,7 +764,7 @@ std::uint64_t CTDualSource::exposuresPerRotatition() const
 }
 
 
-double CTDualSource::getCalibrationValue(std::uint64_t nHistories, transport::ProgressBar* progressBar)
+double CTDualSource::getCalibrationValue(std::uint64_t nHistories, ProgressBar* progressBar)
 {
 	double meanWeight = 0;
 	for (std::size_t i = 0; i < totalExposures(); ++i)

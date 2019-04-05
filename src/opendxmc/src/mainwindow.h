@@ -24,6 +24,7 @@ Copyright 2019 Erlend Andersen
 
 #include "imageimportpipeline.h"
 #include "simulationpipeline.h"
+#include "progressbar.h"
 
 class MainWindow : public QMainWindow
 {
@@ -33,7 +34,7 @@ public:
 	~MainWindow();
 	void setEnableEditing(void);
 	void setDisableEditing(void);
-	void setProgressBar(std::shared_ptr<transport::ProgressBar> progressBar);
+	void setProgressBar(std::shared_ptr<ProgressBar> progressBar);
 	void updateProgressBar();
 private:
 	QThread m_workerThread;
@@ -41,6 +42,6 @@ private:
 	SimulationPipeline* m_simulationPipeline;
 	QTabWidget *m_menuWidget;
 
-	std::shared_ptr<transport::ProgressBar> m_progressBar = nullptr;
+	std::shared_ptr<ProgressBar> m_progressBar = nullptr;
 	QTimer* m_progressTimer = nullptr;
 };

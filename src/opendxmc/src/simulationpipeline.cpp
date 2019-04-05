@@ -18,7 +18,7 @@ Copyright 2019 Erlend Andersen
 
 #include "simulationpipeline.h"
 #include "transport.h"
-
+#include "progressbar.h"
 #include "vtkType.h"
 
 
@@ -29,7 +29,7 @@ SimulationPipeline::SimulationPipeline(QObject *parent)
 	:QObject(parent)
 {
 	qRegisterMetaType<DoseReportContainer>();
-	qRegisterMetaType<std::shared_ptr<transport::ProgressBar>>();
+	qRegisterMetaType<std::shared_ptr<ProgressBar>>();
 	m_world = World();	
 }
 
@@ -92,7 +92,7 @@ void SimulationPipeline::runSimulation(const std::vector<std::shared_ptr<Source>
 		
 		m_world.setAttenuationLutMaxEnergy(s->maxPhotonEnergyProduced());
 		m_world.validate();
-		auto progressBar = std::make_shared<transport::ProgressBar>(s->totalExposures());
+		auto progressBar = std::make_shared<ProgressBar>(s->totalExposures());
 		emit progressBarChanged(progressBar);
 		auto dose = transport::run(m_world, s.get(), progressBar.get());
 		std::transform(std::execution::par_unseq, totalDose->begin(), totalDose->end(), dose.begin(), totalDose->begin(), std::plus<double>());

@@ -23,7 +23,7 @@ Copyright 2019 Erlend Andersen
 #include "beamfilters.h"
 #include "exposure.h"
 #include "beamfilters.h"
-#include "transport.h"
+#include "progressbar.h"
 #include "tube.h"
 #include "world.h"
 #include "dxmcrandom.h"
@@ -65,7 +65,7 @@ public:
 
 	Type type() { return m_type; }
 
-	virtual double getCalibrationValue(std::uint64_t nHistories, transport::ProgressBar*) = 0;
+	virtual double getCalibrationValue(std::uint64_t nHistories, ProgressBar*) = 0;
 	
 	virtual bool isValid(void) const = 0;
 	virtual bool validate(void) = 0;
@@ -102,7 +102,7 @@ public:
 	void setAirDose(double Gycm2) { if (Gycm2 > 0.0) m_airDose = Gycm2; }
 	double airDose(void) const { return m_airDose; } // Gycm2
 
-	double getCalibrationValue(std::uint64_t nHistories, transport::ProgressBar* = nullptr) override;
+	double getCalibrationValue(std::uint64_t nHistories, ProgressBar* = nullptr) override;
 
 	bool isValid(void) const override { return true; }
 	bool validate(void) override {return true; }
@@ -143,7 +143,7 @@ public:
 	void setDap(double Gycm2) { if (Gycm2 > 0.0) m_dap = Gycm2; }
 	double dap(void) const { return m_dap; } // Gycm2
 
-	double getCalibrationValue(std::uint64_t nHistories, transport::ProgressBar* = nullptr) override;
+	double getCalibrationValue(std::uint64_t nHistories, ProgressBar* = nullptr) override;
 	
 	const std::array<double, 3> tubePosition(void) const;
 
@@ -218,7 +218,7 @@ public:
 	void setCtdiPhantomDiameter(std::uint64_t mm) { if (mm > 160) m_ctdiPhantomDiameter = mm; else m_ctdiPhantomDiameter = 160; }
 	std::uint64_t ctdiPhantomDiameter(void) const { return m_ctdiPhantomDiameter; }
 
-	virtual double getCalibrationValue(std::uint64_t nHistories, transport::ProgressBar* = nullptr) override;
+	virtual double getCalibrationValue(std::uint64_t nHistories, ProgressBar* = nullptr) override;
 	
 	virtual std::uint64_t exposuresPerRotatition() const;
 	
@@ -259,7 +259,7 @@ public:
 	//void setScanLenght(double scanLenght) override;
 
 	std::uint64_t totalExposures(void) const override;
-	double getCalibrationValue(std::uint64_t nHistories, transport::ProgressBar* = nullptr) override;
+	double getCalibrationValue(std::uint64_t nHistories, ProgressBar* = nullptr) override;
 protected:
 private:
 	double m_pitch;
@@ -308,7 +308,7 @@ public:
 
 	std::uint64_t totalExposures(void) const override;
 	std::uint64_t exposuresPerRotatition() const;
-	double getCalibrationValue(std::uint64_t nHistories, transport::ProgressBar* = nullptr) override;
+	double getCalibrationValue(std::uint64_t nHistories, ProgressBar* = nullptr) override;
 
 
 	// CT

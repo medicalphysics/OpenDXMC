@@ -65,9 +65,9 @@ VolumeRenderWidget::VolumeRenderWidget(QWidget *parent)
 	volumeProperty->SetGradientOpacity(gradientFun);
 	volumeProperty->ShadeOn();
 	volumeProperty->SetInterpolationTypeToLinear();
-	volumeProperty->SetAmbient(0.1);
+	volumeProperty->SetAmbient(0.6);
 	volumeProperty->SetDiffuse(0.9);
-	volumeProperty->SetSpecular(0.2);
+	volumeProperty->SetSpecular(0.5);
 	volumeProperty->SetSpecularPower(10.0);
 	//volumeProperty->IndependentComponentsOff();
 

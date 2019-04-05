@@ -581,17 +581,17 @@ void VolumeRenderSettingsWidget::setImage(std::shared_ptr<ImageContainer> image)
 			opacityPoints.append(QPointF(i - 0.05, 0.0));
 			while (i <= image->minMax[1])
 			{
-				opacityPoints.append(QPointF(i, 0.05));
+				opacityPoints.append(QPointF(i, 0.2));
 				i += 1.0;
 			}
-			gradientPoints.append(QPointF(1.0, 1.0));
+			gradientPoints.append(QPointF(0.0, 1.0));
 			m_scalarOpacityChart->setPoints(opacityPoints);
 			m_gradientOpacityChart->setPoints(gradientPoints);
 		}
 		else if (image->imageType == ImageContainer::DensityImage)
 		{
 			opacityPoints.append(QPointF(0.5, 0.0));
-			opacityPoints.append(QPointF(1.0, 0.25));
+			opacityPoints.append(QPointF(1.0, 0.5));
 			opacityPoints.append(QPointF(1.5, 0.0));
 			gradientPoints.append(QPointF(0.0, 1.0));
 			m_scalarOpacityChart->setPoints(opacityPoints);
@@ -599,7 +599,9 @@ void VolumeRenderSettingsWidget::setImage(std::shared_ptr<ImageContainer> image)
 		}
 		else if (image->imageType == ImageContainer::DoseImage)
 		{
+			const double minPosPoint = std::min(0.1, (image->minMax[1] - image->minMax[0]) / 1000.0);
 			opacityPoints.append(QPointF(image->minMax[0], 0.0));
+			opacityPoints.append(QPointF(minPosPoint, 0.1));
 			opacityPoints.append(QPointF(image->minMax[1], 1.0));
 			gradientPoints.append(QPointF(0.0, 1.0));
 			m_scalarOpacityChart->setPoints(opacityPoints);

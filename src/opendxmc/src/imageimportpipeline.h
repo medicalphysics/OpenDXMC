@@ -229,8 +229,8 @@ signals:
 protected:
 	template<class Iter>
 	std::pair<std::shared_ptr<std::vector<unsigned char>>, std::shared_ptr<std::vector<double>>> calculateMaterialAndDensityFromCTData(Iter first, Iter last);
-	void processCTData(std::shared_ptr<ImageContainer> ctImage, const std::vector<double>& exposure);
-	std::vector<double> readExposureData(vtkSmartPointer<vtkDICOMReader>& dicomReader);
+	void processCTData(std::shared_ptr<ImageContainer> ctImage, const std::pair<std::string,std::vector<double>>& exposureData);
+	std::pair<std::string, std::vector<double>> readExposureData(vtkSmartPointer<vtkDICOMReader>& dicomReader);
 	
 private:
 	std::array<double, 3> m_outputSpacing = { 2, 2, 2 };

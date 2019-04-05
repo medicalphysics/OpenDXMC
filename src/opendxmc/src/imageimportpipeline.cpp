@@ -158,6 +158,7 @@ void ImageImportPipeline::setDicomData(QStringList dicomPaths)
 
 	auto exposure = readExposureData(dicomReader);
 
+
 	processCTData(imageContainer, exposure);
 	emit processingDataEnded();
 
@@ -186,7 +187,7 @@ std::pair<std::shared_ptr<std::vector<unsigned char>>, std::shared_ptr<std::vect
 	return std::make_pair(materialIndex, density);
 }
 
-void ImageImportPipeline::processCTData(std::shared_ptr<ImageContainer> ctImage, const std::vector<double>& exposure)
+void ImageImportPipeline::processCTData(std::shared_ptr<ImageContainer> ctImage, const std::pair<std::string, std::vector<double>>& exposureData)
 {
 	if (ctImage->imageType != ImageContainer::CTImage)
 		return;
@@ -230,9 +231,10 @@ void ImageImportPipeline::processCTData(std::shared_ptr<ImageContainer> ctImage,
 
 
 	//making exposure map for CT AEC
+	const auto[exposurename, exposure] = exposureData;
 	auto aecFilter = std::make_shared<AECFilter>(density, spacing, dimensionsArray, exposure);
 
-	QString filtername("test");
+	QString filtername = QString::fromStdString(exposurename);
 
 	emit aecFilterChanged(filtername, aecFilter);
 	emit imageDataChanged(materialImage);
@@ -240,14 +242,14 @@ void ImageImportPipeline::processCTData(std::shared_ptr<ImageContainer> ctImage,
 	emit materialDataChanged(m_ctImportMaterialMap);
 }
 
-std::vector<double> ImageImportPipeline::readExposureData(vtkSmartPointer<vtkDICOMReader>& dicomReader)
+std::pair<std::string, std::vector<double>> ImageImportPipeline::readExposureData(vtkSmartPointer<vtkDICOMReader>& dicomReader)
 {
 	std::vector<double> exposure;
 
 	vtkDICOMMetaData *meta = dicomReader->GetMetaData();
 
 	if (!meta->Has(DC::Exposure))
-		return exposure;
+		return std::make_pair(std::string(), exposure);
 
 	int n = meta->GetNumberOfInstances();
 	exposure.resize(n, 0.0);
@@ -266,7 +268,11 @@ std::vector<double> ImageImportPipeline::readExposureData(vtkSmartPointer<vtkDIC
 			exposure[i] = pv.GetDouble(0);
 	}
 
-	return exposure;
+	vtkDICOMTag seriesDescriptionTag(8, 4158);
+	auto seriesDescriptionValue = meta->GetAttributeValue(seriesDescriptionTag);
+	std::string desc = seriesDescriptionValue.GetString(0);
+
+	return std::make_pair(desc, exposure);
 }
 
 

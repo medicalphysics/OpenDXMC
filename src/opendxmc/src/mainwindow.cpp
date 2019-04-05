@@ -51,7 +51,7 @@ MainWindow::MainWindow(QWidget* parent)
 	connect(m_simulationPipeline, &SimulationPipeline::processingDataStarted, this, &MainWindow::setDisableEditing);
 	connect(m_simulationPipeline, &SimulationPipeline::processingDataEnded, this, &MainWindow::setEnableEditing);
 
-	//statusbar and progress widget
+	//statusbar and progress indicator widget
 	auto statusBar = this->statusBar();
 	auto progressIndicator = new ProgressIndicator(this);
 	connect(m_importPipeline, &ImageImportPipeline::processingDataStarted, progressIndicator, &ProgressIndicator::startAnimation);
@@ -103,6 +103,16 @@ MainWindow::MainWindow(QWidget* parent)
 
 	splitter->addWidget(m_menuWidget);
 	
+
+	//simulation progress
+	m_progressTimer = new QTimer(this);
+	m_progressTimer->setTimerType(Qt::CoarseTimer);
+	connect(m_simulationPipeline, &SimulationPipeline::progressBarChanged, this, &MainWindow::setProgressBar);
+	connect(m_progressTimer, &QTimer::timeout, this, &MainWindow::updateProgressBar);
+
+
+
+
 	//Viewport
 	ViewPortWidget* viewPort = new ViewPortWidget(this);
 	splitter->addWidget(viewPort);
@@ -149,5 +159,23 @@ void MainWindow::setDisableEditing(void)
 	{
 		auto wid = m_menuWidget->widget(i);
 		wid->setDisabled(true);
+	}
+}
+
+void MainWindow::setProgressBar(std::shared_ptr<transport::ProgressBar> progressBar)
+{
+	m_progressBar = progressBar;
+	m_progressTimer->start(5000);
+}
+
+void MainWindow::updateProgressBar()
+{
+	if (m_progressBar)
+	{
+		auto msg = m_progressBar->getETA();
+		this->statusBar()->showMessage(QString::fromStdString(msg), 5000);
+	}
+	else {
+		m_progressTimer->stop();
 	}
 }

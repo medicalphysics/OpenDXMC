@@ -24,6 +24,7 @@ Copyright 2019 Erlend Andersen
 #include "world.h"
 #include "tube.h"
 #include "source.h"
+#include "transport.h"
 
 #include <QObject>
 
@@ -35,7 +36,7 @@ Copyright 2019 Erlend Andersen
 #include <vector>
 
 Q_DECLARE_METATYPE(DoseReportContainer)
-
+Q_DECLARE_METATYPE(std::shared_ptr<transport::ProgressBar>)
 
 class SimulationPipeline : public QObject
 {
@@ -53,6 +54,7 @@ public:
 signals:
 	void processingDataStarted();
 	void processingDataEnded();
+	void progressBarChanged(std::shared_ptr<transport::ProgressBar> progressBar);
 	void imageDataChanged(std::shared_ptr<ImageContainer> image);
 	void doseDataChanged(const DoseReportContainer& doses);
 

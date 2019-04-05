@@ -45,16 +45,13 @@ namespace transport {
 	constexpr double RUSSIAN_RULETTE_PROBABILITY = 0.8;
 	constexpr double RUSSIAN_RULETTE_THRESHOLD = 10.0; // keV
 
-
 	std::mutex TRANSPORT_MUTEX;
 
 	constexpr double N_ERROR = 1.0e-9;
 
-
 	template<typename T>
 	void findNearestIndices(const T value, const std::vector<T>& vec, std::size_t& first, std::size_t& last)
 	{
-
 		auto beg = vec.begin();
 		auto end = vec.end();
 		auto upper = std::lower_bound(beg, end, value);
@@ -503,7 +500,7 @@ double comptonScatterEGS(Particle& particle, std::uint64_t seed[2], double& cosA
 	}
 	
 	std::uint64_t parallell_run(const World& w, const Source* source, double* energyImparted,
-		const std::uint64_t expBeg, const std::uint64_t expEnd, std::uint64_t nJobs)
+		const std::uint64_t expBeg, const std::uint64_t expEnd, std::uint64_t nJobs, ProgressBar* progressbar)
 	{
 		std::uint64_t len = expEnd - expBeg;
 		if ((len <= 1) || (nJobs <= 1))
@@ -517,17 +514,19 @@ double comptonScatterEGS(Particle& particle, std::uint64_t seed[2], double& cosA
 				source->getExposure(exposure, i);
 				exposure.alignToDirectionCosines(worldBasis);
 				transport(w, exposure, seed, energyImparted);
+				if (progressbar)
+					progressbar->exposureCompleted();
 			}
 			return source->historiesPerExposure() * (expEnd - expBeg);
 		}
 		auto mid = expBeg + len / 2;
-		auto handle = std::async(std::launch::async, parallell_run, w, source, energyImparted, mid, expEnd, nJobs - 2);
-		std::uint64_t nHistories = parallell_run(w, source, energyImparted, expBeg, mid, nJobs - 2);
+		auto handle = std::async(std::launch::async, parallell_run, w, source, energyImparted, mid, expEnd, nJobs - 2, progressbar);
+		std::uint64_t nHistories = parallell_run(w, source, energyImparted, expBeg, mid, nJobs - 2, progressbar);
 		return handle.get() + nHistories;
 	}
 
 	std::uint64_t parallell_run_ctdi(const CTDIPhantom& w, const CTSource* source, double* energyImparted,
-		const std::uint64_t expBeg, const std::uint64_t expEnd, std::uint64_t nJobs)
+		const std::uint64_t expBeg, const std::uint64_t expEnd, std::uint64_t nJobs, ProgressBar* progressbar)
 	{
 		std::uint64_t len = expEnd - expBeg;
 
@@ -544,12 +543,14 @@ double comptonScatterEGS(Particle& particle, std::uint64_t seed[2], double& cosA
 				exposure.setPositionZ(0.0);
 				exposure.setBeamIntensityWeight(1.0);
 				transport(w, exposure, seed, energyImparted);
+				if (progressbar)
+					progressbar->exposureCompleted();
 			}
 			return source->historiesPerExposure() * (expEnd - expBeg);
 		}
 		auto mid = expBeg + len / 2;
-		auto handle = std::async(std::launch::async, parallell_run_ctdi, w, source, energyImparted, mid, expEnd, nJobs - 2);
-		std::uint64_t nHistories = parallell_run_ctdi(w, source, energyImparted, expBeg, mid, nJobs - 2);
+		auto handle = std::async(std::launch::async, parallell_run_ctdi, w, source, energyImparted, mid, expEnd, nJobs - 2, progressbar);
+		std::uint64_t nHistories = parallell_run_ctdi(w, source, energyImparted, expBeg, mid, nJobs - 2, progressbar);
 		return handle.get() + nHistories;
 		
 	}
@@ -569,7 +570,7 @@ double comptonScatterEGS(Particle& particle, std::uint64_t seed[2], double& cosA
 	}
 	
 
-	std::vector<double> run(const World & world, Source* source)
+	std::vector<double> run(const World & world, Source* source, ProgressBar* progressbar)
 	{
 		std::vector<double> dose(world.size(), 0.0);
 		if (!source)
@@ -590,7 +591,10 @@ double comptonScatterEGS(Particle& particle, std::uint64_t seed[2], double& cosA
 		if (nJobs < 1)
 			nJobs = 1;
 
-		auto nHistories = parallell_run(world, source, dose.data(), 0, totalExposures, nJobs);
+		if (progressbar)
+			progressbar->setTotalExposures(totalExposures);
+
+		auto nHistories = parallell_run(world, source, dose.data(), 0, totalExposures, nJobs, progressbar);
 		
 		double calibrationValue = source->getCalibrationValue(nHistories);
 		//energy imparted to dose
@@ -599,7 +603,7 @@ double comptonScatterEGS(Particle& particle, std::uint64_t seed[2], double& cosA
 	}
 
 
-	std::vector<double> run(const CTDIPhantom & world, CTSource* source)
+	std::vector<double> run(const CTDIPhantom & world, CTSource* source, ProgressBar* progressbar)
 	{
 		std::vector<double> dose(world.size(), 0.0);
 		if (!source)
@@ -618,7 +622,9 @@ double comptonScatterEGS(Particle& particle, std::uint64_t seed[2], double& cosA
 		std::uint64_t nJobs = nThreads;
 		if (nJobs < 1)
 			nJobs = 1;
-		parallell_run_ctdi(world, source, dose.data(), 0, totalExposures, nJobs);
+		if (progressbar)
+			progressbar->setTotalExposures(totalExposures);
+		parallell_run_ctdi(world, source, dose.data(), 0, totalExposures, nJobs, progressbar);
 
 		energyImpartedToDose(world, source, dose, 1.0);
 		return dose;

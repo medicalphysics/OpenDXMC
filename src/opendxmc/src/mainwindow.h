@@ -20,6 +20,7 @@ Copyright 2019 Erlend Andersen
 #include <QMainWindow>
 #include <QThread>
 #include <QTabWidget>
+#include <QTimer>
 
 #include "imageimportpipeline.h"
 #include "simulationpipeline.h"
@@ -32,9 +33,14 @@ public:
 	~MainWindow();
 	void setEnableEditing(void);
 	void setDisableEditing(void);
+	void setProgressBar(std::shared_ptr<transport::ProgressBar> progressBar);
+	void updateProgressBar();
 private:
 	QThread m_workerThread;
 	ImageImportPipeline *m_importPipeline;
 	SimulationPipeline* m_simulationPipeline;
 	QTabWidget *m_menuWidget;
+
+	std::shared_ptr<transport::ProgressBar> m_progressBar = nullptr;
+	QTimer* m_progressTimer = nullptr;
 };

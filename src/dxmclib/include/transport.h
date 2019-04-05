@@ -36,6 +36,7 @@ namespace transport {
 	{
 	public:
 		ProgressBar();
+		ProgressBar(std::uint64_t totalExposures) { setTotalExposures(totalExposures); }
 		void setTotalExposures(std::uint64_t totalExposures) 
 		{
 			m_totalExposures = totalExposures; 
@@ -60,7 +61,6 @@ namespace transport {
 		std::atomic<std::uint64_t> m_currentExposures=0;
 		std::chrono::system_clock::time_point m_startTime;
 		std::atomic<double> m_secondsElapsed;
-
 	};
 
 	double comptonScatter(Particle& particle, std::uint64_t seed[2], double& cosAngle);

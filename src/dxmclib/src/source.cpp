@@ -31,6 +31,8 @@ constexpr double DEG_TO_RAD = PI / 180.0;
 constexpr double RAD_TO_DEG = 1.0 / DEG_TO_RAD;
 constexpr double KEV_TO_MJ = 1.6021773e-13;
 
+constexpr std::uint64_t CTDI_MIN_HISTORIES = 500E6;
+
 template<typename T>
 T vectorLenght(const std::array<T, 3>& v)
 {
@@ -399,6 +401,64 @@ double CTSource::getCalibrationValue(std::uint64_t nHistories, ProgressBar* prog
 	updateFromWorld(world);
 	validate();
 
+	std::array<CTDIPhantom::HolePosition, 5> position = { CTDIPhantom::Center, CTDIPhantom::West, CTDIPhantom::East, CTDIPhantom::South, CTDIPhantom::North };
+
+	auto spacing = world.spacing();
+	auto dim = world.dimensions();
+
+	const double voxelVolume = spacing[0] * spacing[1] * spacing[2] / 1000.0; // cm3
+	const double voxelMass = world.airDensity() * voxelVolume / 1000.0; //kg
+
+	bool usingXCare = m_useXCareFilter;
+	m_useXCareFilter = false; // we need to disable organ aec for ctdi statistics, this should be ok 
+
+	std::size_t statCounter = CTDI_MIN_HISTORIES / (this->exposuresPerRotatition() * m_historiesPerExposure);
+	if (statCounter < 1)
+		statCounter = 1;
+	auto histories = m_historiesPerExposure;
+	m_historiesPerExposure = histories * statCounter; // ensuring enough histories for ctdi measurement
+
+	std::array<double, 5> measureDose;
+	measureDose.fill(0.0);
+	auto dose = transport::run(world, this, progressBar);
+	for (std::size_t i = 0; i < 5; ++i)
+	{
+		auto holeIndices = world.holeIndices(position[i]);
+		for (auto idx : holeIndices)
+			measureDose[i] += dose[idx];
+		measureDose[i] /= static_cast<double>(holeIndices.size());
+	}
+	
+	m_historiesPerExposure = histories; //reverting old value
+
+	const double ctdiPher = (measureDose[1] + measureDose[2] + measureDose[3] + measureDose[4]) / 4.0;
+	const double ctdiCent = measureDose[0];
+	const double ctdivol = (ctdiCent + 2.0 * ctdiPher) / 3.0 / static_cast<double>(statCounter);
+	const double factor = m_ctdivol / ctdivol * meanWeight;
+	m_useXCareFilter = usingXCare; // re-enable organ aec if it was used
+	return factor;
+
+}
+/*
+double CTSource::getCalibrationValue(std::uint64_t nHistories, ProgressBar* progressBar)
+{
+
+	double meanWeight = 0;
+	for (std::size_t i = 0; i < totalExposures(); ++i)
+	{
+		Exposure dummy;
+		getExposure(dummy, i);
+		meanWeight += dummy.beamIntensityWeight();
+	}
+	meanWeight /= static_cast<double>(totalExposures());
+
+	auto world = CTDIPhantom(m_ctdiPhantomDiameter);
+	world.setAttenuationLutMaxEnergy(m_tube.voltage());
+	world.validate();
+
+	updateFromWorld(world);
+	validate();
+
 	std::array<double, 5> measureDoseTotal;
 	measureDoseTotal.fill(0.0);
 	std::array<CTDIPhantom::HolePosition, 5> position = { CTDIPhantom::Center, CTDIPhantom::West, CTDIPhantom::East, CTDIPhantom::South, CTDIPhantom::North };
@@ -412,7 +472,8 @@ double CTSource::getCalibrationValue(std::uint64_t nHistories, ProgressBar* prog
 	bool usingXCare = m_useXCareFilter;
 	m_useXCareFilter = false; // we need to disable organ aec for ctdi statistics, this should be ok 
 
-	std::size_t statCounter = 0;
+	std::size_t statCounter = 1;
+
 	do {
 		std::array<double, 5> measureDose;
 		measureDose.fill(0.0);
@@ -436,7 +497,7 @@ double CTSource::getCalibrationValue(std::uint64_t nHistories, ProgressBar* prog
 	return factor;
 
 }
-
+*/
 std::uint64_t CTSource::exposuresPerRotatition() const 
 {
 	return static_cast<std::size_t>(PI_2 / m_exposureAngleStep);
@@ -763,8 +824,11 @@ std::uint64_t CTDualSource::exposuresPerRotatition() const
 	return 2 * static_cast<std::size_t>(PI_2 / m_exposureAngleStep);
 }
 
-
 double CTDualSource::getCalibrationValue(std::uint64_t nHistories, ProgressBar* progressBar)
+{
+	return CTSource::getCalibrationValue(nHistories, progressBar) * m_pitch;
+}
+/*double CTDualSource::getCalibrationValue(std::uint64_t nHistories, ProgressBar* progressBar)
 {
 	double meanWeight = 0;
 	for (std::size_t i = 0; i < totalExposures(); ++i)
@@ -817,7 +881,7 @@ double CTDualSource::getCalibrationValue(std::uint64_t nHistories, ProgressBar* 
 	const double factor = m_ctdivol / ctdivol / meanWeight;
 	m_useXCareFilter = usingXCare; // re-enable organ aec if it was used
 	return factor;
-}
+}*/
 
 
 void CTDualSource::setStartAngleDegB(double angle)

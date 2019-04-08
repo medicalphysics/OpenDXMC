@@ -1,37 +1,664 @@
 {
-    "filters": [
-        {
-            "filterdata": [
-                {
-                    "angle": 0,
-                    "weight": 1.8816799700821794
-                },
-                {
-                    "angle": 0.041992107,
-                    "weight": 1.7771629567485092
-                },
-                {
-                    "angle": 0.083836642,
-                    "weight": 1.4858913256035922
-                },
-                {
-                    "angle": 0.166511074,
-                    "weight": 0.7320820089981582
-                },
-                {
-                    "angle": 0.246954945,
-                    "weight": 0.47181213705409936
-                },
-                {
-                    "angle": 0.324269441,
-                    "weight": 0.35287338971480264
-                },
-                {
-                    "angle": 0.390607044,
-                    "weight": 0.2984982117986585
-                }
-            ],
-            "name": "Siemens Definition Flash Body W3 120kV"
-        }
-    ]
+    "filters":[
+{
+ "filterdata": [ 
+{
+"angle":0.166511074,
+"weight":3.53208
+}
+,{
+"angle":0.0,
+"weight":13.9167
+}
+,{
+"angle":0.041992107,
+"weight":12.5868
+}
+,{
+"angle":0.083836642,
+"weight":9.41943
+}
+,{
+"angle":0.246954945,
+"weight":1.96665
+}
+,{
+"angle":0.324269441,
+"weight":1.27605
+}
+,{
+"angle":0.39060704399999996,
+"weight":0.947716
+}
+],
+"name": "Siemens Definition Flash Body W2 100kV"
+}
+,{
+ "filterdata": [ 
+{
+"angle":0.166511074,
+"weight":4.2903199999999995
+}
+,{
+"angle":0.0,
+"weight":8.4093
+}
+,{
+"angle":0.041992107,
+"weight":8.092210000000001
+}
+,{
+"angle":0.083836642,
+"weight":7.2031
+}
+,{
+"angle":0.246954945,
+"weight":3.11337
+}
+,{
+"angle":0.324269441,
+"weight":2.4658599999999997
+}
+,{
+"angle":0.39060704399999996,
+"weight":2.09645
+}
+],
+"name": "Siemens Definition Flash Body 80kV"
+}
+,{
+ "filterdata": [ 
+{
+"angle":0.166511074,
+"weight":2.53015
+}
+,{
+"angle":0.0,
+"weight":13.1544
+}
+,{
+"angle":0.041992107,
+"weight":11.5788
+}
+,{
+"angle":0.083836642,
+"weight":8.12759
+}
+,{
+"angle":0.246954945,
+"weight":1.26421
+}
+,{
+"angle":0.324269441,
+"weight":0.788061
+}
+,{
+"angle":0.39060704399999996,
+"weight":0.583505
+}
+],
+"name": "Siemens Definition Flash Body W2 W3 100kV"
+}
+,{
+ "filterdata": [ 
+{
+"angle":0.166511074,
+"weight":7.40678
+}
+,{
+"angle":0.0,
+"weight":30.4423
+}
+,{
+"angle":0.041992107,
+"weight":27.4061
+}
+,{
+"angle":0.083836642,
+"weight":20.3176
+}
+,{
+"angle":0.246954945,
+"weight":4.02963
+}
+,{
+"angle":0.324269441,
+"weight":2.64094
+}
+,{
+"angle":0.39060704399999996,
+"weight":2.01452
+}
+],
+"name": "Siemens Definition Flash Body W2 W3 140kV"
+}
+,{
+ "filterdata": [ 
+{
+"angle":0.166511074,
+"weight":8.61895
+}
+,{
+"angle":0.0,
+"weight":22.1534
+}
+,{
+"angle":0.041992107,
+"weight":20.9229
+}
+,{
+"angle":0.083836642,
+"weight":17.4937
+}
+,{
+"angle":0.246954945,
+"weight":5.55474
+}
+,{
+"angle":0.324269441,
+"weight":4.15445
+}
+,{
+"angle":0.39060704399999996,
+"weight":3.5142800000000003
+}
+],
+"name": "Siemens Definition Flash Body W3 120kV"
+}
+,{
+ "filterdata": [ 
+{
+"angle":0.166511074,
+"weight":18.7171
+}
+,{
+"angle":0.0,
+"weight":34.1723
+}
+,{
+"angle":0.041992107,
+"weight":33.064
+}
+,{
+"angle":0.083836642,
+"weight":29.8142
+}
+,{
+"angle":0.246954945,
+"weight":14.0048
+}
+,{
+"angle":0.324269441,
+"weight":11.3655
+}
+,{
+"angle":0.39060704399999996,
+"weight":9.8136
+}
+],
+"name": "Siemens Definition Flash Body 140kV"
+}
+,{
+ "filterdata": [ 
+{
+"angle":0.166511074,
+"weight":4.586880000000001
+}
+,{
+"angle":0.0,
+"weight":20.7369
+}
+,{
+"angle":0.041992107,
+"weight":18.5356
+}
+,{
+"angle":0.083836642,
+"weight":13.43
+}
+,{
+"angle":0.246954945,
+"weight":2.4092599999999997
+}
+,{
+"angle":0.324269441,
+"weight":1.54023
+}
+,{
+"angle":0.39060704399999996,
+"weight":1.1636
+}
+],
+"name": "Siemens Definition Flash Body W2 W3 120kV"
+}
+,{
+ "filterdata": [ 
+{
+"angle":0.166511074,
+"weight":12.7
+}
+,{
+"angle":0.0,
+"weight":23.5782
+}
+,{
+"angle":0.041992107,
+"weight":22.7582
+}
+,{
+"angle":0.083836642,
+"weight":20.4063
+}
+,{
+"angle":0.246954945,
+"weight":9.418989999999999
+}
+,{
+"angle":0.324269441,
+"weight":7.5987100000000005
+}
+,{
+"angle":0.39060704399999996,
+"weight":6.5248099999999996
+}
+],
+"name": "Siemens Definition Flash Body 120kV"
+}
+,{
+ "filterdata": [ 
+{
+"angle":0.166511074,
+"weight":1.63155
+}
+,{
+"angle":0.0,
+"weight":7.61262
+}
+,{
+"angle":0.041992107,
+"weight":6.78965
+}
+,{
+"angle":0.083836642,
+"weight":4.87421
+}
+,{
+"angle":0.246954945,
+"weight":0.850115
+}
+,{
+"angle":0.324269441,
+"weight":0.527496
+}
+,{
+"angle":0.39060704399999996,
+"weight":0.384338
+}
+],
+"name": "Siemens Definition Flash Body W2 80kV"
+}
+,{
+ "filterdata": [ 
+{
+"angle":0.166511074,
+"weight":0.9544469999999999
+}
+,{
+"angle":0.0,
+"weight":5.12292
+}
+,{
+"angle":0.041992107,
+"weight":4.52427
+}
+,{
+"angle":0.083836642,
+"weight":3.1438200000000003
+}
+,{
+"angle":0.246954945,
+"weight":0.474641
+}
+,{
+"angle":0.324269441,
+"weight":0.291508
+}
+,{
+"angle":0.39060704399999996,
+"weight":0.201356
+}
+],
+"name": "Siemens Definition Flash Body W2 70kV"
+}
+,{
+ "filterdata": [ 
+{
+"angle":0.166511074,
+"weight":0.6219
+}
+,{
+"angle":0.0,
+"weight":4.734369999999999
+}
+,{
+"angle":0.041992107,
+"weight":4.02987
+}
+,{
+"angle":0.083836642,
+"weight":2.57689
+}
+,{
+"angle":0.246954945,
+"weight":0.273418
+}
+,{
+"angle":0.324269441,
+"weight":0.155006
+}
+,{
+"angle":0.39060704399999996,
+"weight":0.111661
+}
+],
+"name": "Siemens Definition Flash Body W2 W3 70kV"
+}
+,{
+ "filterdata": [ 
+{
+"angle":0.166511074,
+"weight":9.7656
+}
+,{
+"angle":0.0,
+"weight":31.8511
+}
+,{
+"angle":0.041992107,
+"weight":29.3059
+}
+,{
+"angle":0.083836642,
+"weight":22.8844
+}
+,{
+"angle":0.246954945,
+"weight":5.79916
+}
+,{
+"angle":0.324269441,
+"weight":3.9471800000000004
+}
+,{
+"angle":0.39060704399999996,
+"weight":3.0324400000000002
+}
+],
+"name": "Siemens Definition Flash Body W2 140kV"
+}
+,{
+ "filterdata": [ 
+{
+"angle":0.166511074,
+"weight":6.18272
+}
+,{
+"angle":0.0,
+"weight":21.8409
+}
+,{
+"angle":0.041992107,
+"weight":19.930999999999997
+}
+,{
+"angle":0.083836642,
+"weight":15.2731
+}
+,{
+"angle":0.246954945,
+"weight":3.5708599999999997
+}
+,{
+"angle":0.324269441,
+"weight":2.39034
+}
+,{
+"angle":0.39060704399999996,
+"weight":1.8074400000000002
+}
+],
+"name": "Siemens Definition Flash Body W2 120kV"
+}
+,{
+ "filterdata": [ 
+{
+"angle":0.166511074,
+"weight":2.8533
+}
+,{
+"angle":0.0,
+"weight":5.73449
+}
+,{
+"angle":0.041992107,
+"weight":5.50095
+}
+,{
+"angle":0.083836642,
+"weight":4.87136
+}
+,{
+"angle":0.246954945,
+"weight":2.05392
+}
+,{
+"angle":0.324269441,
+"weight":1.61646
+}
+,{
+"angle":0.39060704399999996,
+"weight":1.3692
+}
+],
+"name": "Siemens Definition Flash Body 70kV"
+}
+,{
+ "filterdata": [ 
+{
+"angle":0.166511074,
+"weight":13.2291
+}
+,{
+"angle":0.0,
+"weight":32.3672
+}
+,{
+"angle":0.041992107,
+"weight":30.5856
+}
+,{
+"angle":0.083836642,
+"weight":25.8142
+}
+,{
+"angle":0.246954945,
+"weight":8.6718
+}
+,{
+"angle":0.324269441,
+"weight":6.57874
+}
+,{
+"angle":0.39060704399999996,
+"weight":5.57793
+}
+],
+"name": "Siemens Definition Flash Body W3 140kV"
+}
+,{
+ "filterdata": [ 
+{
+"angle":0.166511074,
+"weight":1.5787
+}
+,{
+"angle":0.0,
+"weight":5.21478
+}
+,{
+"angle":0.041992107,
+"weight":4.82503
+}
+,{
+"angle":0.083836642,
+"weight":3.8473699999999997
+}
+,{
+"angle":0.246954945,
+"weight":0.911975
+}
+,{
+"angle":0.324269441,
+"weight":0.647356
+}
+,{
+"angle":0.39060704399999996,
+"weight":0.533293
+}
+],
+"name": "Siemens Definition Flash Body W3 70kV"
+}
+,{
+ "filterdata": [ 
+{
+"angle":0.166511074,
+"weight":1.10069
+}
+,{
+"angle":0.0,
+"weight":7.08697
+}
+,{
+"angle":0.041992107,
+"weight":6.135
+}
+,{
+"angle":0.083836642,
+"weight":4.08301
+}
+,{
+"angle":0.246954945,
+"weight":0.5096609999999999
+}
+,{
+"angle":0.324269441,
+"weight":0.302948
+}
+,{
+"angle":0.39060704399999996,
+"weight":0.219894
+}
+],
+"name": "Siemens Definition Flash Body W2 W3 80kV"
+}
+,{
+ "filterdata": [ 
+{
+"angle":0.166511074,
+"weight":5.16435
+}
+,{
+"angle":0.0,
+"weight":14.1657
+}
+,{
+"angle":0.041992107,
+"weight":13.2913
+}
+,{
+"angle":0.083836642,
+"weight":10.9677
+}
+,{
+"angle":0.246954945,
+"weight":3.21727
+}
+,{
+"angle":0.324269441,
+"weight":2.36606
+}
+,{
+"angle":0.39060704399999996,
+"weight":1.99545
+}
+],
+"name": "Siemens Definition Flash Body W3 100kV"
+}
+,{
+ "filterdata": [ 
+{
+"angle":0.166511074,
+"weight":7.99172
+}
+,{
+"angle":0.0,
+"weight":15.2157
+}
+,{
+"angle":0.041992107,
+"weight":14.6493
+}
+,{
+"angle":0.083836642,
+"weight":13.0792
+}
+,{
+"angle":0.246954945,
+"weight":5.885190000000001
+}
+,{
+"angle":0.324269441,
+"weight":4.69929
+}
+,{
+"angle":0.39060704399999996,
+"weight":4.0340300000000004
+}
+],
+"name": "Siemens Definition Flash Body 100kV"
+}
+,{
+ "filterdata": [ 
+{
+"angle":0.166511074,
+"weight":2.5328
+}
+,{
+"angle":0.0,
+"weight":7.75847
+}
+,{
+"angle":0.041992107,
+"weight":7.22698
+}
+,{
+"angle":0.083836642,
+"weight":5.82685
+}
+,{
+"angle":0.246954945,
+"weight":1.51381
+}
+,{
+"angle":0.324269441,
+"weight":1.09398
+}
+,{
+"angle":0.39060704399999996,
+"weight":0.9101450000000001
+}
+],
+"name": "Siemens Definition Flash Body W3 80kV"
+}
+]
 }

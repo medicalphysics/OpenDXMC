@@ -59,8 +59,8 @@ public:
 	void setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const override;
 	QString displayText(const QVariant& value, const QLocale& locale) const override;
 
-	void addBowtieFilter(const QString& name, std::shared_ptr<BeamFilter> filter) { m_bowtieFilters.push_back(std::make_pair(name, filter)); }
-	void addAecFilter(const QString& name, std::shared_ptr<PositionalFilter> filter) { m_aecFilters.push_back(std::make_pair(name, filter)); }
+	void addBowtieFilter(const QString& name, std::shared_ptr<BeamFilter> filter) { m_bowtieFilters.push_back(std::make_pair(name, filter));  std::sort(m_bowtieFilters.begin(), m_bowtieFilters.end());}
+	void addAecFilter(const QString& name, std::shared_ptr<PositionalFilter> filter) { m_aecFilters.push_back(std::make_pair(name, filter)); std::sort(m_aecFilters.begin(), m_aecFilters.end()); }
 
 private:
 	std::vector<std::pair<QString, std::shared_ptr<BeamFilter>>> m_bowtieFilters;

@@ -43,6 +43,8 @@ ViewPortWidget::ViewPortWidget(QWidget* parent)
 
 	m_volumeSelectorWidget = new QComboBox(toolBar);
 	connect(m_volumeSelectorWidget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &ViewPortWidget::showImageData);
+	auto volumeSelectorLabel = new QLabel(tr("Select Volume: "), this);
+	toolBar->addWidget(volumeSelectorLabel);
 	toolBar->addWidget(m_volumeSelectorWidget);
 
 	QSplitter* vSplitter = new QSplitter(Qt::Vertical);

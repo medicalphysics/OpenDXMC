@@ -539,8 +539,10 @@ double comptonScatterEGS(Particle& particle, std::uint64_t seed[2], double& cosA
 			for (std::size_t i = expBeg; i < expEnd; i++)
 			{
 				source->getExposure(exposure, i);
+				auto pos = source->position();
+				exposure.subtractPosition(pos); // aligning to center of phantom
 				exposure.alignToDirectionCosines(worldBasis);
-				exposure.setPositionZ(0.0);
+				
 				exposure.setBeamIntensityWeight(1.0);
 				transport(w, exposure, seed, energyImparted);
 				if (progressbar)

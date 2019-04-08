@@ -230,6 +230,7 @@ void DicomImportWidget::lookInFolder(const QString folderPath)
 	auto cleanPath = QDir::toNativeSeparators(QDir::cleanPath(folderPath));
 	m_seriesSelector->clear();
 	m_seriesSelector->setEnabled(false);
+	m_seriesSelector->addItem("");
 
 	m_imageDirectorySnooper->SetDirectoryName(cleanPath.toStdString().c_str());
 	m_imageDirectorySnooper->Update();
@@ -260,13 +261,13 @@ void DicomImportWidget::lookInFolder(const QString folderPath)
 void DicomImportWidget::seriesActivated(int index)
 {
 	int n_series = m_imageDirectorySnooper->GetNumberOfSeries();
-	if (index >= n_series)
+	if (index >= n_series+1)
 	{
 		m_seriesSelector->clear();
 		m_seriesSelector->setDisabled(true);
 		return;
 	}
-	auto fileNameArray = m_imageDirectorySnooper->GetFileNamesForSeries(index);
+	auto fileNameArray = m_imageDirectorySnooper->GetFileNamesForSeries(index-1);
 	int n = fileNameArray->GetNumberOfValues();
 	QStringList fileNames;
 	for (int i = 0; i < n; ++i)

@@ -47,6 +47,9 @@ public:
 	void setPositionZ(const double posZ) { m_position[2] = posZ; }
 	const std::array<double, 3>& position(void) const;
 
+	void addPosition(const std::array<double, 3>& pos) { for (std::size_t i = 0; i < 3; ++i) m_position[i] += pos[i]; }
+	void subtractPosition(const std::array<double, 3>& pos) { for (std::size_t i = 0; i < 3; ++i) m_position[i] -= pos[i]; }
+
 	void setDirectionCosines(double x1, double x2, double x3, double y1, double y2, double y3);
 	void setDirectionCosines(const double cosines[6]);
 	void setDirectionCosines(const std::array<double, 6>& cosines);

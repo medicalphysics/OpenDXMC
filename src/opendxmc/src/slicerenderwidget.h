@@ -38,6 +38,10 @@ Copyright 2019 Erlend Andersen
 
 #include <memory>
 
+
+
+https://github.com/Kitware/VTK/blob/master/Rendering/Image/Testing/Cxx/TestImageResliceMapperAlpha.cxx
+
 class SliceRenderWidget : public QWidget
 {
 	Q_OBJECT

@@ -96,6 +96,7 @@ void SimulationPipeline::runSimulation(const std::vector<std::shared_ptr<Source>
 		emit progressBarChanged(progressBar);
 		auto dose = transport::run(m_world, s.get(), progressBar.get());
 		std::transform(std::execution::par_unseq, totalDose->begin(), totalDose->end(), dose.begin(), totalDose->begin(), std::plus<double>());
+		emit progressBarChanged(nullptr);
 	}
 
 	if (m_ignoreAirDose)

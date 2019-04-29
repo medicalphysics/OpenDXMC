@@ -52,15 +52,26 @@ OpacityChart::OpacityChart()
 	this->createDefaultAxes();
 	this->setAnimationOptions(QChart::NoAnimation);
 	this->legend()->hide();
-	this->axisX()->setTitleText(tr("Image intensity"));
-	//this->axisX()->setLabelsVisible(false);
-	this->axisY()->setLabelsVisible(false);
-	//this->axisX()->setTitleVisible(false);
-	this->axisY()->setTitleVisible(false);
-	this->axisX()->setMinorGridLineVisible(false);
-	this->axisY()->setMinorGridLineVisible(false);
-	this->axisX()->setGridLineVisible(false);
-	this->axisY()->setGridLineVisible(false);
+	auto axesX = axes(Qt::Horizontal);
+	auto axesY = axes(Qt::Vertical);
+	if (axesX.size() > 0)
+	{
+		auto axisX = axesX[0];
+		axisX->setTitleText(tr("Image intensity"));
+		//this->axisX()->setLabelsVisible(false);
+		//this->axisX()->setTitleVisible(false);
+		axisX->setMinorGridLineVisible(false);
+		axisX->setGridLineVisible(false);
+	}
+	if (axesY.size() > 0)
+	{
+		auto axisY = axesY[0];
+		axisY->setLabelsVisible(false);
+		axisY->setTitleVisible(false);
+		axisY->setMinorGridLineVisible(false);
+		axisY->setGridLineVisible(false);
+	}
+
 	this->setContentsMargins(0, 0, 0, 0);
 	this->layout()->setContentsMargins(0, 0, 0, 0);
 }
@@ -113,9 +124,12 @@ void OpacityChartView::setImageDataRange(double min, double max)
 
 	m_xrange[0] = cmin;
 	m_xrange[1] = cmax;
-	m_chart->axisX()->setMin(cmin);
-	m_chart->axisX()->setMax(cmax);
-
+	auto axesX = m_chart->axes(Qt::Horizontal);
+	if (axesX.size() > 0)
+	{
+		axesX[0]->setMin(cmin);
+		axesX[0]->setMax(cmax);
+	}
 	//delete any points outside range
 	int teller = 0;
 	auto series = m_chart->getOpacitySeries();
@@ -154,7 +168,7 @@ void OpacityChartView::setColorTable(const QVector<double>& colorTable)
 	if (m_color != None)
 	{
 		int idx = 0;  // red color
-		double step = (m_xrange[1] - m_xrange[0]) / (colorTable.count() - 3);
+		double step = (m_xrange[1] - m_xrange[0]) / (static_cast<double>(colorTable.count()) - 3.0);
 		if (m_color == Green)
 			idx = 1;
 		else if (m_color == Blue)
@@ -162,7 +176,7 @@ void OpacityChartView::setColorTable(const QVector<double>& colorTable)
 		auto series = m_chart->getOpacitySeries();
 		series->clear();
 		for (int i = idx; i < colorTable.count(); i += 3)
-			series->append(step*(i - idx) + m_xrange[0], colorTable[i]);
+			series->append(step * (static_cast<double>(i) - idx) + m_xrange[0], colorTable[i]);
 		updateOpacityFunction();
 	}
 }

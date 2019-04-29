@@ -218,8 +218,8 @@ double DXSource::getCalibrationValue(std::uint64_t nHistories, ProgressBar* prog
 	calcOutput *= KEV_TO_MJ; // Air KERMA [J / kg] = [Gy]
 
 	double output = m_dap / (m_fieldSize[0] * m_fieldSize[1] * 0.01); //mm->cm
-	double factor = output / calcOutput;
-	return factor;
+	double factor = output / calcOutput / 1000.0; // Gy->mGy
+	return factor; 
 }
 
 void DXSource::updateCollimationAngles(const std::array<double, 2>& collimationAngles)

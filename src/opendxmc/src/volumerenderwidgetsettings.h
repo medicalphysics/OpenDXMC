@@ -96,7 +96,7 @@ private:
 	OpacityChart *m_chart;
 	int m_opacityPointIndexIsMoving = -1;
 	vtkPiecewiseFunction *m_opacityFunction;
-	double m_xrange[2];
+	double m_xrange[2] = {0,1};
 	Color m_color = None;
 };
 
@@ -148,7 +148,7 @@ private slots:
 	void setMinZ(int val) { m_planeValues[4] = val; emit croppingPlanesChanged(m_planeValues); }
 	void setMaxZ(int val) { m_planeValues[5] = val; emit croppingPlanesChanged(m_planeValues); }
 private:
-	int m_planeValues[6];
+	int m_planeValues[6] = {0, 1, 0, 1, 0, 1};
 
 	QSlider *m_sliders[6];
 

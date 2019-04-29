@@ -40,7 +40,7 @@ Copyright 2019 Erlend Andersen
 
 
 
-https://github.com/Kitware/VTK/blob/master/Rendering/Image/Testing/Cxx/TestImageResliceMapperAlpha.cxx
+// https://github.com/Kitware/VTK/blob/master/Rendering/Image/Testing/Cxx/TestImageResliceMapperAlpha.cxx
 
 class SliceRenderWidget : public QWidget
 {
@@ -62,6 +62,8 @@ private:
 	vtkSmartPointer<vtkRenderer> m_renderer;
 	vtkSmartPointer<vtkTextActor> m_textActor;
 	std::shared_ptr<ImageContainer> m_image;
+	std::shared_ptr<ImageContainer> m_image2;
+
 
 	QMap<int, std::pair<double, double>> m_windowLevelMaps;
 	//vtkSmartPointer<vtkWindowLevelLookupTable> m_lut;

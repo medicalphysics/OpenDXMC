@@ -28,107 +28,21 @@ Copyright 2019 Erlend Andersen
 #include <QFileDialog>
 
 #include <vtkGenericOpenGLRenderWindow.h>
-#include <vtkVariant.h>
+//#include <vtkVariant.h>
 #include <vtkRendererCollection.h>
-#include <vtkInteractorStyleImage.h>
+//#include <vtkInteractorStyleImage.h>
 #include <vtkCamera.h>
-#include <vtkObjectFactory.h>
+//#include <vtkObjectFactory.h>
 #include <vtkTextProperty.h>
 #include <vtkWindowToImageFilter.h>
 #include <vtkPNGWriter.h>
 //#include <vtkFFMPEGWriter.h>
 
-// Define interaction style
-class customMouseInteractorStyle : public vtkInteractorStyleImage
-{
-public:
-	static customMouseInteractorStyle* New();
-	vtkTypeMacro(customMouseInteractorStyle, vtkInteractorStyleImage);
 
-	virtual void OnLeftButtonDown()
-	{
-		std::cout << "Pressed left mouse button." << std::endl;
-		// Forward events
-		vtkInteractorStyleImage::OnLeftButtonDown();
-	}
 
-	virtual void OnMiddleButtonDown()
-	{
-		std::cout << "Pressed middle mouse button." << std::endl;
-		// Forward events
-		vtkInteractorStyleImage::OnMiddleButtonDown();
-	}
 
-	virtual void OnRightButtonDown()
-	{
-		std::cout << "Pressed right mouse button." << std::endl;
-		// Forward events
-		vtkInteractorStyleImage::OnRightButtonDown();
-	}
-	virtual void OnMouseWheelForward()
-	{
-		int cim = m_imageSliceMapper->GetSliceNumber() + 1;
-		int max = m_imageSliceMapper->GetSliceNumberMaxValue();
-		int min = m_imageSliceMapper->GetSliceNumberMinValue();
-		if (cim > max)
-			cim = min;
-		else if (cim < min)
-			cim = max;
-		m_imageSliceMapper->SetSliceNumber(cim);
-		m_renderWindow->Render();
-		
-	}
-	virtual void OnMouseWheelBackward()
-	{
-		int cim = m_imageSliceMapper->GetSliceNumber() - 1;
-		int max = m_imageSliceMapper->GetSliceNumberMaxValue();
-		int min = m_imageSliceMapper->GetSliceNumberMinValue();
-		if (cim > max)
-			cim = min;
-		else if (cim < min)
-			cim = max;
-		m_imageSliceMapper->SetSliceNumber(cim);
-		
-		m_renderWindow->Render();
-	}
 
-	void OnMouseMove() override
-	{
-		vtkInteractorStyleImage::OnMouseMove();
-		updateWLText();
-	}
 
-	void setMapper(vtkSmartPointer<vtkImageSliceMapper> m)
-	{
-		m_imageSliceMapper = m;
-	}
-	void setRenderWindow(vtkSmartPointer<vtkRenderWindow> m)
-	{
-		m_renderWindow = m;
-	}
-	void setTextActor(vtkSmartPointer<vtkTextActor> textActor)
-	{
-		m_textActor = textActor;
-	}
-	void updateWLText()
-	{
-		auto prop = GetCurrentImageProperty();
-		if (prop)
-		{
-			double l = prop->GetColorLevel();
-			double w = prop->GetColorWindow();
-
-			m_text = std::to_string(l) + ", " + std::to_string(w);
-			m_textActor->SetInput(m_text.c_str());
-		}
-	}
-private:
-	vtkSmartPointer<vtkImageSliceMapper> m_imageSliceMapper;
-	vtkSmartPointer<vtkRenderWindow> m_renderWindow;
-	vtkSmartPointer<vtkTextActor> m_textActor;
-	std::string m_text;
-};
-vtkStandardNewMacro(customMouseInteractorStyle);
 
 
 
@@ -147,30 +61,18 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 	
 	
 	//mapper 
-	m_imageSliceMapper = vtkSmartPointer<vtkImageSliceMapper>::New();
-	m_imageSliceMapper->StreamingOn();
+	m_imageSliceMapper = vtkSmartPointer<vtkImageResliceMapper>::New();
+	//m_imageSliceMapper->StreamingOn();
 	//m_imageSliceMapper->SetSliceAtFocalPoint(true);
 	//imageSliceMapper->SetInputData(colorImage);
 
-	vtkSmartPointer<vtkImageSlice> imageSlice = vtkSmartPointer<vtkImageSlice>::New();
-	imageSlice->SetMapper(m_imageSliceMapper);
-
-	m_lut = vtkSmartPointer<vtkLookupTable>::New();
-	m_dctf = vtkSmartPointer<vtkDiscretizableColorTransferFunction>::New();
-	m_imageProperty = imageSlice->GetProperty();
-	//m_imageProperty->SetLookupTable(m_lut);
-	m_imageProperty->SetLookupTable(m_dctf);
-	
-	
-	m_windowLevelMaps[static_cast<int>(ImageContainer::CTImage)] = std::make_pair(100, 500);
-	m_windowLevelMaps[static_cast<int>(ImageContainer::DensityImage)] = std::make_pair(1, 1);
-	m_windowLevelMaps[static_cast<int>(ImageContainer::DoseImage)] = std::make_pair(1, 1);
-	
+	m_imageSlice = vtkSmartPointer<vtkImageSlice>::New();
+	m_imageSlice->SetMapper(m_imageSliceMapper);
 
 	//renderer
 	// Setup renderers
 	m_renderer = vtkSmartPointer<vtkRenderer>::New();
-	m_renderer->AddViewProp(imageSlice);
+	m_renderer->AddViewProp(m_imageSlice);
 	m_renderer->UseFXAAOn();
 	
 
@@ -186,18 +88,18 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 	// Setup render window interactor
 	vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
 
-	vtkSmartPointer<customMouseInteractorStyle> style = vtkSmartPointer<customMouseInteractorStyle>::New();
+	//vtkSmartPointer<customMouseInteractorStyle> style = vtkSmartPointer<customMouseInteractorStyle>::New();
 	//style->SetInteractionModeToImageSlicing();
-	style->setMapper(m_imageSliceMapper);
-	style->setRenderWindow(renderWindow);
-	renderWindowInteractor->SetInteractorStyle(style);
+	//style->setMapper(m_imageSliceMapper);
+	//style->setRenderWindow(renderWindow);
+	//renderWindowInteractor->SetInteractorStyle(style);
 
 	// Create the tekst widget
 	m_textActor = vtkSmartPointer<vtkTextActor>::New();
 	m_textActor->SetInput("");
 	m_textActor->GetTextProperty()->SetColor(1.0, 1.0, 1.0);
 	m_renderer->AddActor(m_textActor);
-	style->setTextActor(m_textActor);
+	//style->setTextActor(m_textActor);
 	//setup collbacks
 	
 
@@ -214,24 +116,26 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 	m_imageSliceMapper->SetInputData(dummyData);
 
 	//other
-	
+	m_imageSliceMapper->SliceFacesCameraOn();
+	m_imageSliceMapper->SliceAtFocalPointOn();
+
 	if (auto cam = m_renderer->GetActiveCamera(); m_orientation == Axial)
 	{
-		m_imageSliceMapper->SetOrientation(2);
+		
 		cam->SetFocalPoint(0, 0, 0);
 		cam->SetPosition(0, 0, -1);
 		cam->SetViewUp(0, -1, 0);
 	}
 	else if (m_orientation == Coronal)
 	{
-		m_imageSliceMapper->SetOrientation(1);
+		
 		cam->SetFocalPoint(0, 0, 0);
 		cam->SetPosition(0, -1, 0);
 		cam->SetViewUp(0, 0, 1);
 	}
 	else
 	{
-		m_imageSliceMapper->SetOrientation(0);
+		
 		cam->SetFocalPoint(0, 0, 0);
 		cam->SetPosition(1, 0, 0);
 		cam->SetViewUp(0, 0, 1);
@@ -273,7 +177,6 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 			this->updateRendering();
 		}
 	});
-
 }
 
 void SliceRenderWidget::updateRendering()
@@ -294,170 +197,21 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume)
 {
 	if (!volume)
 		return;
-	auto oldImageID = 0;
-	if (m_image)
+	if (m_image1)
 	{
-		if (volume->image == m_image->image)
-			return;
-
-		if (m_image->image)
+		if ((m_image1->ID == volume->ID) && (m_image1->imageType == volume->imageType))
 		{
-			if (int key = static_cast<int>(m_image->imageType); m_windowLevelMaps.contains(key))
-			{
-				m_windowLevelMaps[key].first = m_imageProperty->GetColorLevel();
-				m_windowLevelMaps[key].second = m_imageProperty->GetColorWindow();
-			}
+			return;
 		}
-		oldImageID = m_image->ID;
 	}
 	
-	m_image = volume;
-	m_imageSliceMapper->SetInputData(m_image->image);
+	m_image1 = volume;
+	m_imageSliceMapper->SetInputData(m_image1->image);
 	//m_imageSliceMapper->Update();
 	
-	//lut stuff colortransfer function
-	if ((m_image->imageType == ImageContainer::MaterialImage) ||
-		(m_image->imageType == ImageContainer::OrganImage))
-	{
-		int nColors = static_cast<int>(m_image->minMax[1]) + 1;
-		
-		m_dctf->DiscretizeOn();
-
-		m_dctf->SetNumberOfValues(nColors);
-		m_dctf->RemoveAllPoints();
-		m_lut->SetNumberOfTableValues(nColors);
-		for (int i = 0; i < nColors; ++i)
-		{
-			auto arr = getColor(i);
-			m_lut->SetTableValue(i, arr[0], arr[1], arr[2], i == 0 ? 0.0 : 1.0);
-			m_lut->SetAnnotation(vtkVariant(static_cast<unsigned char>(i)), "");
-			m_dctf->AddRGBPoint(static_cast<double>(i), arr[0], arr[1], arr[2]);
-		}
-		m_dctf->Build();
-		m_lut->IndexedLookupOn();
-		m_imageProperty->SetLookupTable(m_dctf);
-		m_imageProperty->UseLookupTableScalarRangeOn();	
-
-	}
-	else if (m_image->imageType==ImageContainer::DoseImage)
-	{
-		m_dctf->DiscretizeOn();
-		m_dctf->RemoveAllPoints();
-		m_dctf->AddRGBPoint(0, 0, 0, 0);
-		m_dctf->AddRGBPoint(255, 1, 1, 1);
-		m_dctf->SetNumberOfValues(256);
-		m_dctf->Build();
-
-		//using JET LUT
-		m_lut->IndexedLookupOff();
-		m_lut->SetSaturationRange(0, 0);
-		m_lut->SetValueRange(0, 1);
-		auto lut = generateStandardColorTable(JET);
-		m_lut->SetNumberOfTableValues(lut.size() / 3);
-		m_lut->ForceBuild();
-		for (int i = 0; i < lut.size(); i += 3)
-		{
-			m_lut->SetTableValue(i / 3, lut[i], lut[i + 1], lut[i + 2], i == 0 ? 0.0 : 1.0);
-		}
-
-		m_imageProperty->SetLookupTable(m_lut);
-		m_imageProperty->UseLookupTableScalarRangeOff();
-
-		if (int key = static_cast<int>(m_image->imageType); !m_windowLevelMaps.contains(key))
-		{
-			auto window = m_image->minMax[1] - m_image->minMax[0];
-			auto level = 0.5 * (m_image->minMax[1] + m_image->minMax[0]);
-			m_windowLevelMaps[key].first = level * 0.01;
-			m_windowLevelMaps[key].second = window;
-		}
-		m_imageProperty->SetColorLevel(m_windowLevelMaps[static_cast<int>(m_image->imageType)].first);
-		m_imageProperty->SetColorWindow(m_windowLevelMaps[static_cast<int>(m_image->imageType)].second);
-	}
-	else
-	{
-		m_dctf->DiscretizeOn();
-		m_dctf->RemoveAllPoints();
-		m_dctf->AddRGBPoint(0, 0, 0, 0);
-		m_dctf->AddRGBPoint(255, 1, 1, 1);
-		m_dctf->SetNumberOfValues(256);
-		m_dctf->Build();
-
-		m_lut->IndexedLookupOff();
-		m_lut->SetSaturationRange(0, 0);
-		m_lut->SetValueRange(0, 1);
-		m_lut->SetNumberOfTableValues(256);
-		m_lut->ForceBuild();
-		m_lut->SetTableValue(0, 0.0, 0.0, 0.0, 0.0);
-		m_imageProperty->SetLookupTable(m_lut);
-		m_imageProperty->UseLookupTableScalarRangeOff();
-
-		if (int key = static_cast<int>(m_image->imageType); !m_windowLevelMaps.contains(key))
-		{
-			auto window = m_image->minMax[1] - m_image->minMax[0];
-			auto level = 0.5 * (m_image->minMax[1] + m_image->minMax[0]);
-			m_windowLevelMaps[key].first = level;
-			m_windowLevelMaps[key].second = window;
-		}
-		m_imageProperty->SetColorLevel(m_windowLevelMaps[static_cast<int>(m_image->imageType)].first);
-		m_imageProperty->SetColorWindow(m_windowLevelMaps[static_cast<int>(m_image->imageType)].second);
-	}
-	m_imageSliceMapper->Update();
-
-
 	
-	if (oldImageID != m_image->ID)
-	{
-		int sliceMin = m_imageSliceMapper->GetSliceNumberMinValue();
-		int sliceMax = m_imageSliceMapper->GetSliceNumberMaxValue();
-		m_imageSliceMapper->SetSliceNumber((sliceMax - sliceMin) / 2);
-	}
-	
-	//orienting cameras
-	/*{
-		int maxArg;
-		if (m_orientation == Axial)
-		{
-			double z[3];
-			vectormath::cross(m_image.directionCosines.data(), z);
-			for (int i = 0; i < 3; ++i) z[i] = z[i] * z[i];
-			maxArg = vectormath::argmax3<int>(z);
-		}
-		else if (m_orientation == Sagittal)
-		{
-			double z[3];
-			for (int i = 0; i < 3; ++i) z[i] = m_image.directionCosines[i] * m_image.directionCosines[i];
-			maxArg = vectormath::argmax3<int>(z);
-		}
-		else
-		{
-			double z[3];
-			for (int i = 0; i < 3; ++i) z[i] = m_image.directionCosines[i + 3] * m_image.directionCosines[i + 3];
-			maxArg = vectormath::argmax3<int>(z);
-		}
+	//m_imageSliceMapper->Update();
 
-		m_imageSliceMapper->SetOrientation(maxArg);
-		auto cam = m_renderer->GetActiveCamera();
-		if (maxArg == 2)
-		{
-			cam->SetFocalPoint(0, 0, 0);
-			cam->SetPosition(0, 0, 1);
-			cam->SetViewUp(0, -1, 0);
-		}
-		else if (maxArg == 1)
-		{
-			cam->SetFocalPoint(0, 0, 0);
-			cam->SetPosition(0, 1, 0);
-			cam->SetViewUp(0, 0, 1);
-		}
-		else if (maxArg == 0)
-		{
-			//m_imageSliceMapper->SetOrientation(0);
-			cam->SetFocalPoint(0, 0, 0);
-			cam->SetPosition(1, 0, 0);
-			cam->SetViewUp(0, 0, 1);
-		}
-	}*/
-	
 
 	m_renderer->ResetCamera();
 	updateRendering();

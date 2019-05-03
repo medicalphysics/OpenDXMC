@@ -22,18 +22,13 @@ Copyright 2019 Erlend Andersen
 #include "imagecontainer.h"
 
 #include <QWidget>
-#include <QMap>
 
 #include <QVTKOpenGLWidget.h>
 #include <vtkSmartPointer.h>
 #include <vtkImageData.h>
-#include <vtkImageSliceMapper.h>
+#include <vtkImageResliceMapper.h>
 #include <vtkImageSlice.h>
 #include <vtkRenderer.h>
-#include <vtkScalarsToColors.h>
-#include <vtkDiscretizableColorTransferFunction.h>
-#include <vtkLookupTable.h>
-#include <vtkImageProperty.h>
 #include <vtkTextActor.h>
 
 #include <memory>
@@ -51,22 +46,18 @@ public:
 
 	void updateRendering();
 	void setImageData(std::shared_ptr<ImageContainer> volume);
+	void setImageData(std::shared_ptr<ImageContainer> volume1, std::shared_ptr<ImageContainer> volume2);
 
 private:
 	Orientation m_orientation;
 	QVTKOpenGLWidget *m_openGLWidget;
-	vtkSmartPointer<vtkImageSliceMapper> m_imageSliceMapper;
-	vtkSmartPointer<vtkLookupTable> m_lut;
-	vtkSmartPointer<vtkDiscretizableColorTransferFunction> m_dctf;
-	vtkSmartPointer<vtkImageProperty> m_imageProperty;
+	vtkSmartPointer<vtkImageResliceMapper> m_imageSliceMapper;
+	vtkSmartPointer<vtkImageSlice> m_imageSlice;
+
 	vtkSmartPointer<vtkRenderer> m_renderer;
 	vtkSmartPointer<vtkTextActor> m_textActor;
-	std::shared_ptr<ImageContainer> m_image;
+	std::shared_ptr<ImageContainer> m_image1;
 	std::shared_ptr<ImageContainer> m_image2;
-
-
-	QMap<int, std::pair<double, double>> m_windowLevelMaps;
-	//vtkSmartPointer<vtkWindowLevelLookupTable> m_lut;
 }; 
 
 

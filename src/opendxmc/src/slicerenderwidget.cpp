@@ -30,16 +30,137 @@ Copyright 2019 Erlend Andersen
 #include <vtkGenericOpenGLRenderWindow.h>
 //#include <vtkVariant.h>
 #include <vtkRendererCollection.h>
-//#include <vtkInteractorStyleImage.h>
+#include <vtkInteractorStyleImage.h>
 #include <vtkCamera.h>
-//#include <vtkObjectFactory.h>
+#include <vtkPlane.h>
+#include <vtkObjectFactory.h>
 #include <vtkTextProperty.h>
+#include <vtkImageProperty.h>
 #include <vtkWindowToImageFilter.h>
 #include <vtkPNGWriter.h>
 //#include <vtkFFMPEGWriter.h>
 
 
 
+
+// Define interaction style
+class customMouseInteractorStyle : public vtkInteractorStyleImage
+{
+public:
+	static customMouseInteractorStyle* New();
+	vtkTypeMacro(customMouseInteractorStyle, vtkInteractorStyleImage);
+
+	virtual void OnLeftButtonDown()
+	{
+		std::cout << "Pressed left mouse button." << std::endl;
+		// Forward events
+		vtkInteractorStyleImage::OnLeftButtonDown();
+	}
+
+	virtual void OnMiddleButtonDown()
+	{
+		std::cout << "Pressed middle mouse button." << std::endl;
+		// Forward events
+		vtkInteractorStyleImage::OnMiddleButtonDown();
+	}
+
+	virtual void OnRightButtonDown()
+	{
+		std::cout << "Pressed right mouse button." << std::endl;
+		// Forward events
+		vtkInteractorStyleImage::OnRightButtonDown();
+	}
+
+	virtual void OnMouseWheelForward()
+	{
+		m_imageSliceMapper->UpdateInformation();
+		auto plane = m_imageSliceMapper->GetSlicePlane();
+		
+		plane->Push(0.5);
+		double* imbounds = m_imageSliceMapper->GetBounds();
+		double* origin = plane->GetOrigin();
+		for (int i = 0; i < 3; ++i)
+		{
+			if (origin[i] > imbounds[i * 2 + 1])
+				origin[i] = imbounds[i * 2];
+			if (origin[i] < imbounds[i * 2])
+				origin[i] = imbounds[i * 2 + 1];
+		}
+		plane->SetOrigin(origin);
+
+		m_imageSliceMapper->SetSlicePlane(plane);
+		m_imageSliceMapper->UpdateInformation();
+		m_renderWindow->Render();
+
+	}
+	virtual void OnMouseWheelBackward()
+	{
+
+		m_imageSliceMapper->UpdateInformation();
+		auto plane = m_imageSliceMapper->GetSlicePlane();
+
+		plane->Push(-0.5);
+		double* imbounds = m_imageSliceMapper->GetBounds();
+		double* origin = plane->GetOrigin();
+		for (int i = 0; i < 3; ++i)
+		{
+			if (origin[i] > imbounds[i * 2 + 1])
+				origin[i] = imbounds[i * 2];
+			if (origin[i] < imbounds[i * 2])
+				origin[i] = imbounds[i * 2 + 1];
+		}
+		plane->SetOrigin(origin);
+
+		m_imageSliceMapper->SetSlicePlane(plane);
+		m_imageSliceMapper->UpdateInformation();
+		m_renderWindow->Render();
+
+	}
+
+	void OnMouseMove() override
+	{
+		vtkInteractorStyleImage::OnMouseMove();
+		updateWLText();
+	}
+
+	void setMapper(vtkSmartPointer<vtkImageResliceMapper> m)
+	{
+		m_imageSliceMapper = m;
+	}
+	void setRenderWindow(vtkSmartPointer<vtkRenderWindow> m)
+	{
+		m_renderWindow = m;
+	}
+	void setTextActor(vtkSmartPointer<vtkTextActor> textActor)
+	{
+		m_textActor = textActor;
+	}
+	static std::string prettyNumber(double number)
+	{
+		constexpr std::int64_t k = 3; // number decimals
+		std::int64_t b = number * std::pow(10, k);
+		double a = b / (std::pow(10, k));
+		return std::to_string(a);
+	}
+	void updateWLText()
+	{
+		auto prop = GetCurrentImageProperty();
+		if (prop)
+		{
+			double l = prop->GetColorLevel();
+			double w = prop->GetColorWindow();
+			//m_text = std::to_string(l) + ", " + std::to_string(w);
+			m_text = prettyNumber(l) + ", " + prettyNumber(w);
+			m_textActor->SetInput(m_text.c_str());
+		}
+	}
+private:
+	vtkSmartPointer<vtkImageResliceMapper> m_imageSliceMapper;
+	vtkSmartPointer<vtkRenderWindow> m_renderWindow;
+	vtkSmartPointer<vtkTextActor> m_textActor;
+	std::string m_text;
+};
+vtkStandardNewMacro(customMouseInteractorStyle);
 
 
 
@@ -62,9 +183,7 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 	
 	//mapper 
 	m_imageSliceMapper = vtkSmartPointer<vtkImageResliceMapper>::New();
-	//m_imageSliceMapper->StreamingOn();
-	//m_imageSliceMapper->SetSliceAtFocalPoint(true);
-	//imageSliceMapper->SetInputData(colorImage);
+	m_imageSliceMapper->StreamingOn();
 
 	m_imageSlice = vtkSmartPointer<vtkImageSlice>::New();
 	m_imageSlice->SetMapper(m_imageSliceMapper);
@@ -88,18 +207,18 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 	// Setup render window interactor
 	vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
 
-	//vtkSmartPointer<customMouseInteractorStyle> style = vtkSmartPointer<customMouseInteractorStyle>::New();
-	//style->SetInteractionModeToImageSlicing();
-	//style->setMapper(m_imageSliceMapper);
-	//style->setRenderWindow(renderWindow);
-	//renderWindowInteractor->SetInteractorStyle(style);
+	vtkSmartPointer<customMouseInteractorStyle> style = vtkSmartPointer<customMouseInteractorStyle>::New();
+	style->SetInteractionModeToImageSlicing();
+	style->setMapper(m_imageSliceMapper);
+	style->setRenderWindow(renderWindow);
+	renderWindowInteractor->SetInteractorStyle(style);
 
 	// Create the tekst widget
 	m_textActor = vtkSmartPointer<vtkTextActor>::New();
 	m_textActor->SetInput("");
 	m_textActor->GetTextProperty()->SetColor(1.0, 1.0, 1.0);
 	m_renderer->AddActor(m_textActor);
-	//style->setTextActor(m_textActor);
+	style->setTextActor(m_textActor);
 	//setup collbacks
 	
 
@@ -117,7 +236,7 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 
 	//other
 	m_imageSliceMapper->SliceFacesCameraOn();
-	m_imageSliceMapper->SliceAtFocalPointOn();
+	//m_imageSliceMapper->SliceAtFocalPointOn();
 
 	if (auto cam = m_renderer->GetActiveCamera(); m_orientation == Axial)
 	{

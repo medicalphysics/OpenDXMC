@@ -137,10 +137,11 @@ public:
 	}
 	static std::string prettyNumber(double number)
 	{
-		constexpr std::int64_t k = 3; // number decimals
-		std::int64_t b = number * std::pow(10, k);
-		double a = b / (std::pow(10, k));
-		return std::to_string(a);
+		constexpr std::int32_t k = 3; // number decimals
+		std::int32_t b = number * std::pow(10, k);
+		auto bs = std::to_string(b);
+		bs.insert(bs.size() - k, 1, '.');
+		return bs;
 	}
 	void updateWLText()
 	{

@@ -327,11 +327,28 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume)
 	
 	m_image1 = volume;
 	m_imageSliceMapper->SetInputData(m_image1->image);
-	//m_imageSliceMapper->Update();
 	
-	
-	//m_imageSliceMapper->Update();
+	//update LUT based on image type
+	if (m_image1->imageType == ImageContainer::CTImage)
+	{
 
+	}
+	else if (m_image1->imageType == ImageContainer::DensityImage)
+	{
+
+	}
+	else if (m_image1->imageType == ImageContainer::MaterialImage)
+	{
+
+	}
+	else if (m_image1->imageType == ImageContainer::OrganImage)
+	{
+
+	}
+	else if (m_image1->imageType == ImageContainer::DoseImage)
+	{
+
+	}
 
 	m_renderer->ResetCamera();
 	updateRendering();

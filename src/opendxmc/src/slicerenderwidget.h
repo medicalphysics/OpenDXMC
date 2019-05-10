@@ -51,7 +51,7 @@ public:
 private:
 	Orientation m_orientation;
 	QVTKOpenGLWidget *m_openGLWidget;
-	vtkSmartPointer<vtkImageResliceMapper> m_imageSliceMapper;
+	vtkSmartPointer<vtkImageResliceMapper> m_imageMapper;
 	vtkSmartPointer<vtkImageSlice> m_imageSlice;
 
 	vtkSmartPointer<vtkRenderer> m_renderer;

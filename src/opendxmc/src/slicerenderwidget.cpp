@@ -73,11 +73,11 @@ public:
 
 	virtual void OnMouseWheelForward()
 	{
-		m_imageSliceMapper->UpdateInformation();
-		auto plane = m_imageSliceMapper->GetSlicePlane();
+		m_imageMapper->UpdateInformation();
+		auto plane = m_imageMapper->GetSlicePlane();
 		
 		plane->Push(0.5);
-		double* imbounds = m_imageSliceMapper->GetBounds();
+		double* imbounds = m_imageMapper->GetBounds();
 		double* origin = plane->GetOrigin();
 		for (int i = 0; i < 3; ++i)
 		{
@@ -88,19 +88,19 @@ public:
 		}
 		plane->SetOrigin(origin);
 
-		m_imageSliceMapper->SetSlicePlane(plane);
-		m_imageSliceMapper->UpdateInformation();
+		m_imageMapper->SetSlicePlane(plane);
+		m_imageMapper->UpdateInformation();
 		m_renderWindow->Render();
 
 	}
 	virtual void OnMouseWheelBackward()
 	{
 
-		m_imageSliceMapper->UpdateInformation();
-		auto plane = m_imageSliceMapper->GetSlicePlane();
+		m_imageMapper->UpdateInformation();
+		auto plane = m_imageMapper->GetSlicePlane();
 
 		plane->Push(-0.5);
-		double* imbounds = m_imageSliceMapper->GetBounds();
+		double* imbounds = m_imageMapper->GetBounds();
 		double* origin = plane->GetOrigin();
 		for (int i = 0; i < 3; ++i)
 		{
@@ -111,8 +111,8 @@ public:
 		}
 		plane->SetOrigin(origin);
 
-		m_imageSliceMapper->SetSlicePlane(plane);
-		m_imageSliceMapper->UpdateInformation();
+		m_imageMapper->SetSlicePlane(plane);
+		m_imageMapper->UpdateInformation();
 		m_renderWindow->Render();
 
 	}
@@ -125,7 +125,7 @@ public:
 
 	void setMapper(vtkSmartPointer<vtkImageResliceMapper> m)
 	{
-		m_imageSliceMapper = m;
+		m_imageMapper = m;
 	}
 	void setRenderWindow(vtkSmartPointer<vtkRenderWindow> m)
 	{
@@ -156,7 +156,7 @@ public:
 		}
 	}
 private:
-	vtkSmartPointer<vtkImageResliceMapper> m_imageSliceMapper;
+	vtkSmartPointer<vtkImageResliceMapper> m_imageMapper;
 	vtkSmartPointer<vtkRenderWindow> m_renderWindow;
 	vtkSmartPointer<vtkTextActor> m_textActor;
 	std::string m_text;
@@ -183,11 +183,11 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 	
 	
 	//mapper 
-	m_imageSliceMapper = vtkSmartPointer<vtkImageResliceMapper>::New();
-	m_imageSliceMapper->StreamingOn();
+	m_imageMapper = vtkSmartPointer<vtkImageResliceMapper>::New();
+	m_imageMapper->StreamingOn();
 
 	m_imageSlice = vtkSmartPointer<vtkImageSlice>::New();
-	m_imageSlice->SetMapper(m_imageSliceMapper);
+	m_imageSlice->SetMapper(m_imageMapper);
 
 	//renderer
 	// Setup renderers
@@ -210,7 +210,7 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 
 	vtkSmartPointer<customMouseInteractorStyle> style = vtkSmartPointer<customMouseInteractorStyle>::New();
 	style->SetInteractionModeToImageSlicing();
-	style->setMapper(m_imageSliceMapper);
+	style->setMapper(m_imageMapper);
 	style->setRenderWindow(renderWindow);
 	renderWindowInteractor->SetInteractorStyle(style);
 
@@ -233,10 +233,10 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 	vtkSmartPointer<vtkImageData> dummyData = vtkSmartPointer<vtkImageData>::New();
 	dummyData->SetDimensions(30, 30, 30);
 	dummyData->AllocateScalars(VTK_FLOAT, 1);
-	m_imageSliceMapper->SetInputData(dummyData);
+	m_imageMapper->SetInputData(dummyData);
 
 	//other
-	m_imageSliceMapper->SliceFacesCameraOn();
+	m_imageMapper->SliceFacesCameraOn();
 	//m_imageSliceMapper->SliceAtFocalPointOn();
 
 	if (auto cam = m_renderer->GetActiveCamera(); m_orientation == Axial)
@@ -326,7 +326,7 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume)
 	}
 	
 	m_image1 = volume;
-	m_imageSliceMapper->SetInputData(m_image1->image);
+	m_imageMapper->SetInputData(m_image1->image);
 	
 	//update LUT based on image type
 	if (m_image1->imageType == ImageContainer::CTImage)

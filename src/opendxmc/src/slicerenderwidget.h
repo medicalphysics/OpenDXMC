@@ -32,7 +32,8 @@ Copyright 2019 Erlend Andersen
 #include <vtkTextActor.h>
 
 #include <memory>
-
+#include <map>
+#include <array>
 
 
 // https://github.com/Kitware/VTK/blob/master/Rendering/Image/Testing/Cxx/TestImageResliceMapperAlpha.cxx
@@ -53,6 +54,8 @@ private:
 	QVTKOpenGLWidget *m_openGLWidget;
 	vtkSmartPointer<vtkImageResliceMapper> m_imageMapper;
 	vtkSmartPointer<vtkImageSlice> m_imageSlice;
+	std::map<ImageContainer::ImageType, std::array<double, 2>> m_windowLevels;
+
 
 	vtkSmartPointer<vtkRenderer> m_renderer;
 	vtkSmartPointer<vtkTextActor> m_textActor;

@@ -29,6 +29,7 @@ Copyright 2019 Erlend Andersen
 
 #include <vtkGenericOpenGLRenderWindow.h>
 #include <vtkWindowLevelLookupTable.h>
+#include <vtkDiscretizableColorTransferFunction.h>
 #include <vtkLookupTable.h>
 #include <vtkRendererCollection.h>
 #include <vtkInteractorStyleImage.h>
@@ -317,21 +318,29 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume)
 	if (m_image1)
 	{
 		if ((m_image1->ID == volume->ID) && (m_image1->imageType == volume->imageType))
-		{
 			return;
-		}
+		
+		if (m_image1->ID != volume->ID)
+			m_windowLevels.clear();
 	}
 	
+
 	m_image1 = volume;
+	if (m_windowLevels.find(m_image1->imageType) == m_windowLevels.end())
+	{
+		const auto& mm = m_image1->minMax;
+		std::array<double, 2> wl;
+		wl[0] = (mm[0] + mm[1]) * 0.5;
+		wl[1] = (mm[1] - mm[0]) * 0.5;
+		m_windowLevels[m_image1->imageType] = wl;
+	}
 	m_imageMapper->SetInputData(m_image1->image);
 	
 	//update LUT based on image type
 	if (auto prop = m_imageSlice->GetProperty(); m_image1->imageType == ImageContainer::CTImage)
 	{
 		prop->BackingOff();
-		
-		
-		//auto lut = vtkSmartPointer<vtkWindowLevelLookupTable>::New();
+		prop->UseLookupTableScalarRangeOff();
 		auto lut = vtkSmartPointer<vtkLookupTable>::New();
 		lut->SetHueRange(0.0, 0.0);
 		lut->SetSaturationRange(0.0, 0.0);
@@ -345,19 +354,69 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume)
 	}
 	else if (m_image1->imageType == ImageContainer::DensityImage)
 	{
-
+		prop->BackingOff();
+		prop->UseLookupTableScalarRangeOff();
+		auto lut = vtkSmartPointer<vtkLookupTable>::New();
+		lut->SetHueRange(0.0, 1.0);
+		lut->SetSaturationRange(0.5, 0.5);
+		lut->SetValueRange(1.0, 1.0);
+		lut->SetBelowRangeColor(0.0, 0.0, 0.0, 0.0);
+		lut->UseBelowRangeColorOn();
+		lut->Build();
+		prop->SetLookupTable(lut);
 	}
 	else if (m_image1->imageType == ImageContainer::MaterialImage)
 	{
+		prop->BackingOff();
+		prop->UseLookupTableScalarRangeOn();
+		auto lut = vtkSmartPointer<vtkLookupTable>::New();
+		
+		int nColors = static_cast<int>(m_image1->minMax[1]) + 1;
+		lut->SetNumberOfTableValues(nColors);
+		for (int i = 0; i < nColors; ++i)
+		{
+			auto arr = getColor(i);
+			if (i == 0)
+				lut->SetTableValue(i, arr[0], arr[1], arr[2], 0.0);
+			else
+				lut->SetTableValue(i, arr[0], arr[1], arr[2], 1.0);
 
+		}
+		lut->SetTableRange(m_image1->minMax.data());
+		prop->SetLookupTable(lut);
 	}
 	else if (m_image1->imageType == ImageContainer::OrganImage)
 	{
+		prop->BackingOff();
+		prop->UseLookupTableScalarRangeOn();
+		auto lut = vtkSmartPointer<vtkLookupTable>::New();
 
+		int nColors = static_cast<int>(m_image1->minMax[1]) + 1;
+		lut->SetNumberOfTableValues(nColors);
+		for (int i = 0; i < nColors; ++i)
+		{
+			auto arr = getColor(i);
+			if (i == 0)
+				lut->SetTableValue(i, arr[0], arr[1], arr[2], 0.0);
+			else
+				lut->SetTableValue(i, arr[0], arr[1], arr[2], 1.0);
+
+		}
+		lut->SetTableRange(m_image1->minMax.data());
+		prop->SetLookupTable(lut);
 	}
 	else if (m_image1->imageType == ImageContainer::DoseImage)
 	{
-
+		prop->BackingOff();
+		prop->UseLookupTableScalarRangeOff();
+		auto lut = vtkSmartPointer<vtkLookupTable>::New();
+		lut->SetHueRange(0.0, 1.0);
+		lut->SetSaturationRange(0.5, 0.5);
+		lut->SetValueRange(1.0, 1.0);
+		lut->SetBelowRangeColor(0.0, 0.0, 0.0, 0.0);
+		lut->UseBelowRangeColorOn();
+		lut->Build();
+		prop->SetLookupTable(lut);
 	}
 
 	m_renderer->ResetCamera();

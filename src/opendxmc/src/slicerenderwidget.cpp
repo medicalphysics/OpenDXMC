@@ -28,7 +28,8 @@ Copyright 2019 Erlend Andersen
 #include <QFileDialog>
 
 #include <vtkGenericOpenGLRenderWindow.h>
-//#include <vtkVariant.h>
+#include <vtkWindowLevelLookupTable.h>
+#include <vtkLookupTable.h>
 #include <vtkRendererCollection.h>
 #include <vtkInteractorStyleImage.h>
 #include <vtkCamera.h>
@@ -39,9 +40,6 @@ Copyright 2019 Erlend Andersen
 #include <vtkWindowToImageFilter.h>
 #include <vtkPNGWriter.h>
 //#include <vtkFFMPEGWriter.h>
-
-
-
 
 // Define interaction style
 class customMouseInteractorStyle : public vtkInteractorStyleImage
@@ -120,6 +118,7 @@ public:
 	void OnMouseMove() override
 	{
 		vtkInteractorStyleImage::OnMouseMove();
+
 		updateWLText();
 	}
 
@@ -140,6 +139,9 @@ public:
 		constexpr std::int32_t k = 3; // number decimals
 		std::int32_t b = number * std::pow(10, k);
 		auto bs = std::to_string(b);
+		int c = static_cast<int>(bs.size() - k);
+		if (c < 0)
+			bs.insert(0, -c, '0');
 		bs.insert(bs.size() - k, 1, '.');
 		return bs;
 	}
@@ -162,11 +164,6 @@ private:
 	std::string m_text;
 };
 vtkStandardNewMacro(customMouseInteractorStyle);
-
-
-
-
-
 
 
 
@@ -209,7 +206,7 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 	vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
 
 	vtkSmartPointer<customMouseInteractorStyle> style = vtkSmartPointer<customMouseInteractorStyle>::New();
-	style->SetInteractionModeToImageSlicing();
+	//style->SetInteractionModeToImageSlicing();
 	style->setMapper(m_imageMapper);
 	style->setRenderWindow(renderWindow);
 	renderWindowInteractor->SetInteractorStyle(style);
@@ -329,9 +326,22 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume)
 	m_imageMapper->SetInputData(m_image1->image);
 	
 	//update LUT based on image type
-	if (m_image1->imageType == ImageContainer::CTImage)
+	if (auto prop = m_imageSlice->GetProperty(); m_image1->imageType == ImageContainer::CTImage)
 	{
-
+		prop->BackingOff();
+		
+		
+		//auto lut = vtkSmartPointer<vtkWindowLevelLookupTable>::New();
+		auto lut = vtkSmartPointer<vtkLookupTable>::New();
+		lut->SetHueRange(0.0, 0.0);
+		lut->SetSaturationRange(0.0, 0.0);
+		lut->SetValueRange(0.0, 1.0);
+		lut->SetAboveRangeColor(1.0, 1.0, 1.0, 1.0);
+		lut->UseAboveRangeColorOn();
+		lut->SetBelowRangeColor(0.0, 0.0, 0.0, 0.0);
+		lut->UseBelowRangeColorOn();	
+		lut->Build();
+		prop->SetLookupTable(lut);
 	}
 	else if (m_image1->imageType == ImageContainer::DensityImage)
 	{

@@ -46,21 +46,25 @@ public:
 	SliceRenderWidget(QWidget *parent = nullptr, Orientation orientation = Axial);
 
 	void updateRendering();
-	void setImageData(std::shared_ptr<ImageContainer> volume);
-	void setImageData(std::shared_ptr<ImageContainer> volume1, std::shared_ptr<ImageContainer> volume2);
-
+	//void setImageData(std::shared_ptr<ImageContainer> volume);
+	void setImageData(std::shared_ptr<ImageContainer> foreground, std::shared_ptr<ImageContainer> background=nullptr);
+protected:
+	std::array<double, 2> presetLeveling(ImageContainer::ImageType type);
+	//void updateOrientation(void);
 private:
 	Orientation m_orientation;
 	QVTKOpenGLWidget *m_openGLWidget;
 	vtkSmartPointer<vtkImageResliceMapper> m_imageMapper;
+	vtkSmartPointer<vtkImageResliceMapper> m_imageMapperBackground;
 	vtkSmartPointer<vtkImageSlice> m_imageSlice;
+	vtkSmartPointer<vtkImageSlice> m_imageSliceBackground;
 	std::map<ImageContainer::ImageType, std::array<double, 2>> m_windowLevels;
 
 
 	vtkSmartPointer<vtkRenderer> m_renderer;
 	vtkSmartPointer<vtkTextActor> m_textActor;
-	std::shared_ptr<ImageContainer> m_image1;
-	std::shared_ptr<ImageContainer> m_image2;
+	std::shared_ptr<ImageContainer> m_image;
+	std::shared_ptr<ImageContainer> m_imageBackground;
 }; 
 
 

@@ -131,13 +131,25 @@ void ViewPortWidget::showImageData(int index)
 	int imageDescription = -1;
 	if ((index >= 0) & (index < m_volumeSelectorWidget->count())) 
 		imageDescription = m_volumeSelectorWidget->itemData(index).toInt();
-		
-	if (m_availableVolumes.contains(imageDescription))
+	
+	if (m_availableVolumes.contains(imageDescription) || imageDescription==ImageContainer::CustomType)
 	{
-		auto volume = m_availableVolumes[imageDescription];
-		m_sliceRenderWidgetAxial->setImageData(volume);
-		m_sliceRenderWidgetCoronal->setImageData(volume);
-		m_sliceRenderWidgetSagittal->setImageData(volume);
+		std::shared_ptr<ImageContainer> volume, background;
+		if (imageDescription == ImageContainer::CustomType)
+		{
+			volume = m_availableVolumes[static_cast<int>(ImageContainer::DoseImage)];
+			background = m_availableVolumes[static_cast<int>(ImageContainer::CTImage)];
+		}
+		else
+		{
+			volume = m_availableVolumes[imageDescription];
+			background = nullptr;
+		}
+		
+		m_sliceRenderWidgetAxial->setImageData(volume, background);
+		m_sliceRenderWidgetCoronal->setImageData(volume, background);
+		m_sliceRenderWidgetSagittal->setImageData(volume, background);
+
 		m_volumeRenderWidget->setImageData(volume);
 		
 		if ((imageDescription == static_cast<int>(ImageContainer::MaterialImage)) ||
@@ -171,6 +183,13 @@ void ViewPortWidget::updateVolumeSelectorWidget()
 		m_volumeSelectorWidget->addItem(imageDescriptionName(indexKey), QVariant(indexKey));
 		++it;
 	}
+	//adding dose overlay if possible
+	if (m_availableVolumes.contains(ImageContainer::CTImage) && m_availableVolumes.contains(ImageContainer::DoseImage))
+	{
+		int indexKey = ImageContainer::CustomType;
+		m_volumeSelectorWidget->addItem(imageDescriptionName(indexKey), QVariant(indexKey));
+	}
+
 	m_volumeSelectorWidget->blockSignals(false);
 	if (m_volumeSelectorWidget->count() > 0)
 	{
@@ -203,6 +222,9 @@ QString ViewPortWidget::imageDescriptionName(int imageDescription)
 	}
 	else if (imageDescription == static_cast<int>(ImageContainer::DoseImage)) {
 		return QString("Dose data");
+	}
+	else if (imageDescription == static_cast<int>(ImageContainer::CustomType)) {
+		return QString("Dose overlay");
 	}
 	return QString();
 }

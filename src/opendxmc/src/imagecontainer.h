@@ -41,6 +41,7 @@ public:
 		MaterialImage,
 		DoseImage,
 		OrganImage,
+		CustomType,
 		Empty
 	};
 	vtkSmartPointer<vtkImageData> image;

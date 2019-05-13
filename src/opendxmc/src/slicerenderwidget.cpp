@@ -49,27 +49,6 @@ public:
 	static customMouseInteractorStyle* New();
 	vtkTypeMacro(customMouseInteractorStyle, vtkInteractorStyleImage);
 
-	virtual void OnLeftButtonDown()
-	{
-		std::cout << "Pressed left mouse button." << std::endl;
-		// Forward events
-		vtkInteractorStyleImage::OnLeftButtonDown();
-	}
-
-	virtual void OnMiddleButtonDown()
-	{
-		std::cout << "Pressed middle mouse button." << std::endl;
-		// Forward events
-		vtkInteractorStyleImage::OnMiddleButtonDown();
-	}
-
-	virtual void OnRightButtonDown()
-	{
-		std::cout << "Pressed right mouse button." << std::endl;
-		// Forward events
-		vtkInteractorStyleImage::OnRightButtonDown();
-	}
-
 	virtual void OnMouseWheelForward()
 	{
 		m_imageMapper->UpdateInformation();
@@ -89,9 +68,14 @@ public:
 
 		m_imageMapper->SetSlicePlane(plane);
 		m_imageMapper->UpdateInformation();
+		if (m_imageMapperBackground)
+		{
+			m_imageMapperBackground->SetSlicePlane(plane);
+			m_imageMapperBackground->UpdateInformation();
+		}
 		m_renderWindow->Render();
-
 	}
+
 	virtual void OnMouseWheelBackward()
 	{
 
@@ -112,20 +96,27 @@ public:
 
 		m_imageMapper->SetSlicePlane(plane);
 		m_imageMapper->UpdateInformation();
+		if (m_imageMapperBackground)
+		{
+			m_imageMapperBackground->SetSlicePlane(plane);
+			m_imageMapperBackground->UpdateInformation();
+		}
 		m_renderWindow->Render();
-
 	}
 
 	void OnMouseMove() override
 	{
 		vtkInteractorStyleImage::OnMouseMove();
-
 		updateWLText();
 	}
 
 	void setMapper(vtkSmartPointer<vtkImageResliceMapper> m)
 	{
 		m_imageMapper = m;
+	}
+	void setMapperBackground(vtkSmartPointer<vtkImageResliceMapper> m)
+	{
+		m_imageMapperBackground = m;
 	}
 	void setRenderWindow(vtkSmartPointer<vtkRenderWindow> m)
 	{
@@ -153,13 +144,13 @@ public:
 		{
 			double l = prop->GetColorLevel();
 			double w = prop->GetColorWindow();
-			//m_text = std::to_string(l) + ", " + std::to_string(w);
 			m_text = prettyNumber(l) + ", " + prettyNumber(w);
 			m_textActor->SetInput(m_text.c_str());
 		}
 	}
 private:
 	vtkSmartPointer<vtkImageResliceMapper> m_imageMapper;
+	vtkSmartPointer<vtkImageResliceMapper> m_imageMapperBackground;
 	vtkSmartPointer<vtkRenderWindow> m_renderWindow;
 	vtkSmartPointer<vtkTextActor> m_textActor;
 	std::string m_text;
@@ -184,13 +175,21 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 	m_imageMapper = vtkSmartPointer<vtkImageResliceMapper>::New();
 	m_imageMapper->StreamingOn();
 
+	m_imageMapperBackground = vtkSmartPointer<vtkImageResliceMapper>::New();
+	m_imageMapperBackground->StreamingOn();
+
 	m_imageSlice = vtkSmartPointer<vtkImageSlice>::New();
 	m_imageSlice->SetMapper(m_imageMapper);
+
+	m_imageSliceBackground = vtkSmartPointer<vtkImageSlice>::New();
+	m_imageSliceBackground->SetMapper(m_imageMapperBackground);
+
 
 	//renderer
 	// Setup renderers
 	m_renderer = vtkSmartPointer<vtkRenderer>::New();
-	m_renderer->AddViewProp(m_imageSlice);
+	//m_renderer->AddViewProp(m_imageSliceBackground);
+	//m_renderer->AddViewProp(m_imageSlice);
 	m_renderer->UseFXAAOn();
 	
 
@@ -209,6 +208,7 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 	vtkSmartPointer<customMouseInteractorStyle> style = vtkSmartPointer<customMouseInteractorStyle>::New();
 	//style->SetInteractionModeToImageSlicing();
 	style->setMapper(m_imageMapper);
+	style->setMapperBackground(m_imageMapperBackground);
 	style->setRenderWindow(renderWindow);
 	renderWindowInteractor->SetInteractorStyle(style);
 
@@ -220,40 +220,35 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 	style->setTextActor(m_textActor);
 	//setup collbacks
 	
-
-
-
 	// Render and start interaction
 	renderWindowInteractor->SetRenderWindow(renderWindow);
 	renderWindowInteractor->Initialize();
-
 
 	vtkSmartPointer<vtkImageData> dummyData = vtkSmartPointer<vtkImageData>::New();
 	dummyData->SetDimensions(30, 30, 30);
 	dummyData->AllocateScalars(VTK_FLOAT, 1);
 	m_imageMapper->SetInputData(dummyData);
+	m_imageMapperBackground->SetInputData(dummyData);
 
 	//other
 	m_imageMapper->SliceFacesCameraOn();
+	m_imageMapperBackground->SliceFacesCameraOn();
 	//m_imageSliceMapper->SliceAtFocalPointOn();
 
 	if (auto cam = m_renderer->GetActiveCamera(); m_orientation == Axial)
-	{
-		
+	{	
 		cam->SetFocalPoint(0, 0, 0);
 		cam->SetPosition(0, 0, -1);
 		cam->SetViewUp(0, -1, 0);
 	}
 	else if (m_orientation == Coronal)
 	{
-		
 		cam->SetFocalPoint(0, 0, 0);
 		cam->SetPosition(0, -1, 0);
 		cam->SetViewUp(0, 0, 1);
 	}
 	else
-	{
-		
+	{	
 		cam->SetFocalPoint(0, 0, 0);
 		cam->SetPosition(1, 0, 0);
 		cam->SetViewUp(0, 0, 1);
@@ -311,36 +306,51 @@ void SliceRenderWidget::updateRendering()
 	return;
 }
 
-void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume)
+void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume, std::shared_ptr<ImageContainer> background)
 {
 	if (!volume)
 		return;
-	if (m_image1)
+	if (!volume->image)
+		return;
+	if (m_image)
 	{
-		if ((m_image1->ID == volume->ID) && (m_image1->imageType == volume->imageType))
+		if ((m_image->ID == volume->ID) && (m_image->imageType == volume->imageType) && (m_imageBackground==background))
 			return;
 		
-		if (m_image1->ID != volume->ID)
-			m_windowLevels.clear();
+		if (std::array<double, 2> wl; m_image->image)
+		{
+			auto props = m_imageSlice->GetProperty();
+			wl[0] = props->GetColorLevel();
+			wl[1] = props->GetColorWindow();
+			m_windowLevels[m_image->imageType] = wl;
+		}
 	}
-	
 
-	m_image1 = volume;
-	if (m_windowLevels.find(m_image1->imageType) == m_windowLevels.end())
+	m_image = volume;
+	m_imageBackground = background;
+	m_renderer->RemoveActor(m_imageSliceBackground);
+	m_renderer->RemoveActor(m_imageSlice);
+
+	if (m_windowLevels.find(m_image->imageType) == m_windowLevels.end())
 	{
-		const auto& mm = m_image1->minMax;
-		std::array<double, 2> wl;
-		wl[0] = (mm[0] + mm[1]) * 0.5;
-		wl[1] = (mm[1] - mm[0]) * 0.5;
-		m_windowLevels[m_image1->imageType] = wl;
+		std::array<double, 2> wl = presetLeveling(m_image->imageType);
+		if (wl[1] < 0.0) 
+		{
+			const auto& mm = m_image->minMax;
+			wl[0] = (mm[0] + mm[1]) * 0.5;
+			wl[1] = (mm[1] - mm[0]) * 0.5;
+		}
+		m_windowLevels[m_image->imageType] = wl;
 	}
-	m_imageMapper->SetInputData(m_image1->image);
+	m_imageMapper->SetInputData(m_image->image);
 	
 	//update LUT based on image type
-	if (auto prop = m_imageSlice->GetProperty(); m_image1->imageType == ImageContainer::CTImage)
+	if (auto prop = m_imageSlice->GetProperty(); m_image->imageType == ImageContainer::CTImage)
 	{
 		prop->BackingOff();
 		prop->UseLookupTableScalarRangeOff();
+		prop->SetColorLevel(m_windowLevels[m_image->imageType][0]);
+		prop->SetColorWindow(m_windowLevels[m_image->imageType][1]);
 		auto lut = vtkSmartPointer<vtkLookupTable>::New();
 		lut->SetHueRange(0.0, 0.0);
 		lut->SetSaturationRange(0.0, 0.0);
@@ -352,10 +362,12 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume)
 		lut->Build();
 		prop->SetLookupTable(lut);
 	}
-	else if (m_image1->imageType == ImageContainer::DensityImage)
+	else if (m_image->imageType == ImageContainer::DensityImage)
 	{
 		prop->BackingOff();
 		prop->UseLookupTableScalarRangeOff();
+		prop->SetColorLevel(m_windowLevels[m_image->imageType][0]);
+		prop->SetColorWindow(m_windowLevels[m_image->imageType][1]);
 		auto lut = vtkSmartPointer<vtkLookupTable>::New();
 		lut->SetHueRange(0.0, 1.0);
 		lut->SetSaturationRange(0.5, 0.5);
@@ -365,13 +377,13 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume)
 		lut->Build();
 		prop->SetLookupTable(lut);
 	}
-	else if (m_image1->imageType == ImageContainer::MaterialImage)
+	else if (m_image->imageType == ImageContainer::MaterialImage)
 	{
 		prop->BackingOff();
 		prop->UseLookupTableScalarRangeOn();
 		auto lut = vtkSmartPointer<vtkLookupTable>::New();
 		
-		int nColors = static_cast<int>(m_image1->minMax[1]) + 1;
+		int nColors = static_cast<int>(m_image->minMax[1]) + 1;
 		lut->SetNumberOfTableValues(nColors);
 		for (int i = 0; i < nColors; ++i)
 		{
@@ -380,18 +392,17 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume)
 				lut->SetTableValue(i, arr[0], arr[1], arr[2], 0.0);
 			else
 				lut->SetTableValue(i, arr[0], arr[1], arr[2], 1.0);
-
 		}
-		lut->SetTableRange(m_image1->minMax.data());
+		lut->SetTableRange(m_image->minMax.data());
 		prop->SetLookupTable(lut);
 	}
-	else if (m_image1->imageType == ImageContainer::OrganImage)
+	else if (m_image->imageType == ImageContainer::OrganImage)
 	{
 		prop->BackingOff();
 		prop->UseLookupTableScalarRangeOn();
 		auto lut = vtkSmartPointer<vtkLookupTable>::New();
 
-		int nColors = static_cast<int>(m_image1->minMax[1]) + 1;
+		int nColors = static_cast<int>(m_image->minMax[1]) + 1;
 		lut->SetNumberOfTableValues(nColors);
 		for (int i = 0; i < nColors; ++i)
 		{
@@ -400,15 +411,16 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume)
 				lut->SetTableValue(i, arr[0], arr[1], arr[2], 0.0);
 			else
 				lut->SetTableValue(i, arr[0], arr[1], arr[2], 1.0);
-
 		}
-		lut->SetTableRange(m_image1->minMax.data());
+		lut->SetTableRange(m_image->minMax.data());
 		prop->SetLookupTable(lut);
 	}
-	else if (m_image1->imageType == ImageContainer::DoseImage)
+	else if (m_image->imageType == ImageContainer::DoseImage)
 	{
 		prop->BackingOff();
 		prop->UseLookupTableScalarRangeOff();
+		prop->SetColorLevel(m_windowLevels[m_image->imageType][0]);
+		prop->SetColorWindow(m_windowLevels[m_image->imageType][1]);
 		auto lut = vtkSmartPointer<vtkLookupTable>::New();
 		lut->SetHueRange(0.0, 1.0);
 		lut->SetSaturationRange(0.5, 0.5);
@@ -419,7 +431,79 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume)
 		prop->SetLookupTable(lut);
 	}
 
+	if (m_imageBackground)
+	{
+		if (m_imageBackground->image)
+		{
+			m_imageMapperBackground->SetInputData(m_imageBackground->image);
+			m_renderer->AddActor(m_imageSliceBackground);
+			auto prop = m_imageSliceBackground->GetProperty();
+			prop->BackingOff();
+			prop->UseLookupTableScalarRangeOff();
+			auto wl = presetLeveling(m_imageBackground->imageType);
+			prop->SetColorLevel(wl[0]);
+			prop->SetColorWindow(wl[1]);
+			auto lut = vtkSmartPointer<vtkLookupTable>::New();
+			lut->SetHueRange(0.0, 0.0);
+			lut->SetSaturationRange(0.0, 0.0);
+			lut->SetValueRange(0.0, 1.0);
+			lut->SetAboveRangeColor(1.0, 1.0, 1.0, 1.0);
+			lut->UseAboveRangeColorOn();
+			lut->SetBelowRangeColor(0.0, 0.0, 0.0, 0.0);
+			lut->UseBelowRangeColorOn();
+			lut->Build();
+			prop->SetLookupTable(lut);
+		}
+	}
+	m_renderer->AddActor(m_imageSlice);
 	m_renderer->ResetCamera();
 	updateRendering();
-	
 }
+
+std::array<double, 2> SliceRenderWidget::presetLeveling(ImageContainer::ImageType type)
+{
+	std::array<double, 2> wl = {1.0, -1.0};
+	if (type == ImageContainer::CTImage)
+	{
+		wl[0] = 10.0;
+		wl[1] = 500.0;
+	}
+	else if (type == ImageContainer::DensityImage)
+	{
+		wl[0] = 1.0;
+		wl[1] = 0.5;
+	}
+	else if (type == ImageContainer::DoseImage)
+	{
+		wl[0] = 0.1;
+		wl[1] = 0.1;
+	}
+	return wl;
+}
+
+/*void SliceRenderWidget::updateOrientation(void)
+{
+	auto argmax = vectormath::argmax3<std::size_t, double>(m_image->directionCosines.data());
+
+	if (m_orientation == Axial)
+	{
+		for (std::size_t i = 0; i < 3; ++i)
+			dir[i] = m_image->directionCosines[i];
+	}
+	else if (m_orientation == Sagittal)
+	{
+		for (std::size_t i = 0; i < 3; ++i)
+			dir[i] = m_image->directionCosines[i + 3];
+	}
+	else
+	{
+		vectormath::cross(m_image->directionCosines.data(), dir.data());
+	}
+
+	
+	std::size_t argmax = vectormath::argmax3()
+	const auto& dir = m_image->directionCosines;
+
+
+}
+*/

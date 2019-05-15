@@ -26,6 +26,8 @@ Copyright 2019 Erlend Andersen
 #include <QMenu>
 #include <QColorDialog>
 #include <QFileDialog>
+#include <QWidgetAction>
+#include <QSlider>
 
 #include <vtkGenericOpenGLRenderWindow.h>
 #include <vtkWindowLevelLookupTable.h>
@@ -172,8 +174,13 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 	
 	
 	//mapper 
+	m_imageSmoother = vtkSmartPointer<vtkImageGaussianSmooth>::New();
+	m_imageSmoother->SetDimensionality(3);
+	m_imageSmoother->SetStandardDeviations(0.0, 0.0, 0.0);
+
 	m_imageMapper = vtkSmartPointer<vtkImageResliceMapper>::New();
 	m_imageMapper->StreamingOn();
+	m_imageMapper->SetInputConnection(m_imageSmoother->GetOutputPort());
 
 	m_imageMapperBackground = vtkSmartPointer<vtkImageResliceMapper>::New();
 	m_imageMapperBackground->StreamingOn();
@@ -188,8 +195,6 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 	//renderer
 	// Setup renderers
 	m_renderer = vtkSmartPointer<vtkRenderer>::New();
-	//m_renderer->AddViewProp(m_imageSliceBackground);
-	//m_renderer->AddViewProp(m_imageSlice);
 	m_renderer->UseFXAAOn();
 	
 
@@ -227,7 +232,7 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 	vtkSmartPointer<vtkImageData> dummyData = vtkSmartPointer<vtkImageData>::New();
 	dummyData->SetDimensions(30, 30, 30);
 	dummyData->AllocateScalars(VTK_FLOAT, 1);
-	m_imageMapper->SetInputData(dummyData);
+	m_imageSmoother->SetInputData(dummyData);
 	m_imageMapperBackground->SetInputData(dummyData);
 
 	//other
@@ -263,6 +268,20 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 	menuButton->setStyleSheet("QPushButton {background-color:transparent;}");
 	auto menu = new QMenu(menuButton);
 	menuButton->setMenu(menu);
+	
+	auto smoothSlider = new QSlider(Qt::Horizontal, menuButton);
+	smoothSlider->setMaximum(10);
+	smoothSlider->setTickInterval(1);
+	smoothSlider->setTracking(true);
+	if (m_orientation == Axial)
+		connect(smoothSlider, &QSlider::valueChanged, [=](int value) {m_imageSmoother->SetStandardDeviations(static_cast<double>(value), static_cast<double>(value), 0.0); });
+	else if (m_orientation == Coronal)
+		connect(smoothSlider, &QSlider::valueChanged, [=](int value) {m_imageSmoother->SetStandardDeviations(0.0, static_cast<double>(value), static_cast<double>(value)); });
+	else
+		connect(smoothSlider, &QSlider::valueChanged, [=](int value) {m_imageSmoother->SetStandardDeviations(static_cast<double>(value), 0.0, static_cast<double>(value)); });
+	auto smoothSliderAction = new QWidgetAction(menuButton);
+	smoothSliderAction->setDefaultWidget(smoothSlider);
+	menu->addAction(smoothSliderAction);
 	
 	menu->addAction(QString(tr("Set background color")), [=]() {
 		auto color = QColorDialog::getColor(Qt::black, this);
@@ -342,7 +361,9 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume, std
 		}
 		m_windowLevels[m_image->imageType] = wl;
 	}
-	m_imageMapper->SetInputData(m_image->image);
+	m_imageSmoother->SetInputData(m_image->image);
+	m_imageSmoother->Update();
+	//m_imageMapper->SetInputData(m_image->image);
 	
 	//update LUT based on image type
 	if (auto prop = m_imageSlice->GetProperty(); m_image->imageType == ImageContainer::CTImage)
@@ -436,7 +457,9 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume, std
 		if (m_imageBackground->image)
 		{
 			m_imageMapperBackground->SetInputData(m_imageBackground->image);
+			
 			m_renderer->AddActor(m_imageSliceBackground);
+
 			auto prop = m_imageSliceBackground->GetProperty();
 			prop->BackingOff();
 			prop->UseLookupTableScalarRangeOff();

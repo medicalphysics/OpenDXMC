@@ -26,7 +26,7 @@ Copyright 2019 Erlend Andersen
 #include <QIcon>
 #include <QColorDialog>
 #include <QFileDialog>
-
+#include <QWidgetAction>
 
 #include <vtkGenericOpenGLRenderWindow.h>
 #include <vtkRenderWindowInteractor.h>
@@ -71,6 +71,11 @@ VolumeRenderWidget::VolumeRenderWidget(QWidget *parent)
 	volumeProperty->SetSpecularPower(10.0);
 	//volumeProperty->IndependentComponentsOff();
 
+	//smoother
+	m_imageSmoother = vtkSmartPointer<vtkImageGaussianSmooth>::New();
+	m_imageSmoother->SetDimensionality(3);
+	m_imageSmoother->SetStandardDeviations(0.0, 0.0, 0.0);
+
 	m_settingsWidget = new VolumeRenderSettingsWidget(volumeProperty, this);
 	connect(this, &VolumeRenderWidget::imageDataChanged, m_settingsWidget, &VolumeRenderSettingsWidget::setImage);
 	connect(m_settingsWidget, &VolumeRenderSettingsWidget::propertyChanged, this, &VolumeRenderWidget::updateRendering);
@@ -90,6 +95,7 @@ VolumeRenderWidget::VolumeRenderWidget(QWidget *parent)
 	m_renderer->AddActor(m_orientationProp->getActor());	
 
 
+
 	//window settings
 	m_renderer->SetBackground(0, 0, 0);
 	auto menuIcon = QIcon(QString("resources/icons/settings.svg"));
@@ -98,6 +104,16 @@ VolumeRenderWidget::VolumeRenderWidget(QWidget *parent)
 	menuButton->setStyleSheet("QPushButton {background-color:transparent;}");
 	auto menu = new QMenu(menuButton);
 	menuButton->setMenu(menu);
+
+
+	auto smoothSlider = new QSlider(Qt::Horizontal, menuButton);
+	smoothSlider->setMaximum(10);
+	smoothSlider->setTickInterval(1);
+	smoothSlider->setTracking(true);
+	connect(smoothSlider, &QSlider::valueChanged, [=](int value) {m_imageSmoother->SetStandardDeviations(static_cast<double>(value), static_cast<double>(value), static_cast<double>(value)); });
+	auto smoothSliderAction = new QWidgetAction(menuButton);
+	smoothSliderAction->setDefaultWidget(smoothSlider);
+	menu->addAction(smoothSliderAction);
 
 
 	auto showAdvancedAction = menu->addAction(tr("Advanced"));
@@ -120,8 +136,7 @@ VolumeRenderWidget::VolumeRenderWidget(QWidget *parent)
 		if (!filename.isEmpty())
 		{
 			auto renderWindow = m_openGLWidget->GetRenderWindow();
-			vtkSmartPointer<vtkWindowToImageFilter> windowToImageFilter =
-				vtkSmartPointer<vtkWindowToImageFilter>::New();
+			vtkSmartPointer<vtkWindowToImageFilter> windowToImageFilter = vtkSmartPointer<vtkWindowToImageFilter>::New();
 			windowToImageFilter->SetInput(renderWindow);
 			windowToImageFilter->SetScale(3, 3); //set the resolution of the output image (3 times the current resolution of vtk render window)
 			windowToImageFilter->SetInputBufferTypeToRGBA(); //also record the alpha (transparency) channel
@@ -168,6 +183,7 @@ void VolumeRenderWidget::setImageData(std::shared_ptr<ImageContainer> image)
 		}
 	}
 	m_imageData = image;
+	m_imageSmoother->SetInputData(image->image);
 	updateVolumeRendering();
 }
 
@@ -198,7 +214,7 @@ void VolumeRenderWidget::updateVolumeRendering()
 	double minSpacing = std::min(std::min(spacing[0], spacing[1]), spacing[2]);
 	volumeProperty->SetScalarOpacityUnitDistance(meanSpacing);
 	m_volumeMapper->SetInteractiveUpdateRate(0.00001);
-	m_volumeMapper->SetSampleDistance(minSpacing*0.39);
+	m_volumeMapper->SetSampleDistance(minSpacing*1.2);
 	m_volumeMapper->CroppingOn();
 	int *extent = m_imageData->image->GetExtent();
 	setCropPlanes(extent);
@@ -209,7 +225,8 @@ void VolumeRenderWidget::updateVolumeRendering()
 		m_volumeMapper->SetRequestedRenderModeToGPU();
 	
 	m_volumeMapper->SetBlendModeToComposite();
-	m_volumeMapper->SetInputData(m_imageData->image);
+	//m_volumeMapper->SetInputData(m_imageData->image);
+	m_volumeMapper->SetInputConnection(m_imageSmoother->GetOutputPort());
 	m_volumeMapper->Update();
 	emit imageDataChanged(m_imageData);
 	
@@ -223,13 +240,6 @@ void VolumeRenderWidget::updateVolumeRendering()
 	m_renderer->ResetCamera();
 	
 	updateRendering();
-	
-
-	
-
-
-
-
 }
 
 void VolumeRenderWidget::setRenderMode(int mode)

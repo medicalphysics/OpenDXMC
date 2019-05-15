@@ -32,6 +32,7 @@ Copyright 2019 Erlend Andersen
 #include <vtkImageData.h>
 #include <vtkSmartVolumeMapper.h>
 #include <vtkOpenGlRenderer.h>
+#include <vtkImageGaussianSmooth.h>
 
 #include <memory>
 
@@ -59,8 +60,10 @@ private:
 	QVTKOpenGLWidget *m_openGLWidget;
 	VolumeRenderSettingsWidget *m_settingsWidget;
 	vtkSmartPointer<vtkSmartVolumeMapper> m_volumeMapper;
+	vtkSmartPointer<vtkImageGaussianSmooth> m_imageSmoother;
 	vtkSmartPointer<vtkOpenGLRenderer> m_renderer;
 	vtkSmartPointer<vtkVolume> m_volume;
+
 	std::shared_ptr<ImageContainer> m_imageData;
 	int m_renderMode = 0;
 

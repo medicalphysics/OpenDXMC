@@ -30,6 +30,7 @@ Copyright 2019 Erlend Andersen
 #include <vtkImageSlice.h>
 #include <vtkRenderer.h>
 #include <vtkTextActor.h>
+#include <vtkImageGaussianSmooth.h>
 
 #include <memory>
 #include <map>
@@ -55,6 +56,7 @@ private:
 	Orientation m_orientation;
 	QVTKOpenGLWidget *m_openGLWidget;
 	vtkSmartPointer<vtkImageResliceMapper> m_imageMapper;
+	vtkSmartPointer<vtkImageGaussianSmooth> m_imageSmoother;
 	vtkSmartPointer<vtkImageResliceMapper> m_imageMapperBackground;
 	vtkSmartPointer<vtkImageSlice> m_imageSlice;
 	vtkSmartPointer<vtkImageSlice> m_imageSliceBackground;

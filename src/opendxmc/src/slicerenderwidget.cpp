@@ -23,6 +23,7 @@ Copyright 2019 Erlend Andersen
 #include <QColor>
 #include <QPushButton>
 #include <QIcon>
+#include <QLabel>
 #include <QMenu>
 #include <QColorDialog>
 #include <QFileDialog>
@@ -280,7 +281,14 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 	else
 		connect(smoothSlider, &QSlider::valueChanged, [=](int value) {m_imageSmoother->SetStandardDeviations(static_cast<double>(value), 0.0, static_cast<double>(value)); });
 	auto smoothSliderAction = new QWidgetAction(menuButton);
-	smoothSliderAction->setDefaultWidget(smoothSlider);
+	auto smoothSliderHolder = new QWidget(menuButton);
+	auto smoothSliderLayout = new QHBoxLayout(smoothSliderHolder);
+	smoothSliderHolder->setLayout(smoothSliderLayout);
+	auto smoothSliderLabel = new QLabel("Smoothing", smoothSliderHolder);
+	smoothSliderLayout->addWidget(smoothSliderLabel);
+	smoothSliderLayout->addWidget(smoothSlider);
+	//smoothSliderLayout->setContentsMargins(0, 0, 0, 0);
+	smoothSliderAction->setDefaultWidget(smoothSliderHolder);
 	menu->addAction(smoothSliderAction);
 	
 	menu->addAction(QString(tr("Set background color")), [=]() {

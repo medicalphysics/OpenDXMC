@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.9)
 
-set(CMAKE_CONFIGURATION_TYPES Debug Release RelWithDebInfo MinSizeRel CACHE TYPE INTERNAL FORCE)
+#set(CMAKE_CONFIGURATION_TYPES Debug Release RelWithDebInfo MinSizeRel CACHE TYPE INTERNAL FORCE)
+set(CMAKE_CONFIGURATION_TYPES Debug Release RelWithDebInfo MinSizeRel)
 
 project(OpenDXMC VERSION 0.0.1 DESCRIPTION "OpenDXMC description" LANGUAGES CXX C)
 

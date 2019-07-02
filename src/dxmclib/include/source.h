@@ -73,12 +73,12 @@ public:
 
 protected:
 	
-    std::array<double, 3> m_position;
-    std::array<double, 6> m_directionCosines;
-    std::uint64_t m_historiesPerExposure;
+	std::array<double, 3> m_position = { 0,0,0 };
+	std::array<double, 6> m_directionCosines = { 1,0,0,0,1,0 };
+	std::uint64_t m_historiesPerExposure = 1;
 	std::shared_ptr<PositionalFilter> m_positionalFilter;
 	Type m_type = None;
-	//Tube m_tube;
+	
 private:
 	void normalizeDirectionCosines(void);
 };

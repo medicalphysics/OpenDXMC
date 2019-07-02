@@ -29,7 +29,7 @@ constexpr double PI = 3.14159265358979323846;  /* pi */
 constexpr double PI_2 = 2.0 * PI;
 constexpr double DEG_TO_RAD = PI / 180.0;
 constexpr double RAD_TO_DEG = 1.0 / DEG_TO_RAD;
-constexpr double KEV_TO_MJ = 1.6021773e-13;
+constexpr double KEV_TO_MJ = 1.6021773e-13; // milli Joules
 
 constexpr std::uint64_t CTDI_MIN_HISTORIES = static_cast<std::uint64_t>(500E6);
 

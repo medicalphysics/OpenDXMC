@@ -228,11 +228,21 @@ void DicomImportWidget::lookInFolder(const QString folderPath)
 	}
 
 	auto cleanPath = QDir::toNativeSeparators(QDir::cleanPath(folderPath));
+	m_imageDirectorySnooper->SetDirectoryName(cleanPath.toStdString().c_str());
+
+	//resetting series selector
 	m_seriesSelector->clear();
 	m_seriesSelector->setEnabled(false);
 	m_seriesSelector->addItem("");
 
-	m_imageDirectorySnooper->SetDirectoryName(cleanPath.toStdString().c_str());
+	//restricts images to CT images
+	vtkDICOMItem query;
+	query.SetAttributeValue(DC::Modality, " CT ");
+	query.SetAttributeValue(DC::ImageType, " PRIMARY ");
+	query.SetAttributeValue(DC::SOPClassUID, " 1.2.840.10008.5.1.4.1.1.2 ");
+	//query.SetAttributeValue(DC::ImageType, " DERIVED ");
+	m_imageDirectorySnooper->SetFindQuery(query);
+
 	m_imageDirectorySnooper->Update();
 
 	int n_series = m_imageDirectorySnooper->GetNumberOfSeries();
@@ -243,7 +253,7 @@ void DicomImportWidget::lookInFolder(const QString folderPath)
 	}
 
 	vtkDICOMTag seriesDescriptionTag(8, 4158);
-
+	vtkDICOMTag seriesSOPUIDTag(8, 4158);
 	for (int i = 0; i < n_series; i++)
 	{
 		vtkDICOMItem seriesRecord = m_imageDirectorySnooper->GetSeriesRecord(i);
@@ -260,6 +270,10 @@ void DicomImportWidget::lookInFolder(const QString folderPath)
 
 void DicomImportWidget::seriesActivated(int index)
 {
+	if (index == 0)
+	{
+		return; // prevents selecting of empty field 
+	}
 	int n_series = m_imageDirectorySnooper->GetNumberOfSeries();
 	if (index >= n_series+1)
 	{

@@ -120,14 +120,16 @@ if (WIN32)
 		set(libname "${vtkdll}-${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}.dll")
 		set(libpath "${VTK_RUNTIME_LIBRARY_DIRS}/${CMAKE_BUILD_TYPE}/${libname}")
 		set(outpath "${CMAKE_BINARY_DIR}/${PROJECT_NAME}/${libname}")
-		#message(STATUS "Copying vtk dll ${libpath} to ${outpath}")
-		add_custom_command(TARGET vtkdeploy POST_BUILD
-			COMMENT "Copying vtk dll ${libpath} to ${outpath}"
-			DEPENDS ${libpath}
-			COMMAND ${CMAKE_COMMAND} -E copy_if_different
-			${libpath}
-			${outpath}
-			)
+		message(STATUS "Copying vtk dll ${libpath} to ${outpath}")
+		if(NOT vtkdll STREQUAL "vtksqlite") ##Ignores vtksqlite-X.X.dll to prevent cmake error in case vtk was not compiled with SQLite
+			add_custom_command(TARGET vtkdeploy POST_BUILD
+				COMMENT "Copying vtk dll ${libpath} to ${outpath}"
+				DEPENDS ${libpath}
+				COMMAND ${CMAKE_COMMAND} -E copy_if_different
+				${libpath}
+				${outpath}
+				)
+		endif()
 	endforeach()
 	
 	## vtkRenderingVolumeOpenGL2-8.1 is not copied (BUG) a quick fix here

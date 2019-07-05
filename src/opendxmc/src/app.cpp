@@ -24,6 +24,19 @@ Copyright 2019 Erlend Andersen
 
 #include "mainwindow.h"
 
+
+#include "spdlog/spdlog.h"
+#include "spdlog/sinks/rotating_file_sink.h"
+
+void createLogger()
+{
+	auto my_logger = spdlog::rotating_logger_mt("OpenDXMCapp", "log.txt", 1048576 * 5, 1);
+	spdlog::set_level(spdlog::level::trace);
+	my_logger->info("Application started");
+	my_logger->flush();
+}
+
+
 int main (int argc, char *argv[])
 {
 	// needed to ensure appropriate OpenGL context is created for VTK rendering.
@@ -39,6 +52,7 @@ int main (int argc, char *argv[])
 
 	MainWindow win;
 	win.show();
+	createLogger();
 
     return app.exec();
 }

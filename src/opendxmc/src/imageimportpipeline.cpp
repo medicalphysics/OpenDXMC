@@ -43,6 +43,8 @@ Copyright 2019 Erlend Andersen
 #include <execution>
 #include <memory>
 
+#include "spdlog/spdlog.h"
+
 ImageImportPipeline::ImageImportPipeline(QObject *parent)
 	:QObject(parent)
 {
@@ -66,6 +68,8 @@ void ImageImportPipeline::setDicomData(QStringList dicomPaths)
 {
 	emit processingDataStarted();
 
+	auto logger = spdlog::get("OpenDXMCapp");
+	logger->debug("Importing images...");
 	auto const vtkType = VTK_FLOAT;
 
 	//from QStringList og paths to vtkStringArray
@@ -73,7 +77,9 @@ void ImageImportPipeline::setDicomData(QStringList dicomPaths)
 	fileNameArray->SetNumberOfValues(dicomPaths.size());
 	for (int i = 0; i < dicomPaths.size(); ++i)
 	{
-		fileNameArray->SetValue(i, dicomPaths[i].toStdString());
+		auto path = dicomPaths[i].toStdString();
+		fileNameArray->SetValue(i, path);
+		logger->debug("Reading file {}", path);
 	}
 
 	//Dicom file reader
@@ -153,15 +159,14 @@ void ImageImportPipeline::setDicomData(QStringList dicomPaths)
 	auto imageContainer = std::make_shared<ImageContainer>(ImageContainer::CTImage, data);
 	imageContainer->directionCosines = directionCosines;
 	imageContainer->ID = ImageContainer::generateID();
-
+	logger->debug("Done importing images.");
 	emit imageDataChanged(imageContainer);
-
+	logger->debug("Reading exposure data...");
 	auto exposure = readExposureData(dicomReader);
-
+	logger->debug("Done reading exposure data.");
 
 	processCTData(imageContainer, exposure);
 	emit processingDataEnded();
-
 }
 
 void ImageImportPipeline::setOutputSpacing(const double* spacing)
@@ -189,11 +194,18 @@ std::pair<std::shared_ptr<std::vector<unsigned char>>, std::shared_ptr<std::vect
 
 void ImageImportPipeline::processCTData(std::shared_ptr<ImageContainer> ctImage, const std::pair<std::string, std::vector<double>>& exposureData)
 {
+	auto logger = spdlog::get("OpenDXMCapp");
+	logger->debug("Segmenting CT images...");
 	if (ctImage->imageType != ImageContainer::CTImage)
+	{
+		logger->debug("Segmenting CT images failed, data is not CT data.");
 		return;
+	}
 	if (!ctImage->image)
+	{
+		logger->debug("Segmenting CT images failed, no image data.");
 		return; // if ctimage is empty return;
-	
+	}
 	std::shared_ptr<std::vector<unsigned char>> materialIndex;
 	std::shared_ptr<std::vector<double>> density;
 
@@ -235,7 +247,7 @@ void ImageImportPipeline::processCTData(std::shared_ptr<ImageContainer> ctImage,
 	auto aecFilter = std::make_shared<AECFilter>(density, spacing, dimensionsArray, exposure);
 
 	QString filtername = QString::fromStdString(exposurename);
-
+	logger->debug("Done segmenting CT images.");
 	emit aecFilterChanged(filtername, aecFilter);
 	emit imageDataChanged(materialImage);
 	emit imageDataChanged(densityImage);

@@ -47,6 +47,8 @@ include_directories(${Qt5Widgets_INCLUDE_DIRS})
 include_directories(${Qt5Charts_INCLUDE_DIRS})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS}")
 
+## spdlog Logging header only
+include_directories("thirdparty/spdlog/*")
 
 
 # Define an executable (WIN32 argument to prevent console window on windows)
@@ -87,7 +89,6 @@ add_executable(app WIN32
 	src/dosereportwidget.cpp
 	src/sourceeditormodel.h
 	src/sourceeditormodel.cpp
-
     )
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/opendxmc")
@@ -102,6 +103,10 @@ target_link_libraries(app
 		Qt5::Gui
 		Qt5::Charts
         )
+
+target_include_directories(app PRIVATE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/thirdparty>
+    )
 
 ##adding REQUIRED dlls to the binary folder of executable
 #adding target to copy qt dlls 
@@ -120,7 +125,6 @@ if (WIN32)
 		set(libname "${vtkdll}-${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}.dll")
 		set(libpath "${VTK_RUNTIME_LIBRARY_DIRS}/${CMAKE_BUILD_TYPE}/${libname}")
 		set(outpath "${CMAKE_BINARY_DIR}/${PROJECT_NAME}/${libname}")
-		message(STATUS "Copying vtk dll ${libpath} to ${outpath}")
 		if(NOT vtkdll STREQUAL "vtksqlite") ##Ignores vtksqlite-X.X.dll to prevent cmake error in case vtk was not compiled with SQLite
 			add_custom_command(TARGET vtkdeploy POST_BUILD
 				COMMENT "Copying vtk dll ${libpath} to ${outpath}"

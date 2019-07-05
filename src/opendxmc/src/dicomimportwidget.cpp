@@ -88,8 +88,6 @@ DicomImportWidget::DicomImportWidget(QWidget *parent)
 	outputSpacingBox->setCheckable(true);
 	outputSpacingBox->setChecked(false);
 	connect(outputSpacingBox, &QGroupBox::toggled, [=](bool value) {emit useOutputSpacingChanged(value); });
-	//auto outputspacingLabel = new QLabel(tr("Voxel spacing for imported series:"), this);
-	//outputSpacingLayout->addWidget(outputspacingLabel);
 	auto outputSpacingLayoutButtons = new QHBoxLayout;
 	for (int i = 0; i < 3; ++i)
 	{
@@ -233,14 +231,13 @@ void DicomImportWidget::lookInFolder(const QString folderPath)
 	//resetting series selector
 	m_seriesSelector->clear();
 	m_seriesSelector->setEnabled(false);
-	m_seriesSelector->addItem("");
+	//m_seriesSelector->addItem("");
 
-	//restricts images to CT images
+	//restricts images to axial CT images
 	vtkDICOMItem query;
 	query.SetAttributeValue(DC::Modality, " CT ");
-	query.SetAttributeValue(DC::ImageType, " PRIMARY ");
+	query.SetAttributeValue(DC::ImageType, " AXIAL ");
 	query.SetAttributeValue(DC::SOPClassUID, " 1.2.840.10008.5.1.4.1.1.2 ");
-	//query.SetAttributeValue(DC::ImageType, " DERIVED ");
 	m_imageDirectorySnooper->SetFindQuery(query);
 
 	m_imageDirectorySnooper->Update();
@@ -252,36 +249,47 @@ void DicomImportWidget::lookInFolder(const QString folderPath)
 		return;
 	}
 
-	vtkDICOMTag seriesDescriptionTag(8, 4158);
-	vtkDICOMTag seriesSOPUIDTag(8, 4158);
+	//vtkDICOMTag seriesDescriptionTag(8, 4158);
+	vtkDICOMTag seriesDescriptionTag(8, 0x103E);
+	vtkDICOMTag studyDescriptionTag(8, 0x1030);
 	for (int i = 0; i < n_series; i++)
 	{
 		vtkDICOMItem seriesRecord = m_imageDirectorySnooper->GetSeriesRecord(i);
 		vtkDICOMValue seriesDescriptionValue = seriesRecord.GetAttributeValue(seriesDescriptionTag);
+		vtkDICOMValue studyDescriptionValue = seriesRecord.GetAttributeValue(studyDescriptionTag);
+		
+		QString descQ;
+		if (studyDescriptionValue.IsValid())
+		{
+			std::string desc = studyDescriptionValue.GetString(0);
+			descQ.append(QString::fromStdString(desc));
+		}
 		if (seriesDescriptionValue.IsValid())
 		{
 			std::string desc = seriesDescriptionValue.GetString(0);
-			QString descQ = QString::fromStdString(desc);
-			m_seriesSelector->addItem(descQ);
-			m_seriesSelector->setEnabled(true);
+			descQ.append(QString::fromStdString(desc));		
 		}
+		m_seriesSelector->addItem(descQ);
+		m_seriesSelector->setEnabled(true);
 	}
 }
 
 void DicomImportWidget::seriesActivated(int index)
 {
-	if (index == 0)
-	{
-		return; // prevents selecting of empty field 
-	}
+	//if (index == 0)
+	//{
+	//	return; // prevents selecting of empty field 
+	//}
 	int n_series = m_imageDirectorySnooper->GetNumberOfSeries();
-	if (index >= n_series+1)
+	//if (index >= n_series+1)
+	if (index >= n_series)
 	{
 		m_seriesSelector->clear();
 		m_seriesSelector->setDisabled(true);
 		return;
 	}
-	auto fileNameArray = m_imageDirectorySnooper->GetFileNamesForSeries(index-1);
+	//auto fileNameArray = m_imageDirectorySnooper->GetFileNamesForSeries(index-1);
+	auto fileNameArray = m_imageDirectorySnooper->GetFileNamesForSeries(index);
 	int n = fileNameArray->GetNumberOfValues();
 	QStringList fileNames;
 	for (int i = 0; i < n; ++i)

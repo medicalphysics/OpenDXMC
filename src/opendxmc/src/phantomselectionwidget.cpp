@@ -38,6 +38,8 @@ PhantomSelectionWidget::PhantomSelectionWidget(QWidget *parent)
 	phantomSelector->addItem(tr(""));
 	phantomSelector->addItem(tr("Female ICRU reference phantom"));
 	phantomSelector->addItem(tr("Male ICRU reference phantom"));
+	phantomSelector->addItem(tr("Female ICRU reference phantom without arms"));
+	phantomSelector->addItem(tr("Male ICRU reference phantom without arms"));
 	phantomSelector->addItem(tr("CTDI Phantom 320 mm"));
 	phantomSelector->addItem(tr("CTDI Phantom 160 mm"));
 
@@ -45,15 +47,17 @@ PhantomSelectionWidget::PhantomSelectionWidget(QWidget *parent)
 	connect(phantomSelector, QOverload<int>::of(&QComboBox::activated),
 		[=](int index) { 
 		if (index == 1) 
-			emit this->readIRCUFemalePhantom(); 
+			emit this->readIRCUFemalePhantom(false); 
 		else if (index == 2) 
-			emit this->readIRCUMalePhantom(); 
+			emit this->readIRCUMalePhantom(false); 
 		else if (index == 3)
-			emit this->readCTDIPhantom(320);
+			emit this->readIRCUFemalePhantom(true);
 		else if (index == 4)
+			emit this->readIRCUMalePhantom(true);
+		else if (index == 5)
+			emit this->readCTDIPhantom(320);
+		else if (index == 6)
 			emit this->readCTDIPhantom(160);
-
-
 	});
 
 

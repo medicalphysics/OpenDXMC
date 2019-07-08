@@ -30,8 +30,8 @@ public:
 	PhantomSelectionWidget(QWidget *parent = nullptr);
 
 signals:
-	void readIRCUMalePhantom(void);
-	void readIRCUFemalePhantom(void);
+	void readIRCUMalePhantom(bool removeArms=false);
+	void readIRCUFemalePhantom(bool removeArms = false);
 	void readCTDIPhantom(int mm);
 protected:
 	

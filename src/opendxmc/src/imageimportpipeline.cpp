@@ -461,12 +461,15 @@ std::pair<std::shared_ptr<std::vector<unsigned char>>, std::shared_ptr<std::vect
 	for (std::size_t i = 0; i < organArray.size(); ++i)
 	{
 		materialBuffer[i] = materialLut[organArray[i]];
+	}
+	for (std::size_t i = 0; i < organArray.size(); ++i)
+	{
 		densityBuffer[i] = densityLut[organArray[i]];
 	}
 	return std::make_pair(materialArray, densityArray);
 }
 
-void ImageImportPipeline::importICRUMalePhantom(void)
+void ImageImportPipeline::importICRUMalePhantom(bool ignoreArms)
 {
 	emit processingDataStarted();
 	std::array<double, 3> spacing = { 2.137, 2.137, 8.8 };
@@ -479,6 +482,34 @@ void ImageImportPipeline::importICRUMalePhantom(void)
 	auto organs = readICRPOrgans("resources/phantoms/icrp/AM/AM_organs.dat");
 	auto media = readICRPMedia("resources/phantoms/icrp/AM/AM_media.dat");
 	auto organArray = readICRPData("resources/phantoms/icrp/AM/AM.dat", size);
+
+	if (ignoreArms)
+	{
+		for (auto& organ : organs)
+		{
+			//find arm string
+			auto armPos = organ.name.find("arm");
+			if (armPos != std::string::npos)
+			{
+				std::replace(std::execution::par_unseq, organArray->begin(), organArray->end(), static_cast<unsigned char>(organ.ID), static_cast<unsigned char>(0));
+			}
+			auto handPos = organ.name.find("hand");
+			if (handPos != std::string::npos)
+			{
+				std::replace(std::execution::par_unseq, organArray->begin(), organArray->end(), static_cast<unsigned char>(organ.ID), static_cast<unsigned char>(0));
+			}
+			auto humeriPos = organ.name.find("Humeri");
+			if (humeriPos != std::string::npos)
+			{
+				std::replace(std::execution::par_unseq, organArray->begin(), organArray->end(), static_cast<unsigned char>(organ.ID), static_cast<unsigned char>(0));
+			}
+			auto ulnaRadiiPos = organ.name.find("Ulnae");
+			if (ulnaRadiiPos != std::string::npos)
+			{
+				std::replace(std::execution::par_unseq, organArray->begin(), organArray->end(), static_cast<unsigned char>(organ.ID), static_cast<unsigned char>(0));
+			}
+		}
+	}
 
 	auto[materialArray, densityArray] = generateICRUPhantomArrays(*organArray, organs, media);
 
@@ -507,6 +538,7 @@ void ImageImportPipeline::importICRUMalePhantom(void)
 		return;
 	}
 
+	
 
 	auto  organImage = std::make_shared<OrganImageContainer>(organArray, dimensions, spacing, origin);
 	auto materialImage= std::make_shared<MaterialImageContainer>(materialArray, dimensions, spacing, origin);
@@ -523,7 +555,7 @@ void ImageImportPipeline::importICRUMalePhantom(void)
 	emit imageDataChanged(materialImage);
 }
 
-void ImageImportPipeline::importICRUFemalePhantom(void)
+void ImageImportPipeline::importICRUFemalePhantom(bool ignoreArms)
 {
 	emit processingDataStarted();
 	std::array<double, 3> spacing = { 1.775, 1.775, 4.84 };
@@ -536,6 +568,34 @@ void ImageImportPipeline::importICRUFemalePhantom(void)
 	auto organs = readICRPOrgans("resources/phantoms/icrp/AF/AF_organs.dat");
 	auto media = readICRPMedia("resources/phantoms/icrp/AF/AF_media.dat");
 	auto organArray = readICRPData("resources/phantoms/icrp/AF/AF.dat", size);
+
+	if (ignoreArms)
+	{
+		for (auto& organ : organs)
+		{
+			//find arm string
+			auto armPos = organ.name.find("arm");
+			if (armPos != std::string::npos)
+			{
+				std::replace(std::execution::par_unseq, organArray->begin(), organArray->end(), static_cast<unsigned char>(organ.ID), static_cast<unsigned char>(0));
+			}
+			auto handPos = organ.name.find("hand");
+			if (handPos != std::string::npos)
+			{
+				std::replace(std::execution::par_unseq, organArray->begin(), organArray->end(), static_cast<unsigned char>(organ.ID), static_cast<unsigned char>(0));
+			}
+			auto humeriPos = organ.name.find("Humeri");
+			if (humeriPos != std::string::npos)
+			{
+				std::replace(std::execution::par_unseq, organArray->begin(), organArray->end(), static_cast<unsigned char>(organ.ID), static_cast<unsigned char>(0));
+			}
+			auto ulnaRadiiPos = organ.name.find("Ulnae");
+			if (ulnaRadiiPos != std::string::npos)
+			{
+				std::replace(std::execution::par_unseq, organArray->begin(), organArray->end(), static_cast<unsigned char>(organ.ID), static_cast<unsigned char>(0));
+			}
+		}
+	}
 
 	auto[materialArray, densityArray] = generateICRUPhantomArrays(*organArray, organs, media);
 

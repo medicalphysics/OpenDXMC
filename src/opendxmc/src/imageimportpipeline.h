@@ -211,8 +211,8 @@ public:
 	void setCTImportAqusitionAlFiltration(double mm) { m_tube.setAlFiltration(mm); }
 	void setCTImportAqusitionCuFiltration(double mm) { m_tube.setCuFiltration(mm); }
 
-	void importICRUMalePhantom(void);
-	void importICRUFemalePhantom(void);
+	void importICRUMalePhantom(bool ignoreArms=false);
+	void importICRUFemalePhantom(bool ignoreArms = false);
 	void importCTDIPhantom(int mm);
 
 	//void importH5File(const QString& path);

@@ -24,6 +24,7 @@ Copyright 2019 Erlend Andersen
 #include "dicomimportwidget.h"
 #include "imageimportpipeline.h"
 #include "progressindicator.h"
+#include "exportwidget.h"
 //#include "materialselectionwidget.h"
 #include "sourceeditorwidget.h"
 #include "phantomselectionwidget.h"
@@ -68,10 +69,14 @@ MainWindow::MainWindow(QWidget* parent)
 	m_menuWidget->setTabPosition(QTabWidget::West);
 	
 	
+	//import widgets share å tabbed widget
+	auto importWidget = new QTabWidget(this);
+	importWidget->setTabPosition(QTabWidget::North);
 
 	//dicom import widget
 	DicomImportWidget *dicomImportWidget = new DicomImportWidget(this);
-	m_menuWidget->addTab(dicomImportWidget, tr("Import DiCOM CT images"));
+	//m_menuWidget->addTab(dicomImportWidget, tr("Import DiCOM CT images"));
+	importWidget->addTab(dicomImportWidget, tr("DiCOM CT images"));
 	connect(dicomImportWidget, &DicomImportWidget::dicomSeriesActivated, m_importPipeline, &ImageImportPipeline::setDicomData);
 	connect(dicomImportWidget, &DicomImportWidget::outputSpacingChanged, m_importPipeline, &ImageImportPipeline::setOutputSpacing);
 	connect(dicomImportWidget, &DicomImportWidget::useOutputSpacingChanged, m_importPipeline, &ImageImportPipeline::setUseOutputSpacing);
@@ -84,11 +89,13 @@ MainWindow::MainWindow(QWidget* parent)
 
 	//phantom import widget
 	PhantomSelectionWidget* phantomWidget = new PhantomSelectionWidget(this);
-	m_menuWidget->addTab(phantomWidget, tr("Digital phantoms"));
+	//m_menuWidget->addTab(phantomWidget, tr("Digital phantoms"));
+	importWidget->addTab(phantomWidget, tr("Digital phantoms"));
 	connect(phantomWidget, &PhantomSelectionWidget::readIRCUFemalePhantom, m_importPipeline, &ImageImportPipeline::importICRUFemalePhantom);
 	connect(phantomWidget, &PhantomSelectionWidget::readIRCUMalePhantom, m_importPipeline, &ImageImportPipeline::importICRUMalePhantom);
 	connect(phantomWidget, &PhantomSelectionWidget::readCTDIPhantom, m_importPipeline, &ImageImportPipeline::importCTDIPhantom);
 
+	m_menuWidget->addTab(importWidget, tr("Import data"));
 
 	//source edit widget
 	auto sourceEditWidget = new SourceEditWidget(this);
@@ -100,15 +107,26 @@ MainWindow::MainWindow(QWidget* parent)
 	auto doseReportWidget = new DoseReportWidget(this);
 	connect(m_simulationPipeline, &SimulationPipeline::doseDataChanged, doseReportWidget, &DoseReportWidget::setDoseData);
 	m_menuWidget->addTab(doseReportWidget, tr("Dose summary"));
-
+	
+	//export Widget
+	auto exportWidget = new ExportWidget(this);
+	connect(m_simulationPipeline, &SimulationPipeline::imageDataChanged, exportWidget, &ExportWidget::registerImage);
+	connect(m_importPipeline, &ImageImportPipeline::imageDataChanged, exportWidget, &ExportWidget::registerImage);
+	m_menuWidget->addTab(exportWidget, tr("Export data"));
 	splitter->addWidget(m_menuWidget);
 	
+
+
+
 
 	//simulation progress
 	m_progressTimer = new QTimer(this);
 	m_progressTimer->setTimerType(Qt::CoarseTimer);
 	connect(m_simulationPipeline, &SimulationPipeline::progressBarChanged, this, &MainWindow::setProgressBar);
 	connect(m_progressTimer, &QTimer::timeout, this, &MainWindow::updateProgressBar);
+
+
+	
 
 
 

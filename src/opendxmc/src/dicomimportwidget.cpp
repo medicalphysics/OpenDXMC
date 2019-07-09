@@ -43,7 +43,7 @@ Copyright 2019 Erlend Andersen
 DicomImportWidget::DicomImportWidget(QWidget *parent)
 	: QWidget(parent)
 {
-	QSettings settings;
+	QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
 
 	auto *mainlayout = new QVBoxLayout;
 	//mainlayout->setContentsMargins(0, 0, 0, 0);
@@ -204,7 +204,7 @@ DicomImportWidget::DicomImportWidget(QWidget *parent)
 
 void DicomImportWidget::browseForFolder(void)
 {
-	QSettings settings;
+	QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
 	QString lastFolderPath = settings.value("dicomimport/browsepath").value<QString>();
 	QString path = QFileDialog::getExistingDirectory(this, "Select folder with dicom files", lastFolderPath, QFileDialog::ShowDirsOnly);
 	if (!path.isEmpty())
@@ -221,7 +221,7 @@ void DicomImportWidget::lookInFolder(const QString folderPath)
 {
 	if (!folderPath.isEmpty())
 	{
-		QSettings settings;
+		QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
 		settings.setValue("dicomimport/browsepath", folderPath);
 	}
 

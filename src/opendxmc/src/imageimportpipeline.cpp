@@ -124,13 +124,12 @@ void ImageImportPipeline::setDicomData(QStringList dicomPaths)
 	dicomRectifier->Update();
 	auto rectifiedMatrix = dicomRectifier->GetVolumeMatrix();
 	std::array<double, 6> directionCosines;
-	for (int i = 0; i < 3; i++)
+	for (std::size_t i = 0; i < 3; i++)
 	{
-		directionCosines[i] = rectifiedMatrix->GetElement(i, 0);
-		directionCosines[i + 3] = rectifiedMatrix->GetElement(i, 1);
+		directionCosines[i] = rectifiedMatrix->GetElement(static_cast<int>(i), 0);
+		directionCosines[i + 3] = rectifiedMatrix->GetElement(static_cast<int>(i), 1);
 	}
 	
-
 	// We must construct a supported type
 	static_assert((vtkType == 10));
 
@@ -160,11 +159,12 @@ void ImageImportPipeline::setDicomData(QStringList dicomPaths)
 	imageContainer->directionCosines = directionCosines;
 	imageContainer->ID = ImageContainer::generateID();
 	logger->debug("Done importing images.");
-	emit imageDataChanged(imageContainer);
-	logger->debug("Reading exposure data...");
+	logger->flush();
+	
+	
 	auto exposure = readExposureData(dicomReader);
-	logger->debug("Done reading exposure data.");
-
+	
+	emit imageDataChanged(imageContainer);
 	processCTData(imageContainer, exposure);
 	emit processingDataEnded();
 }
@@ -199,17 +199,23 @@ void ImageImportPipeline::processCTData(std::shared_ptr<ImageContainer> ctImage,
 	if (ctImage->imageType != ImageContainer::CTImage)
 	{
 		logger->debug("Segmenting CT images failed, data is not CT data.");
+		logger->flush();
 		return;
 	}
 	if (!ctImage->image)
 	{
 		logger->debug("Segmenting CT images failed, no image data.");
+		logger->flush();
 		return; // if ctimage is empty return;
 	}
 	std::shared_ptr<std::vector<unsigned char>> materialIndex;
 	std::shared_ptr<std::vector<double>> density;
 
-	auto dimensions = ctImage->image->GetDimensions();
+	//auto dimensions = ctImage->image->GetDimensions();
+	std::array<std::size_t, 3> dimensions;
+	for (std::size_t i = 0; i < 3; ++i)
+		dimensions[i] = (ctImage->image->GetDimensions())[i];
+
 	if (ctImage->image->GetScalarType() == VTK_DOUBLE) {
 		auto begin = static_cast<double*>(ctImage->image->GetScalarPointer());
 		auto end = begin + dimensions[0] * dimensions[1] * dimensions[2];
@@ -241,14 +247,24 @@ void ImageImportPipeline::processCTData(std::shared_ptr<ImageContainer> ctImage,
 	materialImage->ID = ctImage->ID;
 	densityImage->ID = ctImage->ID;
 
+	logger->debug("Done segmenting CT images.");
+	logger->flush();
 
 	//making exposure map for CT AEC
-	const auto[exposurename, exposure] = exposureData;
-	auto aecFilter = std::make_shared<AECFilter>(density, spacing, dimensionsArray, exposure);
-
-	QString filtername = QString::fromStdString(exposurename);
-	logger->debug("Done segmenting CT images.");
-	emit aecFilterChanged(filtername, aecFilter);
+	const auto [exposurename, exposure] = exposureData;
+	logger->debug("Generating AEC profile...");
+	if (exposure.size() > 0)
+	{
+		auto aecFilter = std::make_shared<AECFilter>(density, spacing, dimensionsArray, exposure);
+		QString filtername = QString::fromStdString(exposurename);
+		emit aecFilterChanged(filtername, aecFilter);
+		logger->debug("Done generating AEC profile: {}.", exposurename);
+	}
+	else
+	{
+		logger->debug("Could not find suitable AEC profile for {}.", exposurename);
+	}
+	logger->flush();
 	emit imageDataChanged(materialImage);
 	emit imageDataChanged(densityImage);
 	emit materialDataChanged(m_ctImportMaterialMap);
@@ -256,13 +272,20 @@ void ImageImportPipeline::processCTData(std::shared_ptr<ImageContainer> ctImage,
 
 std::pair<std::string, std::vector<double>> ImageImportPipeline::readExposureData(vtkSmartPointer<vtkDICOMReader>& dicomReader)
 {
+	auto logger = spdlog::get("OpenDXMCapp");
+	logger->debug("Reading exposure data...");
+	logger->flush();
+
 	std::vector<double> exposure;
 
 	vtkDICOMMetaData *meta = dicomReader->GetMetaData();
-
+	
 	if (!meta->Has(DC::Exposure))
+	{
+		logger->debug("No exposure data available, data not read.");
+		logger->flush();
 		return std::make_pair(std::string(), exposure);
-
+	}
 	int n = meta->GetNumberOfInstances();
 	exposure.resize(n, 0.0);
 	
@@ -273,16 +296,19 @@ std::pair<std::string, std::vector<double>> ImageImportPipeline::readExposureDat
 	for (int i = 0; i < n; ++i)
 	{
 		int fileIndex = fileMap->GetComponent(i, 0);
+		logger->debug("Reading exposure from file number {}", i);
+
 		// Get the position for that slice.
 		vtkDICOMValue pv = meta->Get(fileIndex, DC::Exposure);
 		
 		if (pv.IsValid())
 			exposure[i] = pv.GetDouble(0);
 	}
-
 	vtkDICOMTag seriesDescriptionTag(8, 4158);
 	auto seriesDescriptionValue = meta->GetAttributeValue(seriesDescriptionTag);
 	std::string desc = seriesDescriptionValue.GetString(0);
+	logger->debug("Done reading exposure data.");
+	logger->flush();
 
 	return std::make_pair(desc, exposure);
 }

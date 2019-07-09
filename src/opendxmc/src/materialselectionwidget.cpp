@@ -39,7 +39,7 @@ MaterialTableModel::MaterialTableModel(QObject *parent)
 	m_header.append(tr("Density [g/cm3]"));
 	m_header.append("Remove");
 
-	QSettings settings;
+	QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
 	settings.beginGroup("material/materials");
 	QStringList keys = settings.allKeys();
 

@@ -22,6 +22,7 @@ Copyright 2019 Erlend Andersen
 #include <vector>
 #include <array>
 #include <chrono>
+#include <string>
 
 #include <vtkSmartPointer.h>
 #include <vtkImageData.h>
@@ -65,6 +66,22 @@ public:
 		auto interval = timepoint.time_since_epoch();
 		return std::chrono::duration_cast<std::chrono::nanoseconds>(interval).count();
 	}
+	std::string getImageName(void)
+	{
+		if (imageType == CTImage)
+			return "CTImage";
+		else if (imageType == DensityImage)
+			return "DensityImage";
+		else if (imageType == MaterialImage)
+			return "MaterialImage";
+		else if (imageType == DoseImage)
+			return "DoseImage";
+		else if (imageType == OrganImage)
+			return "OrganImage";
+		
+		return "Unknown";
+	}
+
 protected:
 	
 

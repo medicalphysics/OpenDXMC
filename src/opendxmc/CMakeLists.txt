@@ -89,6 +89,8 @@ add_executable(app WIN32
 	src/dosereportwidget.cpp
 	src/sourceeditormodel.h
 	src/sourceeditormodel.cpp
+	src/exportwidget.h
+	src/exportwidget.cpp
     )
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/opendxmc")

@@ -1003,7 +1003,7 @@ void SourceModel::setupDXSource(std::shared_ptr<DXSource> src)
 	auto l5Item = new SourceItem<DXSource, double>(src,
 		[=](double val) {src->setDap(val); },
 		[=]() {return src->dap(); });
-	nodes.append(qMakePair(QString("Dose Area Product for beam [Gycm2]"), static_cast<QStandardItem*>(l5Item)));
+	nodes.append(qMakePair(QString("Dose Area Product for beam [mGycm2]"), static_cast<QStandardItem*>(l5Item)));
 
 	for (int i = 0; i < nodes.count(); ++i)
 	{

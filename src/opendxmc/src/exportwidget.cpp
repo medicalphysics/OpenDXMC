@@ -89,10 +89,6 @@ ExportWidget::ExportWidget(QWidget* parent)
 	auto* rawExportBox = new QGroupBox(tr("Select folder for raw export of binary data"), this);
 	rawExportBox->setLayout(exportRawLayout);
 
-
-
-
-
 	mainLayout->addWidget(rawExportBox);
 
 }
@@ -165,7 +161,7 @@ void ExportWidget::exportAllRawData()
 		writeArrayBin(im, filepathBin.string(), m_rawExportIncludeHeader);
 		std::string filenameVtk(im->getImageName() + ".vti");
 		auto filepathVtk = std::filesystem::path(dir.toStdString()) / filenameVtk;
-		writeArrayVtk(im, filepathVtk.string(), m_rawExportIncludeHeader);
+		writeArrayVtk(im, filepathVtk.string());
 	}
 	
 }

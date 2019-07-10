@@ -215,10 +215,10 @@ double DXSource::getCalibrationValue(std::uint64_t nHistories, ProgressBar* prog
 		auto &[keV, weight] = specter[i];
 		calcOutput += keV * weight * nHist * massAbsorb[i];
 	}
-	calcOutput *= KEV_TO_MJ; // Air KERMA [J / kg] = [Gy]
+	calcOutput *= KEV_TO_MJ * 1000.0; // Air KERMA [mJ / kg] = [mGy]
 
 	double output = m_dap / (m_fieldSize[0] * m_fieldSize[1] * 0.01); //mm->cm
-	double factor = output / calcOutput / 1000.0; // Gy->mGy
+	double factor = output / calcOutput; // mGy/mGy
 	return factor; 
 }
 

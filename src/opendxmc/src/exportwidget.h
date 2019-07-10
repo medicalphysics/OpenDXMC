@@ -22,9 +22,6 @@ Copyright 2019 Erlend Andersen
 
 
 #include <QWidget>
-//#include <QString>
-//#include <QStringList>
-//#include <QComboBox>
 #include <QLineEdit>
 
 #include <vector>

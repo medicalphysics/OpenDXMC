@@ -28,12 +28,15 @@ Copyright 2019 Erlend Andersen
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/rotating_file_sink.h"
 
+#include <thread>
+
 void createLogger()
 {
-	auto my_logger = spdlog::rotating_logger_mt("OpenDXMCapp", "log.txt", 1048576 * 5, 1);
+	auto logger = spdlog::rotating_logger_mt("OpenDXMCapp", "log.txt", 1048576 * 5, 1);
 	spdlog::set_level(spdlog::level::trace);
-	my_logger->info("Application started");
-	my_logger->flush();
+	logger->info("Application started");
+	logger->info("Number of hardware threads available: {}.", std::thread::hardware_concurrency());
+	logger->flush();
 }
 
 

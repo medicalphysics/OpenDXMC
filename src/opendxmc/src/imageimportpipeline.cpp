@@ -61,6 +61,7 @@ ImageImportPipeline::ImageImportPipeline(QObject *parent)
 	m_blurRadius[2] = 0.0;
 	m_tube.setVoltage(120.0);
 	m_tube.setAlFiltration(7.0);
+
 }
 
 
@@ -186,7 +187,11 @@ std::pair<std::shared_ptr<std::vector<unsigned char>>, std::shared_ptr<std::vect
 {
 	CalculateCTNumberFromMaterials<unsigned char> worker(m_ctImportMaterialMap, m_tube);
 	auto materialIndex = std::make_shared<std::vector<unsigned char>>(std::distance(first, last)); // we must make new vector to not invalidate old vector 
-	worker.generateMaterialMap(first, last, materialIndex->begin(), std::thread::hardware_concurrency());
+	auto nThreads = std::thread::hardware_concurrency();
+	if (nThreads == 0)
+		nThreads = 4;
+	
+	worker.generateMaterialMap(first, last, materialIndex->begin(), nThreads);
 	auto density = std::make_shared<std::vector<double>>(std::distance(first, last)); // we must make new vector to not invalidate old vector 
 	worker.generateDensityMap(first, last, materialIndex->begin(), density->begin());
 	return std::make_pair(materialIndex, density);

@@ -120,7 +120,6 @@ public:
 				[constant, &ctNumbers, this](auto val, auto index) -> double {
 				const double dens = (val - ctNumbers[index]) * constant / m_materialEnergy[index] + m_materialDensity[index];
 				return dens > 0.0 ? dens : 0.0;
-				//return dens;
 			});
 			
 		}

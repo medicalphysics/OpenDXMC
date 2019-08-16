@@ -160,7 +160,7 @@ private:
 	double m_dap = 1.0; // Gycm2
 	std::array<double, 2> m_fieldSize;
 	std::array<double, 2> m_collimationAngles;
-	std::uint64_t m_totalExposures = 10;
+	std::uint64_t m_totalExposures = 1000;
 	Tube m_tube;
 	bool m_specterValid = false;
 	std::unique_ptr<SpecterDistribution> m_specterDistribution;

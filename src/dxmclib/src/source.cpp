@@ -51,7 +51,7 @@ Source::Source()
 	}
 	m_directionCosines[0] = 1.0;
 	m_directionCosines[4] = 1.0;
-    m_historiesPerExposure = 1000;
+    m_historiesPerExposure = 1000000;
 }
 
 

@@ -30,6 +30,7 @@ Copyright 2019 Erlend Andersen
 #include <vtkImageSlice.h>
 #include <vtkRenderer.h>
 #include <vtkTextActor.h>
+#include <vtkCornerAnnotation.h>
 #include <vtkImageGaussianSmooth.h>
 
 #include <memory>
@@ -61,10 +62,9 @@ private:
 	vtkSmartPointer<vtkImageSlice> m_imageSlice;
 	vtkSmartPointer<vtkImageSlice> m_imageSliceBackground;
 	std::map<ImageContainer::ImageType, std::array<double, 2>> m_windowLevels;
-
-
 	vtkSmartPointer<vtkRenderer> m_renderer;
-	vtkSmartPointer<vtkTextActor> m_textActor;
+	vtkSmartPointer<vtkTextActor> m_textActorWindow;
+	vtkSmartPointer<vtkCornerAnnotation> m_textActorUnits;
 	std::shared_ptr<ImageContainer> m_image;
 	std::shared_ptr<ImageContainer> m_imageBackground;
 }; 

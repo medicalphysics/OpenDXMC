@@ -50,15 +50,17 @@ public:
 	std::array<double, 2> minMax{0,1};
 	ImageType imageType = Empty;
 	std::uint64_t ID = 0;
-	
+	std::string dataUnits = "";
+
 	ImageContainer() {}
-	ImageContainer(ImageType imageType, vtkSmartPointer<vtkImageData> imageData)
+	ImageContainer(ImageType imageType, vtkSmartPointer<vtkImageData> imageData, const std::string& units="")
 	{
 		image = imageData;
 		this->imageType = imageType;
 		auto* minmax = image->GetScalarRange();
 		minMax[0] = minmax[0];
 		minMax[1] = minmax[1];
+		dataUnits = units;
 	}
 	static std::uint64_t generateID(void)
 	{
@@ -151,7 +153,7 @@ private:
 class DensityImageContainer :public ImageContainer
 {
 public:
-	DensityImageContainer() :ImageContainer() { imageType = DensityImage; }
+	DensityImageContainer() :ImageContainer() { imageType = DensityImage; dataUnits = "g/cm3"; }
 	DensityImageContainer(std::shared_ptr<std::vector<double>> imageData, const std::array<std::size_t, 3> &dimensions, const std::array<double, 3> &dataSpacing, const std::array<double, 3> &origin, bool smooth=false)
 		:ImageContainer(DensityImage, imageData, dimensions, dataSpacing, origin, smooth)
 	{

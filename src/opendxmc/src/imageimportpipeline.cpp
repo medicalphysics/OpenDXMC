@@ -156,7 +156,7 @@ void ImageImportPipeline::setDicomData(QStringList dicomPaths)
 		origin[i] = - 0.5 * spacing[i] * dimensions[i];
 	data->SetOrigin(origin);
 
-	auto imageContainer = std::make_shared<ImageContainer>(ImageContainer::CTImage, data);
+	auto imageContainer = std::make_shared<ImageContainer>(ImageContainer::CTImage, data, "HU");
 	imageContainer->directionCosines = directionCosines;
 	imageContainer->ID = ImageContainer::generateID();
 	logger->debug("Done importing images.");
@@ -251,6 +251,8 @@ void ImageImportPipeline::processCTData(std::shared_ptr<ImageContainer> ctImage,
 	densityImage->directionCosines = ctImage->directionCosines;
 	materialImage->ID = ctImage->ID;
 	densityImage->ID = ctImage->ID;
+	densityImage->dataUnits = "g/cm3";
+
 
 	logger->debug("Done segmenting CT images.");
 	logger->flush();

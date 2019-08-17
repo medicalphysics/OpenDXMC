@@ -99,6 +99,7 @@ void SimulationPipeline::runSimulation(const std::vector<std::shared_ptr<Source>
 		emit progressBarChanged(nullptr);
 	}
 
+
 	if (m_ignoreAirDose)
 	{
 		auto mat = m_world.materialIndexArray();
@@ -112,9 +113,28 @@ void SimulationPipeline::runSimulation(const std::vector<std::shared_ptr<Source>
 	std::array<double, 3> origin;
 	for (int i = 0; i < 3; ++i)
 		origin[i] = -(dimensions[i] * spacing[i] * 0.5);
+
+	//scaling dosevalues to sane units
+	const double maxDose = *std::max_element(std::execution::par_unseq, totalDose->begin(), totalDose->end());
+	std::string dataUnits = "mGy";
+	if (maxDose < 1.0/1000.0)
+	{
+		dataUnits = "nGy";
+		std::transform(std::execution::par_unseq, totalDose->begin(), totalDose->end(), totalDose->begin(),
+			[](double d) {return d * 1e6; });
+	}
+	else if (maxDose < 1.0)
+	{
+		dataUnits = "uGy";
+		std::transform(std::execution::par_unseq, totalDose->begin(), totalDose->end(), totalDose->begin(),
+			[](double d) {return d * 1e3; });
+	}
+
+
 	auto doseContainer = std::make_shared<DoseImageContainer>(totalDose, dimensions, spacing, origin, m_smoothDose);
 	doseContainer->directionCosines = m_densityImage->directionCosines;
 	doseContainer->ID = m_densityImage->ID;
+	doseContainer->dataUnits = dataUnits;
 
 	if (m_organImage && (m_organList.size() > 0)) {
 		if (m_organImage->ID == m_materialImage->ID) {
@@ -130,8 +150,6 @@ void SimulationPipeline::runSimulation(const std::vector<std::shared_ptr<Source>
 		DoseReportContainer cont(m_world.materialMap(), m_materialImage, m_densityImage, doseContainer);
 		emit doseDataChanged(cont);
 	}
-
-	
 	emit imageDataChanged(doseContainer);
 
 	emit processingDataEnded();

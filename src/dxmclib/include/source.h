@@ -343,7 +343,7 @@ private:
 	double m_pitch = 1.0;
 	double m_tubeAmas = 100.0;
 	double m_tubeBmas = 100.0;
-	double m_tubeBweight;
-	double m_tubeAweight;
+	double m_tubeBweight = -1.0;
+	double m_tubeAweight = -1.0;
 	std::shared_ptr<BeamFilter> m_bowTieFilterB;
 };

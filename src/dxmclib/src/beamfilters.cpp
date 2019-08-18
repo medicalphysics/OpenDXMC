@@ -123,7 +123,7 @@ void BowTieFilter::normalizeData()
 XCareFilter::XCareFilter()
 	:BeamFilter()
 {
-	m_filterAngle = 0.0;
+	m_filterAngle = 180.0 * DEG_TO_RAD;
 	m_spanAngle = 120.0 * DEG_TO_RAD;
 	m_rampAngle = 20.0 * DEG_TO_RAD;
 	m_lowWeight = 0.6;

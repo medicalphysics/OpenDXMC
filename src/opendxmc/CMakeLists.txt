@@ -52,7 +52,7 @@ include_directories("thirdparty/spdlog/*")
 
 
 # Define an executable (WIN32 argument to prevent console window on windows)
-add_executable(app WIN32
+add_executable(OpenDXMC WIN32
     src/app.cpp
 	src/mainwindow.h
 	src/mainwindow.cpp
@@ -96,7 +96,7 @@ add_executable(app WIN32
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/opendxmc")
 
 # Define the libraries this project depends upon
-target_link_libraries(app
+target_link_libraries(OpenDXMC
         PRIVATE dxmclib
 		PRIVATE vtkextension
 		${VTK_LIBRARIES}
@@ -106,13 +106,13 @@ target_link_libraries(app
 		Qt5::Charts
         )
 
-target_include_directories(app PRIVATE
+target_include_directories(OpenDXMC PRIVATE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/thirdparty>
     )
 
 #making version available in code
 
-target_compile_definitions(app PRIVATE APP_VERSION="${PROJECT_VERSION}")
+target_compile_definitions(OpenDXMC PRIVATE APP_VERSION="${PROJECT_VERSION}")
 
 
 
@@ -124,7 +124,7 @@ if (WIN32)
     get_filename_component(QT5_WINDEPLOYQT_EXECUTABLE ${QT5_QMAKE_EXECUTABLE} PATH)
     set(QT5_WINDEPLOYQT_EXECUTABLE "${QT5_WINDEPLOYQT_EXECUTABLE}/windeployqt.exe")
 	add_custom_target(qtdeploy ALL
-       COMMAND ${QT5_WINDEPLOYQT_EXECUTABLE} --qmldir ${CMAKE_BINARY_DIR} $<TARGET_FILE_DIR:app>)
+       COMMAND ${QT5_WINDEPLOYQT_EXECUTABLE} --qmldir ${CMAKE_BINARY_DIR} $<TARGET_FILE_DIR:OpenDXMC>)
 endif(WIN32)
 
 #adding target to copy vtk dlls 

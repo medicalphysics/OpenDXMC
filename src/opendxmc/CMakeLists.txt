@@ -110,6 +110,13 @@ target_include_directories(app PRIVATE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/thirdparty>
     )
 
+#making version available in code
+
+target_compile_definitions(app PRIVATE APP_VERSION="${PROJECT_VERSION}")
+
+
+
+
 ##adding REQUIRED dlls to the binary folder of executable
 #adding target to copy qt dlls 
 if (WIN32)

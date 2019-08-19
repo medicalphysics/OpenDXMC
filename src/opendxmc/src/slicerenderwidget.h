@@ -22,6 +22,7 @@ Copyright 2019 Erlend Andersen
 #include "imagecontainer.h"
 
 #include <QWidget>
+#include <QComboBox>
 
 #include <QVTKOpenGLWidget.h>
 #include <vtkSmartPointer.h>
@@ -32,6 +33,7 @@ Copyright 2019 Erlend Andersen
 #include <vtkTextActor.h>
 #include <vtkCornerAnnotation.h>
 #include <vtkImageGaussianSmooth.h>
+#include <vtkScalarBarActor.h>
 
 #include <memory>
 #include <map>
@@ -48,11 +50,11 @@ public:
 	SliceRenderWidget(QWidget *parent = nullptr, Orientation orientation = Axial);
 
 	void updateRendering();
-	//void setImageData(std::shared_ptr<ImageContainer> volume);
 	void setImageData(std::shared_ptr<ImageContainer> foreground, std::shared_ptr<ImageContainer> background=nullptr);
 protected:
 	std::array<double, 2> presetLeveling(ImageContainer::ImageType type);
-	//void updateOrientation(void);
+	void setColorTable(const QString& colorTableName);
+	
 private:
 	Orientation m_orientation;
 	QVTKOpenGLWidget *m_openGLWidget;
@@ -65,8 +67,12 @@ private:
 	vtkSmartPointer<vtkRenderer> m_renderer;
 	vtkSmartPointer<vtkTextActor> m_textActorWindow;
 	vtkSmartPointer<vtkCornerAnnotation> m_textActorUnits;
+	vtkSmartPointer<vtkScalarBarActor> m_scalarColorBar;
+	std::map<const QString, QVector<double>> m_colorTables;
+	QComboBox* m_colorTablePicker = nullptr;
 	std::shared_ptr<ImageContainer> m_image;
 	std::shared_ptr<ImageContainer> m_imageBackground;
+
 }; 
 
 

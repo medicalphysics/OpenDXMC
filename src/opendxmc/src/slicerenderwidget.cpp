@@ -250,6 +250,12 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 	m_textActorWindow->GetTextProperty()->SetFontSize(m_textActorUnits->GetTextProperty()->GetFontSize());
 	m_renderer->AddActor(m_textActorUnits);
 	
+	//adding colorbar
+	m_scalarColorBar = vtkSmartPointer<vtkScalarBarActor>::New();
+	m_scalarColorBar->SetMaximumWidthInPixels(200);
+	m_scalarColorBar->AnnotationTextScalingOff();
+	
+	//m_scalarColorBar->SetLookupTable(m_imageSlice->GetProperty()->GetLookupTable());
 
 	//setup collbacks
 	
@@ -288,6 +294,15 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 	}
 	
 	
+
+	//color tables
+	m_colorTables["GRAY"] = GRAY;
+	m_colorTables["JET"] = JET;
+	m_colorTables["PET"] = PET;
+	m_colorTables["HSV"] = HSV;
+	m_colorTables["SIMPLE"] = SIMPLE;
+	m_colorTables["SUMMER"] = SUMMER;
+
 	//window settings
 	m_renderer->SetBackground(0,0,0);
 	auto menuIcon = QIcon(QString("resources/icons/settings.svg"));
@@ -314,16 +329,34 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 	auto smoothSliderLabel = new QLabel("Smoothing", smoothSliderHolder);
 	smoothSliderLayout->addWidget(smoothSliderLabel);
 	smoothSliderLayout->addWidget(smoothSlider);
-	//smoothSliderLayout->setContentsMargins(0, 0, 0, 0);
 	smoothSliderAction->setDefaultWidget(smoothSliderHolder);
 	menu->addAction(smoothSliderAction);
 	
+	m_colorTablePicker = new QComboBox(menuButton);
+	for (const auto& p : m_colorTables)
+	{
+		m_colorTablePicker->addItem(p.first);
+	}
+	connect(m_colorTablePicker, QOverload<const QString&>::of(&QComboBox::currentIndexChanged), this, &SliceRenderWidget::setColorTable);
+	auto colorTablePickerAction = new QWidgetAction(menuButton);
+	auto colorTablePickerHolder = new QWidget(menuButton);
+	auto colorTablePickerLayout = new QHBoxLayout(colorTablePickerHolder);
+	colorTablePickerLayout->setContentsMargins(0, 0, 0, 0);
+	colorTablePickerHolder->setLayout(colorTablePickerLayout);
+	auto colorTablePickerLabel = new QLabel("Color table", colorTablePickerHolder);
+	colorTablePickerLayout->addWidget(colorTablePickerLabel);
+	colorTablePickerLayout->addWidget(m_colorTablePicker);
+	colorTablePickerAction->setDefaultWidget(colorTablePickerHolder);
+	menu->addAction(colorTablePickerAction);
+	m_colorTablePicker->setDisabled(true);
+
 	menu->addAction(QString(tr("Set background color")), [=]() {
 		auto color = QColorDialog::getColor(Qt::black, this);
 		if (color.isValid())
 			m_renderer->SetBackground(color.redF(), color.greenF(), color.blueF());
 		updateRendering();
-	});
+		});
+
 	menu->addAction(QString(tr("Save to file")), [=]() {
 		auto filename = QFileDialog::getSaveFileName(this, tr("Save File"), "untitled.png",	tr("Images (*.png)"));
 		if (!filename.isEmpty())
@@ -389,6 +422,9 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume, std
 	m_textActorUnits->SetText(1, unitText.c_str());
 	m_renderer->RemoveActor(m_imageSliceBackground);
 	m_renderer->RemoveActor(m_imageSlice);
+	m_renderer->RemoveViewProp(m_scalarColorBar);
+	m_colorTablePicker->setDisabled(true);
+
 
 	if (m_windowLevels.find(m_image->imageType) == m_windowLevels.end())
 	{
@@ -411,7 +447,7 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume, std
 		prop->UseLookupTableScalarRangeOff();
 		prop->SetColorLevel(m_windowLevels[m_image->imageType][0]);
 		prop->SetColorWindow(m_windowLevels[m_image->imageType][1]);
-		auto lut = vtkSmartPointer<vtkLookupTable>::New();
+		/*auto lut = vtkSmartPointer<vtkLookupTable>::New();
 		lut->SetHueRange(0.0, 0.0);
 		lut->SetSaturationRange(0.0, 0.0);
 		lut->SetValueRange(0.0, 1.0);
@@ -421,6 +457,10 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume, std
 		lut->UseBelowRangeColorOn();	
 		lut->Build();
 		prop->SetLookupTable(lut);
+		*/
+		m_colorTablePicker->setEnabled(true);
+		m_colorTablePicker->setCurrentText("GRAY");
+		m_colorTablePicker->setEnabled(false);
 	}
 	else if (m_image->imageType == ImageContainer::DensityImage)
 	{
@@ -428,14 +468,21 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume, std
 		prop->UseLookupTableScalarRangeOff();
 		prop->SetColorLevel(m_windowLevels[m_image->imageType][0]);
 		prop->SetColorWindow(m_windowLevels[m_image->imageType][1]);
-		auto lut = vtkSmartPointer<vtkLookupTable>::New();
+		/*auto lut = vtkSmartPointer<vtkLookupTable>::New();
 		lut->SetHueRange(0.0, 1.0);
 		lut->SetSaturationRange(0.5, 0.5);
 		lut->SetValueRange(1.0, 1.0);
 		lut->SetBelowRangeColor(0.0, 0.0, 0.0, 0.0);
 		lut->UseBelowRangeColorOn();
 		lut->Build();
-		prop->SetLookupTable(lut);
+		*/
+		m_renderer->AddViewProp(m_scalarColorBar);
+		//m_scalarColorBar->SetLookupTable(lut);
+		m_scalarColorBar->SetNumberOfLabels(2);
+		m_colorTablePicker->setEnabled(true);
+		m_colorTablePicker->setCurrentText("JET");
+		//prop->SetLookupTable(lut);
+
 	}
 	else if (m_image->imageType == ImageContainer::MaterialImage)
 	{
@@ -454,6 +501,9 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume, std
 				lut->SetTableValue(i, arr[0], arr[1], arr[2], 1.0);
 		}
 		lut->SetTableRange(m_image->minMax.data());
+		m_renderer->AddViewProp(m_scalarColorBar);
+		m_scalarColorBar->SetLookupTable(lut);
+		m_scalarColorBar->SetNumberOfLabels(nColors);
 		prop->SetLookupTable(lut);
 	}
 	else if (m_image->imageType == ImageContainer::OrganImage)
@@ -473,6 +523,9 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume, std
 				lut->SetTableValue(i, arr[0], arr[1], arr[2], 1.0);
 		}
 		lut->SetTableRange(m_image->minMax.data());
+		m_renderer->AddViewProp(m_scalarColorBar);
+		m_scalarColorBar->SetLookupTable(lut);
+		m_scalarColorBar->SetNumberOfLabels(nColors);
 		prop->SetLookupTable(lut);
 	}
 	else if (m_image->imageType == ImageContainer::DoseImage)
@@ -484,14 +537,20 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume, std
 		m_windowLevels[m_image->imageType][1] = (m_windowLevels[m_image->imageType][0] - m_image->minMax[0]);
 		prop->SetColorLevel(m_windowLevels[m_image->imageType][0]);
 		prop->SetColorWindow(m_windowLevels[m_image->imageType][1]);
-		auto lut = vtkSmartPointer<vtkLookupTable>::New();
+		/*auto lut = vtkSmartPointer<vtkLookupTable>::New();
 		lut->SetHueRange(0.0, 1.0);
 		lut->SetSaturationRange(0.5, 0.5);
 		lut->SetValueRange(1.0, 1.0);
 		lut->SetBelowRangeColor(0.0, 0.0, 0.0, 0.0);
 		lut->UseBelowRangeColorOn();
 		lut->Build();
-		prop->SetLookupTable(lut);
+		*/
+		m_colorTablePicker->setEnabled(true);
+		m_colorTablePicker->setCurrentText("JET");
+		m_renderer->AddViewProp(m_scalarColorBar);
+		//m_scalarColorBar->SetLookupTable(lut);
+		m_scalarColorBar->SetNumberOfLabels(2);
+		//prop->SetLookupTable(lut);
 	}
 
 	if (m_imageBackground)
@@ -544,6 +603,22 @@ std::array<double, 2> SliceRenderWidget::presetLeveling(ImageContainer::ImageTyp
 		wl[1] = 0.1;
 	}
 	return wl;
+}
+
+void SliceRenderWidget::setColorTable(const QString& colorTableName)
+{
+	auto lut = vtkSmartPointer<vtkLookupTable>::New();
+	const auto arr = generateStandardColorTable(m_colorTables.at(colorTableName));
+	lut->Allocate();
+	for (std::size_t i = 1; i < 256; ++i)
+	{
+		std::size_t ai = i * 3;
+		lut->SetTableValue(i, arr[ai], arr[ai + 1], arr[ai + 2]);
+	}
+	lut->SetTableValue(0, 0.0, 0.0, 0.0, 0.0); // buttom should be zero for background 
+	auto prop = m_imageSlice->GetProperty();
+	prop->SetLookupTable(lut);
+	m_scalarColorBar->SetLookupTable(lut);
 }
 
 /*void SliceRenderWidget::updateOrientation(void)

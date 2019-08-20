@@ -16,6 +16,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <sstream>
 
 #include <vtkSmartPointer.h>
 #include <vtkXMLImageDataWriter.h>
@@ -25,7 +26,6 @@ ExportWidget::ExportWidget(QWidget* parent)
 {
 	QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
 	auto* mainLayout = new QVBoxLayout;
-
 
 	//export raw binary files
 	auto *exportRawBrowseLayout = new QHBoxLayout;
@@ -60,7 +60,7 @@ ExportWidget::ExportWidget(QWidget* parent)
 
 	auto *exportRawHeaderLayout = new QHBoxLayout;
 	
-	auto *exportRawHeaderCheckBox = new QCheckBox(tr("Include header in exported files?(not working yet)"), this);
+	auto *exportRawHeaderCheckBox = new QCheckBox(tr("Include header in exported files?"), this);
 	exportRawHeaderLayout->addWidget(exportRawHeaderCheckBox);
 
 	if (settings.contains("dataexport/rawexportincludeheader")){
@@ -90,7 +90,6 @@ ExportWidget::ExportWidget(QWidget* parent)
 	rawExportBox->setLayout(exportRawLayout);
 
 	mainLayout->addWidget(rawExportBox);
-
 }
 
 void ExportWidget::browseForRawExportFolder()
@@ -114,28 +113,56 @@ void ExportWidget::browseForRawExportFolder()
 
 void writeArrayVtk(std::shared_ptr<ImageContainer> image, const std::string& path)
 {
-
 	vtkSmartPointer<vtkXMLImageDataWriter> writer =
 		vtkSmartPointer<vtkXMLImageDataWriter>::New();
 	writer->SetFileName(path.c_str());
 	writer->SetInputData(image->image);
 	writer->Write();
-
 }
-void writeArrayBin(std::shared_ptr<ImageContainer> image, const std::string& path, bool includeHeader)
+
+template<typename U>
+void add3array(std::stringstream& stream, U* arr)
 {
-	if (includeHeader)
-	{
-		char hdata[4096];
+	for (std::size_t i = 0; i < 3; ++i)
+		stream << arr[i] << ", ";
+	stream.get();
+	stream << std::endl;
+}
 
-	}
+std::array<char, EXPORT_HEADER_SIZE> ExportWidget::getHeaderData(std::shared_ptr<ImageContainer> image)
+{
+	std::stringstream header;
 
+	header << "# SCALAR_ARRAY" << std::endl;
+	header << "# SCALAR_SIZE_IN_BYTES: " << image->image->GetScalarSize() << std::endl;
+	header << "# DIMENSIONS_[X,Y,Z]: ";
+	add3array(header, image->image->GetDimensions());
+	header << "# VOXEL_SPACING: ";
+	add3array(header, image->image->GetSpacing());
+	auto str = header.str();
+
+	std::array<char, EXPORT_HEADER_SIZE> arr;
+	arr.fill(' ');
+	std::copy(str.begin(), str.end(), arr.begin());
+	std::string end_header = "\nHEADER_DATA_END\n";
+	auto header_end = arr.begin();
+	std::advance(header_end, EXPORT_HEADER_SIZE - end_header.size());
+	std::copy(end_header.begin(), end_header.end(), header_end);
+	return arr;
+}
+
+void ExportWidget::writeArrayBin(std::shared_ptr<ImageContainer> image, const std::string& path, bool includeHeader)
+{
 	std::streamsize size = image->image->GetScalarSize() * image->image->GetNumberOfCells();
 	fstream file;
 	file.open(path, ios::out | ios::binary);
+	if (includeHeader)
+	{
+		auto header = ExportWidget::getHeaderData(image);
+		file.write(header.data(), EXPORT_HEADER_SIZE);
+	}
 	file.write(reinterpret_cast<char*>(image->image->GetScalarPointer()), size);
 	file.close();
-
 }
 
 void ExportWidget::exportAllRawData()
@@ -163,9 +190,7 @@ void ExportWidget::exportAllRawData()
 		auto filepathVtk = std::filesystem::path(dir.toStdString()) / filenameVtk;
 		writeArrayVtk(im, filepathVtk.string());
 	}
-	
 }
-
 
 void ExportWidget::registerImage(std::shared_ptr<ImageContainer> image)
 {

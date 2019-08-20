@@ -26,6 +26,9 @@ Copyright 2019 Erlend Andersen
 
 #include <vector>
 #include <memory>
+#include <string>
+
+constexpr std::size_t EXPORT_HEADER_SIZE = 4096;
 
 class ExportWidget : public QWidget
 {
@@ -39,6 +42,8 @@ signals:
 protected:
 	void browseForRawExportFolder();
 	void exportAllRawData();
+	static std::array<char, EXPORT_HEADER_SIZE> getHeaderData(std::shared_ptr<ImageContainer> image);
+	static void writeArrayBin(std::shared_ptr<ImageContainer> image, const std::string& path, bool includeHeader);
 private:
 	bool m_rawExportIncludeHeader = true;
 	QLineEdit* m_exportRawLineEdit;

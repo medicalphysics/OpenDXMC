@@ -30,7 +30,6 @@ Copyright 2019 Erlend Andersen
 #include <vtkImageResliceMapper.h>
 #include <vtkImageSlice.h>
 #include <vtkRenderer.h>
-#include <vtkTextActor.h>
 #include <vtkCornerAnnotation.h>
 #include <vtkImageGaussianSmooth.h>
 #include <vtkScalarBarActor.h>
@@ -65,8 +64,7 @@ private:
 	vtkSmartPointer<vtkImageSlice> m_imageSliceBackground;
 	std::map<ImageContainer::ImageType, std::array<double, 2>> m_windowLevels;
 	vtkSmartPointer<vtkRenderer> m_renderer;
-	vtkSmartPointer<vtkTextActor> m_textActorWindow;
-	vtkSmartPointer<vtkCornerAnnotation> m_textActorUnits;
+	vtkSmartPointer<vtkCornerAnnotation> m_textActorCorners;
 	vtkSmartPointer<vtkScalarBarActor> m_scalarColorBar;
 	std::map<const QString, QVector<double>> m_colorTables;
 	QComboBox* m_colorTablePicker = nullptr;

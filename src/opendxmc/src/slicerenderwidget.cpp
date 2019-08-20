@@ -45,6 +45,9 @@ Copyright 2019 Erlend Andersen
 #include <vtkPNGWriter.h>
 //#include <vtkFFMPEGWriter.h>
 
+#include <charconv>
+
+
 // Define interaction style
 class customMouseInteractorStyle : public vtkInteractorStyleImage
 {
@@ -145,19 +148,23 @@ public:
 	{
 		m_renderWindow = m;
 	}
-	void setTextActor(vtkSmartPointer<vtkTextActor> textActor)
+	
+	void setCornerAnnotation(vtkSmartPointer<vtkCornerAnnotation> actor)
 	{
-		m_textActor = textActor;
+		m_textActorCorners = actor;
 	}
 	static std::string prettyNumber(double number)
 	{
-		constexpr std::int32_t k = 3; // number decimals
+		constexpr std::int32_t k = 2; // number decimals
 		std::int32_t b = number * std::pow(10, k);
 		auto bs = std::to_string(b);
 		int c = static_cast<int>(bs.size() - k);
 		if (c < 0)
 			bs.insert(0, -c, '0');
-		bs.insert(bs.size() - k, 1, '.');
+		if (bs.size() == k)
+			bs.insert(0, "0.");
+		else
+			bs.insert(bs.size() - k, 1, '.');
 		return bs;
 	}
 	void updateWLText()
@@ -167,16 +174,16 @@ public:
 		{
 			double l = prop->GetColorLevel();
 			double w = prop->GetColorWindow();
-			m_text = prettyNumber(l) + ", " + prettyNumber(w);
-			m_textActor->SetInput(m_text.c_str());
+			auto text = "WC: " + prettyNumber(l) + "\n" + "WW: " + prettyNumber(w);
+			if(m_textActorCorners)
+				m_textActorCorners->SetText(0, text.c_str());
 		}
 	}
 private:
 	vtkSmartPointer<vtkImageResliceMapper> m_imageMapper;
 	vtkSmartPointer<vtkImageResliceMapper> m_imageMapperBackground;
 	vtkSmartPointer<vtkRenderWindow> m_renderWindow;
-	vtkSmartPointer<vtkTextActor> m_textActor;
-	std::string m_text;
+	vtkSmartPointer<vtkCornerAnnotation> m_textActorCorners;
 };
 vtkStandardNewMacro(customMouseInteractorStyle);
 
@@ -193,7 +200,6 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 	this->setLayout(layout);
 
 	//mapper 
-	
 	m_imageSmoother = vtkSmartPointer<vtkImageGaussianSmooth>::New();
 	m_imageSmoother->SetDimensionality(3);
 	m_imageSmoother->SetStandardDeviations(0.0, 0.0, 0.0);
@@ -217,8 +223,6 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 	m_renderer = vtkSmartPointer<vtkRenderer>::New();
 	m_renderer->UseFXAAOn();
 	
-
-
 	//render window
 	//https://lorensen.github.io/VTKExamples/site/Cxx/Images/ImageSliceMapper/
 	//http://vtk.org/gitweb?p=VTK.git;a=blob;f=Examples/GUI/Qt/FourPaneViewer/QtVTKRenderWindows.cxx
@@ -226,39 +230,26 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 	renderWindow->AddRenderer(m_renderer);
 	m_openGLWidget->SetRenderWindow(renderWindow);
 
-
 	// Setup render window interactor
 	vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
 
 	vtkSmartPointer<customMouseInteractorStyle> style = vtkSmartPointer<customMouseInteractorStyle>::New();
-	//style->SetInteractionModeToImageSlicing();
 	style->setMapper(m_imageMapper);
 	style->setMapperBackground(m_imageMapperBackground);
 	style->setRenderWindow(renderWindow);
 	renderWindowInteractor->SetInteractorStyle(style);
 
-	// Create the tekst widgets
-	m_textActorWindow = vtkSmartPointer<vtkTextActor>::New();
-	m_textActorWindow->SetInput("");
-	m_textActorWindow->GetTextProperty()->SetColor(1.0, 1.0, 1.0);
-	m_renderer->AddActor(m_textActorWindow);
-	style->setTextActor(m_textActorWindow);
-
-	m_textActorUnits = vtkSmartPointer<vtkCornerAnnotation>::New();
-	m_textActorUnits->SetText(1, "");
-	m_textActorUnits->GetTextProperty()->SetColor(1.0, 1.0, 1.0);
-	m_textActorWindow->GetTextProperty()->SetFontSize(m_textActorUnits->GetTextProperty()->GetFontSize());
-	m_renderer->AddActor(m_textActorUnits);
+	m_textActorCorners = vtkSmartPointer<vtkCornerAnnotation>::New();
+	m_textActorCorners->SetText(1, "");
+	m_textActorCorners->GetTextProperty()->SetColor(1.0, 1.0, 1.0);
+	style->setCornerAnnotation(m_textActorCorners);
 	
 	//adding colorbar
 	m_scalarColorBar = vtkSmartPointer<vtkScalarBarActor>::New();
 	m_scalarColorBar->SetMaximumWidthInPixels(200);
 	m_scalarColorBar->AnnotationTextScalingOff();
-	
-	//m_scalarColorBar->SetLookupTable(m_imageSlice->GetProperty()->GetLookupTable());
 
 	//setup collbacks
-	
 	// Render and start interaction
 	renderWindowInteractor->SetRenderWindow(renderWindow);
 	renderWindowInteractor->Initialize();
@@ -272,7 +263,6 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 	//other
 	m_imageMapper->SliceFacesCameraOn();
 	m_imageMapperBackground->SliceFacesCameraOn();
-	//m_imageSliceMapper->SliceAtFocalPointOn();
 
 	if (auto cam = m_renderer->GetActiveCamera(); m_orientation == Axial)
 	{	
@@ -337,7 +327,7 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 	{
 		m_colorTablePicker->addItem(p.first);
 	}
-	connect(m_colorTablePicker, QOverload<const QString&>::of(&QComboBox::currentIndexChanged), this, &SliceRenderWidget::setColorTable);
+	connect(m_colorTablePicker, QOverload<const QString&>::of(&QComboBox::currentTextChanged), this, &SliceRenderWidget::setColorTable);
 	auto colorTablePickerAction = new QWidgetAction(menuButton);
 	auto colorTablePickerHolder = new QWidget(menuButton);
 	auto colorTablePickerLayout = new QHBoxLayout(colorTablePickerHolder);
@@ -419,10 +409,12 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume, std
 	std::string unitText = "";
 	if (m_image->dataUnits.size() > 0)
 		unitText = "[" + m_image->dataUnits + "]";
-	m_textActorUnits->SetText(1, unitText.c_str());
+	m_textActorCorners->SetText(1, unitText.c_str());
+	m_textActorCorners->SetText(0, "");
 	m_renderer->RemoveActor(m_imageSliceBackground);
 	m_renderer->RemoveActor(m_imageSlice);
 	m_renderer->RemoveViewProp(m_scalarColorBar);
+	m_renderer->RemoveViewProp(m_textActorCorners);
 	m_colorTablePicker->setDisabled(true);
 
 
@@ -431,9 +423,9 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume, std
 		std::array<double, 2> wl = presetLeveling(m_image->imageType);
 		if (wl[1] < 0.0) 
 		{
-			//const auto& mm = m_image->minMax;
-			//wl[0] = (mm[0] + mm[1]) * 0.5;
-			//wl[1] = (mm[1] - mm[0]) * 0.5;
+			const auto& mm = m_image->minMax;
+			wl[0] = (mm[0] + mm[1]) * 0.5;
+			wl[1] = (mm[1] - mm[0]) * 0.5;
 		}
 		m_windowLevels[m_image->imageType] = wl;
 	}
@@ -447,20 +439,10 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume, std
 		prop->UseLookupTableScalarRangeOff();
 		prop->SetColorLevel(m_windowLevels[m_image->imageType][0]);
 		prop->SetColorWindow(m_windowLevels[m_image->imageType][1]);
-		/*auto lut = vtkSmartPointer<vtkLookupTable>::New();
-		lut->SetHueRange(0.0, 0.0);
-		lut->SetSaturationRange(0.0, 0.0);
-		lut->SetValueRange(0.0, 1.0);
-		lut->SetAboveRangeColor(1.0, 1.0, 1.0, 1.0);
-		lut->UseAboveRangeColorOn();
-		lut->SetBelowRangeColor(0.0, 0.0, 0.0, 0.0);
-		lut->UseBelowRangeColorOn();	
-		lut->Build();
-		prop->SetLookupTable(lut);
-		*/
 		m_colorTablePicker->setEnabled(true);
 		m_colorTablePicker->setCurrentText("GRAY");
 		m_colorTablePicker->setEnabled(false);
+		m_renderer->AddViewProp(m_textActorCorners);
 	}
 	else if (m_image->imageType == ImageContainer::DensityImage)
 	{
@@ -468,21 +450,11 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume, std
 		prop->UseLookupTableScalarRangeOff();
 		prop->SetColorLevel(m_windowLevels[m_image->imageType][0]);
 		prop->SetColorWindow(m_windowLevels[m_image->imageType][1]);
-		/*auto lut = vtkSmartPointer<vtkLookupTable>::New();
-		lut->SetHueRange(0.0, 1.0);
-		lut->SetSaturationRange(0.5, 0.5);
-		lut->SetValueRange(1.0, 1.0);
-		lut->SetBelowRangeColor(0.0, 0.0, 0.0, 0.0);
-		lut->UseBelowRangeColorOn();
-		lut->Build();
-		*/
 		m_renderer->AddViewProp(m_scalarColorBar);
-		//m_scalarColorBar->SetLookupTable(lut);
+		m_renderer->AddViewProp(m_textActorCorners);
 		m_scalarColorBar->SetNumberOfLabels(2);
 		m_colorTablePicker->setEnabled(true);
 		m_colorTablePicker->setCurrentText("JET");
-		//prop->SetLookupTable(lut);
-
 	}
 	else if (m_image->imageType == ImageContainer::MaterialImage)
 	{
@@ -537,20 +509,12 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume, std
 		m_windowLevels[m_image->imageType][1] = (m_windowLevels[m_image->imageType][0] - m_image->minMax[0]);
 		prop->SetColorLevel(m_windowLevels[m_image->imageType][0]);
 		prop->SetColorWindow(m_windowLevels[m_image->imageType][1]);
-		/*auto lut = vtkSmartPointer<vtkLookupTable>::New();
-		lut->SetHueRange(0.0, 1.0);
-		lut->SetSaturationRange(0.5, 0.5);
-		lut->SetValueRange(1.0, 1.0);
-		lut->SetBelowRangeColor(0.0, 0.0, 0.0, 0.0);
-		lut->UseBelowRangeColorOn();
-		lut->Build();
-		*/
+		
 		m_colorTablePicker->setEnabled(true);
 		m_colorTablePicker->setCurrentText("JET");
 		m_renderer->AddViewProp(m_scalarColorBar);
-		//m_scalarColorBar->SetLookupTable(lut);
+		m_renderer->AddViewProp(m_textActorCorners);
 		m_scalarColorBar->SetNumberOfLabels(2);
-		//prop->SetLookupTable(lut);
 	}
 
 	if (m_imageBackground)

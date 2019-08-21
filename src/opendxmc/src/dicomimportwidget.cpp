@@ -30,6 +30,7 @@ Copyright 2019 Erlend Andersen
 #include <QLabel>
 #include <QDoubleSpinBox>
 #include <QGroupBox>
+#include <QTimer>
 
 #include <vtkDICOMTag.h>
 #include <vtkDICOMItem.h>
@@ -84,7 +85,7 @@ DicomImportWidget::DicomImportWidget(QWidget *parent)
 	seriesSelectorBox->setLayout(seriesSelectorLayout);
 
 	//voxel resize selection
-	auto outputSpacingBox = new QGroupBox(tr("Resize voxels to this spacing for imported series:"), this);
+	auto outputSpacingBox = new QGroupBox(tr("Resize voxels to this spacing for imported series [XYZ]:"), this);
 	outputSpacingBox->setCheckable(true);
 	outputSpacingBox->setChecked(false);
 	connect(outputSpacingBox, &QGroupBox::toggled, [=](bool value) {emit useOutputSpacingChanged(value); });
@@ -92,9 +93,9 @@ DicomImportWidget::DicomImportWidget(QWidget *parent)
 	for (int i = 0; i < 3; ++i)
 	{
 		auto spinBox = new QDoubleSpinBox(outputSpacingBox);
-		spinBox->setMinimum(0.01);
+		spinBox->setMinimum(0.1);
 		spinBox->setSuffix(" mm");
-		spinBox->setValue(2.0);
+		spinBox->setValue(m_outputSpacing[i]);
 		connect(spinBox, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [=](auto value) {
 			this->m_outputSpacing[i] = value; 
 			emit outputSpacingChanged(this->m_outputSpacing.data());
@@ -104,14 +105,14 @@ DicomImportWidget::DicomImportWidget(QWidget *parent)
 	outputSpacingBox->setLayout(outputSpacingLayoutButtons);
 
 	//image blurfactor selection
-	auto outputBlurBox = new QGroupBox(tr("Image smooth factor : "), this);
+	auto outputBlurBox = new QGroupBox(tr("Image smooth factor [XYZ]:"), this);
 	auto outputBlurLayoutButtons = new QHBoxLayout;
 	for (int i = 0; i < 3; i++)
 	{
 		auto spinBox = new QDoubleSpinBox(this);
 		spinBox->setMinimum(0.0);
 		spinBox->setSuffix(" voxels");
-		spinBox->setValue(1.0);
+		spinBox->setValue(m_blurRadius[i]);
 		connect(spinBox, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [=](auto value) {
 			this->m_blurRadius[i] = value;
 			emit blurRadiusChanged(this->m_blurRadius.data());
@@ -199,6 +200,12 @@ DicomImportWidget::DicomImportWidget(QWidget *parent)
 		emit dicomFolderSelectedForBrowsing(path.absolutePath());
 	}
 	
+
+	//signal for updating blur and spacing setting to dicomimporter
+	QTimer::singleShot(0, [=](void) {
+		emit this->blurRadiusChanged(m_blurRadius.data());  
+		emit this->outputSpacingChanged(m_outputSpacing.data());
+		});
 }
 
 

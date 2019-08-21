@@ -60,7 +60,7 @@ private:
 	vtkSmartPointer<vtkDICOMDirectory> m_imageDirectorySnooper;
 	QComboBox *m_seriesSelector;
 
-	std::array<double, 3> m_outputSpacing = { 2, 2, 2 };
-	std::array<double, 3> m_blurRadius = { 1, 1, 1 };
+	std::array<double, 3> m_outputSpacing = { 1, 1, 4 };
+	std::array<double, 3> m_blurRadius = { 1, 1, 0 };
 	bool m_useOutputSpacing = false;
 };

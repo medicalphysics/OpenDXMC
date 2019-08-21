@@ -22,6 +22,7 @@ Copyright 2019 Erlend Andersen
 #include "volumeactorcontainer.h"
 #include "beamfilters.h"
 #include "imageimportpipeline.h" // for qt meta aecfilter
+#include "imagecontainer.h"
 
 #include <QStandardItemModel>
 #include <QStandardItem>
@@ -61,6 +62,8 @@ public:
 	bool removeRow(int row, const QModelIndex &parent = QModelIndex());
 	bool removeRows(int rows, int count, const QModelIndex &parent = QModelIndex()) override;
 
+	void setImageData(std::shared_ptr<ImageContainer> image);
+
 signals:
 	void sourceAdded(VolumeActorContainer* actorContainer);
 	void sourceRemoved(VolumeActorContainer* actorContainer);
@@ -79,7 +82,7 @@ protected:
 private:
 	std::vector<std::shared_ptr<VolumeActorContainer>> m_actors;
 	std::vector<std::shared_ptr<Source>> m_sources;
-	//std::vector<std::shared_ptr<BowTieFilter>> m_bowTieFilters;
-
+	std::uint64_t m_currentImageID = 0;
+	std::array<double, 6> m_currentImageExtent;
 };
 

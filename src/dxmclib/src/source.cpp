@@ -712,7 +712,7 @@ CTDualSource::CTDualSource()
 	m_sddB = m_sdd;
 	m_fovB = m_fov;
 	
-	m_startAngleB = m_startAngle;
+	m_startAngleB = m_startAngle + PI * 0.5;
 	
 	m_pitch = 1.0;
 	m_tube.setAlFiltration(7.0);

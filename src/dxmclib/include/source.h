@@ -339,7 +339,7 @@ private:
 	std::unique_ptr<SpecterDistribution> m_specterDistributionB;
 	double m_sddB;
 	double m_fovB;
-	double m_startAngleB = 0.0;
+	double m_startAngleB;
 	double m_pitch = 1.0;
 	double m_tubeAmas = 100.0;
 	double m_tubeBmas = 100.0;

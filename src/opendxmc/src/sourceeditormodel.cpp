@@ -291,6 +291,26 @@ void SourceModel::addSource(Source::Type type)
 		std::array<double, 6> cosines = { -1, 0, 0, 0, 0, 1 };
 		src->setDirectionCosines(cosines);
 		
+		//fitting src position to cover image data
+		if (m_currentImageID != 0)
+		{
+			std::array<double, 2> srcCoverage;
+			if (m_currentImageExtent[5] - m_currentImageExtent[4] < 500.0)
+			{
+				srcCoverage[0] = m_currentImageExtent[4];
+				srcCoverage[1] = m_currentImageExtent[5];
+			}
+			else 
+			{
+				double center = (m_currentImageExtent[5] - m_currentImageExtent[4]) * 0.5;
+				srcCoverage[0] = center - 250.0;
+				srcCoverage[1] = center + 250.0;
+			}
+			std::array<double, 3> position = { 0, 0, srcCoverage[0] };
+			src->setPosition(position);
+			src->setScanLenght(srcCoverage[1]- srcCoverage[0]);
+		}
+
 		m_sources.emplace_back(std::static_pointer_cast<Source>(src));
 		setupCTSpiralSource(src);
 		
@@ -306,7 +326,25 @@ void SourceModel::addSource(Source::Type type)
 		auto src = std::make_shared<CTAxialSource>();
 		std::array<double, 6> cosines = { -1, 0, 0, 0, 0, 1 };
 		src->setDirectionCosines(cosines);
-
+		//fitting src position to cover image data
+		if (m_currentImageID != 0)
+		{
+			std::array<double, 2> srcCoverage;
+			if (m_currentImageExtent[5] - m_currentImageExtent[4] < 500.0)
+			{
+				srcCoverage[0] = m_currentImageExtent[4];
+				srcCoverage[1] = m_currentImageExtent[5];
+			}
+			else
+			{
+				double center = (m_currentImageExtent[5] - m_currentImageExtent[4]) * 0.5;
+				srcCoverage[0] = center - 250.0;
+				srcCoverage[1] = center + 250.0;
+			}
+			std::array<double, 3> position = { 0, 0, srcCoverage[0] };
+			src->setPosition(position);
+			src->setScanLenght(srcCoverage[1] - srcCoverage[0]);
+		}
 		m_sources.emplace_back(std::static_pointer_cast<Source>(src));
 		setupCTAxialSource(src);
 
@@ -322,7 +360,25 @@ void SourceModel::addSource(Source::Type type)
 		auto src = std::make_shared<CTDualSource>();
 		std::array<double, 6> cosines = { -1, 0, 0, 0, 0, 1 };
 		src->setDirectionCosines(cosines);
-
+		//fitting src position to cover image data
+		if (m_currentImageID != 0)
+		{
+			std::array<double, 2> srcCoverage;
+			if (m_currentImageExtent[5] - m_currentImageExtent[4] < 500.0)
+			{
+				srcCoverage[0] = m_currentImageExtent[4];
+				srcCoverage[1] = m_currentImageExtent[5];
+			}
+			else
+			{
+				double center = (m_currentImageExtent[5] - m_currentImageExtent[4]) * 0.5;
+				srcCoverage[0] = center - 250.0;
+				srcCoverage[1] = center + 250.0;
+			}
+			std::array<double, 3> position = { 0, 0, srcCoverage[0] };
+			src->setPosition(position);
+			src->setScanLenght(srcCoverage[1] - srcCoverage[0]);
+		}
 		m_sources.emplace_back(std::static_pointer_cast<Source>(src));
 		setupCTDualSource(src);
 
@@ -351,6 +407,9 @@ void SourceModel::addSource(Source::Type type)
 		emit sourceAdded(actor_raw);
 		emit layoutChanged();
 	}
+
+	
+
 }
 
 bool SourceModel::removeSource(std::shared_ptr<Source> src)
@@ -388,6 +447,23 @@ bool SourceModel::removeRows(int row, int count, const QModelIndex & parent)
 		}
 	}
 	return QStandardItemModel::removeRows(row, count, parent);
+}
+
+void SourceModel::setImageData(std::shared_ptr<ImageContainer> image)
+{
+	if (m_currentImageID != image->ID)
+	{
+		m_currentImageID = image->ID;
+		auto origin = image->image->GetOrigin();
+		auto extent = image->image->GetExtent();
+		auto spacing = image->image->GetSpacing();
+		for (std::size_t i = 0; i < 3; ++i)
+		{
+			auto idx = 2 * i;
+			m_currentImageExtent[idx] = extent[idx] * spacing[i] + origin[i];
+			m_currentImageExtent[idx + 1] = extent[idx + 1] * spacing[i] + origin[i];
+		}
+	}
 }
 
 
@@ -620,6 +696,7 @@ void SourceModel::setupCTSource(std::shared_ptr<CTSource> src, QStandardItem* pa
 			parent->appendRow(row);
 		}
 	}
+
 }
 
 void SourceModel::setupCTAxialSource(std::shared_ptr<CTAxialSource> src)

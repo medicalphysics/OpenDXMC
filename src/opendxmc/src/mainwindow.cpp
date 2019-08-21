@@ -102,6 +102,8 @@ MainWindow::MainWindow(QWidget* parent)
 	m_menuWidget->addTab(sourceEditWidget, tr("X-ray sources"));
 	auto sourceEditDelegate = sourceEditWidget->delegate();
 	connect(m_importPipeline, &ImageImportPipeline::aecFilterChanged, sourceEditDelegate, &SourceDelegate::addAecFilter);
+	connect(m_importPipeline, &ImageImportPipeline::imageDataChanged, sourceEditWidget->model(), &SourceModel::setImageData);
+
 
 	//dosereportWidget
 	auto doseReportWidget = new DoseReportWidget(this);

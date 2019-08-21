@@ -169,7 +169,7 @@ QWidget *SourceDelegate::createEditor(QWidget *parent, const QStyleOptionViewIte
 	else if (userType == qMetaTypeId<std::shared_ptr<PositionalFilter>>())
 	{
 		QComboBox *cb = new QComboBox(parent);
-		for (auto &[name, filter] : m_aecFilters)
+		for (const auto &[name, filter] : m_aecFilters)
 		{
 			cb->addItem(name);
 		}
@@ -202,7 +202,7 @@ void SourceDelegate::setEditorData(QWidget *editor, const QModelIndex &index) co
 		auto currentFilter = qvariant_cast<std::shared_ptr<PositionalFilter>>(index.data(Qt::EditRole));
 		auto cb = qobject_cast<QComboBox*>(editor);
 		int teller = 0;
-		for (auto &[name, filter] : m_aecFilters)
+		for (const auto &[name, filter] : m_aecFilters)
 		{
 			if (filter == currentFilter)
 			{
@@ -231,10 +231,10 @@ void SourceDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, co
 	else if (userType == qMetaTypeId<std::shared_ptr<PositionalFilter>>())
 	{
 		auto cb = qobject_cast<QComboBox *>(editor);
-		auto idx = cb->currentIndex();
-		if (idx < 0)
-			idx = 0;
-		auto data = QVariant::fromValue(m_aecFilters[idx].second);
+		auto idx = cb->currentText();
+		if (idx.size() == 0)
+			idx = "None";
+		auto data = QVariant::fromValue(m_aecFilters.at(idx));
 		model->setData(index, data, Qt::EditRole);
 	}
 	else
@@ -267,7 +267,7 @@ QString SourceDelegate::displayText(const QVariant & value, const QLocale & loca
 		{
 			if (filter == currentFilter)
 			{
-				return m_aecFilters[teller].first;
+				return name;
 			}
 			teller++;
 		}

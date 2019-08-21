@@ -115,21 +115,11 @@ MainWindow::MainWindow(QWidget* parent)
 	m_menuWidget->addTab(exportWidget, tr("Export data"));
 	splitter->addWidget(m_menuWidget);
 	
-
-
-
-
 	//simulation progress
 	m_progressTimer = new QTimer(this);
 	m_progressTimer->setTimerType(Qt::CoarseTimer);
 	connect(m_simulationPipeline, &SimulationPipeline::progressBarChanged, this, &MainWindow::setProgressBar);
 	connect(m_progressTimer, &QTimer::timeout, this, &MainWindow::updateProgressBar);
-
-
-	
-
-
-
 
 	//Viewport
 	ViewPortWidget* viewPort = new ViewPortWidget(this);

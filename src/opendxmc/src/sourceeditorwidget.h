@@ -19,8 +19,6 @@ Copyright 2019 Erlend Andersen
 
 #pragma once
 
-
-
 #include "sourceeditormodel.h"
 
 #include <QWidget>
@@ -29,6 +27,8 @@ Copyright 2019 Erlend Andersen
 #include <QStyledItemDelegate>
 #include <QJsonObject>
 
+#include <vector>
+#include <map>
 
 class BowtieFilterReader :public QWidget
 {
@@ -60,11 +60,13 @@ public:
 	QString displayText(const QVariant& value, const QLocale& locale) const override;
 
 	void addBowtieFilter(const QString& name, std::shared_ptr<BeamFilter> filter) { m_bowtieFilters.push_back(std::make_pair(name, filter));  std::sort(m_bowtieFilters.begin(), m_bowtieFilters.end());}
-	void addAecFilter(const QString& name, std::shared_ptr<PositionalFilter> filter) { m_aecFilters.push_back(std::make_pair(name, filter)); std::sort(m_aecFilters.begin(), m_aecFilters.end()); }
+	//void addAecFilter(const QString& name, std::shared_ptr<PositionalFilter> filter) { m_aecFilters.push_back(std::make_pair(name, filter)); std::sort(m_aecFilters.begin(), m_aecFilters.end()); }
+	void addAecFilter(const QString& name, std::shared_ptr<PositionalFilter> filter) { m_aecFilters[name] = filter; }
 
 private:
 	std::vector<std::pair<QString, std::shared_ptr<BeamFilter>>> m_bowtieFilters;
-	std::vector<std::pair<QString, std::shared_ptr<PositionalFilter>>> m_aecFilters;
+	//std::vector<std::pair<QString, std::shared_ptr<PositionalFilter>>> m_aecFilters;
+	std::map<QString, std::shared_ptr<PositionalFilter>> m_aecFilters;
 };
 
 class SourceModelView : public QTreeView

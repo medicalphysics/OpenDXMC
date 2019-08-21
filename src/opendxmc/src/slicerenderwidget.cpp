@@ -439,9 +439,9 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume, std
 		prop->UseLookupTableScalarRangeOff();
 		prop->SetColorLevel(m_windowLevels[m_image->imageType][0]);
 		prop->SetColorWindow(m_windowLevels[m_image->imageType][1]);
-		m_colorTablePicker->setEnabled(true);
+		
 		m_colorTablePicker->setCurrentText("GRAY");
-		m_colorTablePicker->setEnabled(false);
+		setColorTable("GRAY");
 		m_renderer->AddViewProp(m_textActorCorners);
 	}
 	else if (m_image->imageType == ImageContainer::DensityImage)
@@ -453,8 +453,9 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume, std
 		m_renderer->AddViewProp(m_scalarColorBar);
 		m_renderer->AddViewProp(m_textActorCorners);
 		m_scalarColorBar->SetNumberOfLabels(2);
-		m_colorTablePicker->setEnabled(true);
 		m_colorTablePicker->setCurrentText("JET");
+		setColorTable("JET");
+		m_colorTablePicker->setEnabled(true);
 	}
 	else if (m_image->imageType == ImageContainer::MaterialImage)
 	{
@@ -510,11 +511,12 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume, std
 		prop->SetColorLevel(m_windowLevels[m_image->imageType][0]);
 		prop->SetColorWindow(m_windowLevels[m_image->imageType][1]);
 		
-		m_colorTablePicker->setEnabled(true);
 		m_colorTablePicker->setCurrentText("JET");
+		setColorTable("JET");
 		m_renderer->AddViewProp(m_scalarColorBar);
 		m_renderer->AddViewProp(m_textActorCorners);
 		m_scalarColorBar->SetNumberOfLabels(2);
+		m_colorTablePicker->setEnabled(true);
 	}
 
 	if (m_imageBackground)

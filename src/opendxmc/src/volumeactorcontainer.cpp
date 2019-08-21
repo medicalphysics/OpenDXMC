@@ -624,9 +624,9 @@ void CTDualSourceContainer::updateTubeB()
 		vtkSmartPointer<vtkNamedColors>::New();
 	vtkSmartPointer<vtkUnsignedCharArray> m_colors = vtkSmartPointer<vtkUnsignedCharArray>::New();
 	m_colors->SetNumberOfComponents(3);
-	m_colors->InsertNextTypedTuple(namedColors->GetColor3ub("Tomato").GetData());
+	m_colors->InsertNextTypedTuple(namedColors->GetColor3ub("SpringGreen").GetData());
 	for (int i = 0; i < 4; ++i)
-		m_colors->InsertNextTypedTuple(namedColors->GetColor3ub("Mint").GetData());
+		m_colors->InsertNextTypedTuple(namedColors->GetColor3ub("Gold").GetData());
 
 	m_linesPolyDataB->GetCellData()->SetScalars(m_colors);
 

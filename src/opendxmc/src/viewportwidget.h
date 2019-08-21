@@ -25,8 +25,10 @@ Copyright 2019 Erlend Andersen
 #include "volumeactorcontainer.h"
 
 #include <QWidget>
+#include <QComboBox>
 #include <QSize>
 #include <QMap>
+#include <QString>
 #include <memory>
 
 

@@ -24,7 +24,6 @@ Copyright 2019 Erlend Andersen
 #include <QToolBar>
 #include <QPushButton>
 #include <QVariant>
-#include <QComboBox>
 #include <QCheckBox>
 
 #include <QVTKOpenGLWidget.h>
@@ -42,6 +41,7 @@ ViewPortWidget::ViewPortWidget(QWidget* parent)
 	mainLayout->addWidget(toolBar);
 
 	m_volumeSelectorWidget = new QComboBox(toolBar);
+	m_volumeSelectorWidget->setSizeAdjustPolicy(QComboBox::AdjustToContents);
 	connect(m_volumeSelectorWidget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &ViewPortWidget::showImageData);
 	auto volumeSelectorLabel = new QLabel(tr("Select Volume: "), this);
 	toolBar->addWidget(volumeSelectorLabel);

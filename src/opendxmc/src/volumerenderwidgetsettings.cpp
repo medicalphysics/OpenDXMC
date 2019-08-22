@@ -287,6 +287,7 @@ ColorChartView::ColorChartView(QWidget *parent, vtkColorTransferFunction *colorF
 	connect(m_chartViewBlue, &OpacityChartView::opacityFunctionChanged, this, &ColorChartView::updateColorFunction);
 
 	addColorTable("CT", CT);
+	addColorTable("TURBO", TURBO);
 	addColorTable("JET", JET);
 	addColorTable("GRAY", GRAY);
 	addColorTable("HSV", HSV);

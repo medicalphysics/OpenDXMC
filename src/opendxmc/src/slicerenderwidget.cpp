@@ -288,6 +288,7 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 	//color tables
 	m_colorTables["GRAY"] = GRAY;
 	m_colorTables["JET"] = JET;
+	m_colorTables["TURBO"] = TURBO;
 	m_colorTables["PET"] = PET;
 	m_colorTables["HSV"] = HSV;
 	m_colorTables["SIMPLE"] = SIMPLE;
@@ -453,8 +454,8 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume, std
 		m_renderer->AddViewProp(m_scalarColorBar);
 		m_renderer->AddViewProp(m_textActorCorners);
 		m_scalarColorBar->SetNumberOfLabels(2);
-		m_colorTablePicker->setCurrentText("JET");
-		setColorTable("JET");
+		m_colorTablePicker->setCurrentText("TURBO");
+		setColorTable("TURBO");
 		m_colorTablePicker->setEnabled(true);
 	}
 	else if (m_image->imageType == ImageContainer::MaterialImage)
@@ -511,8 +512,8 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume, std
 		prop->SetColorLevel(m_windowLevels[m_image->imageType][0]);
 		prop->SetColorWindow(m_windowLevels[m_image->imageType][1]);
 		
-		m_colorTablePicker->setCurrentText("JET");
-		setColorTable("JET");
+		m_colorTablePicker->setCurrentText("TURBO");
+		setColorTable("TURBO");
 		m_renderer->AddViewProp(m_scalarColorBar);
 		m_renderer->AddViewProp(m_textActorCorners);
 		m_scalarColorBar->SetNumberOfLabels(2);

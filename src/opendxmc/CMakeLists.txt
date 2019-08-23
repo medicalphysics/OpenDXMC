@@ -53,6 +53,7 @@ include_directories("thirdparty/spdlog/*")
 
 # Define an executable (WIN32 argument to prevent console window on windows)
 add_executable(OpenDXMC WIN32
+	resources/resources.rc
     src/app.cpp
 	src/mainwindow.h
 	src/mainwindow.cpp

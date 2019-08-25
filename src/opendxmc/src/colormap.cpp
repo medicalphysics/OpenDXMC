@@ -39,16 +39,20 @@ inline double interp(double x0, double x1, double y0, double y1, double x)
 	return y0 + (y1 - y0) * (x - x0) / (x1 - x0);
 }
 
-std::array<double, 768> generateStandardColorTable(const QVector<double>& colorTable)
+std::array<double, 768> generateStandardColorTable(const QVector<double> & colorTable)
 {
 	std::array<double, 768> lut;
-	int nColors = colorTable.count() / 3;
-	int cStep = 256 / (nColors - 1);
-	for (int i = 0; i < 256; ++i)
+	const int nColors = colorTable.size() / 3;
+	for (int i = 0; i < 255; ++i)
 	{
-		int cIdx = i / cStep;
+		int idx0 = i * (nColors - 1) / 255;
+		int idx1 = idx0 + 1;
 		for (int j = 0; j < 3; ++j)
-			lut[i * 3 + j] = interp(cIdx, cIdx + 1, colorTable[cIdx * 3 + j], colorTable[cIdx * 3 + 3 + j], i / (double)cStep);
+		{
+			lut[i * 3 + j] = interp(idx0, idx1, colorTable[idx0 * 3 + j], colorTable[idx1 * 3 + j], i * (nColors - 1) / 255.0);
+		}
 	}
+	for (int j = 0; j < 3; ++j)
+		lut[255 * 3 + j] = colorTable[(nColors-1) * 3 + j];
 	return lut;
 }

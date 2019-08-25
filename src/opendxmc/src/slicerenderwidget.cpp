@@ -29,6 +29,7 @@ Copyright 2019 Erlend Andersen
 #include <QFileDialog>
 #include <QWidgetAction>
 #include <QSlider>
+#include <QDoubleSpinBox>
 
 #include <vtkGenericOpenGLRenderWindow.h>
 #include <vtkWindowLevelLookupTable.h>
@@ -332,7 +333,7 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 	auto colorTablePickerAction = new QWidgetAction(menuButton);
 	auto colorTablePickerHolder = new QWidget(menuButton);
 	auto colorTablePickerLayout = new QHBoxLayout(colorTablePickerHolder);
-	colorTablePickerLayout->setContentsMargins(0, 0, 0, 0);
+	//colorTablePickerLayout->setContentsMargins(0, 0, 0, 0);
 	colorTablePickerHolder->setLayout(colorTablePickerLayout);
 	auto colorTablePickerLabel = new QLabel("Color table", colorTablePickerHolder);
 	colorTablePickerLayout->addWidget(colorTablePickerLabel);
@@ -340,6 +341,54 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 	colorTablePickerAction->setDefaultWidget(colorTablePickerHolder);
 	menu->addAction(colorTablePickerAction);
 	m_colorTablePicker->setDisabled(true);
+
+	auto windowSettingsAction = new QWidgetAction(menuButton);
+	auto windowSettingsHolder = new QWidget(menuButton);
+	auto windowSettingsLayout = new QHBoxLayout(windowSettingsHolder);
+	//windowSettingsLayout->setContentsMargins(0, 0, 0, 0);
+	windowSettingsHolder->setLayout(windowSettingsLayout);
+	auto windowSettingsWCLabel = new QLabel("Min:", windowSettingsHolder);
+	windowSettingsLayout->addWidget(windowSettingsWCLabel);
+	auto windowSettingMax = new QDoubleSpinBox(menuButton);
+	auto windowSettingMin = new QDoubleSpinBox(menuButton);
+	auto windowSettingsWWLabel = new QLabel("Max:", windowSettingsHolder);
+	windowSettingsLayout->addWidget(windowSettingMin);
+	windowSettingsLayout->addWidget(windowSettingsWWLabel);
+	windowSettingsLayout->addWidget(windowSettingMax);
+	windowSettingsAction->setDefaultWidget(windowSettingsHolder);
+	menu->addAction(windowSettingsAction);
+	connect(menu, &QMenu::aboutToShow, [=](void) {
+		auto prop = style->GetCurrentImageProperty();
+		if (prop)
+		{
+			double WW = style->GetCurrentImageProperty()->GetColorWindow();
+			double WL = style->GetCurrentImageProperty()->GetColorLevel();
+			double min = WL - WW * 0.5;
+			double max = WL + WW * 0.5;
+			if (m_image)
+			{
+				windowSettingMax->setRange(std::min(m_image->minMax[0], min), std::max(m_image->minMax[1], max));
+				windowSettingMin->setRange(std::min(m_image->minMax[0], min), std::max(m_image->minMax[1], max));
+			}
+			windowSettingMin->setValue(min);
+			windowSettingMax->setValue(max);
+		}
+		});
+	connect(menu, &QMenu::aboutToHide, [=](void) {
+		auto prop = style->GetCurrentImageProperty();
+		if (prop)
+		{
+			double min = windowSettingMin->value();
+			double max = windowSettingMax->value();
+			if (min >= max)
+				return;
+			double WW = (max - min);
+			double WL = (min + max) * 0.5;
+			prop->SetColorLevel(WL);
+			prop->SetColorWindow(WW);
+			style->updateWLText();
+		}
+		});
 
 	menu->addAction(QString(tr("Set background color")), [=]() {
 		auto color = QColorDialog::getColor(Qt::black, this);

@@ -18,7 +18,6 @@ Copyright 2019 Erlend Andersen
 #include "slicerenderwidget.h"
 #include "vectormath.h"
 #include "colormap.h"
-#include "opendxmcconfig.h"
 
 #include <QVBoxLayout>
 #include <QColor>
@@ -31,6 +30,9 @@ Copyright 2019 Erlend Andersen
 #include <QWidgetAction>
 #include <QSlider>
 #include <QDoubleSpinBox>
+#include <QProgressDialog>
+#include <QSettings>
+#include <QDir>
 
 #include <vtkGenericOpenGLRenderWindow.h>
 #include <vtkWindowLevelLookupTable.h>
@@ -45,9 +47,10 @@ Copyright 2019 Erlend Andersen
 #include <vtkImageProperty.h>
 #include <vtkWindowToImageFilter.h>
 #include <vtkPNGWriter.h>
-#include "vtkIOMovieModule.h"
+
+#ifdef WINDOWS
 #include <vtkAVIWriter.h>
-//#include <vtkFFMPEGWriter.h>
+#endif
 
 #include <charconv>
 
@@ -226,7 +229,8 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 	// Setup renderers
 	m_renderer = vtkSmartPointer<vtkRenderer>::New();
 	m_renderer->UseFXAAOn();
-	
+	m_renderer->GetActiveCamera()->ParallelProjectionOn();
+
 	//render window
 	//https://lorensen.github.io/VTKExamples/site/Cxx/Images/ImageSliceMapper/
 	//http://vtk.org/gitweb?p=VTK.git;a=blob;f=Examples/GUI/Qt/FourPaneViewer/QtVTKRenderWindows.cxx
@@ -401,9 +405,13 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 		});
 
 	menu->addAction(QString(tr("Save to file")), [=]() {
-		auto filename = QFileDialog::getSaveFileName(this, tr("Save File"), "untitled.png",	tr("Images (*.png)"));
+		QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
+		auto filename = settings.value("mediaexport/image", "untitled.png").value<QString>();
+		filename = QFileDialog::getSaveFileName(this, tr("Save File"), filename,	tr("Images (*.png)"));
+
 		if (!filename.isEmpty())
 		{
+			settings.setValue("mediaexport/image", filename);
 			auto renderWindow = m_openGLWidget->GetRenderWindow();
 			vtkSmartPointer<vtkWindowToImageFilter> windowToImageFilter =
 				vtkSmartPointer<vtkWindowToImageFilter>::New();
@@ -422,62 +430,7 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 	});
 #ifdef WINDOWS
 	menu->addAction(QString(tr("Save cine")), [=]() {
-		auto windowFilter = vtkSmartPointer<vtkWindowToImageFilter>::New();
-		windowFilter->SetInput(renderWindow);
-		windowFilter->SetInputBufferTypeToRGB();
-		windowFilter->ReadFrontBufferOff();
-		windowFilter->SetScale(3, 3);
-		windowFilter->Update();
-		auto writer = vtkSmartPointer<vtkAVIWriter>::New();
-		writer->SetInputConnection(windowFilter->GetOutputPort());
-
-		auto filename = QFileDialog::getSaveFileName(this, tr("Save File"), "cine.avi", tr("Movies (*.avi)"));
-		if (!filename.isEmpty())
-		{
-			writer->SetFileName(filename.toLatin1().data());
-			writer->SetRate(10);
-
-			m_imageMapper->UpdateInformation();
-			auto plane = m_imageMapper->GetSlicePlane();
-			auto normal = plane->GetNormal();
-			auto stepAxis = vectormath::argmax3<int, double>(normal);
-
-			double* imbounds = m_imageMapper->GetBounds();
-			double* origin = plane->GetOrigin();
-			double originHold[3];
-			for (int i = 0; i < 3; ++i)
-				originHold[i] = origin[i];
-			origin[stepAxis] = imbounds[stepAxis * 2];
-			plane->SetOrigin(origin);
-			m_imageMapper->SetSlicePlane(plane);
-			m_imageMapper->UpdateInformation();
-			renderWindow->Render();
-
-			writer->Start();
-			windowFilter->Modified();
-			writer->Write();
-
-			double step = imbounds[stepAxis * 2] < imbounds[stepAxis * 2 + 1] ? 1 : -1;
-			if (normal[stepAxis] < 0.0)
-				step = step * -1.0;
-			double rate = 1.0;
-			
-
-			while (origin[stepAxis] <= imbounds[stepAxis * 2 + 1])
-			{
-				plane->Push(step * rate);
-				m_imageMapper->SetSlicePlane(plane);
-				m_imageMapper->UpdateInformation();
-				//renderWindow->Render();
-				windowFilter->Modified();
-				writer->Write();
-			}
-			writer->End();
-			plane->SetOrigin(originHold);
-			m_imageMapper->SetSlicePlane(plane);
-			m_imageMapper->UpdateInformation();
-			renderWindow->Render();
-		}
+		this->saveCine();
 		});
 #endif // WINDOWS
 
@@ -700,30 +653,82 @@ void SliceRenderWidget::setColorTable(const QString& colorTableName)
 	prop->SetLookupTable(lut);
 	m_scalarColorBar->SetLookupTable(lut);
 }
+#ifdef WINDOWS
+void SliceRenderWidget::saveCine() {
 
-/*void SliceRenderWidget::updateOrientation(void)
-{
-	auto argmax = vectormath::argmax3<std::size_t, double>(m_image->directionCosines.data());
+	if (!(m_imageMapper && m_image))
+		return;
 
-	if (m_orientation == Axial)
+	auto windowFilter = vtkSmartPointer<vtkWindowToImageFilter>::New();
+	auto renderWindow = m_renderer->GetRenderWindow();
+	windowFilter->SetInput(renderWindow);
+	windowFilter->SetInputBufferTypeToRGB();
+	windowFilter->ReadFrontBufferOff();
+	//windowFilter->SetScale(3, 3);
+	windowFilter->Update();
+	auto writer = vtkSmartPointer<vtkAVIWriter>::New();
+	writer->SetInputConnection(windowFilter->GetOutputPort());
+
+	QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
+	auto filename = settings.value("mediaexport/video", "untitled.avi").value<QString>();
+	filename = QFileDialog::getSaveFileName(this, tr("Save File"), filename, tr("Movies (*.avi)"));
+	if (!filename.isEmpty())
 	{
-		for (std::size_t i = 0; i < 3; ++i)
-			dir[i] = m_image->directionCosines[i];
-	}
-	else if (m_orientation == Sagittal)
-	{
-		for (std::size_t i = 0; i < 3; ++i)
-			dir[i] = m_image->directionCosines[i + 3];
-	}
-	else
-	{
-		vectormath::cross(m_image->directionCosines.data(), dir.data());
-	}
+		settings.setValue("mediaexport/video", filename);
+		writer->SetFileName(filename.toLatin1().data());
+		m_imageMapper->UpdateInformation();
+		auto plane = m_imageMapper->GetSlicePlane();
+		auto normal = plane->GetNormal();
+		auto stepAxis = vectormath::argmax3<int, double>(normal);
 
-	
-	std::size_t argmax = vectormath::argmax3()
-	const auto& dir = m_image->directionCosines;
+		double* imbounds = m_imageMapper->GetBounds();
+		double* origin = plane->GetOrigin();
+		double originHold[3];
+		for (int i = 0; i < 3; ++i)
+			originHold[i] = origin[i];
+		origin[stepAxis] = imbounds[stepAxis * 2];
+		plane->SetOrigin(origin);
+		m_imageMapper->SetSlicePlane(plane);
+		if(m_imageMapperBackground)
+			m_imageMapperBackground->SetSlicePlane(plane);
+		
+		auto dimensions = m_image->image->GetDimensions();
+		const int nFrames = dimensions[stepAxis] * 2;
+		const int nSec = 20;
+		int frameRate = std::max( nFrames / nSec, 2);
+		writer->SetRate(frameRate);
 
+		QProgressDialog progress("Generating movie", "Cancel", 0, nFrames, this);
+		progress.setWindowModality(Qt::WindowModal);
 
+		writer->Start();
+		windowFilter->Modified();
+		writer->Write();
+
+		const double step = (imbounds[stepAxis * 2 + 1] - imbounds[stepAxis * 2]) / static_cast<double>(nFrames);
+		int currentFrame = 0;
+		while (origin[stepAxis] <= imbounds[stepAxis * 2 + 1])
+		{
+			origin[stepAxis] += step;
+			currentFrame += 1;
+			plane->SetOrigin(origin);
+			m_imageMapper->SetSlicePlane(plane);
+			if (m_imageMapperBackground)
+				m_imageMapperBackground->SetSlicePlane(plane);
+			windowFilter->Modified();
+			writer->Write();
+			progress.setValue(currentFrame);
+			if (progress.wasCanceled())
+			{
+				writer->End();
+				return;
+			}
+		}
+		writer->End();
+		plane->SetOrigin(originHold);
+		m_imageMapper->SetSlicePlane(plane);
+		m_imageMapper->UpdateInformation();
+		renderWindow->Render();
+	}
 }
-*/
+#endif // WINDOWS

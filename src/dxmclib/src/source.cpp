@@ -336,6 +336,8 @@ void CTSource::setExposureAngleStep(double angleStep)
 	const double absAngle = std::abs(angleStep);
 	if (absAngle < PI)
 		m_exposureAngleStep = absAngle;
+	else if (absAngle > 0.1 * DEG_TO_RAD)
+		m_exposureAngleStep = absAngle;
 }
 
 double CTSource::exposureAngleStep(void) const

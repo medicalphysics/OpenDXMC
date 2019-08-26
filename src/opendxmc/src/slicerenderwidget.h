@@ -20,6 +20,7 @@ Copyright 2019 Erlend Andersen
 
 
 #include "imagecontainer.h"
+#include "opendxmcconfig.h"
 
 #include <QWidget>
 #include <QComboBox>
@@ -53,6 +54,9 @@ public:
 protected:
 	std::array<double, 2> presetLeveling(ImageContainer::ImageType type);
 	void setColorTable(const QString& colorTableName);
+#ifdef WINDOWS
+	void saveCine();
+#endif
 	
 private:
 	Orientation m_orientation;

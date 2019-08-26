@@ -28,6 +28,7 @@ find_package(VTK COMPONENTS
   vtkDICOM
   vtkRenderingVolume
   vtkRenderingVolumeOpenGL2
+  vtkIOMovie
   )
 include(${VTK_USE_FILE})
 include_directories(${VTK_INCLUDE_DIRS})
@@ -92,6 +93,7 @@ add_executable(OpenDXMC WIN32
 	src/sourceeditormodel.cpp
 	src/exportwidget.h
 	src/exportwidget.cpp
+	src/opendxmcconfig.h
     )
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/opendxmc")

@@ -18,6 +18,7 @@ Copyright 2019 Erlend Andersen
 #include "slicerenderwidget.h"
 #include "vectormath.h"
 #include "colormap.h"
+#include "opendxmcconfig.h"
 
 #include <QVBoxLayout>
 #include <QColor>
@@ -44,6 +45,8 @@ Copyright 2019 Erlend Andersen
 #include <vtkImageProperty.h>
 #include <vtkWindowToImageFilter.h>
 #include <vtkPNGWriter.h>
+#include "vtkIOMovieModule.h"
+#include <vtkAVIWriter.h>
 //#include <vtkFFMPEGWriter.h>
 
 #include <charconv>
@@ -417,6 +420,67 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 			this->updateRendering();
 		}
 	});
+#ifdef WINDOWS
+	menu->addAction(QString(tr("Save cine")), [=]() {
+		auto windowFilter = vtkSmartPointer<vtkWindowToImageFilter>::New();
+		windowFilter->SetInput(renderWindow);
+		windowFilter->SetInputBufferTypeToRGB();
+		windowFilter->ReadFrontBufferOff();
+		windowFilter->SetScale(3, 3);
+		windowFilter->Update();
+		auto writer = vtkSmartPointer<vtkAVIWriter>::New();
+		writer->SetInputConnection(windowFilter->GetOutputPort());
+
+		auto filename = QFileDialog::getSaveFileName(this, tr("Save File"), "cine.avi", tr("Movies (*.avi)"));
+		if (!filename.isEmpty())
+		{
+			writer->SetFileName(filename.toLatin1().data());
+			writer->SetRate(10);
+
+			m_imageMapper->UpdateInformation();
+			auto plane = m_imageMapper->GetSlicePlane();
+			auto normal = plane->GetNormal();
+			auto stepAxis = vectormath::argmax3<int, double>(normal);
+
+			double* imbounds = m_imageMapper->GetBounds();
+			double* origin = plane->GetOrigin();
+			double originHold[3];
+			for (int i = 0; i < 3; ++i)
+				originHold[i] = origin[i];
+			origin[stepAxis] = imbounds[stepAxis * 2];
+			plane->SetOrigin(origin);
+			m_imageMapper->SetSlicePlane(plane);
+			m_imageMapper->UpdateInformation();
+			renderWindow->Render();
+
+			writer->Start();
+			windowFilter->Modified();
+			writer->Write();
+
+			double step = imbounds[stepAxis * 2] < imbounds[stepAxis * 2 + 1] ? 1 : -1;
+			if (normal[stepAxis] < 0.0)
+				step = step * -1.0;
+			double rate = 1.0;
+			
+
+			while (origin[stepAxis] <= imbounds[stepAxis * 2 + 1])
+			{
+				plane->Push(step * rate);
+				m_imageMapper->SetSlicePlane(plane);
+				m_imageMapper->UpdateInformation();
+				//renderWindow->Render();
+				windowFilter->Modified();
+				writer->Write();
+			}
+			writer->End();
+			plane->SetOrigin(originHold);
+			m_imageMapper->SetSlicePlane(plane);
+			m_imageMapper->UpdateInformation();
+			renderWindow->Render();
+		}
+		});
+#endif // WINDOWS
+
 }
 
 void SliceRenderWidget::updateRendering()

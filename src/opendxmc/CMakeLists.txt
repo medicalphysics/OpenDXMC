@@ -48,6 +48,7 @@ include_directories(${Qt5Widgets_INCLUDE_DIRS})
 include_directories(${Qt5Charts_INCLUDE_DIRS})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS}")
 
+
 ## spdlog Logging header only
 include_directories("thirdparty/spdlog/*")
 
@@ -114,11 +115,7 @@ target_include_directories(OpenDXMC PRIVATE
     )
 
 #making version available in code
-
 target_compile_definitions(OpenDXMC PRIVATE APP_VERSION="${PROJECT_VERSION}")
-
-
-
 
 ##adding REQUIRED dlls to the binary folder of executable
 #adding target to copy qt dlls 

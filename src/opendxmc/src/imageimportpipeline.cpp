@@ -162,11 +162,8 @@ void ImageImportPipeline::setDicomData(QStringList dicomPaths)
 	logger->debug("Done importing images.");
 	logger->flush();
 	
-	
 	auto exposure = readExposureData(dicomReader);
-	
-	emit imageDataChanged(imageContainer);
-	processCTData(imageContainer, exposure);
+	this->processCTData(imageContainer, exposure);
 	emit processingDataEnded();
 }
 
@@ -272,9 +269,13 @@ void ImageImportPipeline::processCTData(std::shared_ptr<ImageContainer> ctImage,
 		logger->debug("Could not find suitable AEC profile for {}.", exposurename);
 	}
 	logger->flush();
+	logger->debug("Emitting processed images...");
+	emit imageDataChanged(ctImage);
 	emit imageDataChanged(materialImage);
 	emit imageDataChanged(densityImage);
 	emit materialDataChanged(m_ctImportMaterialMap);
+	logger->debug("Emitting processed images... Done");
+	logger->flush();
 }
 
 std::pair<std::string, std::vector<double>> ImageImportPipeline::readExposureData(vtkSmartPointer<vtkDICOMReader>& dicomReader)
@@ -295,7 +296,6 @@ std::pair<std::string, std::vector<double>> ImageImportPipeline::readExposureDat
 	}
 	int n = meta->GetNumberOfInstances();
 	exposure.resize(n, 0.0);
-	
 
 	// Get the arrays that map slice to file and frame.
 	vtkIntArray *fileMap = dicomReader->GetFileIndexArray();
@@ -320,16 +320,13 @@ std::pair<std::string, std::vector<double>> ImageImportPipeline::readExposureDat
 	return std::make_pair(desc, exposure);
 }
 
-
 struct organElement
 {
-	int ID;
-	int tissue;
-	double density;
+	int ID = 0;
+	int tissue = 0;
+	double density = 0;
 	std::string name;
 };
-
-
 
 std::vector<organElement> readICRPOrgans(const std::string& path)
 {

@@ -15,9 +15,7 @@ include(GNUInstallDirs)
 
 
 # Build types 
-set(CMAKE_CONFIGURATION_TYPES )
-
-
+set(CMAKE_CONFIGURATION_TYPES ${CMAKE_CONFIGURATION_TYPES} CACHE STRING "Available build configurations." FORCE)
 
 # Targets that we develop here
 enable_testing()

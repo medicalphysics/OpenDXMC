@@ -65,9 +65,9 @@ private:
 	double m_minEnergy = 0;
 	double m_maxEnergy = 150.0;
 	double m_energyStep = 1.0;
-	double m_momtMaxSqr;
-	double m_momtStepSqr;
-	std::size_t m_energyResolution;
+	double m_momtMaxSqr = 0;
+	double m_momtStepSqr = 0;
+	std::size_t m_energyResolution = 150;
 	std::size_t m_materials;
 	std::vector<double> m_attData; // energy, array-> total, photo, compton, rauleight
 	std::vector<double> m_coherData; //qsquared, array-> A(qsquared)

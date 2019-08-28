@@ -255,7 +255,9 @@ void ImageImportPipeline::processCTData(std::shared_ptr<ImageContainer> ctImage,
 	logger->flush();
 
 	//making exposure map for CT AEC
-	const auto [exposurename, exposure] = exposureData;
+	const auto& exposurename = exposureData.first;
+	const auto& exposure = exposureData.second;
+
 	logger->debug("Generating AEC profile...");
 	if (exposure.size() > 0)
 	{
@@ -567,8 +569,6 @@ void ImageImportPipeline::importICRUMalePhantom(bool ignoreArms)
 		emit processingDataEnded();
 		return;
 	}
-
-	
 
 	auto  organImage = std::make_shared<OrganImageContainer>(organArray, dimensions, spacing, origin);
 	auto materialImage= std::make_shared<MaterialImageContainer>(materialArray, dimensions, spacing, origin);

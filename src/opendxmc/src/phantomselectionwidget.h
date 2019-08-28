@@ -32,7 +32,7 @@ public:
 signals:
 	void readIRCUMalePhantom(bool removeArms=false);
 	void readIRCUFemalePhantom(bool removeArms = false);
-	void readCTDIPhantom(int mm);
+	void readCTDIPhantom(int diameter_mm);
 protected:
 	
 	

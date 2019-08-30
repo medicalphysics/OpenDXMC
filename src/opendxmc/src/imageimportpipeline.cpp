@@ -669,6 +669,62 @@ void ImageImportPipeline::importICRUFemalePhantom(bool ignoreArms)
 	emit imageDataChanged(materialImage);
 }
 
+
+std::shared_ptr<ImageContainer> readAWSData(const std::string& path)
+{
+	std::array<std::size_t, 3> dimensions = { 0,0,0 };
+	std::array<double, 3> spacing = { 1,1,1 };
+	std::ifstream input(path);
+	if (!input.is_open())
+		return std::make_shared<ImageContainer>();
+
+	//getting header
+	std::string header;
+	header.resize(headerSize);
+	input.read(&header[0], headerSize);
+	for (std::string line ; std::getline(header, line);)
+	{
+		auto pos = header.find("Width");
+
+	}
+	auto pos = header.find("Width");
+
+
+
+
+
+
+
+
+	auto organs = std::make_shared<std::vector<unsigned char>>();
+	std::ifstream input(path);
+	if (!input.is_open())
+		return organs;
+	organs->reserve(size);
+	int c;
+	while (input >> c)
+	{
+		organs->push_back(static_cast<unsigned char>(c));
+	}
+	return organs;
+}
+
+void ImageImportPipeline::importAWSPhantom(const std::string& name)
+{
+	emit processingDataStarted();
+
+	auto organs = readICRPOrgans("resources/phantoms/other/" + name +"_organs.dat");
+	auto media = readICRPMedia("resources/phantoms/other/media.dat");
+	auto organImage = readAWSData("resources/phantoms/other/+name");
+
+
+
+
+	emit processingDataEnded();
+}
+
+
+
 void ImageImportPipeline::importCTDIPhantom(int mm)
 {
 	emit processingDataStarted();
@@ -727,4 +783,3 @@ void ImageImportPipeline::importCTDIPhantom(int mm)
 	emit imageDataChanged(materialImage);
 	emit imageDataChanged(organImage);
 }
-

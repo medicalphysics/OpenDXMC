@@ -42,7 +42,7 @@ PhantomSelectionWidget::PhantomSelectionWidget(QWidget *parent)
 	phantomSelector->addItem(tr("Female ICRU reference phantom without arms"));
 	phantomSelector->addItem(tr("Male ICRU reference phantom"));
 	phantomSelector->addItem(tr("Male ICRU reference phantom without arms"));
-
+	phantomSelector->addItem(tr("Pregnant female"));
 	//connecting slots
 	connect(phantomSelector, QOverload<int>::of(&QComboBox::activated),
 		[=](int index) { 
@@ -58,9 +58,8 @@ PhantomSelectionWidget::PhantomSelectionWidget(QWidget *parent)
 			emit this->readIRCUMalePhantom(false);
 		else if (index == 6)
 			emit this->readIRCUMalePhantom(true);
-
-
-
+		else if (index == 7)
+			emit this->readAWSPhantom("Katya");
 	});
 
 

@@ -33,6 +33,7 @@ signals:
 	void readIRCUMalePhantom(bool removeArms=false);
 	void readIRCUFemalePhantom(bool removeArms = false);
 	void readCTDIPhantom(int diameter_mm);
+	void readAWSPhantom(const std::string& name);
 protected:
 	
 	

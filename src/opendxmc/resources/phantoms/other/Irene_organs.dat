@@ -1,0 +1,60 @@
+Irene                                                              
+                                                                   
+Organ Organ                                            TissueDensity
+ID                                                     number      
+1     Adipose tissue arms                              49    0.95  
+2     Adipose tissue rest of body                      49    0.95  
+3     Adrenals                                         43    1.03  
+4     Bladder wall                                     41    1.04  
+5     Bladder contents                                 52    1.04  
+6     Blood vessels in arms                            28    1.06  
+7     Blood vessels in rest of body                    28    1.06  
+8     Arm bones                                        2     1.546 
+9     Leg bones                                        2     1.508 
+10    Bones in rest of body                            2     1.502 
+11    Brain                                            32    1.05  
+12    Breast, adipose tissue                           49    0.95  
+13    Breast, glandular tissue                         48    1.03  
+14    Bronchi                                          45    1.03  
+18    Ascending colon                                  38    1.04  
+19    Transverse colon                                 38    1.04  
+20    Descending colon                                 38    1.04  
+21    Sigmoid colon                                    38    1.04  
+22    Rectum                                           38    1.04  
+24    Ascending colon contents                         51    1.04  
+25    Transverse colon contents                        51    1.04  
+26    Descending colon contents                        51    1.04  
+27    Sigmoid colon contents                           51    1.04  
+28    Rectum contents                                  51    1.04  
+29    Eye lenses                                       34    1.05  
+30    Eyes                                             34    1.05  
+31    Anterior nasal passage (ET1)                     45    1.03  
+32    Posterior nasal passage down to larynx (ET2)     45    1.03  
+33    Gall bladder wall                                45    1.03  
+34    Gall bladder contents                            45    1.03  
+35    Heart                                            33    1.05  
+37    Kidneys                                          35    1.05  
+38    Liver                                            30    1.05  
+39    Lungs                                            50    0.385 
+40    Muscle in arms                                   29    1.05  
+41    Muscle in rest of body                           29    1.05  
+42    Oesophagus                                       44    1.03  
+43    Ovaries                                          42    1.04  
+44    Pancreas                                         31    1.05  
+46    Salivary glands                                  45    1.03  
+47    Skin at arms                                     27    1.09  
+48    Skin at rest of body                             27    1.09  
+49    Duodenum                                         37    1.04  
+50    Ileum                                            37    1.04  
+51    Duodenum contents                                51    1.04  
+52    Ileum contents                                   51    1.04  
+53    Spinal cord                                      45    1.03  
+54    Spleen                                           39    1.04  
+55    Stomach wall                                     36    1.04  
+56    Stomach contents                                 51    1.04  
+57    Teeth                                            1     2.75  
+59    Thymus                                           45    1.03  
+60    Thyroid                                          40    1.04  
+61    Tongue                                           29    1.05  
+62    Trachea                                          45    1.03  
+64    Uterus                                           46    1.03  

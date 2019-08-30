@@ -1,0 +1,65 @@
+Child                                                              
+                                                                   
+Organ Organ                                            TissueDensity
+ID                                                     number      
+1     Adrenals                                         43    1.03  
+2     Bladder wall                                     41    1.04  
+3     Brain                                            32    1.05  
+4     Eyes                                             34    1.05  
+5     Eye lenses                                       34    1.05  
+6     Heart                                            33    1.05  
+8     Colon ascending + transverse (wall)              38    1.04  
+9     Colon descending (wall)                          38    1.04  
+10    Small intestine (wall + contents)                37    1.04  
+12    Left kidney                                      35    1.05  
+13    Right kidney                                     35    1.05  
+14    Liver                                            30    1.05  
+16    Left lung                                        50    0.385 
+17    Right lung                                       50    0.385 
+18    Ovaries                                          42    1.04  
+19    Pancreas                                         31    1.05  
+21    Head skin                                        27    1.09  
+22    Trunk skin                                       27    1.09  
+23    Arm skin                                         27    1.09  
+24    Leg skin                                         27    1.09  
+25    Spinal cord                                      45    1.03  
+26    Spleen                                           39    1.04  
+27    Stomach wall                                     36    1.04  
+28    Thymus                                           45    1.03  
+29    Thyroid                                          40    1.04  
+31    Head tissue                                      29    1.05  
+32    Trunk tissue                                     29    1.05  
+33    Left arm tissue                                  29    1.05  
+34    Right arm tissue                                 29    1.05  
+35    Left leg tissue                                  29    1.05  
+36    Right leg tissue                                 29    1.05  
+37    Trachea                                          45    1.03  
+38    Uterus                                           46    1.03  
+40    Upper left arm bone                              2     1.92  
+41    Lower left arm bones                             2     1.92  
+42    Left hand bones                                  2     1.92  
+43    Upper right arm bone                             2     1.92  
+44    Lower right arm bones                            2     1.92  
+45    Right hand bones                                 2     1.92  
+46    Clavicles                                        2     1.92  
+47    Facial skeleton                                  2     1.92  
+49    Upper left leg bone                              2     1.92  
+50    Lower left leg bones                             2     1.92  
+51    Left foot bones                                  2     1.92  
+52    Upper right leg bone                             2     1.92  
+53    Lower right leg bones                            2     1.92  
+54    Right foot bones                                 2     1.92  
+55    Pelvis                                           2     1.92  
+56    Ribs                                             2     1.92  
+61    Scapulae                                         2     1.92  
+62    Skull                                            2     1.92  
+64    Cervical spine                                   2     1.92  
+65    Thoracic spine                                   2     1.92  
+66    Lumbar spine                                     2     1.92  
+67    Sacrum                                           2     1.92  
+68    Sternum                                          2     1.92  
+110   Mucous membrane (head)                           49    0.95  
+111   Bladder contents                                 52    1.04  
+112   Colon contents                                   51    1.04  
+113   Stomach contents                                 51    1.04  
+114   Testes                                           42    1.04  

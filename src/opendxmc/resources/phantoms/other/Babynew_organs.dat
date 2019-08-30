@@ -1,0 +1,70 @@
+Babynew                                                             
+                                                                   
+Organ Organ                                            TissueDensity
+ID                                                     number      
+1     Adrenals                                         43    1.05  
+2     Bladder wall                                     41    1.05  
+3     Brain                                            32    0.9869
+4     Eyes                                             34    1.05  
+5     Eye lenses                                       34    1.05  
+6     Heart                                            33    1.05  
+8     Small intestine wall                             37    1.05  
+10    Left kidney                                      35    1.05  
+11    Right kidney                                     35    1.05  
+12    Liver                                            30    1.05  
+14    Left lung                                        50    0.2958
+15    Right lung                                       50    0.2958
+16    Ovaries                                          42    1.05  
+17    Pancreas                                         31    1.05  
+19    Head skin                                        27    1.1049
+20    Trunk skin                                       27    1.1049
+21    Leg skin                                         27    1.1049
+22    Spinal cord                                      45    1.05  
+23    Spleen                                           39    1.05  
+24    Stomach wall                                     36    1.05  
+25    Testes                                           42    1.05  
+26    Thymus                                           45    1.05  
+27    Thyroid                                          40    1.05  
+29    Head tissue                                      29    0.9869
+30    Trunk tissue                                     29    0.9869
+31    Leg tissue                                       29    0.9869
+32    Uterus                                           46    0.9869
+34    Upper left arm bone                              2     1.546 
+35    Lower left arm bones                             2     1.562 
+36    Left hand bones                                  2     1.562 
+37    Upper right arm bone                             2     1.525 
+38    Lower right arm bones                            2     1.57  
+39    Right hand bones                                 2     1.57  
+40    Clavicles                                        2     1.541 
+41    Facial skeleton                                  2     1.54  
+43    Upper left leg bone                              2     1.489 
+44    Lower left leg bones                             2     1.508 
+45    Left foot bones                                  2     1.539 
+46    Upper right leg bone                             2     1.479 
+47    Lower right leg bones                            2     1.51  
+48    Right foot bones                                 2     1.539 
+49    Pelvis                                           2     1.502 
+50    Ribs                                             2     1.55  
+51    Scapulae                                         2     1.544 
+52    Skull                                            2     1.544 
+54    Cervical spine                                   2     1.549 
+55    Thoracic spine                                   2     1.545 
+56    Lumbar spine                                     2     1.541 
+57    Sternum                                          2     1.523 
+93    Stomach contents                                 51    0.9869
+94    Small intestine contents                         51    0.9869
+96    Bladder contents                                 52    0.9869
+103   Upper large intestine (ascending+transverse colon) wall38    1.05  
+104   Lower large intestine (descending+sigmoid colon) wall38    1.05  
+105   Upper large intestine contents                   51    0.9869
+106   Lower large intestine contents                   51    0.9869
+107   Arm skin                                         27    1.1049
+108   Arm tissue                                       29    0.9869
+109   Breast                                           48    1.05  
+110   Oesophagus                                       44    1.05  
+111   Gall bladder wall                                45    1.05  
+112   Gall bladder contents                            45    1.05  
+113   Muscle tissue, head                              29    1.05  
+114   Muscle tissue, trunk                             29    1.05  
+115   Muscle tissue, arms                              29    1.05  
+116   Muscle tissue, legs                              29    1.05  

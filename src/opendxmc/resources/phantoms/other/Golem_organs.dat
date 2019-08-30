@@ -1,0 +1,126 @@
+golem                                                              
+                                                                   
+Organ Organ                                            TissueDensity
+ID                                                     number      
+2     Adipose tissue head                              49    0.95  
+3     Adipose tissue trunk                             49    0.95  
+4     Adipose tissue left arm                          49    0.95  
+5     Adipose tissue right arm                         49    0.95  
+6     Adipose tissue left leg                          49    0.95  
+7     Adipose tissue right leg                         49    0.95  
+8     Adrenals                                         45    1.05  
+9     Bladder wall                                     45    1.05  
+27    Brain                                            45    1.05  
+28    Anterior nasal passage                           27    1.09  
+29    Posterior nasal passage                          27    1.09  
+30    Pharynx (nasal part)                             27    1.09  
+31    Pharynx (oral part)                              27    1.09  
+32    Larynx                                           27    1.09  
+33    Bronchial tree                                   45    1.05  
+34    Eyes                                             45    1.05  
+35    Eye lenses                                       45    1.05  
+36    Heart                                            45    1.05  
+38    Left kidney                                      45    1.05  
+39    Right kidney                                     45    1.05  
+41    Liver                                            45    1.05  
+43    Left lung                                        50    0.26  
+44    Right lung                                       50    0.26  
+46    Muscle tissue head                               29    1.05  
+47    Muscle tissue trunk                              29    1.05  
+48    Muscle tissue left arm                           29    1.05  
+49    Muscle tissue right arm                          29    1.05  
+50    Muscle tissue left leg                           29    1.05  
+51    Muscle tissue right leg                          29    1.05  
+52    Oesophagus                                       45    1.05  
+54    Pancreas                                         45    1.05  
+55    Penis                                            45    1.05  
+135   Upper left arm bone                              2     1.92  
+136   Lower left arm bones                             2     1.92  
+137   Left hand bones                                  2     1.92  
+138   Upper right arm bone                             2     1.92  
+139   Lower right arm bones                            2     1.92  
+140   Right hand bones                                 2     1.92  
+141   Clavicles                                        2     1.92  
+143   Upper left leg bone                              2     1.92  
+144   Lower left leg bones                             2     1.92  
+145   Left foot bones                                  2     1.92  
+146   Upper right leg bone                             2     1.92  
+147   Lower right leg bones                            2     1.92  
+148   Right foot bones                                 2     1.92  
+149   Mandible                                         2     1.92  
+150   Pelvis                                           2     1.92  
+152   Rib 1 left side                                  2     1.92  
+153   Rib 2 left side                                  2     1.92  
+154   Rib 3 left side                                  2     1.92  
+155   Rib 4 left side                                  2     1.92  
+156   Rib 5 left side                                  2     1.92  
+157   Rib 6 left side                                  2     1.92  
+158   Rib 7 left side                                  2     1.92  
+159   Rib 8 left side                                  2     1.92  
+160   Rib 9 left side                                  2     1.92  
+161   Rib 10 left side                                 2     1.92  
+162   Rib 11 left side                                 2     1.92  
+163   Rib 12 left side                                 2     1.92  
+164   Rib 1 right side                                 2     1.92  
+165   Rib 2 right side                                 2     1.92  
+166   Rib 3 right side                                 2     1.92  
+167   Rib 4 right side                                 2     1.92  
+168   Rib 5 right side                                 2     1.92  
+169   Rib 6 right side                                 2     1.92  
+170   Rib 7 right side                                 2     1.92  
+171   Rib 8 right side                                 2     1.92  
+172   Rib 9 right side                                 2     1.92  
+173   Rib 10 right side                                2     1.92  
+174   Rib 11 right side                                2     1.92  
+175   Rib 12 right side                                2     1.92  
+176   Scapulae                                         2     1.92  
+177   Skull                                            2     1.92  
+180   Cervical vertebra 1                              2     1.92  
+181   Cervical vertebra 2                              2     1.92  
+182   Cervical vertebra 3                              2     1.92  
+183   Cervical vertebra 4                              2     1.92  
+184   Cervical vertebra 5                              2     1.92  
+185   Cervical vertebra 6                              2     1.92  
+186   Cervical vertebra 7                              2     1.92  
+188   Thoracic vertebra 1                              2     1.92  
+189   Thoracic vertebra 2                              2     1.92  
+190   Thoracic vertebra 3                              2     1.92  
+191   Thoracic vertebra 4                              2     1.92  
+192   Thoracic vertebra 5                              2     1.92  
+193   Thoracic vertebra 6                              2     1.92  
+194   Thoracic vertebra 7                              2     1.92  
+195   Thoracic vertebra 8                              2     1.92  
+196   Thoracic vertebra 9                              2     1.92  
+197   Thoracic vertebra 10                             2     1.92  
+198   Thoracic vertebra 11                             2     1.92  
+199   Thoracic vertebra 12                             2     1.92  
+201   Lumbar vertebra 1                                2     1.92  
+202   Lumbar vertebra 2                                2     1.92  
+203   Lumbar vertebra 3                                2     1.92  
+204   Lumbar vertebra 4                                2     1.92  
+205   Lumbar vertebra 5                                2     1.92  
+206   Sacrum                                           2     1.92  
+207   Sternum                                          2     1.92  
+211   Head skin                                        27    1.09  
+212   Trunk skin                                       27    1.09  
+214   Left arm skin                                    27    1.09  
+215   Right arm skin                                   27    1.09  
+217   Left leg skin                                    27    1.09  
+218   Right leg skin                                   27    1.09  
+219   Small intestine (wall + contents)                45    1.05  
+220   Spinal cord                                      45    1.05  
+221   Spleen                                           45    1.05  
+222   Stomach wall                                     45    1.05  
+223   Teeth                                            2     1.92  
+224   Testes                                           45    1.05  
+225   Thymus                                           45    1.05  
+226   Thyroid                                          45    1.05  
+227   Trachea                                          45    1.05  
+242   Bladder contents                                 45    1.05  
+243   Large intestine contents                         51    1.05  
+244   Stomach contents                                 45    1.05  
+245   Bed + pillow                                     45    1.05  
+250   Ascending + transverse colon                     45    1.05  
+251   Descending + sigmoid colon                       45    1.05  
+252   Gall bladder                                     45    1.05  
+253   Prostate                                         45    1.05  

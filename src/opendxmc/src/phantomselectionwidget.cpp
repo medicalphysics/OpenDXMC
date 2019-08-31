@@ -59,7 +59,7 @@ PhantomSelectionWidget::PhantomSelectionWidget(QWidget *parent)
 		else if (index == 6)
 			emit this->readIRCUMalePhantom(true);
 		else if (index == 7)
-			emit this->readAWSPhantom("Katya");
+			emit this->readAWSPhantom("Katja");
 	});
 
 

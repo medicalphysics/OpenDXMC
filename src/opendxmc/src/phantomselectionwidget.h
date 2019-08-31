@@ -20,8 +20,9 @@ Copyright 2019 Erlend Andersen
 
 #include "imagecontainer.h"
 #include <QWidget>
+#include <QString>
+
 #include <vector>
-#include <string>
 
 class PhantomSelectionWidget : public QWidget
 {
@@ -33,7 +34,7 @@ signals:
 	void readIRCUMalePhantom(bool removeArms=false);
 	void readIRCUFemalePhantom(bool removeArms = false);
 	void readCTDIPhantom(int diameter_mm);
-	void readAWSPhantom(const std::string& name);
+	void readAWSPhantom(const QString& name);
 protected:
 	
 	

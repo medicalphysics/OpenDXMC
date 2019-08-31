@@ -213,7 +213,7 @@ public:
 	void importICRUMalePhantom(bool ignoreArms=false);
 	void importICRUFemalePhantom(bool ignoreArms = false);
 	void importCTDIPhantom(int mm);
-	void importAWSPhantom(const std::string& name);
+	void importAWSPhantom(const QString& name);
 
 	//void importH5File(const QString& path);
 	//void exportH5File(const QString& path, const DataExportContainer data);

@@ -654,7 +654,7 @@ void ImageImportPipeline::importICRUFemalePhantom(bool ignoreArms)
 		return;
 	}
 
-	auto  organImage = std::make_shared<OrganImageContainer>(organArray, dimensions, spacing, origin);
+	auto organImage = std::make_shared<OrganImageContainer>(organArray, dimensions, spacing, origin);
 	auto materialImage = std::make_shared<MaterialImageContainer>(materialArray, dimensions, spacing, origin);
 	auto densityImage = std::make_shared<DensityImageContainer>(densityArray, dimensions, spacing, origin);
 	organImage->ID = ImageContainer::generateID();
@@ -669,57 +669,207 @@ void ImageImportPipeline::importICRUFemalePhantom(bool ignoreArms)
 	emit imageDataChanged(materialImage);
 }
 
-
-std::shared_ptr<ImageContainer> readAWSData(const std::string& path)
+// string trimms
+std::string& ltrim(std::string& str, const std::string& chars = "\t\n\v\f\r ")
 {
-	std::array<std::size_t, 3> dimensions = { 0,0,0 };
-	std::array<double, 3> spacing = { 1,1,1 };
-	std::ifstream input(path);
-	if (!input.is_open())
-		return std::make_shared<ImageContainer>();
-
-	//getting header
-	std::string header;
-	header.resize(headerSize);
-	input.read(&header[0], headerSize);
-	for (std::string line ; std::getline(header, line);)
-	{
-		auto pos = header.find("Width");
-
-	}
-	auto pos = header.find("Width");
-
-
-
-
-
-
-
-
-	auto organs = std::make_shared<std::vector<unsigned char>>();
-	std::ifstream input(path);
-	if (!input.is_open())
-		return organs;
-	organs->reserve(size);
-	int c;
-	while (input >> c)
-	{
-		organs->push_back(static_cast<unsigned char>(c));
-	}
-	return organs;
+	str.erase(0, str.find_first_not_of(chars));
+	return str;
 }
 
-void ImageImportPipeline::importAWSPhantom(const std::string& name)
+std::string& rtrim(std::string& str, const std::string& chars = "\t\n\v\f\r ")
+{
+	str.erase(str.find_last_not_of(chars) + 1);
+	return str;
+}
+
+std::string& trim(std::string& str, const std::string& chars = "\t\n\v\f\r ")
+{
+	return ltrim(rtrim(str, chars), chars);
+}
+
+//string split
+std::vector<std::string> stringSplit(const std::string& txt,  char delimiter)
+{
+	size_t pos = txt.find(delimiter);
+	size_t initialPos = 0;
+	std::vector<std::string> strs;
+	// Decompose statement
+	while (pos != std::string::npos) {
+		auto substr = trim(txt.substr(initialPos, pos - initialPos));
+		if (substr.size() > 0)
+			strs.push_back(substr);
+		initialPos = pos + 1;
+		pos = txt.find(delimiter, initialPos);
+	}
+	// Add the last one
+	auto substr = trim(txt.substr(initialPos, std::min(pos, txt.size()) - initialPos + 1));
+	if (substr.size() > 0)
+		strs.push_back(substr);
+	return strs;
+}
+
+
+struct AWSImageData
+{
+	std::array<std::size_t, 3> dimensions = { 0,0,0 };
+	std::array<double, 3> spacing = { 0,0,0 };
+	std::shared_ptr<std::vector<unsigned char>> image = nullptr;
+};
+
+AWSImageData readAWSData(const std::string& path)
+{
+	std::array<std::size_t, 3> dimensions = { 0,0,0 };
+	std::array<double, 3> spacing = { 0,0,0 };
+	std::ifstream input(path);
+	if (!input.is_open())
+		return AWSImageData();
+
+	bool valid = false;
+	std::size_t headerSize = 0;
+
+	// first line, this shoul be "AVW_ImageFile   1.00     4096" (type version header lenght) if valid file
+	std::string firstline;
+	std::getline(input, firstline);
+	auto strings = stringSplit(firstline, ' ');
+	if (strings.size() >= 3)
+	{
+		if (strings[0].compare("AVW_ImageFile") == 0)
+		{
+			try { headerSize = std::stoi(strings[2]); }
+			catch (const std::invalid_argument& e) {
+				return AWSImageData();
+			}
+			valid = true;
+		}
+	}
+
+	if (!valid)
+	{ 
+		return AWSImageData();
+	}
+	//reading dimension data
+	std::string header(headerSize, ' ');
+	input.read(&header[0], headerSize);
+	auto lines = stringSplit(header, '\n');
+	for (const auto& line : lines)
+	{
+		auto lv = stringSplit(line, '=');
+		if (lv.size() == 2)
+		{
+			if (lv[0].compare("Width") == 0)
+			{
+				dimensions[0] = std::stoi(lv[1]);
+			}
+			else if (lv[0].compare("Height") == 0)
+			{
+				dimensions[1] = std::stoi(lv[1]);
+			}
+			else if (lv[0].compare("Depth") == 0)
+			{
+				dimensions[2] = std::stoi(lv[1]);
+			}
+			else if (lv[0].compare("VoxelHeight") == 0)
+			{
+				spacing[0] = std::stod(lv[1]);
+			}
+			else if (lv[0].compare("VoxelWidth") == 0)
+			{
+				spacing[1] = std::stod(lv[1]);
+			}
+			else if (lv[0].compare("VoxelDepth") == 0)
+			{
+				spacing[2] = std::stod(lv[1]);
+			}
+		}
+
+	}
+	
+	const std::size_t imageSize = dimensions[0] * dimensions[1] * dimensions[2];
+
+	valid = (spacing[0] * spacing[1] * spacing[2] != 0) && (imageSize != 0);
+	if (!valid)
+		return AWSImageData();
+
+	//reading image data
+	auto organArray = std::make_shared<std::vector<unsigned char>>(imageSize, 0);
+	input.read(reinterpret_cast<char*>(organArray->data()), imageSize); 
+	
+	AWSImageData data;
+	data.dimensions = dimensions;
+	data.spacing = spacing;
+	data.image = organArray;
+	return data;
+}
+
+void ImageImportPipeline::importAWSPhantom(const QString& name)
 {
 	emit processingDataStarted();
 
-	auto organs = readICRPOrgans("resources/phantoms/other/" + name +"_organs.dat");
+	auto name_std = name.toStdString();
+
+	auto organs = readICRPOrgans("resources/phantoms/other/" + name_std +"_organs.dat");
 	auto media = readICRPMedia("resources/phantoms/other/media.dat");
-	auto organImage = readAWSData("resources/phantoms/other/+name");
+	auto organData = readAWSData("resources/phantoms/other/"+name_std);
+
+	if (!organData.image)
+	{
+		emit processingDataEnded();
+		return;
+	}
+
+	auto organArray = organData.image;
+	auto dimensions = organData.dimensions;
+	auto spacing = organData.spacing;
+	std::array<double, 3> origin;
+	for (std::size_t i = 0; i < 3; ++i)
+		origin[i] = dimensions[i] * spacing[i] * 0.5;
 
 
+	/*auto [materialArray, densityArray] = generateICRUPhantomArrays(*organArray, organs, media);
 
 
+	bool valid = true;
+	std::vector<std::string> organMap(organs.size());
+	std::vector<Material> materialMap(organs.size());
+	for (std::size_t i = 0; i < organs.size(); ++i)
+	{
+		if (organs[i].ID == i)
+			organMap[i] = organs[i].name;
+		else
+			valid = false;
+	}
+	for (std::size_t i = 0; i < media.size(); ++i)
+	{
+		auto& [id, material] = media[i];
+		material.setStandardDensity(1.0);
+		if (id == i)
+			materialMap[i] = material;
+		else
+			valid = false;
+	}
+	if (!valid)
+	{
+		emit processingDataEnded();
+		return;
+	}
+
+	auto organImage = std::make_shared<OrganImageContainer>(organArray, dimensions, spacing, origin);
+	auto materialImage = std::make_shared<MaterialImageContainer>(materialArray, dimensions, spacing, origin);
+	auto densityImage = std::make_shared<DensityImageContainer>(densityArray, dimensions, spacing, origin);
+	organImage->ID = ImageContainer::generateID();
+	materialImage->ID = organImage->ID;
+	densityImage->ID = organImage->ID;
+
+	emit processingDataEnded();
+	emit materialDataChanged(materialMap);
+	emit organDataChanged(organMap);
+	emit imageDataChanged(organImage);
+	emit imageDataChanged(densityImage);
+	emit imageDataChanged(materialImage);
+	*/
+	auto organImage = std::make_shared<OrganImageContainer>(organArray, dimensions, spacing, origin);
+	organImage->ID = ImageContainer::generateID();
+	emit imageDataChanged(organImage);
 	emit processingDataEnded();
 }
 

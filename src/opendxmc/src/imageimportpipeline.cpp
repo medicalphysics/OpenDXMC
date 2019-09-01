@@ -356,7 +356,7 @@ std::vector<organElement> readICRPOrgans(const std::string& path)
 		//skipping first 4 lines
 		if (teller > 3)
 		{
-			if (line.size() == 66)
+			if (line.size() > 65)
 			{
 				std::string id = line.substr(0, 6);
 				std::string name = line.substr(6, 49);
@@ -473,15 +473,20 @@ std::shared_ptr<std::vector<unsigned char>> readICRPData(const std::string& path
 }
 
 std::pair<std::shared_ptr<std::vector<unsigned char>>, std::shared_ptr<std::vector<double>>> generateICRUPhantomArrays(
-	const std::vector<unsigned char>& organArray,
-	const std::vector<organElement>& organs, 
+	std::vector<unsigned char>& organArray,
+	std::vector<organElement>& organs, 
 	const std::vector<std::pair<unsigned char, Material>>& media)
 {
 
 	std::vector<unsigned char> materialLut(organs.size());
 	std::vector<double> densityLut(organs.size());
+	std::map<unsigned char, unsigned char> reverse_lut;
+
 	for (std::size_t i = 0; i < organs.size(); ++i)
 	{
+		auto key = organs[i].ID;
+		reverse_lut[key] = static_cast<unsigned char>(i);
+		organs[i].ID = static_cast<unsigned char>(i);
 		materialLut[i] = static_cast<unsigned char>(organs[i].tissue);
 		densityLut[i] = organs[i].density;
 	}
@@ -492,10 +497,8 @@ std::pair<std::shared_ptr<std::vector<unsigned char>>, std::shared_ptr<std::vect
 	auto densityBuffer = densityArray->data();
 	for (std::size_t i = 0; i < organArray.size(); ++i)
 	{
+		organArray[i] = reverse_lut[organArray[i]];
 		materialBuffer[i] = materialLut[organArray[i]];
-	}
-	for (std::size_t i = 0; i < organArray.size(); ++i)
-	{
 		densityBuffer[i] = densityLut[organArray[i]];
 	}
 	return std::make_pair(materialArray, densityArray);
@@ -792,8 +795,10 @@ AWSImageData readAWSData(const std::string& path)
 
 	//reading image data
 	auto organArray = std::make_shared<std::vector<unsigned char>>(imageSize, 0);
-	input.read(reinterpret_cast<char*>(organArray->data()), imageSize); 
+	input.seekg(headerSize + 1);
+	input.read(reinterpret_cast<char*>(organArray->data()), imageSize);
 	
+
 	AWSImageData data;
 	data.dimensions = dimensions;
 	data.spacing = spacing;
@@ -822,11 +827,11 @@ void ImageImportPipeline::importAWSPhantom(const QString& name)
 	auto spacing = organData.spacing;
 	std::array<double, 3> origin;
 	for (std::size_t i = 0; i < 3; ++i)
-		origin[i] = dimensions[i] * spacing[i] * 0.5;
+		origin[i] = -(dimensions[i] * spacing[i] * 0.5);
 
 
-	/*auto [materialArray, densityArray] = generateICRUPhantomArrays(*organArray, organs, media);
-
+	auto [materialArray, densityArray] = generateICRUPhantomArrays(*organArray, organs, media);
+	
 
 	bool valid = true;
 	std::vector<std::string> organMap(organs.size());
@@ -866,10 +871,11 @@ void ImageImportPipeline::importAWSPhantom(const QString& name)
 	emit imageDataChanged(organImage);
 	emit imageDataChanged(densityImage);
 	emit imageDataChanged(materialImage);
-	*/
+	/*
 	auto organImage = std::make_shared<OrganImageContainer>(organArray, dimensions, spacing, origin);
 	organImage->ID = ImageContainer::generateID();
 	emit imageDataChanged(organImage);
+	*/
 	emit processingDataEnded();
 }
 

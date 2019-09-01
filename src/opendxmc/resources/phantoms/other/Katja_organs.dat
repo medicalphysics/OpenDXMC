@@ -145,9 +145,9 @@ ID                                                     number
 141   Skin at top and bottom                           27    1.09  
 210   Placenta                                         46    1.03  
 211   Umbilical cord                                   45    1.03  
-212   Amniotic fluid                                   0     1     
+212   Amniotic fluid                                   53    1     
 213   Fetus Head tissue                                49    0.95  
-214   Fetus cerebrospinal fluid                        0     1     
+214   Fetus cerebrospinal fluid                        53    1     
 215   Fetus Spine                                      33    1.05  
 220   Fetus Skin                                       27    1.09  
 221   Fetus Trunk                                      49    0.95  

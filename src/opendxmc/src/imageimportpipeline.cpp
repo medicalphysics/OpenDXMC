@@ -739,7 +739,7 @@ AWSImageData readAWSData(const std::string& path)
 		if (strings[0].compare("AVW_ImageFile") == 0)
 		{
 			try { headerSize = std::stoi(strings[2]); }
-			catch (const std::invalid_argument& e) {
+			catch (const std::invalid_argument&) {
 				return AWSImageData();
 			}
 			valid = true;

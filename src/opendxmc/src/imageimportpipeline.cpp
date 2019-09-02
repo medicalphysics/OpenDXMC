@@ -498,8 +498,8 @@ std::pair<std::shared_ptr<std::vector<unsigned char>>, std::shared_ptr<std::vect
 		auto key = organs[i].ID;
 		materialLut[key] = static_cast<unsigned char>(organs[i].tissue);
 		densityLut[key] = organs[i].density;
-		organLut[key] = i;
-		organs[i].ID = i;
+		organLut[key] = static_cast<unsigned char>(i);
+		organs[i].ID = static_cast<unsigned char>(i);
 	}
 
 
@@ -808,10 +808,13 @@ AWSImageData readAWSData(const std::string& path)
 		return AWSImageData();
 
 	//reading image data
-	auto organArray = std::make_shared<std::vector<unsigned char>>(imageSize, 0);
-	input.seekg(headerSize + 1);
-	input.read(reinterpret_cast<char*>(organArray->data()), imageSize);
-	
+	auto organArray = std::make_shared<std::vector<std::uint8_t>>(imageSize+headerSize, 0);
+
+	input.seekg(0, std::ios::beg);
+	input.read(reinterpret_cast<char*>(organArray->data()), imageSize+headerSize);
+	auto len = input.gcount();
+	organArray->erase(organArray->begin(), organArray->begin() + headerSize);
+
 
 	AWSImageData data;
 	data.dimensions = dimensions;

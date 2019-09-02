@@ -194,8 +194,8 @@ set (fileresources
 	"phantoms/icrp/README.txt"
 	"phantoms/other/Golem_organs.dat"
 	"phantoms/other/Golem"
-	"phantoms/other/Babynew_organs.dat"
-	"phantoms/other/Babynew"
+	"phantoms/other/Baby_organs.dat"
+	"phantoms/other/Baby"
 	"phantoms/other/Child_organs.dat"
 	"phantoms/other/Child"
 	"phantoms/other/Donna_organs.dat"
@@ -210,8 +210,8 @@ set (fileresources
 	"phantoms/other/Jo"
 	"phantoms/other/Katja_organs.dat"
 	"phantoms/other/Katja"
-	"phantoms/other/VizHum_organs.dat"
-	"phantoms/other/VizHum"
+	"phantoms/other/Vishum_organs.dat"
+	"phantoms/other/Vishum"
 	"phantoms/other/media.dat"
 	)
 foreach(fileresource ${fileresources})

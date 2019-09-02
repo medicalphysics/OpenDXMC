@@ -154,8 +154,8 @@ std::array<char, EXPORT_HEADER_SIZE> ExportWidget::getHeaderData(std::shared_ptr
 void ExportWidget::writeArrayBin(std::shared_ptr<ImageContainer> image, const std::string& path, bool includeHeader)
 {
 	std::streamsize size = image->image->GetScalarSize() * image->image->GetNumberOfCells();
-	fstream file;
-	file.open(path, ios::out | ios::binary);
+	std::fstream file;
+	file.open(path, std::ios::out | std::ios::binary);
 	if (includeHeader)
 	{
 		auto header = ExportWidget::getHeaderData(image);

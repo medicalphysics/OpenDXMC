@@ -64,7 +64,7 @@ PhantomSelectionWidget::PhantomSelectionWidget(QWidget *parent)
 		else if (index == 7)
 			emit this->readAWSPhantom("Katja");
 		else if (index == 8)
-			emit this->readAWSPhantom("Babynew");
+			emit this->readAWSPhantom("Baby");
 		else if (index == 9)
 			emit this->readAWSPhantom("Child");
 	});

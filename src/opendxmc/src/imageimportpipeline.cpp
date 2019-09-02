@@ -324,8 +324,8 @@ std::pair<std::string, std::vector<double>> ImageImportPipeline::readExposureDat
 
 struct organElement
 {
-	int ID = 0;
-	int tissue = 0;
+	unsigned char ID = 0;
+	unsigned char tissue = 0;
 	double density = 0;
 	std::string name;
 };
@@ -457,7 +457,7 @@ std::vector<std::pair<unsigned char, Material>> readICRPMedia(const std::string&
 	return media;
 }
 
-std::shared_ptr<std::vector<unsigned char>> readICRPData(const std::string& path, std::size_t	size)
+std::shared_ptr<std::vector<unsigned char>> readICRPData(const std::string& path, std::size_t size)
 {
 	auto organs = std::make_shared<std::vector<unsigned char>>();
 	std::ifstream input(path);
@@ -478,18 +478,32 @@ std::pair<std::shared_ptr<std::vector<unsigned char>>, std::shared_ptr<std::vect
 	const std::vector<std::pair<unsigned char, Material>>& media)
 {
 
-	std::vector<unsigned char> materialLut(organs.size());
-	std::vector<double> densityLut(organs.size());
-	std::map<unsigned char, unsigned char> reverse_lut;
+	//std::vector<unsigned char> materialLut(organs.size());
+	//std::vector<double> densityLut(organs.size());
+	//std::map<unsigned char, unsigned char> organLut;
+	std::map<unsigned char, double> densityLut;
+	std::map<unsigned char, unsigned char> materialLut;
+	std::map<unsigned char, unsigned char> organLut;
 
-	for (std::size_t i = 0; i < organs.size(); ++i)
+	/*for (std::size_t i = 0; i < organs.size(); ++i)
 	{
 		auto key = organs[i].ID;
 		reverse_lut[key] = static_cast<unsigned char>(i);
 		organs[i].ID = static_cast<unsigned char>(i);
 		materialLut[i] = static_cast<unsigned char>(organs[i].tissue);
 		densityLut[i] = organs[i].density;
+	}*/
+	for (std::size_t i = 0; i < organs.size(); ++i)
+	{
+		auto key = organs[i].ID;
+		materialLut[key] = static_cast<unsigned char>(organs[i].tissue);
+		densityLut[key] = organs[i].density;
+		organLut[key] = i;
+		organs[i].ID = i;
 	}
+
+
+
 	auto materialArray = std::make_shared<std::vector<unsigned char>>(organArray.size());
 	auto densityArray = std::make_shared<std::vector<double>>(organArray.size());
 	
@@ -497,9 +511,9 @@ std::pair<std::shared_ptr<std::vector<unsigned char>>, std::shared_ptr<std::vect
 	auto densityBuffer = densityArray->data();
 	for (std::size_t i = 0; i < organArray.size(); ++i)
 	{
-		organArray[i] = reverse_lut[organArray[i]];
 		materialBuffer[i] = materialLut[organArray[i]];
 		densityBuffer[i] = densityLut[organArray[i]];
+		organArray[i] = organLut[organArray[i]];
 	}
 	return std::make_pair(materialArray, densityArray);
 }
@@ -730,15 +744,15 @@ AWSImageData readAWSData(const std::string& path)
 	bool valid = false;
 	std::size_t headerSize = 0;
 
-	// first line, this shoul be "AVW_ImageFile   1.00     4096" (type version header lenght) if valid file
+	// first line, this shoul be "# HEADER_DATA_BEGIN: 4096" (type version header lenght) if valid file
 	std::string firstline;
 	std::getline(input, firstline);
-	auto strings = stringSplit(firstline, ' ');
-	if (strings.size() >= 3)
+	auto strings = stringSplit(firstline, ':');
+	if (strings.size() > 1)
 	{
-		if (strings[0].compare("AVW_ImageFile") == 0)
+		if (strings[0].compare("# HEADER_DATA_BEGIN") == 0)
 		{
-			try { headerSize = std::stoi(strings[2]); }
+			try { headerSize = std::stoi(strings[1]); }
 			catch (const std::invalid_argument&) {
 				return AWSImageData();
 			}
@@ -756,30 +770,30 @@ AWSImageData readAWSData(const std::string& path)
 	auto lines = stringSplit(header, '\n');
 	for (const auto& line : lines)
 	{
-		auto lv = stringSplit(line, '=');
+		auto lv = stringSplit(line, ':');
 		if (lv.size() == 2)
 		{
-			if (lv[0].compare("Width") == 0)
+			if (lv[0].compare("# WIDTH") == 0)
 			{
 				dimensions[0] = std::stoi(lv[1]);
 			}
-			else if (lv[0].compare("Height") == 0)
+			else if (lv[0].compare("# HEIGHT") == 0)
 			{
 				dimensions[1] = std::stoi(lv[1]);
 			}
-			else if (lv[0].compare("Depth") == 0)
+			else if (lv[0].compare("# DEPTH") == 0)
 			{
 				dimensions[2] = std::stoi(lv[1]);
 			}
-			else if (lv[0].compare("VoxelHeight") == 0)
+			else if (lv[0].compare("# HEIGHT_SPACING") == 0)
 			{
 				spacing[0] = std::stod(lv[1]);
 			}
-			else if (lv[0].compare("VoxelWidth") == 0)
+			else if (lv[0].compare("# WIDTH_SPACING") == 0)
 			{
 				spacing[1] = std::stod(lv[1]);
 			}
-			else if (lv[0].compare("VoxelDepth") == 0)
+			else if (lv[0].compare("# DEPTH_SPACING") == 0)
 			{
 				spacing[2] = std::stod(lv[1]);
 			}
@@ -835,7 +849,7 @@ void ImageImportPipeline::importAWSPhantom(const QString& name)
 
 	bool valid = true;
 	std::vector<std::string> organMap(organs.size());
-	std::vector<Material> materialMap(organs.size());
+	std::vector<Material> materialMap(media.size());
 	for (std::size_t i = 0; i < organs.size(); ++i)
 	{
 		if (organs[i].ID == i)
@@ -865,12 +879,12 @@ void ImageImportPipeline::importAWSPhantom(const QString& name)
 	materialImage->ID = organImage->ID;
 	densityImage->ID = organImage->ID;
 
-	emit processingDataEnded();
+	emit imageDataChanged(densityImage);
+	emit imageDataChanged(organImage);
+	emit imageDataChanged(materialImage);
 	emit materialDataChanged(materialMap);
 	emit organDataChanged(organMap);
-	emit imageDataChanged(organImage);
-	emit imageDataChanged(densityImage);
-	emit imageDataChanged(materialImage);
+	emit processingDataEnded();
 	/*
 	auto organImage = std::make_shared<OrganImageContainer>(organArray, dimensions, spacing, origin);
 	organImage->ID = ImageContainer::generateID();

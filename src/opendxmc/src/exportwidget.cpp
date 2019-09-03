@@ -132,13 +132,27 @@ void add3array(std::stringstream& stream, U* arr)
 std::array<char, EXPORT_HEADER_SIZE> ExportWidget::getHeaderData(std::shared_ptr<ImageContainer> image)
 {
 	std::stringstream header;
+	auto dimensions = image->image->GetDimensions();
+	auto spacing = image->image->GetSpacing();
+	auto cosines = image->directionCosines;
 
-	header << "# SCALAR_ARRAY" << std::endl;
-	header << "# SCALAR_SIZE_IN_BYTES: " << image->image->GetScalarSize() << std::endl;
-	header << "# DIMENSIONS_[X,Y,Z]: ";
-	add3array(header, image->image->GetDimensions());
-	header << "# VOXEL_SPACING: ";
-	add3array(header, image->image->GetSpacing());
+	header << "# HEADER_DATA_BEGIN: " << EXPORT_HEADER_SIZE << std::endl;
+	header << "# HEADER_SIZE: " << EXPORT_HEADER_SIZE << std::endl;
+	header << "# SCALAR_ARRAY: " << "ORGANDATA" << std::endl;
+	header << "# SCALAR_TYPE: " << "unsigned char" << std::endl;
+	header << "# SCALAR_SIZE_IN_BYTES: " << sizeof(unsigned char) << std::endl;
+	header << "# WIDTH: " << dimensions[0] << std::endl;
+	header << "# HEIGHT: " << dimensions[1] << std::endl;
+	header << "# DEPTH: " << dimensions[2] << std::endl;
+	header << "# WIDTH_SPACING: " << spacing[0] << std::endl;
+	header << "# HEIGHT_SPACING: " << spacing[1] << std::endl;
+	header << "# DEPTH_SPACING: " << spacing[2] << std::endl;
+	header << "# COSINES_X1: " << cosines[0] << std::endl;
+	header << "# COSINES_X2: " << cosines[1] << std::endl;
+	header << "# COSINES_X3: " << cosines[2] << std::endl;
+	header << "# COSINES_Y1: " << cosines[3] << std::endl;
+	header << "# COSINES_Y2: " << cosines[4] << std::endl;
+	header << "# COSINES_Y3: " << cosines[5] << std::endl;
 	auto str = header.str();
 
 	std::array<char, EXPORT_HEADER_SIZE> arr;

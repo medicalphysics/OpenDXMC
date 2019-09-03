@@ -730,14 +730,16 @@ struct AWSImageData
 {
 	std::array<std::size_t, 3> dimensions = { 0,0,0 };
 	std::array<double, 3> spacing = { 0,0,0 };
+	std::array<double, 6> cosines = { 1,0,0, 0, 1, 0 };
 	std::shared_ptr<std::vector<unsigned char>> image = nullptr;
 };
 
 AWSImageData readAWSData(const std::string& path)
 {
-	std::array<std::size_t, 3> dimensions = { 0,0,0 };
-	std::array<double, 3> spacing = { 0,0,0 };
-	std::ifstream input(path);
+	std::array<std::size_t, 3> dimensions = { 0, 0, 0 };
+	std::array<double, 3> spacing = { 0, 0, 0 };
+	std::array<double, 6> cosines = { 1, 0, 0, 0, 1, 0 };
+	std::ifstream input(path, std::ios::in | std::ios::binary);
 	if (!input.is_open())
 		return AWSImageData();
 
@@ -797,6 +799,30 @@ AWSImageData readAWSData(const std::string& path)
 			{
 				spacing[2] = std::stod(lv[1]);
 			}
+			else if (lv[0].compare("# COSINES_X1") == 0)
+			{
+				cosines[0] = std::stod(lv[1]);
+			}
+			else if (lv[0].compare("# COSINES_X2") == 0)
+			{
+				cosines[1] = std::stod(lv[1]);
+			}
+			else if (lv[0].compare("# COSINES_X3") == 0)
+			{
+				cosines[2] = std::stod(lv[1]);
+			}
+			else if (lv[0].compare("# COSINES_Y1") == 0)
+			{
+				cosines[3] = std::stod(lv[1]);
+			}
+			else if (lv[0].compare("# COSINES_Y2") == 0)
+			{
+				cosines[4] = std::stod(lv[1]);
+			}
+			else if (lv[0].compare("# COSINES_Y3") == 0)
+			{
+				cosines[5] = std::stod(lv[1]);
+			}
 		}
 
 	}
@@ -820,6 +846,7 @@ AWSImageData readAWSData(const std::string& path)
 	data.dimensions = dimensions;
 	data.spacing = spacing;
 	data.image = organArray;
+	data.cosines = cosines;
 	return data;
 }
 
@@ -881,6 +908,9 @@ void ImageImportPipeline::importAWSPhantom(const QString& name)
 	organImage->ID = ImageContainer::generateID();
 	materialImage->ID = organImage->ID;
 	densityImage->ID = organImage->ID;
+	organImage->directionCosines = organData.cosines;
+	materialImage->directionCosines = organData.cosines;
+	densityImage->directionCosines = organData.cosines;
 
 	emit imageDataChanged(densityImage);
 	emit imageDataChanged(organImage);

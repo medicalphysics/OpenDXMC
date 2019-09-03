@@ -45,6 +45,13 @@ PhantomSelectionWidget::PhantomSelectionWidget(QWidget *parent)
 	phantomSelector->addItem(tr("Pregnant female"));
 	phantomSelector->addItem(tr("Baby"));
 	phantomSelector->addItem(tr("Child"));
+	phantomSelector->addItem(tr("Donna"));
+	phantomSelector->addItem(tr("Frank"));
+	phantomSelector->addItem(tr("Golem"));
+	phantomSelector->addItem(tr("Helga"));
+	phantomSelector->addItem(tr("Irene"));
+	phantomSelector->addItem(tr("Jo"));
+	phantomSelector->addItem(tr("Vishum"));
 
 	//connecting slots
 	connect(phantomSelector, QOverload<int>::of(&QComboBox::activated),
@@ -67,6 +74,20 @@ PhantomSelectionWidget::PhantomSelectionWidget(QWidget *parent)
 			emit this->readAWSPhantom("Baby");
 		else if (index == 9)
 			emit this->readAWSPhantom("Child");
+		else if (index == 10)
+			emit this->readAWSPhantom("Donna");
+		else if (index == 11)
+			emit this->readAWSPhantom("Frank");
+		else if (index == 12)
+			emit this->readAWSPhantom("Golem");
+		else if (index == 13)
+			emit this->readAWSPhantom("Helga");
+		else if (index == 14)
+			emit this->readAWSPhantom("Irene");
+		else if (index == 15)
+			emit this->readAWSPhantom("Jo");
+		else if (index == 16)
+			emit this->readAWSPhantom("Vishum");
 	});
 
 

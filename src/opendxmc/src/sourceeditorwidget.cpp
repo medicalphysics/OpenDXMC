@@ -365,22 +365,22 @@ void SourceEditWidget::addCurrentSourceType(void)
 {
 	if (m_currentSourceTypeSelected == 0)
 	{
-		// add ct beam
+		// add dx beam
 		m_model->addSource(Source::DX);
 	}
 	else if (m_currentSourceTypeSelected == 1)
 	{
-		//add dx beam
+		//add spiral beam
 		m_model->addSource(Source::CTSpiral);
 	}
 	else if (m_currentSourceTypeSelected == 2)
 	{
-		//add dx beam
+		//add axial beam
 		m_model->addSource(Source::CTAxial);
 	}
 	else if (m_currentSourceTypeSelected == 3)
 	{
-		//add dx beam
+		//add DE beam
 		m_model->addSource(Source::CTDual);
 	}
 }

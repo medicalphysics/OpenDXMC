@@ -302,7 +302,7 @@ void SourceModel::addSource(Source::Type type)
 			}
 			else 
 			{
-				double center = (m_currentImageExtent[5] - m_currentImageExtent[4]) * 0.5;
+				double center = (m_currentImageExtent[5] + m_currentImageExtent[4]) * 0.5;
 				srcCoverage[0] = center - 250.0;
 				srcCoverage[1] = center + 250.0;
 			}
@@ -337,7 +337,7 @@ void SourceModel::addSource(Source::Type type)
 			}
 			else
 			{
-				double center = (m_currentImageExtent[5] - m_currentImageExtent[4]) * 0.5;
+				double center = (m_currentImageExtent[5] + m_currentImageExtent[4]) * 0.5;
 				srcCoverage[0] = center - 250.0;
 				srcCoverage[1] = center + 250.0;
 			}
@@ -371,7 +371,7 @@ void SourceModel::addSource(Source::Type type)
 			}
 			else
 			{
-				double center = (m_currentImageExtent[5] - m_currentImageExtent[4]) * 0.5;
+				double center = (m_currentImageExtent[5] + m_currentImageExtent[4]) * 0.5;
 				srcCoverage[0] = center - 250.0;
 				srcCoverage[1] = center + 250.0;
 			}

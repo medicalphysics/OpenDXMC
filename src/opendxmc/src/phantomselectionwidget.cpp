@@ -115,17 +115,11 @@ PhantomSelectionWidget::PhantomSelectionWidget(QWidget *parent)
 		importHelmholtzLabel->document()->adjustSize();
 		importHelmholtzLabel->updateGeometry();
 		importHelmholtzLabel->setMaximumHeight(importHelmholtzLabel->document()->size().height());
-		qDebug() << importHelmholtzLabel->document()->size();
-
 		});
 
 	mainLayout->addStretch();
 	this->setLayout(mainLayout);
-
 	addInstalledPhantoms();
-
-
-
 }
 
 

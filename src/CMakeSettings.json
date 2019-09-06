@@ -10,7 +10,13 @@
       "cmakeCommandArgs": "",
       "buildCommandArgs": "-v",
       "ctestCommandArgs": "",
-      "variables": []
+      "variables": [
+        {
+          "name": "Qt5_DIR",
+          "value": "C:/Qt/5.13.1/msvc2017_64/lib/cmake/Qt5",
+          "type": "PATH"
+        }
+      ]
     },
     {
       "name": "x64-Debug",
@@ -22,7 +28,13 @@
       "cmakeCommandArgs": "",
       "buildCommandArgs": "-v",
       "ctestCommandArgs": "",
-      "variables": []
+      "variables": [
+        {
+          "name": "Qt5_DIR",
+          "value": "C:/Qt/5.13.1/msvc2017_64/lib/cmake/Qt5",
+          "type": "PATH"
+        }
+      ]
     },
     {
       "name": "x64-RelWithDebInfo",
@@ -34,7 +46,13 @@
       "cmakeCommandArgs": "",
       "buildCommandArgs": "-v",
       "ctestCommandArgs": "",
-      "variables": []
+      "variables": [
+        {
+          "name": "Qt5_DIR",
+          "value": "C:/Qt/5.13.1/msvc2017_64/lib/cmake/Qt5",
+          "type": "PATH"
+        }
+      ]
     }
   ]
 }

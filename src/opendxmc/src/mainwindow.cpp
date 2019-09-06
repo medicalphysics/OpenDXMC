@@ -18,6 +18,8 @@ Copyright 2019 Erlend Andersen
 
 #include <QSplitter>
 #include <QStatusbar>
+#include <QAction>
+#include <QMenuBar>
 
 #include "mainwindow.h"
 #include "viewportwidget.h"
@@ -25,7 +27,6 @@ Copyright 2019 Erlend Andersen
 #include "imageimportpipeline.h"
 #include "progressindicator.h"
 #include "exportwidget.h"
-//#include "materialselectionwidget.h"
 #include "sourceeditorwidget.h"
 #include "phantomselectionwidget.h"
 #include "dosereportwidget.h"
@@ -140,6 +141,14 @@ MainWindow::MainWindow(QWidget* parent)
 	//request to run simulation connection
 	connect(sourceEditWidget, &SourceEditWidget::runSimulation, m_simulationPipeline, &SimulationPipeline::runSimulation);
 
+
+
+	//window menu
+	/*auto fileMenu = menuBar()->addMenu(tr("&File"));
+	auto importMenu = fileMenu->addMenu(tr("&Import"));
+	auto importAction = importMenu->addAction(tr("Helmholtz-Zentrum phantoms"));
+	connect(importAction, &QAction::triggered, phantomWidget, &PhantomSelectionWidget::importHelmholtzPhantoms);
+	*/
 	//no connections to pipeline after this point
 	m_workerThread.start();
 

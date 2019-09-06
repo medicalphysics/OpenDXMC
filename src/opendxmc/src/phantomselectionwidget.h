@@ -21,6 +21,7 @@ Copyright 2019 Erlend Andersen
 #include "imagecontainer.h"
 #include <QWidget>
 #include <QString>
+#include <QComboBox>
 
 #include <vector>
 
@@ -29,6 +30,7 @@ class PhantomSelectionWidget : public QWidget
 	Q_OBJECT
 public:
 	PhantomSelectionWidget(QWidget *parent = nullptr);
+	void importHelmholtzPhantoms();
 
 signals:
 	void readIRCUMalePhantom(bool removeArms=false);
@@ -36,9 +38,9 @@ signals:
 	void readCTDIPhantom(int diameter_mm);
 	void readAWSPhantom(const QString& name);
 protected:
-	
-	
+	void addInstalledPhantoms(void);
 private:
+	QComboBox* m_phantomSelector = nullptr;
 	
 	
 };

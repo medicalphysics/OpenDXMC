@@ -59,5 +59,10 @@ int main (int argc, char *argv[])
 	win.show();
 	createLogger();
 
+
+
+
+
+
     return app.exec();
 }

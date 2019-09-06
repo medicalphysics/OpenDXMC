@@ -918,12 +918,6 @@ void ImageImportPipeline::importAWSPhantom(const QString& name)
 	emit materialDataChanged(materialMap);
 	emit organDataChanged(organMap);
 	emit processingDataEnded();
-	/*
-	auto organImage = std::make_shared<OrganImageContainer>(organArray, dimensions, spacing, origin);
-	organImage->ID = ImageContainer::generateID();
-	emit imageDataChanged(organImage);
-	*/
-	emit processingDataEnded();
 }
 
 

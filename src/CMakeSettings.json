@@ -33,6 +33,11 @@
           "name": "Qt5_DIR",
           "value": "C:/Qt/5.13.1/msvc2017_64/lib/cmake/Qt5",
           "type": "PATH"
+        },
+        {
+          "name": "VTK_DIR",
+          "value": "C:/VTK/bin/vtk",
+          "type": "FILEPATH"
         }
       ]
     },

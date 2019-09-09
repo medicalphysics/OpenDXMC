@@ -2,35 +2,34 @@
 
 
 find_package(VTK COMPONENTS
-  vtkCommonColor
-  vtkCommonComputationalGeometry
-  vtkCommonCore
-  vtkCommonDataModel
-  vtkCommonExecutionModel
-  vtkCommonMath
-  vtkCommonMisc
-  vtkCommonSystem
-  vtkCommonTransforms
-  vtkFiltersCore
-  vtkFiltersGeneral
-  vtkFiltersSources
-  vtkGUISupportQt
-  vtkImagingCore
-  vtkImagingMath
-  vtkInteractionStyle
-  vtkInteractionImage
-  vtkRenderingCore
-  vtkRenderingImage
-  vtkRenderingOpenGL2
-  vtkRenderingQt
-  vtkViewsQt
-  vtkkwiml
-  vtkDICOM
-  vtkRenderingVolume
-  vtkRenderingVolumeOpenGL2
-  vtkIOMovie
+  CommonColor
+  CommonComputationalGeometry
+  CommonCore
+  CommonDataModel
+  CommonExecutionModel
+  CommonMath
+  CommonMisc
+  CommonSystem
+  CommonTransforms
+  FiltersCore
+  FiltersGeneral
+  FiltersSources
+  GUISupportQt
+  ImagingCore
+  ImagingMath
+  InteractionStyle
+  InteractionImage
+  RenderingCore
+  RenderingImage
+  RenderingOpenGL2
+  RenderingQt
+  ViewsQt
+  kwiml
+  DICOM
+  RenderingVolume
+  RenderingVolumeOpenGL2
   )
-include(${VTK_USE_FILE})
+#include(${VTK_USE_FILE})
 include_directories(${VTK_INCLUDE_DIRS})
 
 

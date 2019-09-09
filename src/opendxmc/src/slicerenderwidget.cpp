@@ -47,6 +47,7 @@ Copyright 2019 Erlend Andersen
 #include <vtkImageProperty.h>
 #include <vtkWindowToImageFilter.h>
 #include <vtkPNGWriter.h>
+#include <vtkRenderWindowInteractor.h>
 
 #ifdef WINDOWS
 #include <vtkAVIWriter.h>
@@ -305,12 +306,12 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 	//window settings
 	m_renderer->SetBackground(0,0,0);
 	auto menuIcon = QIcon(QString("resources/icons/settings.svg"));
-	auto menuButton = new QPushButton(menuIcon, QString(), m_openGLWidget);
+	auto menuButton = new QPushButton(menuIcon, QString(), this);
 	menuButton->setIconSize(QSize(24, 24));
 	menuButton->setStyleSheet("QPushButton {background-color:transparent;}");
 	auto menu = new QMenu(menuButton);
 	menuButton->setMenu(menu);
-	
+
 	auto smoothSlider = new QSlider(Qt::Horizontal, menuButton);
 	smoothSlider->setMaximum(10);
 	smoothSlider->setTickInterval(1);

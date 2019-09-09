@@ -25,11 +25,19 @@ find_package(VTK COMPONENTS
   vtkRenderingQt
   vtkViewsQt
   vtkkwiml
-  vtkDICOM
+  #vtkDICOM
   vtkRenderingVolume
   vtkRenderingVolumeOpenGL2
   vtkIOMovie
   )
+
+find_package(DICOM QUIET)
+if(DICOM_FOUND)
+	include(${DICOM_USE_FILE})
+	include_directories(${DICOM_INCLUDE_DIRS})
+endif()
+set(VTK_DICOM_LIBRARIES vtkDICOM)
+
 include(${VTK_USE_FILE})
 include_directories(${VTK_INCLUDE_DIRS})
 
@@ -104,6 +112,7 @@ target_link_libraries(OpenDXMC
         PRIVATE dxmclib
 		PRIVATE vtkextension
 		${VTK_LIBRARIES}
+		${VTK_DICOM_LIBRARIES}
         Qt5::Widgets
 		Qt5::Core
 		Qt5::Gui

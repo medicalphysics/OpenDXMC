@@ -30,7 +30,7 @@ find_package(VTK COMPONENTS
   vtkRenderingQt
   vtkViewsQt
   vtkkwiml
-  vtkDICOM
+  #vtkDICOM
   vtkRenderingVolume
   vtkRenderingVolumeOpenGL2
   )

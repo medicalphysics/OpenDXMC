@@ -88,3 +88,7 @@ ipch/
 
 # Visual Studio Trace Files
 *.e2e
+
+/src/out/build/x64-Debug
+/src/CMakeSettings.json
+out

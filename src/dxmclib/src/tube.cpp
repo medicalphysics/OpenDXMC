@@ -487,6 +487,35 @@ void Tube::setCuFiltration(double mm)
 	}
 }
 
+double Tube::SnFiltration() const
+{
+	for (auto& [material, thickness] : m_filtrationMaterials)
+	{
+		if (material.name().compare("Sn") == 0)
+			return thickness;
+	}
+	return 0.0;
+}
+void Tube::setSnFiltration(double mm)
+{
+	bool hasSnFiltration = false;
+	bool snFiltrationSet = false;
+	for (auto& [material, thickness] : m_filtrationMaterials)
+		if (material.name().compare("Sn") == 0)
+			if (!snFiltrationSet)
+			{
+				thickness = std::abs(mm);
+				hasSnFiltration = true;
+				snFiltrationSet = true;
+			}
+	if (!hasSnFiltration)
+	{
+		Material sn(50);
+		addFiltrationMaterial(sn, std::abs(mm));
+	}
+}
+
+
 std::vector<double> Tube::getSpecter(const std::vector<double>& energies, bool normalize) const
 {
 	std::vector<double> specter;

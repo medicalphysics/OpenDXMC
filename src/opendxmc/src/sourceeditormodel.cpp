@@ -37,6 +37,7 @@ QVariant SourceItem<CTSource, std::shared_ptr<BeamFilter>>::data(int role) const
 	}
 	return QVariant();
 }
+
 template<>
 void SourceItem<CTSource, std::shared_ptr<BeamFilter>>::setData(const QVariant& data, int role)
 {
@@ -56,6 +57,7 @@ QVariant SourceItem<CTDualSource, std::shared_ptr<BeamFilter>>::data(int role) c
 	}
 	return QVariant();
 }
+
 template<>
 void SourceItem<CTDualSource, std::shared_ptr<BeamFilter>>::setData(const QVariant& data, int role)
 {
@@ -75,6 +77,7 @@ QVariant SourceItem<CTSource, std::shared_ptr<PositionalFilter>>::data(int role)
 	}
 	return QVariant();
 }
+
 template<>
 void SourceItem<CTSource, std::shared_ptr<PositionalFilter>>::setData(const QVariant& data, int role)
 {
@@ -84,7 +87,6 @@ void SourceItem<CTSource, std::shared_ptr<PositionalFilter>>::setData(const QVar
 		emitDataChanged();
 	}
 }
-
 
 template<>
 QVariant SourceItem<CTSource, std::uint64_t>::data(int role) const
@@ -97,6 +99,7 @@ QVariant SourceItem<CTSource, std::uint64_t>::data(int role) const
 	}
 	return QVariant();
 }
+
 template<>
 void SourceItem<CTSource, std::uint64_t>::setData(const QVariant& data, int role)
 {
@@ -118,6 +121,7 @@ QVariant SourceItem<CTDualSource, std::uint64_t>::data(int role) const
 	}
 	return QVariant();
 }
+
 template<>
 void SourceItem<CTDualSource, std::uint64_t>::setData(const QVariant& data, int role)
 {
@@ -127,7 +131,6 @@ void SourceItem<CTDualSource, std::uint64_t>::setData(const QVariant& data, int 
 		emitDataChanged();
 	}
 }
-
 
 template<>
 QVariant SourceItem<DXSource, std::uint64_t>::data(int role) const
@@ -140,6 +143,7 @@ QVariant SourceItem<DXSource, std::uint64_t>::data(int role) const
 	}
 	return QVariant();
 }
+
 template<>
 void SourceItem<DXSource, std::uint64_t>::setData(const QVariant& data, int role)
 {
@@ -149,7 +153,6 @@ void SourceItem<DXSource, std::uint64_t>::setData(const QVariant& data, int role
 		emitDataChanged();
 	}
 }
-
 
 template<std::size_t N>
 QString arrayToQString(const std::array<double, N>& arr)
@@ -181,7 +184,6 @@ std::pair<bool, std::array<double, N>> qstringToArray(const QString& str)
 	}
 	return std::make_pair(true, data);
 }
-
 
 template<>
 QVariant SourceItem<DXSource, std::array<double, 2>>::data(int role) const
@@ -220,6 +222,7 @@ QVariant SourceItem<Source, std::array<double, 3>>::data(int role) const
 	}
 	return QVariant();
 }
+
 template<>
 void SourceItem<Source, std::array<double, 3>>::setData(const QVariant& data, int role)
 {
@@ -236,6 +239,7 @@ void SourceItem<Source, std::array<double, 3>>::setData(const QVariant& data, in
 		}
 	}
 }
+
 template<>
 QVariant SourceItem<Source, std::array<double, 6>>::data(int role) const
 {
@@ -247,6 +251,7 @@ QVariant SourceItem<Source, std::array<double, 6>>::data(int role) const
 	}
 	return QVariant();
 }
+
 template<>
 void SourceItem<Source, std::array<double, 6>>::setData(const QVariant& data, int role)
 {
@@ -270,6 +275,7 @@ SourceModel::SourceModel(QObject *parent)
 	setColumnCount(2);
 	connect(this, &SourceModel::dataChanged, this, &SourceModel::sourceDataChanged);
 }
+
 QVariant SourceModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
 	if (orientation == Qt::Horizontal && role == Qt::DisplayRole)
@@ -407,9 +413,6 @@ void SourceModel::addSource(Source::Type type)
 		emit sourceAdded(actor_raw);
 		emit layoutChanged();
 	}
-
-	
-
 }
 
 bool SourceModel::removeSource(std::shared_ptr<Source> src)
@@ -491,6 +494,10 @@ void setupTube(std::shared_ptr<S> src, QStandardItem * parent)
 		[=]() {return src->tube().CuFiltration(); });
 	nodes.append(qMakePair(QString("Tube Cu filtration [mm]"), static_cast<QStandardItem*>(l5Item)));
 
+	auto l6Item = new SourceItem<S, double>(src,
+		[=](double val) {src->tube().setSnFiltration(val); },
+		[=]() {return src->tube().SnFiltration(); });
+	nodes.append(qMakePair(QString("Tube Sn (Tin) filtration [mm]"), static_cast<QStandardItem*>(l6Item)));
 
 	for (int i = 0; i < nodes.count(); ++i)
 	{
@@ -526,7 +533,6 @@ void setupTubeB(std::shared_ptr<CTDualSource> src, QStandardItem * parent)
 		[=]() {return src->tubeB().CuFiltration(); });
 	nodes.append(qMakePair(QString("Tube Cu filtration [mm]"), static_cast<QStandardItem*>(l5Item)));
 
-
 	for (int i = 0; i < nodes.count(); ++i)
 	{
 		auto descItem = new QStandardItem(nodes[i].first);
@@ -537,8 +543,6 @@ void setupTubeB(std::shared_ptr<CTDualSource> src, QStandardItem * parent)
 		parent->appendRow(row);
 	}
 }
-
-
 
 template<class S>
 void setupXCare(std::shared_ptr<S> src, QStandardItem * parent)
@@ -568,7 +572,6 @@ void setupXCare(std::shared_ptr<S> src, QStandardItem * parent)
 		[=](double val) {},
 		[=]() {return src->xcareFilter().highWeight(); });
 	xcareNodes.append(qMakePair(QString("Highest beam intensity (calculated value)"), static_cast<QStandardItem*>(highXCare)));
-
 	
 	for (int i = 0; i < xcareNodes.count(); ++i)
 	{
@@ -578,7 +581,6 @@ void setupXCare(std::shared_ptr<S> src, QStandardItem * parent)
 		row.append(xcareNodes[i].second);
 		parent->appendRow(row);
 	}
-	
 }
 
 void SourceModel::setupSource(std::shared_ptr<Source> src, QStandardItem * parent)
@@ -626,7 +628,6 @@ void SourceModel::setupCTSource(std::shared_ptr<CTSource> src, QStandardItem* pa
 		[=]() {return src->collimation(); });
 	nodes.append(qMakePair(QString("Collimation [mm]"), static_cast<QStandardItem*>(colItem)));
 
-
 	auto tubeNode = new QStandardItem("X-ray tube settings");
 	setupTube(src, tubeNode);
 	nodes.append(qMakePair(QString(), tubeNode));
@@ -654,7 +655,6 @@ void SourceModel::setupCTSource(std::shared_ptr<CTSource> src, QStandardItem* pa
 		[=](double val) {src->setExposureAngleStepDeg(val); },
 		[=]() {return src->exposureAngleStepDeg(); });
 	nodes.append(qMakePair(QString("Step angle [deg]"), static_cast<QStandardItem*>(l1Item)));
-
 
 	auto l3Item = new SourceItem<CTSource, double>(src,
 		[=](double val) {src->setScanLenght(val); },
@@ -696,7 +696,6 @@ void SourceModel::setupCTSource(std::shared_ptr<CTSource> src, QStandardItem* pa
 			parent->appendRow(row);
 		}
 	}
-
 }
 
 void SourceModel::setupCTAxialSource(std::shared_ptr<CTAxialSource> src)
@@ -733,7 +732,6 @@ void SourceModel::setupCTAxialSource(std::shared_ptr<CTAxialSource> src)
 
 	//adding source
 	this->invisibleRootItem()->appendRow(sourceItem);
-
 }
 
 void SourceModel::setupCTSpiralSource(std::shared_ptr<CTSpiralSource> src)
@@ -770,7 +768,6 @@ void SourceModel::setupCTSpiralSource(std::shared_ptr<CTSpiralSource> src)
 
 	//adding source
 	this->invisibleRootItem()->appendRow(sourceItem);
-
 }
 
 void SourceModel::setupCTDualSource(std::shared_ptr<CTDualSource> src)
@@ -792,7 +789,6 @@ void SourceModel::setupCTDualSource(std::shared_ptr<CTDualSource> src)
 		[=]() {return src->sourceDetectorDistanceB(); });
 	tubeBNodes.append(qMakePair(QString("Source detector distance [mm]"), static_cast<QStandardItem*>(sddItemb)));
 
-
 	auto fovItem = new SourceItem<CTDualSource, double>(src,
 		[=](double val) {src->setFieldOfView(val); },
 		[=]() {return src->fieldOfView(); });
@@ -802,24 +798,17 @@ void SourceModel::setupCTDualSource(std::shared_ptr<CTDualSource> src)
 		[=]() {return src->fieldOfViewB(); });
 	tubeBNodes.append(qMakePair(QString("Field of view [mm]"), static_cast<QStandardItem*>(fovItemb)));
 
-
 	auto colItem = new SourceItem<CTDualSource, double>(src,
 		[=](double val) {src->setCollimation(val); },
 		[=]() {return src->collimation(); });
 	commonNodes.append(qMakePair(QString("Collimation [mm]"), static_cast<QStandardItem*>(colItem)));
-
 
 	auto tubeNodeA = new QStandardItem("X-ray tube A settings");
 	auto tubeNodeB = new QStandardItem("X-ray tube B settings");
 	
 	setupTube(src, tubeNodeA);
 	setupTubeB(src, tubeNodeB);
-	//tubeANodes.append(qMakePair(QString(), tubeNodeA));
-	//tubeBNodes.append(qMakePair(QString(), tubeNodeB));
-
-
-
-
+	
 	auto bowItema = new SourceItem<CTDualSource, std::shared_ptr<BeamFilter>>(src,
 		[=](std::shared_ptr<BeamFilter> val) {src->setBowTieFilter(val); },
 		[=]() {return src->bowTieFilter(); });
@@ -838,18 +827,14 @@ void SourceModel::setupCTDualSource(std::shared_ptr<CTDualSource> src)
 		[=]() {return src->tubeBmas(); });
 	tubeBNodes.append(qMakePair(QString("Relative tube current for tube B [mAs]"), static_cast<QStandardItem*>(masItemb)));
 
-
-
 	auto aecItema = new SourceItem<CTSource, std::shared_ptr<PositionalFilter>>(src,
 		[=](std::shared_ptr<PositionalFilter> val) {src->setPositionalFilter(val); },
 		[=]() {return src->positionalFilter(); });
 	commonNodes.append(qMakePair(QString("Select tube current modulation profile"), static_cast<QStandardItem*>(aecItema)));
 	
-
 	auto xcareItem = new QStandardItem("Organ exposure control");
 	setupXCare(src, xcareItem);
 	commonNodes.append(qMakePair(QString(), xcareItem));
-
 
 	auto sangItema = new SourceItem<CTDualSource, double>(src,
 		[=](double val) {src->setStartAngleDeg(val); },
@@ -860,12 +845,10 @@ void SourceModel::setupCTDualSource(std::shared_ptr<CTDualSource> src)
 		[=]() {return src->startAngleDegB(); });
 	tubeBNodes.append(qMakePair(QString("Start angle [deg]"), static_cast<QStandardItem*>(sangItemb)));
 
-
 	auto l1Item = new SourceItem<CTDualSource, double>(src,
 		[=](double val) {src->setExposureAngleStepDeg(val); },
 		[=]() {return src->exposureAngleStepDeg(); });
 	commonNodes.append(qMakePair(QString("Step angle [deg]"), static_cast<QStandardItem*>(l1Item)));
-
 
 	auto l3Item = new SourceItem<CTDualSource, double>(src,
 		[=](double val) {src->setScanLenght(val); },
@@ -876,8 +859,6 @@ void SourceModel::setupCTDualSource(std::shared_ptr<CTDualSource> src)
 		[=](double val) {src->setPitch(val); },
 		[=]() {return src->pitch(); });
 	commonNodes.append(qMakePair(QString("Pitch [A.U]"), static_cast<QStandardItem*>(pitchItem)));
-
-
 
 	auto l4Item = new SourceItem<CTDualSource, std::uint64_t>(src,
 		[=](auto val) {},
@@ -898,7 +879,6 @@ void SourceModel::setupCTDualSource(std::shared_ptr<CTDualSource> src)
 		[=](auto val) {src->setCtdiPhantomDiameter(val); },
 		[=]() {return src->ctdiPhantomDiameter(); });
 	commonNodes.append(qMakePair(QString("CTDI phantom diameter [mm] "), static_cast<QStandardItem*>(l6Item)));
-
 
 	for (int i = 0; i < commonNodes.count(); ++i)
 	{
@@ -950,10 +930,8 @@ void SourceModel::setupCTDualSource(std::shared_ptr<CTDualSource> src)
 	sourceItem->appendRow(tubeNodeA);
 	sourceItem->appendRow(tubeNodeB);
 
-
 	//adding source
 	this->invisibleRootItem()->appendRow(sourceItem);
-
 }
 void SourceModel::setupDXSource(std::shared_ptr<DXSource> src)
 {
@@ -961,21 +939,14 @@ void SourceModel::setupDXSource(std::shared_ptr<DXSource> src)
 	auto sourceItem = new QStandardItem("DX Source");
 
 	//standard parameters
-
-
 	setupSource(std::static_pointer_cast<Source>(src), sourceItem);
-
-
 
 	QVector<QPair<QString, QStandardItem* >> nodes;
 	auto tubeNode = new QStandardItem("X-ray tube settings");
 	setupTube(src, tubeNode);
 	nodes.append(qMakePair(QString(), tubeNode));
 
-
 	//DX parameters
-	
-
 	auto l1Item = new SourceItem<DXSource, std::array<double, 2>>(src,
 		[=](const auto& val) {src->setCollimationAnglesDeg(val); },
 		[=]() {return src->collimationAnglesDeg(); });
@@ -991,7 +962,6 @@ void SourceModel::setupDXSource(std::shared_ptr<DXSource> src)
 		[=]() {return src->sourceDetectorDistance(); });
 	nodes.append(qMakePair(QString("Source detector distance [mm]"), static_cast<QStandardItem*>(l12Item)));
 
-
 	auto l2Item = new SourceItem<DXSource, std::size_t>(src,
 		[=](std::size_t val) {src->setTotalExposures(val); },
 		std::bind(&DXSource::totalExposures, src));
@@ -1002,7 +972,6 @@ void SourceModel::setupDXSource(std::shared_ptr<DXSource> src)
 		[=]() {return src->historiesPerExposure(); });
 	nodes.append(qMakePair(QString("Histories per exposure"), static_cast<QStandardItem*>(l14Item)));
 
-
 	auto l5Item = new SourceItem<DXSource, double>(src,
 		[=](double val) {src->setDap(val); },
 		[=]() {return src->dap(); });
@@ -1010,7 +979,6 @@ void SourceModel::setupDXSource(std::shared_ptr<DXSource> src)
 
 	for (int i = 0; i < nodes.count(); ++i)
 	{
-
 		if (nodes[i].first.isEmpty())
 		{
 			sourceItem->appendRow(nodes[i].second);
@@ -1024,12 +992,8 @@ void SourceModel::setupDXSource(std::shared_ptr<DXSource> src)
 			sourceItem->appendRow(row);
 		}
 	}
-
-
-
 	//adding source
 	this->invisibleRootItem()->appendRow(sourceItem);
-
 }
 
 void SourceModel::sourceDataChanged(const QModelIndex & topLeft, const QModelIndex & bottomRight, const QVector<int>& roles)

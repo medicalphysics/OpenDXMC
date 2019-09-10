@@ -23,11 +23,8 @@ Copyright 2019 Erlend Andersen
 #include <vector>
 #include <utility>
 
-
 constexpr double TUBEMAXVOLTAGE = 150.0;
 constexpr double TUBEMINVOLTAGE = 50.0;
-
-
 
 class Tube
 {
@@ -47,11 +44,13 @@ public:
 	void addFiltrationMaterial(const Material &filtrationMaterial, double mm) { m_filtrationMaterials.push_back(std::make_pair(filtrationMaterial, std::abs(mm))); }
 	std::vector<std::pair<Material, double>>& filtrationMaterials() { return m_filtrationMaterials; }
 	const std::vector<std::pair<Material, double>>& filtrationMaterials() const { return m_filtrationMaterials; }
+	
 	void setAlFiltration(double mm);
 	void setCuFiltration(double mm);
-
+	void setSnFiltration(double mm);
 	double AlFiltration() const;
 	double CuFiltration() const;
+	double SnFiltration() const;
 
 	void clearFiltrationMaterials() { m_filtrationMaterials.clear(); }
 	

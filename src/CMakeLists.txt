@@ -20,7 +20,6 @@ set(CMAKE_CONFIGURATION_TYPES ${CMAKE_CONFIGURATION_TYPES} CACHE STRING "Availab
 # Targets that we develop here
 enable_testing()
 add_subdirectory(dxmclib)
-add_subdirectory(vtkextension)
 add_subdirectory(opendxmc)
 
 

@@ -25,7 +25,7 @@ Copyright 2019 Erlend Andersen
 #include <QWidget>
 #include <QComboBox>
 
-#include <QVTKOpenGLWidget.h>
+#include <QVTKOpenGLNativeWidget.h>
 #include <vtkSmartPointer.h>
 #include <vtkImageData.h>
 #include <vtkImageResliceMapper.h>
@@ -60,7 +60,7 @@ protected:
 	
 private:
 	Orientation m_orientation;
-	QVTKOpenGLWidget *m_openGLWidget;
+	QVTKOpenGLNativeWidget *m_openGLWidget;
 	vtkSmartPointer<vtkImageResliceMapper> m_imageMapper;
 	vtkSmartPointer<vtkImageGaussianSmooth> m_imageSmoother;
 	vtkSmartPointer<vtkImageResliceMapper> m_imageMapperBackground;

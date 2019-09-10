@@ -2,45 +2,74 @@
 
 
 find_package(VTK COMPONENTS
-  vtkCommonColor
-  vtkCommonComputationalGeometry
-  vtkCommonCore
-  vtkCommonDataModel
-  vtkCommonExecutionModel
-  vtkCommonMath
-  vtkCommonMisc
-  vtkCommonSystem
-  vtkCommonTransforms
-  vtkFiltersCore
-  vtkFiltersGeneral
-  vtkFiltersSources
-  vtkGUISupportQt
-  vtkImagingCore
-  vtkImagingMath
-  vtkInteractionStyle
-  vtkInteractionImage
-  vtkRenderingCore
-  vtkRenderingImage
-  vtkRenderingOpenGL2
-  vtkRenderingQt
-  vtkViewsQt
-  vtkkwiml
-  #vtkDICOM
-  vtkRenderingVolume
-  vtkRenderingVolumeOpenGL2
-  vtkIOMovie
+  CommonColor
+  CommonComputationalGeometry
+  CommonCore
+  CommonDataModel
+  CommonExecutionModel
+  CommonMath
+  CommonMisc
+  CommonSystem
+  CommonTransforms
+  FiltersCore
+  FiltersGeneral
+  FiltersSources
+  FiltersGeometry
+  FiltersStatistics
+  FiltersModeling
+  FiltersHybrid
+  ParallelDIY
+  ParallelCore
+  GUISupportQt
+  ImagingCore
+  ImagingMath
+  ImagingGeneral
+  ImagingHybrid
+  ImagingFourier
+  InteractionStyle
+  InteractionImage
+  RenderingCore
+  RenderingImage
+  RenderingOpenGL2
+  RenderingQt
+  ViewsQt
+  glew
+  zlib
+  ImagingSources
+  DICOM
+  RenderingVolume
+  RenderingAnnotation
+  RenderingVolumeOpenGL2
+  IOCore
+  IOMovie
+  IOXML
+  IOXMLParser
+  IOImage
+  IOLegacy
+  FiltersExtraction
+  ImagingColor
+  InteractionImage
+  InteractionWidgets
+  RenderingFreeType
+  DICOMParser
+  jpeg
+  pugixml
+  freetype
+  metaio
+  png
+  tiff
+  loguru
+  doubleconversion
+  lz4
+  lzma
+  expat
   )
 
-find_package(DICOM QUIET)
-if(DICOM_FOUND)
-	include(${DICOM_USE_FILE})
-	include_directories(${DICOM_INCLUDE_DIRS})
-endif()
-set(VTK_DICOM_LIBRARIES vtkDICOM)
 
-include(${VTK_USE_FILE})
-include_directories(${VTK_INCLUDE_DIRS})
 
+#include(${VTK_USE_FILE})  # depricated since vtk 8.90
+
+include_directories(${VTK_INCLUDE_DIRS})  # do we need this?
 
 ## QT specifics for CMake
 set(CMAKE_AUTOMOC ON)
@@ -110,14 +139,18 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/opendxmc")
 # Define the libraries this project depends upon
 target_link_libraries(OpenDXMC
         PRIVATE dxmclib
-		PRIVATE vtkextension
-		${VTK_LIBRARIES}
-		${VTK_DICOM_LIBRARIES}
-        Qt5::Widgets
-		Qt5::Core
-		Qt5::Gui
-		Qt5::Charts
+		PRIVATE ${VTK_LIBRARIES}
+        PRIVATE Qt5::Widgets
+		PRIVATE Qt5::Core
+		PRIVATE Qt5::Gui
+		PRIVATE Qt5::Charts
         )
+
+# Adding vtk modules (replaces include(${VTK_USE_FILE}) since vtk 8.90) 
+vtk_module_autoinit(
+    TARGETS OpenDXMC
+    MODULES ${VTK_LIBRARIES}
+    )
 
 target_include_directories(OpenDXMC PRIVATE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/thirdparty>
@@ -140,10 +173,17 @@ endif(WIN32)
 if (WIN32)
 	add_custom_target(vtkdeploy ALL)
 	foreach(vtkdll ${VTK_LIBRARIES})
+		
 		set(libname "${vtkdll}-${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}.dll")
-		set(libpath "${VTK_RUNTIME_LIBRARY_DIRS}/${CMAKE_BUILD_TYPE}/${libname}")
+		string(REPLACE "VTK::" "vtk" libname ${libname})
+		if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+			string(REPLACE ".dll" "d.dll" libname ${libname})
+		endif()
+		set(libpath "${VTK_DIR}/bin/${CMAKE_BUILD_TYPE}/${libname}")
+		#set(libpath "${VTK_RUNTIME_LIBRARY_DIRS}/${CMAKE_BUILD_TYPE}/${libname}")
 		set(outpath "${CMAKE_BINARY_DIR}/${PROJECT_NAME}/${libname}")
-		if(NOT vtkdll STREQUAL "vtksqlite") ##Ignores vtksqlite-X.X.dll to prevent cmake error in case vtk was not compiled with SQLite
+		
+		if(NOT vtkdll STREQUAL "VTK::sqlite") ##Ignores vtksqlite-X.X.dll to prevent cmake error in case vtk was not compiled with SQLite
 			add_custom_command(TARGET vtkdeploy POST_BUILD
 				COMMENT "Copying vtk dll ${libpath} to ${outpath}"
 				DEPENDS ${libpath}
@@ -158,7 +198,12 @@ if (WIN32)
 	add_custom_target(vtkdeployBUGFIX ALL)
 	set(vtkdll "vtkRenderingVolumeOpenGL2")
 	set(libname "${vtkdll}-${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}.dll")
-	set(libpath "${VTK_RUNTIME_LIBRARY_DIRS}/${CMAKE_BUILD_TYPE}/${libname}")
+	string(REPLACE "VTK::" "vtk" libname ${libname})
+	if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+		string(REPLACE ".dll" "d.dll" libname ${libname})
+	endif()
+	set(libpath "${VTK_DIR}/bin/${CMAKE_BUILD_TYPE}/${libname}")
+	#set(libpath "${VTK_RUNTIME_LIBRARY_DIRS}/${CMAKE_BUILD_TYPE}/${libname}")
 	set(outpath "${CMAKE_BINARY_DIR}/${PROJECT_NAME}/${libname}")
 	add_custom_command(TARGET vtkdeployBUGFIX POST_BUILD
 		COMMENT "Copying vtk dll ${libpath} to ${outpath}"
@@ -167,6 +212,25 @@ if (WIN32)
 		${libpath}
 		${outpath}
 		)
+
+	## vtksys is not a component and must be copied manually
+	add_custom_target(vtkdeploySys ALL)
+	set(vtkdll "vtksys")
+	set(libname "${vtkdll}-${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}.dll")
+	if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+		string(REPLACE ".dll" "d.dll" libname ${libname})
+	endif()
+	set(libpath "${VTK_DIR}/bin/${CMAKE_BUILD_TYPE}/${libname}")
+	#set(libpath "${VTK_RUNTIME_LIBRARY_DIRS}/${CMAKE_BUILD_TYPE}/${libname}")
+	set(outpath "${CMAKE_BINARY_DIR}/${PROJECT_NAME}/${libname}")
+	add_custom_command(TARGET vtkdeployBUGFIX POST_BUILD
+		COMMENT "Copying vtk dll ${libpath} to ${outpath}"
+		DEPENDS ${libpath}
+		COMMAND ${CMAKE_COMMAND} -E copy_if_different
+		${libpath}
+		${outpath}
+		)
+
 endif(WIN32)
 
 

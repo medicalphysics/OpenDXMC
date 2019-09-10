@@ -48,9 +48,9 @@ VolumeRenderWidget::VolumeRenderWidget(QWidget *parent)
 	:m_renderMode(0), QWidget(parent)
 {
 	
-	m_openGLWidget = new QVTKOpenGLWidget(this);
+	m_openGLWidget = new QVTKOpenGLNativeWidget(this);
 	vtkNew<vtkGenericOpenGLRenderWindow> renderWindow;
-	m_openGLWidget->SetRenderWindow(renderWindow);
+	m_openGLWidget->setRenderWindow(renderWindow);
 	m_renderer = vtkSmartPointer<vtkOpenGLRenderer>::New();
 	m_renderer->BackingStoreOn();
 	renderWindow->AddRenderer(m_renderer);
@@ -135,7 +135,7 @@ VolumeRenderWidget::VolumeRenderWidget(QWidget *parent)
 		auto filename = QFileDialog::getSaveFileName(this, tr("Save File"), "untitled.png", tr("Images (*.png)"));
 		if (!filename.isEmpty())
 		{
-			auto renderWindow = m_openGLWidget->GetRenderWindow();
+			auto renderWindow = m_openGLWidget->renderWindow();
 			vtkSmartPointer<vtkWindowToImageFilter> windowToImageFilter = vtkSmartPointer<vtkWindowToImageFilter>::New();
 			windowToImageFilter->SetInput(renderWindow);
 			windowToImageFilter->SetScale(3, 3); //set the resolution of the output image (3 times the current resolution of vtk render window)
@@ -168,7 +168,7 @@ void VolumeRenderWidget::updateRendering(void)
 	if (m_volume)
 		m_volume->Update();
 	m_openGLWidget->update();
-	m_openGLWidget->GetRenderWindow()->Render();	
+	m_openGLWidget->renderWindow()->Render();	
 }
 void VolumeRenderWidget::setImageData(std::shared_ptr<ImageContainer> image)
 {

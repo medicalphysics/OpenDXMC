@@ -29,9 +29,6 @@ Copyright 2019 Erlend Andersen
 #include <string>
 #include <memory>
 
-
-
-
 class World {
 public:
     World();
@@ -59,7 +56,6 @@ public:
     std::shared_ptr<std::vector<double>> densityArray(void) {return m_density;}
 	const std::shared_ptr<std::vector<double>> densityArray(void) const { return m_density; }
 
-
 	void setMaterialIndexArray(std::shared_ptr<std::vector<unsigned char>> materialIndex);
 	const unsigned char* materialIndexBuffer() const { return m_materialIndex->data(); }
 	std::shared_ptr<std::vector<unsigned char>> materialIndexArray(void){return m_materialIndex;}
@@ -72,7 +68,6 @@ public:
 
 	const AttenuationLut& attenuationLut() const { return m_attLut; }
 
-    
 	void setAttenuationLutMaxEnergy(double max_keV);
 	double attenuationLutMaxEnergy(void) const { return m_attenuationLutMaxEnergy; }
 
@@ -80,8 +75,6 @@ public:
 
     bool isValid(void) const { return m_valid; }
 	bool validate(void);
-
-
 
 protected:
     void updateWorldMatrixExtent(void);
@@ -107,7 +100,6 @@ private:
 	double m_attenuationLutMaxEnergy = 150.0;
 };
 
-
 class CTDIPhantom : public World
 {
 public:
@@ -117,5 +109,5 @@ public:
 	double airDensity() { return m_airDensity; }
 private:
 	std::array<std::vector<std::size_t>, 5> m_holePositions;
-	double m_airDensity;
+	double m_airDensity = 0.0;
 };

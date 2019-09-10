@@ -200,7 +200,7 @@ vtkStandardNewMacro(customMouseInteractorStyle);
 SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 	:QWidget(parent), m_orientation(orientation)
 {
-	m_openGLWidget = new QVTKOpenGLWidget(this);
+	m_openGLWidget = new QVTKOpenGLNativeWidget(this);
 	
 	auto layout = new QVBoxLayout;
 	layout->setContentsMargins(0, 0, 0, 0);
@@ -237,7 +237,7 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 	//http://vtk.org/gitweb?p=VTK.git;a=blob;f=Examples/GUI/Qt/FourPaneViewer/QtVTKRenderWindows.cxx
 	vtkSmartPointer<vtkGenericOpenGLRenderWindow> renderWindow = vtkSmartPointer<vtkGenericOpenGLRenderWindow>::New();
 	renderWindow->AddRenderer(m_renderer);
-	m_openGLWidget->SetRenderWindow(renderWindow);
+	m_openGLWidget->setRenderWindow(renderWindow);
 
 	// Setup render window interactor
 	vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
@@ -306,7 +306,7 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 	//window settings
 	m_renderer->SetBackground(0,0,0);
 	auto menuIcon = QIcon(QString("resources/icons/settings.svg"));
-	auto menuButton = new QPushButton(menuIcon, QString(), this);
+	auto menuButton = new QPushButton(menuIcon, QString(), m_openGLWidget);
 	menuButton->setIconSize(QSize(24, 24));
 	menuButton->setStyleSheet("QPushButton {background-color:transparent;}");
 	auto menu = new QMenu(menuButton);
@@ -413,7 +413,7 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 		if (!filename.isEmpty())
 		{
 			settings.setValue("mediaexport/image", filename);
-			auto renderWindow = m_openGLWidget->GetRenderWindow();
+			auto renderWindow = m_openGLWidget->renderWindow();
 			vtkSmartPointer<vtkWindowToImageFilter> windowToImageFilter =
 				vtkSmartPointer<vtkWindowToImageFilter>::New();
 			windowToImageFilter->SetInput(renderWindow);
@@ -442,7 +442,7 @@ void SliceRenderWidget::updateRendering()
 	//might need to call Render
 	//m_resliceImageViewer->Reset();
 	
-	auto renderWindow = m_openGLWidget->GetRenderWindow();
+	auto renderWindow = m_openGLWidget->renderWindow();
 	auto renderCollection = renderWindow->GetRenderers();
 	auto renderer = renderCollection->GetFirstRenderer();
 	renderer->ResetCamera();

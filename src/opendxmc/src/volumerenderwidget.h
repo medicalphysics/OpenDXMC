@@ -25,7 +25,7 @@ Copyright 2019 Erlend Andersen
 
 #include <QWidget>
 
-#include <QVTKOpenGLWidget.h>
+#include <QVTKOpenGLNativeWidget.h>
 #include <vtkSmartPointer.h>
 #include <vtkVolumeProperty.h>
 #include <vtkSmartPointer.h>
@@ -57,7 +57,7 @@ private:
 	void updateVolumeRendering();
 	void updateVolumeProps();
 
-	QVTKOpenGLWidget *m_openGLWidget;
+	QVTKOpenGLNativeWidget *m_openGLWidget;
 	VolumeRenderSettingsWidget *m_settingsWidget;
 	vtkSmartPointer<vtkSmartVolumeMapper> m_volumeMapper;
 	vtkSmartPointer<vtkImageGaussianSmooth> m_imageSmoother;

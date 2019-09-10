@@ -105,7 +105,7 @@ PhantomSelectionWidget::PhantomSelectionWidget(QWidget *parent)
 	importHelmholtzLabel->setText(tr("""Import phantoms made by Helmholtz-Zentrum. Phantoms can be obtained from <a href=https://www.helmholtz-muenchen.de/en/irm/service/virtual-human-download-portal/virtual-human-phantoms-download>helmholtz-muenchen.de</a>. Unzip phantoms into a folder before importing. After importing the phantom will be available in the dropdown menu."));
 	importHelmholtzLabel->setOpenExternalLinks(true);
 	importHelmholtzLabel->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContentsOnFirstShow);
-	auto importHelmholtzButton = new QPushButton(tr("Select folder"), this);
+	auto importHelmholtzButton = new QPushButton(tr("Select phantom"), this);
 	importHelmholtzLayout->addWidget(importHelmholtzLabel);
 	importHelmholtzLayout->addWidget(importHelmholtzButton);
 	importHelmholtzBox->setLayout(importHelmholtzLayout);

@@ -161,7 +161,7 @@ void ImageImportPipeline::setDicomData(QStringList dicomPaths)
 	imageContainer->ID = ImageContainer::generateID();
 	logger->debug("Done importing images.");
 	logger->flush();
-	
+	emit imageDataChanged(imageContainer);
 	auto exposure = readExposureData(dicomReader);
 	this->processCTData(imageContainer, exposure);
 	emit processingDataEnded();
@@ -272,7 +272,6 @@ void ImageImportPipeline::processCTData(std::shared_ptr<ImageContainer> ctImage,
 	}
 	logger->flush();
 	logger->debug("Emitting processed images...");
-	emit imageDataChanged(ctImage);
 	emit imageDataChanged(materialImage);
 	emit imageDataChanged(densityImage);
 	emit materialDataChanged(m_ctImportMaterialMap);

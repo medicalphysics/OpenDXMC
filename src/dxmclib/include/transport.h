@@ -29,9 +29,6 @@ Copyright 2019 Erlend Andersen
 #include <mutex>
 
 namespace transport {
-	
-	
-
 	double comptonScatter(Particle& particle, std::uint64_t seed[2], double& cosAngle);
 	double comptonScatterGeant(Particle& particle, std::uint64_t seed[2], double& cosAngle);
 	double comptonScatterEGS(Particle& particle, std::uint64_t seed[2], double& cosAngle);

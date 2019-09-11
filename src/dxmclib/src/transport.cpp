@@ -45,6 +45,8 @@ namespace transport {
 	constexpr double RUSSIAN_RULETTE_PROBABILITY = 0.8;
 	constexpr double RUSSIAN_RULETTE_THRESHOLD = 10.0; // keV
 
+	constexpr double KEV_TO_MJ = 1.6021773e-13;
+
 	std::mutex TRANSPORT_MUTEX;
 
 	constexpr double N_ERROR = 1.0e-9;
@@ -189,13 +191,10 @@ namespace transport {
 		// theta is scattering angle
 		// see http://rcwww.kek.jp/research/egs/egs5_manual/slac730-150228.pdf
 
-
 		//finding qmax
-		
 		const double qmax = attLut.momentumTransferMax(particle.energy);
 		const double qmaxSqr = qmax * qmax;
 		const double AqmaxSquared = attLut.cumFormFactorSquared(materialIdx, qmaxSqr);
-
 
 		double mu;
 		bool rejected;
@@ -219,7 +218,7 @@ namespace transport {
 	}
 
 
-double comptonScatterEGS(Particle& particle, std::uint64_t seed[2], double& cosAngle)
+	double comptonScatterEGS(Particle& particle, std::uint64_t seed[2], double& cosAngle)
 		// see http://geant4-userdoc.web.cern.ch/geant4-userdoc/UsersGuides/PhysicsReferenceManual/fo/PhysicsReferenceManual.pdf
 		// and
 		// https://nrc-cnrc.github.io/EGSnrc/doc/pirs701-egsnrc.pdf
@@ -381,8 +380,7 @@ double comptonScatterEGS(Particle& particle, std::uint64_t seed[2], double& cosA
 			{
 				const std::size_t bufferIdx = indexFromPosition(p.pos, world);
 				const auto matIdx = materialBuffer[bufferIdx];
-				
-				
+								
 				const double attenuationTotal = lutTable.totalAttenuation(matIdx, p.energy) * densityBuffer[bufferIdx];
 
 				const double r2 = randomUniform<double>(seed);
@@ -419,7 +417,6 @@ double comptonScatterEGS(Particle& particle, std::uint64_t seed[2], double& cosA
 						rayleightScatter(p, matIdx, world.attenuationLut(), seed, cosangle);
 					}
 
-
 					// russian rulette
 					if ((p.energy < RUSSIAN_RULETTE_THRESHOLD) && ruletteCandidate)
 					{
@@ -434,16 +431,12 @@ double comptonScatterEGS(Particle& particle, std::uint64_t seed[2], double& cosA
 							p.weight *= factor;
 						}
 					}
-
-
 				}
-
 			}
 			else // particle not inside world
 			{
 				continueSampling = false;
 			}
-
 		}
 	}
 
@@ -468,7 +461,6 @@ double comptonScatterEGS(Particle& particle, std::uint64_t seed[2], double& cosA
 				amin = std::max(amin, std::min(a0, an));
 				amax = std::min(amax, std::max(a0, an));
 			}
-
 		}
 		if (amin < amax && amin > 0.0)
 		{
@@ -480,7 +472,6 @@ double comptonScatterEGS(Particle& particle, std::uint64_t seed[2], double& cosA
 		}
 		return false;
 	}
-
 
 
 	void transport(const World& world, const Exposure& exposure, std::uint64_t seed[2], double* energyImparted)
@@ -519,9 +510,10 @@ double comptonScatterEGS(Particle& particle, std::uint64_t seed[2], double& cosA
 			}
 			return source->historiesPerExposure() * (expEnd - expBeg);
 		}
+		nJobs = nJobs < 2 ? 0 : nJobs - 2;
 		auto mid = expBeg + len / 2;
-		auto handle = std::async(std::launch::async, parallell_run, w, source, energyImparted, mid, expEnd, nJobs - 2, progressbar);
-		std::uint64_t nHistories = parallell_run(w, source, energyImparted, expBeg, mid, nJobs - 2, progressbar);
+		auto handle = std::async(std::launch::async, parallell_run, w, source, energyImparted, mid, expEnd, nJobs, progressbar);
+		std::uint64_t nHistories = parallell_run(w, source, energyImparted, expBeg, mid, nJobs, progressbar);
 		return handle.get() + nHistories;
 	}
 
@@ -550,16 +542,16 @@ double comptonScatterEGS(Particle& particle, std::uint64_t seed[2], double& cosA
 			}
 			return source->historiesPerExposure() * (expEnd - expBeg);
 		}
+		nJobs = nJobs < 2 ? 0 : nJobs - 2;
 		auto mid = expBeg + len / 2;
-		auto handle = std::async(std::launch::async, parallell_run_ctdi, w, source, energyImparted, mid, expEnd, nJobs - 2, progressbar);
-		std::uint64_t nHistories = parallell_run_ctdi(w, source, energyImparted, expBeg, mid, nJobs - 2, progressbar);
+		auto handle = std::async(std::launch::async, parallell_run_ctdi, w, source, energyImparted, mid, expEnd, nJobs, progressbar);
+		std::uint64_t nHistories = parallell_run_ctdi(w, source, energyImparted, expBeg, mid, nJobs, progressbar);
 		return handle.get() + nHistories;
 		
 	}
 
 	void energyImpartedToDose(const World & world, const Source* source, std::vector<double>& energyImparted, const double calibrationValue)
 	{
-		constexpr double KEV_TO_MJ = 1.6021773e-13;
 		auto spacing = world.spacing();
 		const double voxelVolume = spacing[0] * spacing[1] * spacing[2] / 1000.0; // cm3
 		auto density = world.densityArray();
@@ -571,7 +563,6 @@ double comptonScatterEGS(Particle& particle, std::uint64_t seed[2], double& cosA
 		});
 	}
 	
-
 	std::vector<double> run(const World & world, Source* source, ProgressBar* progressbar)
 	{
 		std::vector<double> dose(world.size(), 0.0);

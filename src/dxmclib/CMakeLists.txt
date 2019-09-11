@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.9)
 project(dxmclib VERSION 0.0.1 DESCRIPTION "OpenDXMClib" LANGUAGES CXX)
-
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 #Thirdparty libs
 IF(WIN32)
@@ -183,4 +184,3 @@ target_include_directories(validatedxmclib PUBLIC
 target_link_libraries(validatedxmclib
     dxmclib)
 add_test(validatedxmclib validatedxmclib)
-

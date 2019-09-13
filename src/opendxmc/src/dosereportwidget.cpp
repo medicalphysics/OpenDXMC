@@ -60,9 +60,9 @@ QVariant DoseReportModel::headerData(int section, Qt::Orientation orientation, i
 		else if (section == 3)
 			return QString(tr("Volume [cm3]"));
 		else if (section == 4)
-			return QString(tr("Dose [mGy]"));
+			return QString(tr("Dose [") + QString(m_dataUnits) + QString("]"));
 		else if (section == 5)
-			return QString(tr("Dose std [mGy]"));
+			return QString(tr("Dose stddev [") + QString(m_dataUnits) + QString("]"));
 		else if (section == 6)
 			return QString(tr("Number of voxels [N]"));
 		else if (section == 7)
@@ -125,11 +125,6 @@ int DoseReportModel::columnCount(const QModelIndex & parent) const
 	return 8;
 }
 
-/*Qt::ItemFlags DoseReportModel::flags(const QModelIndex & index) const
-{
-	return Qt::ItemFlags();
-}*/
-
 QVariant DoseReportModel::data(const QModelIndex& index, int role) const
 {
 	if (role == Qt::DisplayRole)
@@ -162,7 +157,6 @@ QVariant DoseReportModel::data(const QModelIndex& index, int role) const
 DoseReportView::DoseReportView(QWidget* parent)
 	:QTableView(parent)
 {
-
 }
 void DoseReportView::keyPressEvent(QKeyEvent *event)
 {
@@ -201,8 +195,6 @@ DoseReportWidget::DoseReportWidget(QWidget *parent)
 
 	auto view1 = new DoseReportView(this);
 	auto view2 = new DoseReportView(this);
-	//view1->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-	//view2->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 	layout->addWidget(view1);
 	layout->addWidget(view2);
 	view1->setModel(m_materialModel);
@@ -213,11 +205,13 @@ DoseReportWidget::DoseReportWidget(QWidget *parent)
 	connect(m_organModel, &DoseReportModel::layoutChanged, [=](const auto & parents, auto hint) {view2->resizeColumnsToContents(); });
 
 	this->setLayout(layout);
-
 }
 
 void DoseReportWidget::setDoseData(const DoseReportContainer & doseData)
 {
 	m_organModel->setDoseData(doseData.organData());
 	m_materialModel->setDoseData(doseData.materialData());
+	
+	m_organModel->setDataUnits(doseData.doseUnits());
+	m_materialModel->setDataUnits(doseData.doseUnits());
 }

@@ -54,6 +54,8 @@ public:
 		std::shared_ptr<DoseImageContainer> doseImage);
 	std::shared_ptr<std::vector<DoseReportElement>> organData() const { return m_organValues; }
 	std::shared_ptr<std::vector<DoseReportElement>> materialData() const { return m_materialValues; }
+	const std::string& doseUnits(void) const { return m_doseUnits; }
+
 protected:
 	void createMaterialData(const std::vector<Material>& materialMap,
 		std::shared_ptr<MaterialImageContainer> materialImage,
@@ -64,7 +66,10 @@ protected:
 		std::shared_ptr<OrganImageContainer> organImage, 
 		std::shared_ptr<DensityImageContainer> densityImage, 
 		std::shared_ptr<DoseImageContainer> doseImage);
+	void setDoseUnits(const std::string& units) { m_doseUnits = units; }
+
 private:
 	std::shared_ptr<std::vector<DoseReportElement>> m_materialValues;
 	std::shared_ptr<std::vector<DoseReportElement>> m_organValues;
+	std::string m_doseUnits = "mGy";
 };

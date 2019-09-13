@@ -29,7 +29,7 @@ Copyright 2019 Erlend Andersen
 #include <QVariant>
 #include <QTableView>
 
-
+#include <string>
 
 class DoseReportModel : public QAbstractTableModel
 {
@@ -41,11 +41,13 @@ public:
 	void sort(int column, Qt::SortOrder order = Qt::AscendingOrder) override;
 	int rowCount(const QModelIndex &parent = QModelIndex()) const override;
 	int columnCount(const QModelIndex &parent = QModelIndex()) const override;
-	//Qt::ItemFlags flags(const QModelIndex &index) const override;
 	QVariant data(const QModelIndex &index, int role) const override;
+	void setDataUnits(const QString& units) { m_dataUnits = units; }
+	void setDataUnits(const std::string& units) { m_dataUnits = QString::fromStdString(units); }
 private:
 	std::shared_ptr<std::vector<DoseReportElement>> m_data;
 	QString m_name ="";
+	QString m_dataUnits = "mGy";
 };
 
 class DoseReportView :public QTableView
@@ -68,5 +70,4 @@ private:
 	std::uint64_t m_ID = 0;
 	DoseReportModel* m_organModel;
 	DoseReportModel* m_materialModel;
-	
 };

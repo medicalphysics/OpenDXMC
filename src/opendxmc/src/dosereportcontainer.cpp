@@ -22,12 +22,14 @@ DoseReportContainer::DoseReportContainer(const std::vector<Material>& materialMa
 {
 	createMaterialData(materialMap, materialImage, densityImage, doseImage);
 	m_organValues = std::make_shared<std::vector<DoseReportElement>>();
+	setDoseUnits(doseImage->dataUnits);
 }
 
 DoseReportContainer::DoseReportContainer(const std::vector<Material>& materialMap, const std::vector<std::string>& organMap, std::shared_ptr<MaterialImageContainer> materialImage, std::shared_ptr<OrganImageContainer> organImage, std::shared_ptr<DensityImageContainer> densityImage, std::shared_ptr<DoseImageContainer> doseImage)
 {
 	createMaterialData(materialMap, materialImage, densityImage, doseImage);
 	createOrganData(organMap, organImage, densityImage, doseImage);
+	setDoseUnits(doseImage->dataUnits);
 }
 
 void DoseReportContainer::createMaterialData(const std::vector<Material>& materialMap, std::shared_ptr<MaterialImageContainer> materialImage, std::shared_ptr<DensityImageContainer> densityImage, std::shared_ptr<DoseImageContainer> doseImage)

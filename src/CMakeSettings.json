@@ -1,60 +1,96 @@
 ﻿{
-"configurations": [
-{
-"name": "x64-Debug",
-"generator": "Ninja",
-"configurationType": "Debug",
-"buildRoot": "${projectDir}\\out\\build\\${name}",
-"installRoot": "${projectDir}\\out\\install\\${name}",
-"cmakeCommandArgs": "",
-"buildCommandArgs": "-v",
-"ctestCommandArgs": "",
-"inheritEnvironments": [ "msvc_x64_x64" ],
-  "variables": [
+  "configurations": [
     {
-      "name": "CMAKE_BUILD_TYPE",
-      "value": "Debug",
-      "type": "STRING"
+      "name": "x64-Debug",
+      "generator": "Ninja",
+      "configurationType": "Debug",
+      "buildRoot": "${projectDir}\\out\\build\\${name}",
+      "installRoot": "${projectDir}\\out\\install\\${name}",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "-v",
+      "ctestCommandArgs": "",
+      "inheritEnvironments": [ "msvc_x64_x64" ],
+      "variables": [
+        {
+          "name": "Qt5_DIR",
+          "value": "C:/Qt/5.13.1/msvc2017_64/lib/cmake/Qt5",
+          "type": "PATH"
+        },
+        {
+          "name": "VTK_DIR",
+          "value": "C:/VTK/bin/vtk",
+          "type": "FILEPATH"
+        }
+      ]
     },
     {
-      "name": "Qt5_DIR",
-      "value": "C:/Qt/5.13.1/msvc2017_64/lib/cmake/Qt5",
-      "type": "PATH"
+      "name": "x64-Release",
+      "generator": "Ninja",
+      "configurationType": "Release",
+      "buildRoot": "${projectDir}\\out\\build\\${name}",
+      "installRoot": "${projectDir}\\out\\install\\${name}",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "-v",
+      "ctestCommandArgs": "",
+      "inheritEnvironments": [ "msvc_x64_x64" ],
+      "variables": [
+        {
+          "name": "VTK_DIR",
+          "value": "C:/VTK/bin/vtk",
+          "type": "FILEPATH"
+        },
+        {
+          "name": "Qt5_DIR",
+          "value": "C:/Qt/5.13.1/msvc2017_64/lib/cmake/Qt5",
+          "type": "PATH"
+        }
+      ]
     },
     {
-      "name": "VTK_DIR",
-      "value": "C:/VTK/bin/vtk",
-      "type": "FILEPATH"
+      "name": "x64-RelWithDebInfo",
+      "generator": "Ninja",
+      "configurationType": "RelWithDebInfo",
+      "buildRoot": "${projectDir}\\out\\build\\${name}",
+      "installRoot": "${projectDir}\\out\\install\\${name}",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "-v",
+      "ctestCommandArgs": "",
+      "inheritEnvironments": [ "msvc_x64_x64" ],
+      "variables": [
+        {
+          "name": "VTK_DIR",
+          "value": "C:/VTK/bin/vtk",
+          "type": "FILEPATH"
+        },
+        {
+          "name": "Qt5_DIR",
+          "value": "C:/Qt/5.13.1/msvc2017_64/lib/cmake/Qt5",
+          "type": "PATH"
+        }
+      ]
+    },
+    {
+      "name": "x64-MinSizeRel",
+      "generator": "Ninja",
+      "configurationType": "MinSizeRel",
+      "buildRoot": "${projectDir}\\out\\build\\${name}",
+      "installRoot": "${projectDir}\\out\\install\\${name}",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "-v",
+      "ctestCommandArgs": "",
+      "inheritEnvironments": [ "msvc_x64_x64" ],
+      "variables": [
+        {
+          "name": "VTK_DIR",
+          "value": "C:/VTK/bin/vtk",
+          "type": "FILEPATH"
+        },
+        {
+          "name": "Qt5_DIR",
+          "value": "C:/Qt/5.13.1/msvc2017_64/lib/cmake/Qt5",
+          "type": "PATH"
+        }
+      ]
     }
   ]
-},
-{
-"name": "x64-Release",
-"generator": "Ninja",
-"configurationType": "Release",
-"buildRoot": "${projectDir}\\out\\build\\${name}",
-"installRoot": "${projectDir}\\out\\install\\${name}",
-"cmakeCommandArgs": "",
-"buildCommandArgs": "-v",
-"ctestCommandArgs": "",
-"inheritEnvironments": [ "msvc_x64_x64" ],
-"variables": [
-{
-"name": "CMAKE_BUILD_TYPE",
-"value": "Release",
-"type": "STRING"
-},
-{
-"name": "VTK_DIR",
-"value": "C:/VTK/bin/vtk",
-"type": "FILEPATH"
-},
-{
-"name": "Qt5_DIR",
-"value": "C:/Qt/5.13.1/msvc2017_64/lib/cmake/Qt5",
-"type": "PATH"
-}
-]
-}
-]
 }

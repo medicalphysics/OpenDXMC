@@ -18,12 +18,12 @@ Copyright 2019 Erlend Andersen
 
 #include <QApplication>
 #include <QSurfaceFormat>
+#include <QDebug>
 
 #include <QVTKOpenGLWidget.h>
 #include <vtkOpenGLRenderWindow.h>
 
 #include "mainwindow.h"
-
 
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/rotating_file_sink.h"
@@ -58,11 +58,6 @@ int main (int argc, char *argv[])
 	win.setWindowTitle(title);
 	win.show();
 	createLogger();
-
-
-
-
-
 
     return app.exec();
 }

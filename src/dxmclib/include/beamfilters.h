@@ -93,7 +93,7 @@ public:
 	AECFilter(const std::vector<double>& densityImage, const std::array<double, 3> spacing, const std::array<std::size_t, 3> dimensions, const std::vector<double>& exposuremapping);
 	AECFilter(std::shared_ptr<std::vector<double>>& densityImage, const std::array<double, 3> spacing, const std::array<std::size_t, 3> dimensions, const std::vector<double>& exposuremapping);
 	
-	double sampleIntensityWeight(const std::array<double, 3>& position) const;
+	double sampleIntensityWeight(const std::array<double, 3>& position) const override;
 	void updateFromWorld(const World& world) override;
 	bool isValid() const { return m_valid; }
 protected:

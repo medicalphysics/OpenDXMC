@@ -17,7 +17,7 @@ Copyright 2019 Erlend Andersen
 */
 
 #include <QSplitter>
-#include <QStatusbar>
+#include <QStatusBar>
 #include <QAction>
 #include <QMenuBar>
 

@@ -77,7 +77,7 @@ void validateDose()
 	w.setDensityArray(dens);
 	w.setMaterialIndexArray(mat);
 
-	auto valid = w.validate();
+	//auto valid = w.validate();
 
 	PencilSource src;
 
@@ -182,7 +182,7 @@ void validateReyleight()
 	w.setSpacing(spacing);
 	std::uint64_t seed[2];
 
-	bool test = w.validate();
+	//bool test = w.validate();
 	auto attlut = w.attenuationLut();
 
 
@@ -249,10 +249,10 @@ void validateCompton()
 		const double absEnergy =  transport::comptonScatterEGS(p, seed, cosAngle);
 
 		const double energyFinalAna = energy * MEC2 / (MEC2 + energy * (1 - cosAngle));
-		const double energyFinalCalc = energy - absEnergy;
+		//const double energyFinalCalc = energy - absEnergy;
 
-		const double cosAngleAna = MEC2 * (1.0 / energy - 1.0 / energyFinalAna) + 1;
-		const double anglef = std::acos(cosAngle);
+		//const double cosAngleAna = MEC2 * (1.0 / energy - 1.0 / energyFinalAna) + 1;
+		//const double anglef = std::acos(cosAngle);
 		
 
 		std::size_t angle = static_cast<std::size_t>(std::abs(std::acos(cosAngle))*RAD_TO_DEG);

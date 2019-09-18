@@ -25,7 +25,7 @@ void writeToFile(const std::string& filename, const std::vector<T>& array)
 
 int testTransport()
 {
-    std::size_t N = 100000;
+    
     double energy = 5.0;
 
 
@@ -105,7 +105,7 @@ int testWorldSetup()
 
 	std::array<double, 6> cosines{ 1, 0, 0, 0, 1, 0 };
     //double cosines[6] = { 1, 0, 0, 0, 1, 0 };
-    double rotAxis[3] = { 0, 1, 0 };
+    //double rotAxis[3] = { 0, 1, 0 };
     //vectormath::rotate(cosines, rotAxis, M_PI / 4.0);
     //vectormath::rotate(&cosines[3], rotAxis, M_PI / 4.0);
     w.setDirectionCosines(cosines);
@@ -114,7 +114,7 @@ int testWorldSetup()
     auto worldCenter = w.origin();
    
     w.validate();
-    bool validWorld = w.isValid();
+    //bool validWorld = w.isValid();
 
     std::array<double, 3> sourcePos;
     for (std::size_t i = 0; i < 3; i++)

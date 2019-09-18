@@ -225,7 +225,7 @@ namespace transport {
 	{
 		const double k = particle.energy / ELECTRON_REST_MASS;
 		const double emin = 1.0 / (1.0 + 2.0 * k);
-		const double gmax = 1.0 / emin + emin;
+		//const double gmax = 1.0 / emin + emin;
 		double e;
 		for (;;)
 		{

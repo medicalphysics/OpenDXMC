@@ -172,7 +172,7 @@ class CTSource : public Source
 {
 public:
     CTSource();
-	virtual bool getExposure(Exposure& exposure, std::uint64_t i) const = 0;
+	virtual bool getExposure(Exposure& exposure, std::uint64_t i) const override = 0;
 
 	Tube& tube(void) { m_specterValid = false; return m_tube; };
 	const Tube& tube(void) const { return m_tube; }
@@ -213,7 +213,7 @@ public:
 	XCareFilter& xcareFilter() { return m_xcareFilter; }
 	const XCareFilter& xcareFilter() const { return m_xcareFilter; }
 
-	virtual std::uint64_t totalExposures(void) const = 0;
+	virtual std::uint64_t totalExposures(void) const override = 0;
 
 	void setCtdiPhantomDiameter(std::uint64_t mm) { if (mm > 160) m_ctdiPhantomDiameter = mm; else m_ctdiPhantomDiameter = 160; }
 	std::uint64_t ctdiPhantomDiameter(void) const { return m_ctdiPhantomDiameter; }
@@ -303,11 +303,11 @@ public:
 	Tube& tubeB(void) { m_specterValid = false; return m_tubeB; };
 	const Tube& tubeB(void) const { return m_tubeB; }
 
-	double maxPhotonEnergyProduced()const { return std::max(m_tube.voltage(), m_tubeB.voltage()); }
+	double maxPhotonEnergyProduced()const override { return std::max(m_tube.voltage(), m_tubeB.voltage()); }
 
 
 	std::uint64_t totalExposures(void) const override;
-	std::uint64_t exposuresPerRotatition() const;
+	std::uint64_t exposuresPerRotatition() const override;
 	double getCalibrationValue(std::uint64_t nHistories, ProgressBar* = nullptr) override;
 
 

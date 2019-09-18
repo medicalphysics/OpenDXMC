@@ -587,7 +587,7 @@ void Tube::filterSpecter(const std::vector<double>& energies, std::vector<double
 	{
 		const double cm = mm * 0.1; //for mm -> cm
 		std::transform(std::execution::par_unseq, specter.begin(), specter.end(), energies.begin(), specter.begin(), 
-			[&](double n, double e) {return n * std::exp(-material.getTotalAttenuation(e) * material.standardDensity() * cm); });
+			[&, material=material](double n, double e) {return n * std::exp(-material.getTotalAttenuation(e) * material.standardDensity() * cm); });
 	}
 }
 

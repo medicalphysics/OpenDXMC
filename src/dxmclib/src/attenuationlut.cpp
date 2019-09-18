@@ -68,7 +68,7 @@ void AttenuationLut::generate(const std::vector<Material>& materials, double min
 }
 void AttenuationLut::generate(const std::vector<Material>& materials, const std::vector<double>& energies)
 {
-	auto&[minIt, maxIt] = std::minmax_element(energies.begin(), energies.end());
+	auto [minIt, maxIt] = std::minmax_element(energies.begin(), energies.end());
 	generate(materials, *minIt, *maxIt);
 }
 

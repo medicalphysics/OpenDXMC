@@ -405,11 +405,11 @@ double CTSource::getCalibrationValue(std::uint64_t nHistories, ProgressBar* prog
 
 	std::array<CTDIPhantom::HolePosition, 5> position = { CTDIPhantom::Center, CTDIPhantom::West, CTDIPhantom::East, CTDIPhantom::South, CTDIPhantom::North };
 
-	auto spacing = world.spacing();
-	auto dim = world.dimensions();
+	//auto spacing = world.spacing();
+	//auto dim = world.dimensions();
 
-	const double voxelVolume = spacing[0] * spacing[1] * spacing[2] / 1000.0; // cm3
-	const double voxelMass = world.airDensity() * voxelVolume / 1000.0; //kg
+	//const double voxelVolume = spacing[0] * spacing[1] * spacing[2] / 1000.0; // cm3
+	//const double voxelMass = world.airDensity() * voxelVolume / 1000.0; //kg
 
 	bool usingXCare = m_useXCareFilter;
 	m_useXCareFilter = false; // we need to disable organ aec for ctdi statistics, this should be ok 
@@ -624,7 +624,6 @@ double CTAxialSource::step(void) const
 
 void CTAxialSource::setScanLenght(double scanLenght)
 {
-	auto test = std::floor(scanLenght / m_step);
 	m_scanLenght = m_step * std::floor(scanLenght / m_step);
 }
 

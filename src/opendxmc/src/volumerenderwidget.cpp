@@ -45,7 +45,7 @@ Copyright 2019 Erlend Andersen
 
 
 VolumeRenderWidget::VolumeRenderWidget(QWidget *parent)
-	:m_renderMode(0), QWidget(parent)
+	:QWidget(parent), m_renderMode(0)
 {
 	
 	m_openGLWidget = new QVTKOpenGLNativeWidget(this);

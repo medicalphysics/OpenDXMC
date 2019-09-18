@@ -78,7 +78,7 @@ OpacityChart::OpacityChart()
 
 
 OpacityChartView::OpacityChartView(QWidget *parent, vtkPiecewiseFunction * opacityFunction, OpacityChartView::Color color)
-	: m_opacityFunction(opacityFunction), QChartView(parent)
+	: QChartView(parent), m_opacityFunction(opacityFunction)
 {
 	m_color = color;
 	//m_opacityFunction = opacityFunction;
@@ -204,7 +204,6 @@ void OpacityChartView::mouseMoveEvent(QMouseEvent * event)
 	QChartView::mouseMoveEvent(event);
 	if ((m_opacityPointIndexIsMoving > -1) & (event->buttons() == Qt::LeftButton))
 	{
-		auto test = event->buttons() == Qt::LeftButton;
 		QPointF pos_scene = this->mapToScene(event->pos());
 		QPointF pos = m_chart->mapToValue(pos_scene, m_chart->getOpacitySeries());
 		double ymin = 0.0;
@@ -448,7 +447,7 @@ void VolumeCropWidget::toggleVisibility(void)
 
 
 VolumeRenderSettingsWidget::VolumeRenderSettingsWidget(vtkSmartPointer<vtkVolumeProperty> prop, QWidget *parent)
-	:m_property(prop),QWidget(parent, Qt::Window)
+	:QWidget(parent, Qt::Window), m_property(prop)
 {
 
 	m_currentImageType = ImageContainer::Empty;

@@ -31,7 +31,7 @@ Copyright 2019 Erlend Andersen
 #include <vtkSmartPointer.h>
 #include <vtkImageData.h>
 #include <vtkSmartVolumeMapper.h>
-#include <vtkOpenGlRenderer.h>
+#include <vtkOpenGLRenderer.h>
 #include <vtkImageGaussianSmooth.h>
 
 #include <memory>

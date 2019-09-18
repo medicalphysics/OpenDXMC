@@ -194,8 +194,6 @@ void XCareFilter::setLowWeight(double weight)
 double XCareFilter::highWeight() const
 {
 	return (PI_2 - m_spanAngle * m_lowWeight + m_lowWeight * m_rampAngle) / (PI_2 - m_spanAngle + m_rampAngle);
-	//return (PI_2 + (-m_spanAngle + m_rampAngle)*m_lowWeight) / (PI_2 - m_spanAngle + m_rampAngle);
-	//return (2.0 * PI - m_lowWeight * (m_rampAngle + m_spanAngle)) / (2.0 * PI - m_spanAngle + m_rampAngle);
 }
 
 template<typename T>

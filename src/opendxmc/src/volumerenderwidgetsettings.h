@@ -170,8 +170,7 @@ signals:
 	void propertyChanged(void);
 	void renderModeChanged(int mode);
 	void cropPlanesChanged(int planes[6]);
-protected:
-	//void cropPlanesUpdated(double[6] planes) { emit cropPlanesChanged(planes); }
+
 private:
 
 	vtkSmartPointer<vtkVolumeProperty> m_property; // this is the volumeproperty

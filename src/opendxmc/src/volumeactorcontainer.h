@@ -70,7 +70,6 @@ class DXSourceContainer :public VolumeActorContainer
 public:
 	DXSourceContainer(std::shared_ptr<DXSource> src);
 	virtual ~DXSourceContainer() = default;
-	//void setOrientation(const std::array<double, 6> &directionCosines) override;
 	void update() override;
 private:
 	std::shared_ptr<DXSource> m_src;

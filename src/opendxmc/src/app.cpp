@@ -25,20 +25,8 @@ Copyright 2019 Erlend Andersen
 
 #include "mainwindow.h"
 
-//#include "spdlog/spdlog.h"
-//#include "spdlog/sinks/rotating_file_sink.h"
-
 #include <thread>
 
-/*void createLogger()
-{
-	auto logger = spdlog::rotating_logger_mt("OpenDXMCapp", "logs/log.txt", 1048576 * 5, 1);
-	spdlog::set_level(spdlog::level::trace);
-	logger->info("Application started");
-	logger->info("Number of hardware threads available: {}.", std::thread::hardware_concurrency());
-	logger->flush();
-}
-*/
 
 int main (int argc, char *argv[])
 {
@@ -57,7 +45,6 @@ int main (int argc, char *argv[])
 	QString title = "OpenDXMC v" + QString(APP_VERSION);
 	win.setWindowTitle(title);
 	win.show();
-	//createLogger();
-
+	
     return app.exec();
 }

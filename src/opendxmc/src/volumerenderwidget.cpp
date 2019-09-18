@@ -69,7 +69,6 @@ VolumeRenderWidget::VolumeRenderWidget(QWidget *parent)
 	volumeProperty->SetDiffuse(0.9);
 	volumeProperty->SetSpecular(0.5);
 	volumeProperty->SetSpecularPower(10.0);
-	//volumeProperty->IndependentComponentsOff();
 
 	//smoother
 	m_imageSmoother = vtkSmartPointer<vtkImageGaussianSmooth>::New();
@@ -225,7 +224,6 @@ void VolumeRenderWidget::updateVolumeRendering()
 		m_volumeMapper->SetRequestedRenderModeToGPU();
 	
 	m_volumeMapper->SetBlendModeToComposite();
-	//m_volumeMapper->SetInputData(m_imageData->image);
 	m_volumeMapper->SetInputConnection(m_imageSmoother->GetOutputPort());
 	m_volumeMapper->Update();
 	emit imageDataChanged(m_imageData);

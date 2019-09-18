@@ -113,11 +113,7 @@ void RandomDistribution::generateTable()
 
 std::size_t RandomDistribution::sampleIndex()
 {
-	//const double r1 = randomUniform<double>(m_seed);
-	//const double r2 = randomUniform<double>(m_seed);
-	//std::size_t k = static_cast<std::size_t>(m_weights.size() * r1);
 	return sampleIndex(m_seed);
-	//return r2 < m_probs[k] ? k : m_alias[k];
 }
 
 std::size_t RandomDistribution::sampleIndex(std::uint64_t seed[2]) const

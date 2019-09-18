@@ -104,7 +104,7 @@ DXSourceContainer::DXSourceContainer(std::shared_ptr<DXSource> src)
 	const auto &cosines = m_src->directionCosines();
 	vectormath::cross(cosines.data(), direction.data());
 
-	double lenght = src->sourceDetectorDistance();// std::sqrt(origin[0] * origin[0] + origin[1] * origin[1] + origin[2] * origin[2]);
+	double lenght = src->sourceDetectorDistance();
 	std::array<double, 3> p0, p1, p2, p3;
 	const auto &angles = m_src->collimationAngles();
 	for (int i = 0; i < 3; ++i)
@@ -169,22 +169,8 @@ DXSourceContainer::DXSourceContainer(std::shared_ptr<DXSource> src)
 	m_mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
 	m_mapper->SetInputConnection(m_tubeFilter->GetOutputPort());
 	getActor()->SetMapper(m_mapper);
-	//getActor()->GetProperty()->SetLineWidth(5);
 }
-/*void DXSourceContainer::setOrientation(const std::array<double, 6>& directionCosines)
-{
-	auto matrix = getMatrix();
-	matrix->Identity();
-	double z[3];
-	vectormath::cross(directionCosines.data(), z);
-	for (int i = 0; i < 3; ++i)
-	{
-		matrix->SetElement(i, 0, directionCosines[i]);
-		matrix->SetElement(i, 1, directionCosines[i + 3]);
-		matrix->SetElement(i, 2, z[i]);
-	}
-	matrix->Invert();
-}*/
+
 void DXSourceContainer::update()
 {
 
@@ -193,7 +179,7 @@ void DXSourceContainer::update()
 	const auto &cosines = m_src->directionCosines();
 	vectormath::cross(cosines.data(), direction.data());
 
-	double lenght = m_src->sourceDetectorDistance();// std::sqrt(origin[0] * origin[0] + origin[1] * origin[1] + origin[2] * origin[2]);
+	double lenght = m_src->sourceDetectorDistance();
 	std::array<double, 3> p0, p1, p2, p3;
 	const auto &angles = m_src->collimationAngles();
 	for (int i = 0; i < 3; ++i)
@@ -205,7 +191,6 @@ void DXSourceContainer::update()
 	}
 
 	// Create a vtkPoints container and store the points in it
-	//m_points = vtkSmartPointer<vtkPoints>::New();
 	m_points->Reset();
 	m_points->InsertNextPoint(origin.data());
 	m_points->InsertNextPoint(p0.data());
@@ -214,7 +199,6 @@ void DXSourceContainer::update()
 	m_points->InsertNextPoint(p3.data());
 	m_linesPolyData->SetPoints(m_points);
 	m_tubeFilter->Update();
-
 }
 
 CTSpiralSourceContainer::CTSpiralSourceContainer(std::shared_ptr<CTSpiralSource> src)
@@ -272,9 +256,6 @@ void CTSpiralSourceContainer::update()
 	m_points->SetPoint(nPoints + 2, p2[0], p2[1], p2[2]);
 	m_points->SetPoint(nPoints + 3, p3[0], p3[1], p3[2]);
 	m_linesPolyData->SetPoints(m_points);
-
-
-	//m_linesPolyData->Squeeze();
 
 	m_polyLine->GetPointIds()->SetNumberOfIds(nPoints);
 	for (int i = 0; i < nPoints; ++i)
@@ -379,9 +360,6 @@ void CTAxialSourceContainer::update()
 	m_points->SetPoint(nPoints + 3, p3[0], p3[1], p3[2]);
 	m_linesPolyData->SetPoints(m_points);
 
-
-	//m_linesPolyData->Squeeze();
-
 	m_polyLine->GetPointIds()->SetNumberOfIds(nPoints);
 	for (int i = 0; i < nPoints; ++i)
 		m_polyLine->GetPointIds()->SetId(i, i);
@@ -456,15 +434,8 @@ void CTDualSourceContainer::update()
 	updateTubeA();
 	updateTubeB();
 	
-	//m_appendFilter->Update();
-	
-	//m_tubeFilter->SetInputData(m_linesPolyDataA);
 	m_tubeFilter->Update();
 	getActor()->SetMapper(m_mapper);
-
-
-	
-	
 }
 
 void CTDualSourceContainer::updateTubeA()
@@ -507,7 +478,6 @@ void CTDualSourceContainer::updateTubeA()
 	m_linesPolyDataA->SetPoints(m_pointsA);
 
 
-	//m_linesPolyData->Squeeze();
 
 	m_polyLineA->GetPointIds()->SetNumberOfIds(nPoints);
 	for (int i = 0; i < nPoints; ++i)
@@ -588,9 +558,6 @@ void CTDualSourceContainer::updateTubeB()
 	m_pointsB->SetPoint(nPoints + 2, p2[0], p2[1], p2[2]);
 	m_pointsB->SetPoint(nPoints + 3, p3[0], p3[1], p3[2]);
 	m_linesPolyDataB->SetPoints(m_pointsB);
-
-
-	//m_linesPolyData->Squeeze();
 
 	m_polyLineB->GetPointIds()->SetNumberOfIds(nPoints);
 	for (int i = 0; i < nPoints; ++i)

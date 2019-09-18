@@ -88,19 +88,16 @@ protected:
 
 	ImageContainer(ImageType imageType, std::shared_ptr<std::vector<double>> imageData, const std::array<std::size_t, 3> &dimensions, const std::array<double, 3> &dataSpacing, const std::array<double, 3> &origin, bool smooth = false)
 	{
-		//image_data_double = imageData;
 		this->imageType = imageType;
 		registerVector(imageData, dimensions, dataSpacing, origin, VTK_DOUBLE, smooth);
 	}
 	ImageContainer(ImageType imageType, std::shared_ptr<std::vector<float>> imageData, const std::array<std::size_t, 3> &dimensions, const std::array<double, 3> &dataSpacing, const std::array<double, 3> &origin, bool smooth = false)
 	{
-		//image_data_float = imageData;
 		this->imageType = imageType;
 		registerVector(imageData, dimensions, dataSpacing, origin, VTK_FLOAT, smooth);
 	}
 	ImageContainer(ImageType imageType, std::shared_ptr<std::vector<unsigned char>> imageData, const std::array<std::size_t, 3> &dimensions, const std::array<double, 3> &dataSpacing, const std::array<double, 3> &origin, bool smooth = false)
 	{
-		//image_data_uchar = imageData;
 		this->imageType = imageType;
 		registerVector(imageData, dimensions, dataSpacing, origin, VTK_UNSIGNED_CHAR, smooth);
 	}

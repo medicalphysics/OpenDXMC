@@ -43,7 +43,6 @@ Copyright 2019 Erlend Andersen
 #include <execution>
 #include <memory>
 
-//#include "spdlog/spdlog.h"
 
 ImageImportPipeline::ImageImportPipeline(QObject *parent)
 	:QObject(parent)
@@ -69,18 +68,14 @@ void ImageImportPipeline::setDicomData(QStringList dicomPaths)
 {
 	emit processingDataStarted();
 
-	//auto logger = spdlog::get("OpenDXMCapp");
-	//logger->debug("Importing images...");
 	auto const vtkType = VTK_FLOAT;
 
-	//from QStringList og paths to vtkStringArray
 	vtkSmartPointer<vtkStringArray> fileNameArray = vtkSmartPointer<vtkStringArray>::New();
 	fileNameArray->SetNumberOfValues(dicomPaths.size());
 	for (int i = 0; i < dicomPaths.size(); ++i)
 	{
 		auto path = dicomPaths[i].toStdString();
 		fileNameArray->SetValue(i, path);
-		//logger->debug("Reading file {}", path);
 	}
 
 	//Dicom file reader
@@ -159,8 +154,7 @@ void ImageImportPipeline::setDicomData(QStringList dicomPaths)
 	auto imageContainer = std::make_shared<ImageContainer>(ImageContainer::CTImage, data, "HU");
 	imageContainer->directionCosines = directionCosines;
 	imageContainer->ID = ImageContainer::generateID();
-	//logger->debug("Done importing images.");
-	//logger->flush();
+
 	emit imageDataChanged(imageContainer);
 	auto exposure = readExposureData(dicomReader);
 	this->processCTData(imageContainer, exposure);
@@ -196,24 +190,17 @@ std::pair<std::shared_ptr<std::vector<unsigned char>>, std::shared_ptr<std::vect
 
 void ImageImportPipeline::processCTData(std::shared_ptr<ImageContainer> ctImage, const std::pair<std::string, std::vector<double>>& exposureData)
 {
-	//auto logger = spdlog::get("OpenDXMCapp");
-	//logger->debug("Segmenting CT images...");
 	if (ctImage->imageType != ImageContainer::CTImage)
 	{
-		//logger->debug("Segmenting CT images failed, data is not CT data.");
-		//logger->flush();
 		return;
 	}
 	if (!ctImage->image)
 	{
-		//logger->debug("Segmenting CT images failed, no image data.");
-		//logger->flush();
 		return; // if ctimage is empty return;
 	}
 	std::shared_ptr<std::vector<unsigned char>> materialIndex;
 	std::shared_ptr<std::vector<double>> density;
 
-	//auto dimensions = ctImage->image->GetDimensions();
 	std::array<std::size_t, 3> dimensions;
 	for (std::size_t i = 0; i < 3; ++i)
 		dimensions[i] = (ctImage->image->GetDimensions())[i];
@@ -250,49 +237,32 @@ void ImageImportPipeline::processCTData(std::shared_ptr<ImageContainer> ctImage,
 	densityImage->ID = ctImage->ID;
 	densityImage->dataUnits = "g/cm3";
 
-
-	//logger->debug("Done segmenting CT images.");
-	//logger->flush();
-
 	//making exposure map for CT AEC
 	const auto& exposurename = exposureData.first;
 	const auto& exposure = exposureData.second;
 
-	//logger->debug("Generating AEC profile...");
+
 	if (exposure.size() > 0)
 	{
 		auto aecFilter = std::make_shared<AECFilter>(density, spacing, dimensionsArray, exposure);
 		QString filtername = QString::fromStdString(exposurename);
 		emit aecFilterChanged(filtername, aecFilter);
-		//logger->debug("Done generating AEC profile: {}.", exposurename);
 	}
-	else
-	{
-		//logger->debug("Could not find suitable AEC profile for {}.", exposurename);
-	}
-	//logger->flush();
-	//logger->debug("Emitting processed images...");
+
 	emit imageDataChanged(materialImage);
 	emit imageDataChanged(densityImage);
 	emit materialDataChanged(m_ctImportMaterialMap);
-	//logger->debug("Emitting processed images... Done");
-	//logger->flush();
 }
 
 std::pair<std::string, std::vector<double>> ImageImportPipeline::readExposureData(vtkSmartPointer<vtkDICOMReader>& dicomReader)
 {
-	/*auto logger = spdlog::get("OpenDXMCapp");
-	logger->debug("Reading exposure data...");
-	logger->flush();
-	*/
 	std::vector<double> exposure;
 
 	vtkDICOMMetaData *meta = dicomReader->GetMetaData();
 	
 	if (!meta->Has(DC::Exposure))
 	{
-		//logger->debug("No exposure data available, data not read.");
-		//logger->flush();
+		
 		return std::make_pair(std::string(), exposure);
 	}
 	int n = meta->GetNumberOfInstances();
@@ -315,9 +285,7 @@ std::pair<std::string, std::vector<double>> ImageImportPipeline::readExposureDat
 	vtkDICOMTag seriesDescriptionTag(8, 4158);
 	auto seriesDescriptionValue = meta->GetAttributeValue(seriesDescriptionTag);
 	std::string desc = seriesDescriptionValue.GetString(0);
-	//logger->debug("Done reading exposure data.");
-	//logger->flush();
-
+	
 	return std::make_pair(desc, exposure);
 }
 
@@ -476,22 +444,10 @@ std::pair<std::shared_ptr<std::vector<unsigned char>>, std::shared_ptr<std::vect
 	std::vector<organElement>& organs, 
 	const std::vector<std::pair<unsigned char, Material>>& media)
 {
-
-	//std::vector<unsigned char> materialLut(organs.size());
-	//std::vector<double> densityLut(organs.size());
-	//std::map<unsigned char, unsigned char> organLut;
 	std::map<unsigned char, double> densityLut;
 	std::map<unsigned char, unsigned char> materialLut;
 	std::map<unsigned char, unsigned char> organLut;
 
-	/*for (std::size_t i = 0; i < organs.size(); ++i)
-	{
-		auto key = organs[i].ID;
-		reverse_lut[key] = static_cast<unsigned char>(i);
-		organs[i].ID = static_cast<unsigned char>(i);
-		materialLut[i] = static_cast<unsigned char>(organs[i].tissue);
-		densityLut[i] = organs[i].density;
-	}*/
 	for (std::size_t i = 0; i < organs.size(); ++i)
 	{
 		auto key = organs[i].ID;
@@ -500,8 +456,6 @@ std::pair<std::shared_ptr<std::vector<unsigned char>>, std::shared_ptr<std::vect
 		organLut[key] = static_cast<unsigned char>(i);
 		organs[i].ID = static_cast<unsigned char>(i);
 	}
-
-
 
 	auto materialArray = std::make_shared<std::vector<unsigned char>>(organArray.size());
 	auto densityArray = std::make_shared<std::vector<double>>(organArray.size());

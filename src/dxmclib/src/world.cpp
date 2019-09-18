@@ -263,13 +263,11 @@ std::vector<std::size_t> circleIndices2D(const std::array<std::size_t, 2>& dim, 
 {
 	std::vector<std::size_t> indices;
 	std::array<int, 4> flimits;
-	//int flimits[4];
 	flimits[0] = static_cast<int>((center[0] - radius) / spacing[0]);
 	flimits[1] = static_cast<int>((center[0] + radius) / spacing[0]) + 1;
 	flimits[2] = static_cast<int>((center[1] - radius) / spacing[1]);
 	flimits[3] = static_cast<int>((center[1] + radius) / spacing[1]) + 1;
 	std::array<std::size_t, 4> limits;
-	//std::size_t limits[4];
 	limits[0] = static_cast<std::size_t>(std::max(flimits[0], 0));
 	limits[1] = static_cast<std::size_t>(std::min(flimits[1], static_cast<int>(dim[0])));
 	limits[2] = static_cast<std::size_t>(std::max(flimits[2], 0));

@@ -256,7 +256,6 @@ MaterialSelectionWidget::MaterialSelectionWidget(QWidget *parent)
 	m_tableView = new QTableView(this);
 	m_tableView->setSortingEnabled(true);
 	m_tableView->setModel(m_tableModel);
-	//m_tableView->horizontalHeader()->setStretchLastSection(true);
 	m_tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 	connect(m_tableModel, &MaterialTableModel::layoutChanged, [=](const auto & parents, auto hint) {m_tableView->resizeColumnsToContents(); });
 

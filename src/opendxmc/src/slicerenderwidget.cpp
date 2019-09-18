@@ -341,7 +341,6 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 	auto colorTablePickerAction = new QWidgetAction(menuButton);
 	auto colorTablePickerHolder = new QWidget(menuButton);
 	auto colorTablePickerLayout = new QHBoxLayout(colorTablePickerHolder);
-	//colorTablePickerLayout->setContentsMargins(0, 0, 0, 0);
 	colorTablePickerHolder->setLayout(colorTablePickerLayout);
 	auto colorTablePickerLabel = new QLabel("Color table", colorTablePickerHolder);
 	colorTablePickerLayout->addWidget(colorTablePickerLabel);
@@ -353,7 +352,6 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 	auto windowSettingsAction = new QWidgetAction(menuButton);
 	auto windowSettingsHolder = new QWidget(menuButton);
 	auto windowSettingsLayout = new QHBoxLayout(windowSettingsHolder);
-	//windowSettingsLayout->setContentsMargins(0, 0, 0, 0);
 	windowSettingsHolder->setLayout(windowSettingsLayout);
 	auto windowSettingsWCLabel = new QLabel("Min:", windowSettingsHolder);
 	windowSettingsLayout->addWidget(windowSettingsWCLabel);
@@ -440,7 +438,6 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 void SliceRenderWidget::updateRendering()
 {
 	//might need to call Render
-	//m_resliceImageViewer->Reset();
 	
 	auto renderWindow = m_openGLWidget->renderWindow();
 	auto renderCollection = renderWindow->GetRenderers();
@@ -665,7 +662,6 @@ void SliceRenderWidget::saveCine() {
 	windowFilter->SetInput(renderWindow);
 	windowFilter->SetInputBufferTypeToRGB();
 	windowFilter->ReadFrontBufferOff();
-	//windowFilter->SetScale(3, 3);
 	windowFilter->Update();
 	auto writer = vtkSmartPointer<vtkAVIWriter>::New();
 	writer->SetInputConnection(windowFilter->GetOutputPort());

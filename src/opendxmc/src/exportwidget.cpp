@@ -39,7 +39,6 @@ ExportWidget::ExportWidget(QWidget* parent)
 	exportRawBrowseCompleterModel->setFilter(QDir::Dirs | QDir::NoDotAndDotDot);
 	exportRawBrowseCompleter->setModel(exportRawBrowseCompleterModel);
 	exportRawBrowseCompleter->setCompletionMode(QCompleter::InlineCompletion);
-	//connect(this, &ExportWidget::rawExportFolderSelected, exportRawBrowseCompleter, &QCompleter::setCompletionPrefix);
 	connect(this, &ExportWidget::rawExportFolderSelected, [=](const QString& folderPath) {
 		exportRawBrowseCompleter->setCompletionPrefix(folderPath);
 		m_exportRawLineEdit->setText(folderPath);

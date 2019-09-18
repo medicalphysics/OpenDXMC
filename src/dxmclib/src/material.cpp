@@ -23,13 +23,6 @@ Copyright 2019 Erlend Andersen
 #include <algorithm>
 #include <execution>
 
-
-//constexpr double ELECTRON_REST_MASS = 510.9989461; // keV
-
-//SetErrorMessages(0); // supress xraylin error messages
-
-
-
 double Material::getPhotoelectricAttenuation(double energy) const
 {
 	return CS_Photo_CP(m_name.c_str(), energy);

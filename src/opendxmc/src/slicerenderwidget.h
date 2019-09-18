@@ -77,21 +77,3 @@ private:
 
 }; 
 
-
-/*class SliceRenderWidget : public QWidget
-{
-	Q_OBJECT
-public:
-	enum Orientation { Axial, Sagittal, Coronal };
-	SliceRenderWidget(QWidget *parent = nullptr, Orientation orientation = Axial);
-
-	void updateRendering();
-	void setImageData(ImageContainer volume);
-
-private:
-	Orientation m_orientation;
-	QVTKOpenGLWidget *m_openGLWidget;
-	vtkSmartPointer<vtkResliceImageViewer> m_resliceImageViewer;
-	ImageContainer m_image;
-	vtkSmartPointer<vtkWindowLevelLookupTable> m_lut;
-};*/

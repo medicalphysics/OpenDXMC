@@ -76,7 +76,6 @@ MainWindow::MainWindow(QWidget* parent)
 
 	//dicom import widget
 	DicomImportWidget *dicomImportWidget = new DicomImportWidget(this);
-	//m_menuWidget->addTab(dicomImportWidget, tr("Import DiCOM CT images"));
 	importWidget->addTab(dicomImportWidget, tr("DiCOM CT images"));
 	connect(dicomImportWidget, &DicomImportWidget::dicomSeriesActivated, m_importPipeline, &ImageImportPipeline::setDicomData);
 	connect(dicomImportWidget, &DicomImportWidget::outputSpacingChanged, m_importPipeline, &ImageImportPipeline::setOutputSpacing);
@@ -90,7 +89,6 @@ MainWindow::MainWindow(QWidget* parent)
 
 	//phantom import widget
 	PhantomSelectionWidget* phantomWidget = new PhantomSelectionWidget(this);
-	//m_menuWidget->addTab(phantomWidget, tr("Digital phantoms"));
 	importWidget->addTab(phantomWidget, tr("Digital phantoms"));
 	connect(phantomWidget, &PhantomSelectionWidget::readIRCUFemalePhantom, m_importPipeline, &ImageImportPipeline::importICRUFemalePhantom);
 	connect(phantomWidget, &PhantomSelectionWidget::readIRCUMalePhantom, m_importPipeline, &ImageImportPipeline::importICRUMalePhantom);
@@ -141,14 +139,6 @@ MainWindow::MainWindow(QWidget* parent)
 	//request to run simulation connection
 	connect(sourceEditWidget, &SourceEditWidget::runSimulation, m_simulationPipeline, &SimulationPipeline::runSimulation);
 
-
-
-	//window menu
-	/*auto fileMenu = menuBar()->addMenu(tr("&File"));
-	auto importMenu = fileMenu->addMenu(tr("&Import"));
-	auto importAction = importMenu->addAction(tr("Helmholtz-Zentrum phantoms"));
-	connect(importAction, &QAction::triggered, phantomWidget, &PhantomSelectionWidget::importHelmholtzPhantoms);
-	*/
 	//no connections to pipeline after this point
 	m_workerThread.start();
 

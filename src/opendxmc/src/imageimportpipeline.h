@@ -107,8 +107,7 @@ public:
 	void generateDensityMap(iterT CTArrayFirst, iterT CTArrayLast, iterU materialIndex, iterD destination)
 	{
 		//calculate density based on voxel_i CT number and estimated CT number from material M in voxel_i 
-		//std::fill(CTArrayFirst, CTArrayLast, 0);
-		//return;
+		
 		if (m_materialCTNumbers.size() > 0)
 		{
 			std::vector<double> ctNumbers(m_materialCTNumbers.size());
@@ -128,12 +127,7 @@ public:
 private:
 	void materialCTNumbers(std::vector<Material>& materialMap, const Tube& tube)
 	{
-		// claibrationEnergy and materialEnergy are the simulated detector responce from each material for the specified tube
-		//std::vector<AttenuationLutElement> calibrationLut;
-		//Material waterMaterial("Water, Liquid");
-		//Material airMaterial("Air, Dry (near sea level)");
-		//calibrationLut.push_back(waterMaterial.generateAttenuationLut(1.0, tube.voltage()));
-		//calibrationLut.push_back(airMaterial.generateAttenuationLut(1.0, tube.voltage()));
+		
 		std::vector<Material> calibrationMaterials;
 		calibrationMaterials.push_back(Material("Water, Liquid"));
 		calibrationMaterials.push_back(Material("Air, Dry (near sea level)"));
@@ -177,24 +171,6 @@ private:
 };
 
 
-
-
-
-/*class DataExportContainer :public QObject
-{
-	Q_OBJECT
-public:
-	DataExportContainer(QObject* parent=nullptr) :QObject(parent){}
-	std::shared_ptr<DensityImageContainer> m_density;
-	std::shared_ptr<OrganImageContainer> m_organMap;
-	std::shared_ptr<MaterialImageContainer> m_materialMap;
-	std::shared_ptr<DoseImageContainer> m_dose;
-	std::vector<Material> m_materials;
-
-};*/
-
-
-
 class ImageImportPipeline : public QObject
 {
 	Q_OBJECT
@@ -214,9 +190,6 @@ public:
 	void importICRUFemalePhantom(bool ignoreArms = false);
 	void importCTDIPhantom(int mm);
 	void importAWSPhantom(const QString& name);
-
-	//void importH5File(const QString& path);
-	//void exportH5File(const QString& path, const DataExportContainer data);
 
 
 signals:

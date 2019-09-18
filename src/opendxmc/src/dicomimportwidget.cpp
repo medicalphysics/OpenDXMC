@@ -47,8 +47,6 @@ DicomImportWidget::DicomImportWidget(QWidget *parent)
 	QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
 
 	auto *mainlayout = new QVBoxLayout;
-	//mainlayout->setContentsMargins(0, 0, 0, 0);
-
 
 	auto *browseLayout = new QHBoxLayout;
 	//setting ut folder line edit with completer and memory of last folderpath
@@ -189,8 +187,6 @@ DicomImportWidget::DicomImportWidget(QWidget *parent)
 	m_imageDirectorySnooper->SetScanDepth(8);
 	m_imageDirectorySnooper->RequirePixelDataOn();
 	m_imageDirectorySnooper->SetQueryFilesToAlways();
-	//m_imageDirectorySnooper->SetFindLevelToSeries();
-	
 
 	connect(this, &DicomImportWidget::dicomFolderSelectedForBrowsing, this, static_cast<void (DicomImportWidget::*)(QString)>(&DicomImportWidget::lookInFolder));
 
@@ -238,7 +234,6 @@ void DicomImportWidget::lookInFolder(const QString folderPath)
 	//resetting series selector
 	m_seriesSelector->clear();
 	m_seriesSelector->setEnabled(false);
-	//m_seriesSelector->addItem("");
 
 	//restricts images to axial CT images
 	vtkDICOMItem query;
@@ -256,7 +251,6 @@ void DicomImportWidget::lookInFolder(const QString folderPath)
 		return;
 	}
 
-	//vtkDICOMTag seriesDescriptionTag(8, 4158);
 	vtkDICOMTag seriesDescriptionTag(8, 0x103E);
 	vtkDICOMTag studyDescriptionTag(8, 0x1030);
 	for (int i = 0; i < n_series; i++)
@@ -283,19 +277,13 @@ void DicomImportWidget::lookInFolder(const QString folderPath)
 
 void DicomImportWidget::seriesActivated(int index)
 {
-	//if (index == 0)
-	//{
-	//	return; // prevents selecting of empty field 
-	//}
 	int n_series = m_imageDirectorySnooper->GetNumberOfSeries();
-	//if (index >= n_series+1)
 	if (index >= n_series)
 	{
 		m_seriesSelector->clear();
 		m_seriesSelector->setDisabled(true);
 		return;
 	}
-	//auto fileNameArray = m_imageDirectorySnooper->GetFileNamesForSeries(index-1);
 	auto fileNameArray = m_imageDirectorySnooper->GetFileNamesForSeries(index);
 	int n = fileNameArray->GetNumberOfValues();
 	QStringList fileNames;

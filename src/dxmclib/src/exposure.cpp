@@ -196,9 +196,7 @@ void Exposure::sampleParticle(Particle& p, std::uint64_t seed[2]) const
 	p.pos[1] = m_position[1];
 	p.pos[2] = m_position[2];
 
-
 	// particle direction
-
 	const double theta = randomUniform(seed, -m_collimationAngles[0] / 2.0, m_collimationAngles[0] / 2.0);
 	const double phi = randomUniform(seed, -m_collimationAngles[1] / 2.0, m_collimationAngles[1] / 2.0);
 	const double sintheta = std::sin(theta);

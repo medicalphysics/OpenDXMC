@@ -58,8 +58,6 @@ OpacityChart::OpacityChart()
 	{
 		auto axisX = axesX[0];
 		axisX->setTitleText(tr("Image intensity"));
-		//this->axisX()->setLabelsVisible(false);
-		//this->axisX()->setTitleVisible(false);
 		axisX->setMinorGridLineVisible(false);
 		axisX->setGridLineVisible(false);
 	}
@@ -81,7 +79,6 @@ OpacityChartView::OpacityChartView(QWidget *parent, vtkPiecewiseFunction * opaci
 	: QChartView(parent), m_opacityFunction(opacityFunction)
 {
 	m_color = color;
-	//m_opacityFunction = opacityFunction;
 	m_chart = new OpacityChart();
 	this->setChart(m_chart);
 	setMouseTracking(true);
@@ -119,7 +116,6 @@ void OpacityChartView::setImageDataRange(double min, double max)
 		cmin = 0;
 	}
 
-	//if ((m_color != None) & (m_color != Gradient)) // we want to redistribute plot points if it is a color table
 	this->redistributePointsToRange(cmin, cmax); // we want to redistribute plot points
 
 	m_xrange[0] = cmin;
@@ -451,7 +447,7 @@ VolumeRenderSettingsWidget::VolumeRenderSettingsWidget(vtkSmartPointer<vtkVolume
 {
 
 	m_currentImageType = ImageContainer::Empty;
-	//this->hide();
+
 
 	auto layout = new QVBoxLayout;
 	layout->setContentsMargins(0, 0, 0, 0);
@@ -568,7 +564,6 @@ void VolumeRenderSettingsWidget::setImage(std::shared_ptr<ImageContainer> image)
 	
 	// setting up dimensions
 	int extent[6];
-	//image.image->GetDimensions(dimensions);
 	image->image->GetExtent(extent);
 	m_volumeCropWidget->setExtent(extent); 
 

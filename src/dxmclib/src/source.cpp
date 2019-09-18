@@ -201,7 +201,6 @@ double DXSource::sourceDetectorDistance() const
 
 double DXSource::getCalibrationValue(std::uint64_t nHistories, ProgressBar* progressBar)
 {
-	
 	auto specter = tube().getSpecter();
 	std::vector<double> massAbsorb(specter.size(), 0.0);
 	Material airMaterial("Air, Dry (near sea level)");
@@ -263,7 +262,6 @@ CTSource::CTSource()
     m_scanLenght = 100.0;
 	auto &t = tube();
 	t.setAlFiltration(7.0);
-
 }
 
 
@@ -289,8 +287,6 @@ double CTSource::collimation(void) const
 {
 	return m_collimation;
 }
-
-
 
 void CTSource::setFieldOfView(double fov)
 {
@@ -405,12 +401,6 @@ double CTSource::getCalibrationValue(std::uint64_t nHistories, ProgressBar* prog
 
 	std::array<CTDIPhantom::HolePosition, 5> position = { CTDIPhantom::Center, CTDIPhantom::West, CTDIPhantom::East, CTDIPhantom::South, CTDIPhantom::North };
 
-	//auto spacing = world.spacing();
-	//auto dim = world.dimensions();
-
-	//const double voxelVolume = spacing[0] * spacing[1] * spacing[2] / 1000.0; // cm3
-	//const double voxelMass = world.airDensity() * voxelVolume / 1000.0; //kg
-
 	bool usingXCare = m_useXCareFilter;
 	m_useXCareFilter = false; // we need to disable organ aec for ctdi statistics, this should be ok 
 
@@ -441,71 +431,11 @@ double CTSource::getCalibrationValue(std::uint64_t nHistories, ProgressBar* prog
 	return factor;
 
 }
-/*
-double CTSource::getCalibrationValue(std::uint64_t nHistories, ProgressBar* progressBar)
-{
 
-	double meanWeight = 0;
-	for (std::size_t i = 0; i < totalExposures(); ++i)
-	{
-		Exposure dummy;
-		getExposure(dummy, i);
-		meanWeight += dummy.beamIntensityWeight();
-	}
-	meanWeight /= static_cast<double>(totalExposures());
-
-	auto world = CTDIPhantom(m_ctdiPhantomDiameter);
-	world.setAttenuationLutMaxEnergy(m_tube.voltage());
-	world.validate();
-
-	updateFromWorld(world);
-	validate();
-
-	std::array<double, 5> measureDoseTotal;
-	measureDoseTotal.fill(0.0);
-	std::array<CTDIPhantom::HolePosition, 5> position = { CTDIPhantom::Center, CTDIPhantom::West, CTDIPhantom::East, CTDIPhantom::South, CTDIPhantom::North };
-
-	auto spacing = world.spacing();
-	auto dim = world.dimensions();
-
-	const double voxelVolume = spacing[0] * spacing[1] * spacing[2] / 1000.0; // cm3
-	const double voxelMass = world.airDensity() * voxelVolume / 1000.0; //kg
-
-	bool usingXCare = m_useXCareFilter;
-	m_useXCareFilter = false; // we need to disable organ aec for ctdi statistics, this should be ok 
-
-	std::size_t statCounter = 1;
-
-	do {
-		std::array<double, 5> measureDose;
-		measureDose.fill(0.0);
-		auto dose = transport::run(world, this, progressBar);
-		for (std::size_t i = 0; i < 5; ++i)
-		{
-			auto holeIndices = world.holeIndices(position[i]);
-			for (auto idx : holeIndices)
-				measureDose[i] += dose[idx];
-			measureDose[i] /= static_cast<double>(holeIndices.size());
-			measureDoseTotal[i] += measureDose[i];
-		}
-		++statCounter;
-	} while ((ctdiStatIndex(measureDoseTotal) > 0.05) && (statCounter < 20)); // we allow 5% normal error in ctdi dose calibration
-
-	const double ctdiPher = (measureDoseTotal[1] + measureDoseTotal[2] + measureDoseTotal[3] + measureDoseTotal[4]) / 4.0;
-	const double ctdiCent = measureDoseTotal[0];
-	const double ctdivol = (ctdiCent + 2.0 * ctdiPher) / 3.0 / static_cast<double>(statCounter);
-	const double factor = m_ctdivol / ctdivol / meanWeight;
-	m_useXCareFilter = usingXCare; // re-enable organ aec if it was used
-	return factor;
-
-}
-*/
 std::uint64_t CTSource::exposuresPerRotatition() const 
 {
 	return static_cast<std::size_t>(PI_2 / m_exposureAngleStep);
 }
-
-
 
 
 CTSpiralSource::CTSpiralSource()
@@ -546,8 +476,6 @@ bool CTSpiralSource::getExposure(Exposure& exposure, std::uint64_t exposureIndex
 		pos[i] += m_position[i];
 		otherAxis[i] = -otherAxis[i];
 	}
-	//vectormath::rotate(otherAxis.data(), rotationAxis.data(), angle);
-
 
 	exposure.setPosition(pos);
 	exposure.setDirectionCosines(otherAxis, rotationAxis);
@@ -594,9 +522,7 @@ std::uint64_t CTSpiralSource::totalExposures() const
 
 double CTSpiralSource::getCalibrationValue(std::uint64_t nHistories, ProgressBar* progressBar)
 {
-
 	return CTSource::getCalibrationValue(nHistories, progressBar) * m_pitch;
-
 }
 
 
@@ -632,10 +558,8 @@ bool CTAxialSource::getExposure(Exposure& exposure, std::uint64_t exposureIndex)
 	//calculating position
 	std::array<double, 3> pos = { 0,m_sdd / 2.0,0 };
 	
-
 	const std::uint64_t anglesPerRotation = static_cast<std::uint64_t>(PI_2 / m_exposureAngleStep);
 	const std::uint64_t rotationNumber = exposureIndex / anglesPerRotation;
-
 
 	const double angle = m_startAngle + m_exposureAngleStep * (exposureIndex - (rotationNumber*anglesPerRotation));
 
@@ -735,7 +659,7 @@ std::array<double, 3 > CTDualSource::getExposurePosition(std::uint64_t exposureI
 		sdd = m_sddB;
 		startAngle = m_startAngleB;
 	}
-	std::array<double, 3> pos = { 0,m_sdd / 2.0,0 };
+	std::array<double, 3> pos = { 0, sdd / 2.0,0 };
 	
 	const double angle = startAngle + m_exposureAngleStep * exposureIndex;
 
@@ -829,61 +753,6 @@ double CTDualSource::getCalibrationValue(std::uint64_t nHistories, ProgressBar* 
 {
 	return CTSource::getCalibrationValue(nHistories, progressBar) * m_pitch;
 }
-/*double CTDualSource::getCalibrationValue(std::uint64_t nHistories, ProgressBar* progressBar)
-{
-	double meanWeight = 0;
-	for (std::size_t i = 0; i < totalExposures(); ++i)
-	{
-		Exposure dummy;
-		getExposure(dummy, i);
-		meanWeight += dummy.beamIntensityWeight();
-	}
-	meanWeight /= static_cast<double>(totalExposures());
-
-	auto world = CTDIPhantom(m_ctdiPhantomDiameter);
-	world.setAttenuationLutMaxEnergy(maxPhotonEnergyProduced());
-	world.validate();
-
-	updateFromWorld(world);
-	validate();
-
-	std::array<double, 5> measureDoseTotal;
-	measureDoseTotal.fill(0.0);
-	std::array<CTDIPhantom::HolePosition, 5> position = { CTDIPhantom::Center, CTDIPhantom::West, CTDIPhantom::East, CTDIPhantom::South, CTDIPhantom::North };
-
-	auto spacing = world.spacing();
-	auto dim = world.dimensions();
-
-	const double voxelVolume = spacing[0] * spacing[1] * spacing[2] / 1000.0; // cm3
-	const double voxelMass = world.airDensity() * voxelVolume / 1000.0; //kg
-
-	bool usingXCare = m_useXCareFilter;
-	m_useXCareFilter = false; // we need to disable organ aec for ctdi statistics, this should be ok 
-
-	std::size_t statCounter = 0;
-	do {
-		std::array<double, 5> measureDose;
-		measureDose.fill(0.0);
-		auto dose = transport::run(world, this, progressBar);
-		for (std::size_t i = 0; i < 5; ++i)
-		{
-			auto holeIndices = world.holeIndices(position[i]);
-			for (auto idx : holeIndices)
-				measureDose[i] += dose[idx];
-			measureDose[i] /= static_cast<double>(holeIndices.size());
-			measureDoseTotal[i] += measureDose[i];
-		}
-		++statCounter;
-	} while ((ctdiStatIndex(measureDoseTotal) > 0.05) && (statCounter < 20)); // we allow 5% normal error in ctdi dose calibration
-
-	const double ctdiPher = (measureDoseTotal[1] + measureDoseTotal[2] + measureDoseTotal[3] + measureDoseTotal[4]) / 4.0;
-	const double ctdiCent = measureDoseTotal[0];
-	const double ctdivol = (ctdiCent + 2.0 * ctdiPher) / 3.0 / m_pitch / static_cast<double>(statCounter);
-	const double factor = m_ctdivol / ctdivol / meanWeight;
-	m_useXCareFilter = usingXCare; // re-enable organ aec if it was used
-	return factor;
-}*/
-
 
 void CTDualSource::setStartAngleDegB(double angle)
 {

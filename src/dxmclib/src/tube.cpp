@@ -183,19 +183,6 @@ inline double bilinearInterpolate(double q11, double q12, double q21, double q22
 	double r1 = xf1 * q11 + xf2 * q21;
 	double r2 = xf1 * q12 + xf2 * q22;
 	return ((y2 - y) / (y2 - y1)) * r1 + ((y - y1) / (y2 - y1)) * r2;
-	/*double x2x1, y2y1, x2x, y2y, yy1, xx1;
-	x2x1 = x2 - x1;
-	y2y1 = y2 - y1;
-	x2x = x2 - x;
-	y2y = y2 - y;
-	yy1 = y - y1;
-	xx1 = x - x1;
-	return 1.0 / (x2x1 * y2y1) * (
-		q11 * x2x * y2y +
-		q21 * xx1 * y2y +
-		q12 * x2x * yy1 +
-		q22 * xx1 * yy1
-		);*/
 }
 
 
@@ -298,9 +285,6 @@ double electronDensity_M(double uval, double xval)
 double electronDensity(double u, double x, double tubeVoltage)
 {
 	double f = ThomsonWiddingtonRange(SIMULATED_ENERGY) / ThomsonWiddingtonRange(tubeVoltage);
-//	auto test = numberFractionF(x, tubeVoltage) * electronDensity_F(u, x*f) + numberFractionM(x, tubeVoltage)*electronDensity_M(u, x*f);
-//	if (std::isnan(test))
-//		return 0;
 	return numberFractionF(x, tubeVoltage) * electronDensity_F(u, x*f) + numberFractionM(x, tubeVoltage)*electronDensity_M(u, x*f);
 }
 
@@ -338,17 +322,12 @@ double betheHeitlerCrossSection(double hv, double Ti)
 	const double L = 2.0 * std::log((Ei * Ef + pic * pfc - ELECTRON_REST_MASS * ELECTRON_REST_MASS) / (ELECTRON_REST_MASS * hv));
 
 	const double columb_correction = pic / pfc;
-//	auto test = phi_bar_const * (4.0 * Ei * Ef * L - 7.0 * pic * pfc) / (hv * pic * pic) * columb_correction;
-//	if (!std::isfinite(test))
-//		return 0.0;
 	return phi_bar_const * (4.0 * Ei * Ef * L - 7.0 * pic * pfc) / (hv * pic * pic) * columb_correction;
 }
 
 double betheHeitlerSpectra(double T0, double hv, double takeoffAngle)
 {
-
 	const double tungstenTotAtt = CS_Total(TUNGSTEN_ATOMIC_NUMBER, hv);
-
 	constexpr double xmax = 14.0;
 	constexpr double umax = 1.0;
 	constexpr double xstep = 0.1;
@@ -387,11 +366,7 @@ std::array<std::pair<double, double>, 5> characteristicTungstenKedge(double T0, 
 	return char_rad;
 }
 
-
 //END SEMIRELATIVISTIC BETHE HEITLER CROSS SECTION CALCULATION
-
-
-
 
 
 Tube::Tube(double tubeVoltage, double tubeAngleDeg, double energyResolution)

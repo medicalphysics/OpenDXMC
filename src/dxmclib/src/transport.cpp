@@ -39,12 +39,9 @@ namespace transport {
 	constexpr double ELECTRON_REST_MASS = 510.9989461; // keV
 	constexpr double PI_VAL = 3.14159265358979323846264338327950288;
 	constexpr double PI_VAL2 = PI_VAL + PI_VAL;
-
 	constexpr double ENERGY_CUTOFF = 1.0; // 10 ev
-
 	constexpr double RUSSIAN_RULETTE_PROBABILITY = 0.8;
 	constexpr double RUSSIAN_RULETTE_THRESHOLD = 10.0; // keV
-
 	constexpr double KEV_TO_MJ = 1.6021773e-13;
 
 	std::mutex TRANSPORT_MUTEX;
@@ -225,7 +222,6 @@ namespace transport {
 	{
 		const double k = particle.energy / ELECTRON_REST_MASS;
 		const double emin = 1.0 / (1.0 + 2.0 * k);
-		//const double gmax = 1.0 / emin + emin;
 		double e;
 		for (;;)
 		{
@@ -604,7 +600,6 @@ namespace transport {
 
 		if (!world.isValid())
 			return dose;
-
 		
 		if (!source->isValid())
 			return dose;
@@ -622,5 +617,4 @@ namespace transport {
 		energyImpartedToDose(world, source, dose, 1.0);
 		return dose;
 	}
-	
 }

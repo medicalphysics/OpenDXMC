@@ -57,6 +57,7 @@ class OrientationActorContainer :public VolumeActorContainer
 {
 public:
 	OrientationActorContainer();
+	virtual ~OrientationActorContainer() = default;
 	void setOrientation(const std::array<double, 6> &directionCosines) override;
 	void update() override;
 protected:
@@ -68,6 +69,7 @@ class DXSourceContainer :public VolumeActorContainer
 {
 public:
 	DXSourceContainer(std::shared_ptr<DXSource> src);
+	virtual ~DXSourceContainer() = default;
 	//void setOrientation(const std::array<double, 6> &directionCosines) override;
 	void update() override;
 private:
@@ -88,6 +90,7 @@ class CTSpiralSourceContainer :public VolumeActorContainer
 {
 public:
 	CTSpiralSourceContainer(std::shared_ptr<CTSpiralSource> src);
+	virtual ~CTSpiralSourceContainer() = default;
 	void update() override;
 private:
 	std::shared_ptr<CTSpiralSource> m_src;
@@ -105,6 +108,7 @@ class CTAxialSourceContainer :public VolumeActorContainer
 {
 public:
 	CTAxialSourceContainer(std::shared_ptr<CTAxialSource> src);
+	virtual ~CTAxialSourceContainer() = default;
 	void update() override;
 private:
 	std::shared_ptr<CTAxialSource> m_src;
@@ -124,6 +128,7 @@ class CTDualSourceContainer :public VolumeActorContainer
 {
 public:
 	CTDualSourceContainer(std::shared_ptr<CTDualSource> src);
+	virtual ~CTDualSourceContainer() = default;
 	void update() override;
 private:
 	void updateTubeA();

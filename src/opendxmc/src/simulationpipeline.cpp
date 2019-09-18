@@ -22,9 +22,6 @@ Copyright 2019 Erlend Andersen
 #include "vtkType.h"
 
 
-constexpr double KEV_TO_MJ = 1.6021773e-13;
-
-
 SimulationPipeline::SimulationPipeline(QObject *parent)
 	:QObject(parent)
 {

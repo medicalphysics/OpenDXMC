@@ -83,7 +83,6 @@ void AttenuationLut::generateMaxMassTotalAttenuation(It1 materialIndexBegin, It1
 	
 	while (materialIndexBegin != materialIndexEnd)
 	{
-		std::size_t matIdx = static_cast<std::size_t>(*materialIndexBegin);
 		maxDens[*materialIndexBegin] = std::max(maxDens[*materialIndexBegin], *densityBegin);
 		++materialIndexBegin;
 		++densityBegin;

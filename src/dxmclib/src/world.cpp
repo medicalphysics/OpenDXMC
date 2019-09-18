@@ -311,10 +311,8 @@ CTDIPhantom::CTDIPhantom(std::size_t diameter)
 	constexpr double holeRadii = holeDiameter / 2.0;
 	constexpr double holeDisplacement = 10.0;
 	const double radii = static_cast<double>(diameter) / 2.0;
-	const double radiiSqr = radii * radii;
 	const auto dim = dimensions();
 	const auto sp = spacing();
-	const auto ex = matrixExtent();
 	//making phantom
 	auto dBufferPtr = std::make_shared<std::vector<double>>(size());
 	auto mBufferPtr = std::make_shared<std::vector<unsigned char>>(size());

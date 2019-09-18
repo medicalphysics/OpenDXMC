@@ -56,7 +56,7 @@ class DoseReportView :public QTableView
 public:
 	DoseReportView(QWidget* parent = nullptr);
 protected:
-	void DoseReportView::keyPressEvent(QKeyEvent *event) override;
+	void keyPressEvent(QKeyEvent *event) override;
 };
 
 class DoseReportWidget :public QWidget

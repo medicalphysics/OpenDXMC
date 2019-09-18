@@ -63,7 +63,7 @@ public:
 	static customMouseInteractorStyle* New();
 	vtkTypeMacro(customMouseInteractorStyle, vtkInteractorStyleImage);
 
-	virtual void OnMouseWheelForward()
+	void OnMouseWheelForward() override
 	{
 		m_imageMapper->UpdateInformation();
 		auto plane = m_imageMapper->GetSlicePlane();
@@ -100,7 +100,7 @@ public:
 		m_renderWindow->Render();
 	}
 
-	virtual void OnMouseWheelBackward()
+	void OnMouseWheelBackward() override
 	{
 
 		m_imageMapper->UpdateInformation();

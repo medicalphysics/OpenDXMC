@@ -208,9 +208,7 @@ void AttenuationLut::generateFFdata(const std::vector<Material>& materials)
 
 	//se http://rcwww.kek.jp/research/egs/egs5_manual/slac730-150228.pdf
 
-	
 	auto momtMax = momentumTransferMax(m_maxEnergy);
-	auto momtStep = momtMax / (m_energyResolution - 1);
 	m_momtMaxSqr = momtMax * momtMax;
 	m_momtStepSqr = m_momtMaxSqr / (m_energyResolution - 1);
 

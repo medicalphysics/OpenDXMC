@@ -151,7 +151,7 @@ QVariant MaterialTableModel::data(const QModelIndex & index, int role) const
 			return QVariant(QString::fromStdString(m_materials[row].name()));
 		if (auto row = index.row(); index.column() == 2)
 			return QVariant(m_materials[row].standardDensity());
-		if (auto row = index.row(); index.column() == 3)
+		if (index.column() == 3)
 			return QVariant(false);
 	}
 	if (role == Qt::EditRole)

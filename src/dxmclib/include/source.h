@@ -37,6 +37,7 @@ class Source
 public:
 	enum Type { None, CTSpiral, CTAxial, DX, CTDual, Pencil };
     Source();
+	//virtual ~Source() = default;
     virtual bool getExposure(Exposure& exposure, std::uint64_t i) const = 0;
 	
 	//Tube& tube(void);
@@ -88,7 +89,7 @@ class PencilSource :public Source
 {
 public:
 	PencilSource();
-
+	virtual ~PencilSource() = default;
 	bool getExposure(Exposure& exposure, std::uint64_t i) const override;
 
 	void setPhotonEnergy(double energy);
@@ -118,6 +119,7 @@ class DXSource : public Source
 {
 public:
 	DXSource();
+	virtual ~DXSource() = default;
 	bool getExposure(Exposure& exposure, std::uint64_t i) const override;
 	
 	Tube& tube(void) { m_specterValid = false; return m_tube; };
@@ -172,6 +174,7 @@ class CTSource : public Source
 {
 public:
     CTSource();
+	virtual ~CTSource() = default;
 	virtual bool getExposure(Exposure& exposure, std::uint64_t i) const override = 0;
 
 	Tube& tube(void) { m_specterValid = false; return m_tube; };

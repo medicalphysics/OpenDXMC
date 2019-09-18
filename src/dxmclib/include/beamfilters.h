@@ -34,6 +34,7 @@ public:
 	BowTieFilter(const std::vector<double>& angles, const std::vector<double>& weights);
     BowTieFilter(const std::vector<std::pair<double, double>>& angleWeightsPairs);
 	BowTieFilter(const BowTieFilter& other);
+	virtual ~BowTieFilter() = default;
 	double sampleIntensityWeight(const double angle) const override;
 	const std::vector<std::pair<double, double>>& data() const { return m_data; }
 protected:
@@ -47,7 +48,7 @@ class XCareFilter :public BeamFilter
 {
 public:
 	XCareFilter();
-
+	virtual ~XCareFilter() = default;
 	double filterAngle() const { return m_filterAngle; }
 	double filterAngleDeg() const;
 	void setFilterAngle(double angle);
@@ -92,7 +93,7 @@ class AECFilter :public PositionalFilter
 public:
 	AECFilter(const std::vector<double>& densityImage, const std::array<double, 3> spacing, const std::array<std::size_t, 3> dimensions, const std::vector<double>& exposuremapping);
 	AECFilter(std::shared_ptr<std::vector<double>>& densityImage, const std::array<double, 3> spacing, const std::array<std::size_t, 3> dimensions, const std::vector<double>& exposuremapping);
-	
+	virtual ~AECFilter() = default;
 	double sampleIntensityWeight(const std::array<double, 3>& position) const override;
 	void updateFromWorld(const World& world) override;
 	bool isValid() const { return m_valid; }

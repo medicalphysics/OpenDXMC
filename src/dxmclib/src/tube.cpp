@@ -311,7 +311,6 @@ constexpr double ELECTRON_REST_MASS = 510.9989461; // [keV]
 constexpr double FINE_STRUCTURE_CONSTANT = 7.29735308E-03;
 constexpr double CLASSIC_ELECTRON_RADIUS = 2.81794092E-15; // [m]
 constexpr double PHI_BAR = TUNGSTEN_ATOMIC_NUMBER * TUNGSTEN_ATOMIC_NUMBER * CLASSIC_ELECTRON_RADIUS * CLASSIC_ELECTRON_RADIUS * FINE_STRUCTURE_CONSTANT;
-constexpr double SPEED_OF_LIGHT = 2.99792458E+08; //[m/s]
 constexpr double PIVAL = 3.14159265359;
 constexpr double RAD_TO_DEG = 180.0 / PIVAL;
 constexpr double DEG_TO_RAD = 1.0 / RAD_TO_DEG;
@@ -350,10 +349,10 @@ double betheHeitlerSpectra(double T0, double hv, double takeoffAngle)
 
 	const double tungstenTotAtt = CS_Total(TUNGSTEN_ATOMIC_NUMBER, hv);
 
-	const double xmax = 14.0;
-	const double umax = 1.0;
-	const double xstep = 0.1;
-	const double ustep = 0.005;
+	constexpr double xmax = 14.0;
+	constexpr double umax = 1.0;
+	constexpr double xstep = 0.1;
+	constexpr double ustep = 0.005;
 
 	double x = 0.0;
 	double I_obs = 0.0;
@@ -363,7 +362,7 @@ double betheHeitlerSpectra(double T0, double hv, double takeoffAngle)
 	{
 		double I_step = 0.0;
 		double u = ustep;
-		while ((u <=1.0) )
+		while (u <= umax )
 		{
 			I_step = I_step + betheHeitlerCrossSection(hv, T0 * u) * electronDensity(u, x, T0) * ustep;
 			u = u + ustep;
@@ -376,15 +375,11 @@ double betheHeitlerSpectra(double T0, double hv, double takeoffAngle)
 
 std::array<std::pair<double, double>, 5> characteristicTungstenKedge(double T0, double takeoffAngle)
 {
-	//std::array<double, 5> k_edge_energies{ 69.5, 59.3, 58.0, 67.2, 69.1 };
-	//std::array<double, 5> k_edge_fractions{ 1.0, 0.505, 0.291, 0.162, 0.042 };
 	std::array<double, 4> k_edge_energies{59.3, 58.0, 67.2, 69.1 };
 	std::array<double, 4> k_edge_fractions{0.505, 0.291, 0.162, 0.042 };
 	constexpr double P = 0.33;
 	constexpr double omega_k = 0.94;
 	constexpr double rk = 4.4;
-
-	
 
 	std::array<std::pair<double, double>, 5> char_rad;
 	std::transform(std::execution::par_unseq, k_edge_energies.begin(), k_edge_energies.end(), k_edge_fractions.begin(), char_rad.begin(),

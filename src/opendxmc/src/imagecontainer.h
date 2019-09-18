@@ -156,6 +156,7 @@ public:
 	{
 		m_image_data = imageData;
 	}
+	virtual ~DensityImageContainer() = default;
 	std::shared_ptr<std::vector<double>> imageData(void)
 	{
 		return m_image_data;
@@ -174,6 +175,7 @@ public:
 	{
 		m_image_data = imageData;
 	}
+	virtual ~DoseImageContainer() = default;
 	std::shared_ptr<std::vector<double>> imageData(void)
 	{
 		return m_image_data;
@@ -192,6 +194,7 @@ public:
 	{
 		m_image_data = imageData;
 	}
+	virtual ~OrganImageContainer() = default;
 	std::shared_ptr<std::vector<unsigned char>> imageData(void)
 	{
 		return m_image_data;
@@ -209,6 +212,7 @@ public:
 	{
 		m_image_data = imageData;
 	}
+	virtual ~MaterialImageContainer() = default;
 	std::shared_ptr<std::vector<unsigned char>> imageData(void)
 	{
 		return m_image_data;

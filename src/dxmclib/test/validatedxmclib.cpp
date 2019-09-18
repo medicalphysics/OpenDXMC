@@ -246,9 +246,9 @@ void validateCompton()
 	for (std::uint64_t i = 0; i < nHistories; ++i)
 	{
 		p.energy = energy;
-		const double absEnergy =  transport::comptonScatterEGS(p, seed, cosAngle);
+		//const double absEnergy =  transport::comptonScatterEGS(p, seed, cosAngle);
 
-		const double energyFinalAna = energy * MEC2 / (MEC2 + energy * (1 - cosAngle));
+		//const double energyFinalAna = energy * MEC2 / (MEC2 + energy * (1 - cosAngle));
 		//const double energyFinalCalc = energy - absEnergy;
 
 		//const double cosAngleAna = MEC2 * (1.0 / energy - 1.0 / energyFinalAna) + 1;

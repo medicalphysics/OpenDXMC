@@ -193,7 +193,6 @@ void ViewPortWidget::updateVolumeSelectorWidget()
 	m_volumeSelectorWidget->blockSignals(false);
 	if (m_volumeSelectorWidget->count() > 0)
 	{
-		auto test =  m_volumeSelectorWidget->currentIndex();
 		if (currentIndex < 0)
 			currentIndex = 0;
 		else if (currentIndex > m_volumeSelectorWidget->count())

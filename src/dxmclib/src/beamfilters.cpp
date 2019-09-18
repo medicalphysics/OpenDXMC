@@ -342,7 +342,6 @@ void AECFilter::generateDensityWeightMap(const std::vector<double>& densityImage
 	
 	const double voxelVolume = spacing[0] * spacing[1] * spacing[2];
 	const std::size_t step = dimensions[0] * dimensions[1];
-	double totalMass = 0.0;
 	double exposureMean = std::accumulate(exposure.begin(), exposure.end(), 0.0) / exposure.size();
 	for (std::size_t k = 0; k < dimensions[2]; ++k)
 	{
@@ -371,7 +370,6 @@ void AECFilter::generateDensityWeightMap(std::shared_ptr<std::vector<double>>& d
 
 	const double voxelVolume = spacing[0] * spacing[1] * spacing[2];
 	const std::size_t step = dimensions[0] * dimensions[1];
-	double totalMass = 0.0;
 	double exposureMean = std::accumulate(exposure.begin(), exposure.end(), 0.0) / exposure.size();
 	for (std::size_t k = 0; k < dimensions[2]; ++k)
 	{

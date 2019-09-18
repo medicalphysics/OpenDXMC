@@ -20,6 +20,11 @@
           "name": "VTK_DIR",
           "value": "C:/VTK/bin/vtk",
           "type": "FILEPATH"
+        },
+        {
+          "name": "spdlog_DIR",
+          "value": "C:/spdlog/bin/spdlog",
+          "type": "PATH"
         }
       ]
     },
@@ -111,6 +116,11 @@
         {
           "name": "VTK_DIR",
           "value": "C:/VTK/bin/vtk",
+          "type": "PATH"
+        },
+        {
+          "name": "spdlog_DIR",
+          "value": "C:/spdlog/bin/spdlog",
           "type": "PATH"
         }
       ]

@@ -184,3 +184,12 @@ target_include_directories(validatedxmclib PUBLIC
 target_link_libraries(validatedxmclib
     dxmclib)
 add_test(validatedxmclib validatedxmclib)
+
+
+add_executable(benchmark
+    test/benchmark.cpp)
+target_include_directories(benchmark PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/include )
+target_link_libraries(benchmark
+    dxmclib)
+add_test(benchmark benchmark)

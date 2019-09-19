@@ -30,8 +30,6 @@ target_include_directories(test_material PRIVATE ${XRAYLIB_INCLUDES} ${OpenDXMCl
 target_link_libraries(test_material ${XRAYLIB_LIBRARY} OpenDXMClib)
 #include_directories(${XRAYLIB_INCLUDES} )
 
-
-#
 add_test(test_material test_material)
 set_tests_properties(${test_material}
     PROPERTIES

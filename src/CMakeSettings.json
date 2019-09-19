@@ -124,6 +124,29 @@
           "type": "PATH"
         }
       ]
+    },
+    {
+      "name": "x64-Clang-Release",
+      "generator": "Ninja",
+      "configurationType": "Release",
+      "buildRoot": "${projectDir}\\out\\build\\${name}",
+      "installRoot": "${projectDir}\\out\\install\\${name}",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "-v",
+      "ctestCommandArgs": "",
+      "inheritEnvironments": [ "clang_cl_x64" ],
+      "variables": [
+        {
+          "name": "Qt5_DIR",
+          "value": "C:/Qt/5.13.1/msvc2017_64/lib/cmake/Qt5",
+          "type": "PATH"
+        },
+        {
+          "name": "VTK_DIR",
+          "value": "C:/VTK/bin/vtk",
+          "type": "PATH"
+        }
+      ]
     }
   ]
 }

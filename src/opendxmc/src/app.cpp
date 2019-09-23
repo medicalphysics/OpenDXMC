@@ -27,17 +27,14 @@ Copyright 2019 Erlend Andersen
 
 #include <thread>
 
-#include "spdlog/spdlog.h"
-#include "spdlog/sinks/basic_file_sink.h"
+#include "include/spdlog/spdlog.h"
 
 
 int main (int argc, char *argv[])
 {
-
 	spdlog::info("Sample Info output.");
 	spdlog::warn("Sample Warn output.");
 	spdlog::error("Sample Error output.");
-
 
 	// needed to ensure appropriate OpenGL context is created for VTK rendering.
 	vtkOpenGLRenderWindow::SetGlobalMaximumNumberOfMultiSamples(0);

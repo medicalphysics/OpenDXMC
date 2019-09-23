@@ -26,4 +26,4 @@ ExternalProject_Get_Property(spdlog_external source_dir)
 ## set the include directory which is to be associated with this target
 ## and which will be inherited by all targets which use 
 ## target_link_libraries(<target> spdlog)
-target_include_directories(spdlog INTERFACE ${source_dir}/include)
+target_include_directories(spdlog INTERFACE ${source_dir})

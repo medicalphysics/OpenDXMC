@@ -53,5 +53,5 @@ int main(int argc, char *argv[])
 	auto success = std::all_of(is_equal.begin(), is_equal.end(), [](auto v) {return v == true; });
 
 	assert(success);
-    return 0;
+    return !success;
 }

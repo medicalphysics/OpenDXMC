@@ -68,7 +68,7 @@ void ImageImportPipeline::setDicomData(QStringList dicomPaths)
 {
 	emit processingDataStarted();
 
-	auto const vtkType = VTK_FLOAT;
+	auto constexpr vtkType = VTK_FLOAT;
 
 	vtkSmartPointer<vtkStringArray> fileNameArray = vtkSmartPointer<vtkStringArray>::New();
 	fileNameArray->SetNumberOfValues(dicomPaths.size());
@@ -127,7 +127,7 @@ void ImageImportPipeline::setDicomData(QStringList dicomPaths)
 	}
 	
 	// We must construct a supported type
-	static_assert((vtkType == 10));
+	static_assert(vtkType == 10, "VTK image type is not required float");
 
 	//selecting image data i.e are we rescaling or not
 	vtkSmartPointer<vtkImageData> data;
@@ -229,8 +229,8 @@ void ImageImportPipeline::processCTData(std::shared_ptr<ImageContainer> ctImage,
 	for (std::size_t i = 0; i < 3; ++i)
 		dimensionsArray[i] = static_cast<std::size_t>(dim[i]);
 
-	auto materialImage= std::make_shared<MaterialImageContainer>(materialIndex, dimensionsArray, spacing, origo);
-	auto densityImage= std::make_shared<DensityImageContainer>(density, dimensionsArray, spacing, origo);
+	std::shared_ptr<ImageContainer> materialImage= std::make_shared<MaterialImageContainer>(materialIndex, dimensionsArray, spacing, origo);
+	std::shared_ptr<ImageContainer> densityImage= std::make_shared<DensityImageContainer>(density, dimensionsArray, spacing, origo);
 	materialImage->directionCosines = ctImage->directionCosines;
 	densityImage->directionCosines = ctImage->directionCosines;
 	materialImage->ID = ctImage->ID;

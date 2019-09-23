@@ -84,11 +84,9 @@ include_directories(${Qt5Charts_INCLUDE_DIRS})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS}")
 
 
-## include spdlog 
-#find_package(spdlog REQUIRED)
-#spdlog_enable_warnings(OpenDXMC)
-# Create logs directory
-#file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/logs")
+#spdlog 
+add_subdirectory(external)
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/logs")
 
 # Define an executable (WIN32 argument to prevent console window on windows)
 add_executable(OpenDXMC WIN32
@@ -136,6 +134,7 @@ add_executable(OpenDXMC WIN32
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/opendxmc")
 
+
 # Define the libraries this project depends upon
 target_link_libraries(OpenDXMC
         PRIVATE dxmclib
@@ -144,7 +143,7 @@ target_link_libraries(OpenDXMC
 		PRIVATE Qt5::Core
 		PRIVATE Qt5::Gui
 		PRIVATE Qt5::Charts
-		#PRIVATE spdlog::spdlog
+		PUBLIC spdlog
         )
 
 # Adding vtk modules (replaces include(${VTK_USE_FILE}) since vtk 8.90) 

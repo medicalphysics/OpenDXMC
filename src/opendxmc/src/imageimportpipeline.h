@@ -47,48 +47,6 @@ Q_DECLARE_METATYPE(std::vector<std::string>)
 Q_DECLARE_METATYPE(std::shared_ptr<AECFilter>)
 
 
-
-template<class iterT, class iterU, typename T, typename U>
-void generateMaterialMapWorker(iterT CTArrayFirst, iterT CTArrayLast, iterU destination, const std::vector<std::pair<U, T>>& materialCTNumbers, unsigned int nThreads)
-{
-	auto len = std::distance(CTArrayFirst, CTArrayLast);
-	if (materialCTNumbers.size() <= 1)
-	{
-		std::fill(destination, destination + len, 0);
-		return;
-	}
-
-	if ((nThreads == 1) || (len < 1))
-	{
-		auto const  nThres = materialCTNumbers.size();
-		std::vector<T> CTThres(nThres);
-		for (std::size_t i = 0; i < nThres - 1; ++i)
-		{
-			CTThres[i] = (materialCTNumbers[i].second + materialCTNumbers[i + 1].second) * 0.5;
-		}
-		CTThres[nThres - 1] = std::numeric_limits<T>::infinity();
-		while (CTArrayFirst != CTArrayLast)
-		{
-			U i = 0;
-			while (*CTArrayFirst > CTThres[i])
-				++i;
-			*destination = materialCTNumbers[i].first;
-			++CTArrayFirst;
-			++destination;
-		}
-		return;
-	}
-
-	auto CTArrayMid = CTArrayFirst;
-	std::advance(CTArrayMid, len / 2);
-	auto destinationMid = destination;
-	std::advance(destinationMid, len / 2);
-	auto handle = std::async(std::launch::async, generateMaterialMapWorker<iterT, iterU, T, U>, CTArrayMid, CTArrayLast, destinationMid, materialCTNumbers, nThreads - 1);
-	generateMaterialMapWorker(CTArrayFirst, CTArrayMid, destination, materialCTNumbers, nThreads - 1);
-	handle.get();
-	return;
-}
-
 template<typename S>
 class CalculateCTNumberFromMaterials
 {
@@ -98,10 +56,38 @@ public:
 		materialCTNumbers(materialMap, tube);
 	}
 
+	
 	template<class iterT, class iterU>
-	void generateMaterialMap(iterT CTArrayFirst, iterT CTArrayLast, iterU destination, unsigned int nThreads)
+	void generateMaterialMap(iterT CTArrayFirst, iterT CTArrayLast, iterU destination)
 	{
-		generateMaterialMapWorker(CTArrayFirst, CTArrayLast, destination, m_materialCTNumbers, nThreads);
+		if (m_materialCTNumbers.size() <= 1)
+		{
+			std::fill(destination, destination + std::distance(CTArrayFirst, CTArrayLast), 0);
+			return;
+		}
+		
+		typedef typename std::iterator_traits<iterT>::value_type T;
+		typedef typename std::iterator_traits<iterU>::value_type U;
+
+		const std::size_t nThres = m_materialCTNumbers.size();
+		std::vector<T> CTThres(nThres);
+		for (std::size_t i = 0; i < nThres - 1; ++i)
+		{
+			CTThres[i] = (m_materialCTNumbers[i].second + m_materialCTNumbers[i + 1].second) * 0.5;
+		}
+
+		CTThres[nThres - 1] = std::numeric_limits<T>::infinity();
+
+		std::transform(std::execution::par_unseq, CTArrayFirst, CTArrayLast, destination,
+			[&](const T ctNumber)
+		{
+			for (std::size_t i = 0; i < nThres; ++i)
+			{
+				if (CTThres[i] >= ctNumber)
+					return static_cast<U>(i);
+			}
+			return static_cast<U>(0);
+		});
 	}
 	template<class iterT, class iterU, class iterD>
 	void generateDensityMap(iterT CTArrayFirst, iterT CTArrayLast, iterU materialIndex, iterD destination)
@@ -113,7 +99,7 @@ public:
 			std::vector<double> ctNumbers(m_materialCTNumbers.size());
 			for (auto[index, hu] : m_materialCTNumbers)
 				ctNumbers[index] = hu;
-			auto constant = (m_calibrationEnergy[0] * m_calibrationDensity[0] - m_calibrationEnergy[1] * m_calibrationDensity[1]) / 1000.0;
+			const auto constant = (m_calibrationEnergy[0] * m_calibrationDensity[0] - m_calibrationEnergy[1] * m_calibrationDensity[1]) / 1000.0;
 
 			std::transform(std::execution::par_unseq, CTArrayFirst, CTArrayLast, materialIndex, destination,
 				[constant, &ctNumbers, this](auto val, auto index) -> double {
@@ -121,6 +107,12 @@ public:
 				return dens > 0.0 ? dens : 0.0;
 			});
 			
+		}
+		else
+		{
+			auto destination_stop = destination;
+			std::advance(destination_stop, std::distance(CTArrayFirst, CTArrayLast));
+			std::fill(destination, destination_stop, 0);
 		}
 	}
 
@@ -151,8 +143,11 @@ private:
 
 		//calculating CT number for each matrial based on the materials detector response 
 		m_materialCTNumbers.clear();
+		m_materialCTNumbers.reserve(materialMap.size());
 		m_materialEnergy.clear();
+		m_materialEnergy.reserve(materialMap.size());
 		m_materialDensity.clear();
+		m_materialDensity.reserve(materialMap.size());
 		for (std::size_t index = 0; index < materialMap.size(); ++index)
 		{
 			m_materialEnergy.push_back(std::transform_reduce(std::execution::par, attLut.attenuationTotalBegin(index), attLut.attenuationTotalEnd(index), specterIntensity.cbegin(), 0.0));

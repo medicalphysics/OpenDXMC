@@ -182,7 +182,8 @@ std::pair<std::shared_ptr<std::vector<unsigned char>>, std::shared_ptr<std::vect
 	if (nThreads == 0)
 		nThreads = 4;
 	
-	worker.generateMaterialMap(first, last, materialIndex->begin(), nThreads);
+	//worker.generateMaterialMap(first, last, materialIndex->begin(), nThreads);
+	worker.generateMaterialMap(first, last, materialIndex->begin());
 	auto density = std::make_shared<std::vector<double>>(std::distance(first, last)); // we must make new vector to not invalidate old vector 
 	worker.generateDensityMap(first, last, materialIndex->begin(), density->begin());
 	return std::make_pair(materialIndex, density);

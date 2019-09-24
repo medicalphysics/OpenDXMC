@@ -143,7 +143,7 @@ target_link_libraries(OpenDXMC
 		PRIVATE Qt5::Core
 		PRIVATE Qt5::Gui
 		PRIVATE Qt5::Charts
-		PUBLIC spdlog
+		PRIVATE spdlog::spdlog_header_only
         )
 
 # Adding vtk modules (replaces include(${VTK_USE_FILE}) since vtk 8.90) 
@@ -191,7 +191,7 @@ if (WIN32)
 		endif()
 	endforeach()
 	
-	## vtkRenderingVolumeOpenGL2-8.1 is not copied (BUG) a quick fix here
+	## vtkRenderingVolumeOpenGL2-8.X is not copied (BUG) a quick fix here
 	add_custom_target(vtkdeployBUGFIX ALL)
 	set(vtkdll "vtkRenderingVolumeOpenGL2")
 	set(libname "${vtkdll}-${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}.dll")
@@ -218,7 +218,6 @@ if (WIN32)
 		string(REPLACE ".dll" "d.dll" libname ${libname})
 	endif()
 	set(libpath "${VTK_DIR}/bin/${CMAKE_BUILD_TYPE}/${libname}")
-	#set(libpath "${VTK_RUNTIME_LIBRARY_DIRS}/${CMAKE_BUILD_TYPE}/${libname}")
 	set(outpath "${CMAKE_BINARY_DIR}/${PROJECT_NAME}/${libname}")
 	add_custom_command(TARGET vtkdeployBUGFIX POST_BUILD
 		COMMENT "Copying vtk dll ${libpath} to ${outpath}"
@@ -259,29 +258,23 @@ set (fileresources
 	"icons/settings.png"
 	"icons/settings.svg"
 	"icons/icon.png"
-	"phantoms/icrp/AF/AF.dat" "phantoms/icrp/AF/AF_organs.dat" "phantoms/icrp/AF/AF_media.dat"
-	"phantoms/icrp/AM/AM.dat" "phantoms/icrp/AM/AM_organs.dat" "phantoms/icrp/AM/AM_media.dat"
+	"phantoms/icrp/AF/AF.dat" 
+	"phantoms/icrp/AF/AF_organs.dat" 
+	"phantoms/icrp/AF/AF_media.dat"
+	"phantoms/icrp/AM/AM.dat" 
+	"phantoms/icrp/AM/AM_organs.dat" 
+	"phantoms/icrp/AM/AM_media.dat"
 	"phantoms/icrp/README.txt"
 	"phantoms/other/Golem_organs.dat"
-	#"phantoms/other/Golem"
 	"phantoms/other/Baby_organs.dat"
-	#"phantoms/other/Baby"
 	"phantoms/other/Child_organs.dat"
-	#"phantoms/other/Child"
 	"phantoms/other/Donna_organs.dat"
-	#"phantoms/other/Donna"
 	"phantoms/other/Frank_organs.dat"
-	#"phantoms/other/Frank"
 	"phantoms/other/Helga_organs.dat"
-	#"phantoms/other/Helga"
 	"phantoms/other/Irene_organs.dat"
-	#"phantoms/other/Irene"
 	"phantoms/other/Jo_organs.dat"
-	#"phantoms/other/Jo"
 	"phantoms/other/Katja_organs.dat"
-	#"phantoms/other/Katja"
 	"phantoms/other/Vishum_organs.dat"
-	#"phantoms/other/Vishum"
 	"phantoms/other/media.dat"
 	)
 foreach(fileresource ${fileresources})

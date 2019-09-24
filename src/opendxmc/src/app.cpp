@@ -27,11 +27,12 @@ Copyright 2019 Erlend Andersen
 
 #include <thread>
 
-//#include "include/spdlog/spdlog.h"
+#include "include/spdlog/spdlog.h"
 
 
 int main (int argc, char *argv[])
 {
+	
 	//spdlog::info("Sample Info output.");
 	//spdlog::warn("Sample Warn output.");
 	//spdlog::error("Sample Error output.");

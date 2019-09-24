@@ -28,7 +28,7 @@ Copyright 2019 Erlend Andersen
 
 
 
-inline std::uint64_t xoroshiro128plus(std::uint64_t s[2])
+inline std::uint64_t xoroshiro128plus(std::uint64_t s[2]) noexcept
 {
     std::uint64_t s0 = s[0];
     std::uint64_t s1 = s[1];
@@ -40,28 +40,27 @@ inline std::uint64_t xoroshiro128plus(std::uint64_t s[2])
 }
 
 template<typename T>
-inline T randomUniform(std::uint64_t s[2])
+inline T randomUniform(std::uint64_t s[2]) noexcept
 {
+	static_assert(std::is_floating_point<T>::value, "Uniform random number requires floating point precision");
     const T r = static_cast<T>(xoroshiro128plus(s));
 	return r / (std::numeric_limits<std::uint64_t>::max() - 1);
 }
 
 template<typename T>
-inline T randomUniform(std::uint64_t s[2], const T max)
+inline T randomUniform(std::uint64_t s[2], const T max) noexcept
 {
-	std::uint64_t rint = xoroshiro128plus(s);
-	const T r = static_cast<T>(rint);
-	return (r / std::numeric_limits<std::uint64_t>::max()) * max;
+	const T r = randomUniform<T>(s);
+	return r * max;
 }
 
 
 template<typename T>
-inline T randomUniform(std::uint64_t s[2], const T min, const T max)
+inline T randomUniform(std::uint64_t s[2], const T min, const T max) noexcept
 {
-    std::uint64_t rint = xoroshiro128plus(s);
-    const T r = static_cast<T>(rint);
+	const T r = randomUniform<T>(s);
     const T range = max - min;
-	return min + (r / std::numeric_limits<std::uint64_t>::max()) * range;
+	return min + r * range;
 }
 
 void randomSeed(std::uint64_t s[2]);

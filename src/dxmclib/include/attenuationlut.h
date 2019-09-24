@@ -53,8 +53,8 @@ public:
 	std::vector<double>::iterator attenuationTotalEnd(std::size_t material) { return m_attData.begin() + m_energyResolution + m_energyResolution * 4 * material + m_energyResolution; } // todo error checking
 
 
-	double momentumTransferSquared(std::size_t material, double cumFormFactorSquared) const;
-	double cumFormFactorSquared(std::size_t material, double momentumTransferSquared) const;
+	double momentumTransferSquared(std::size_t material, double momentumTransferSquared) const;
+	double cumFormFactorSquared(std::size_t material, double cumFormFactorSquared) const;
 	
 	static double momentumTransfer(double energy, double angle);
 	static double momentumTransferMax(double energy);
@@ -68,7 +68,7 @@ private:
 	double m_momtMaxSqr = 0;
 	double m_momtStepSqr = 0;
 	std::size_t m_energyResolution = 150;
-	std::size_t m_materials;
+	std::size_t m_materials = 0;
 	std::vector<double> m_attData; // energy, array-> total, photo, compton, rauleight
 	std::vector<double> m_coherData; //qsquared, array-> A(qsquared)
 	std::vector<double> m_maxMassAtt;

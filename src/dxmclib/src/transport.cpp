@@ -576,7 +576,7 @@ namespace transport {
 		const std::uint64_t totalExposures = source->totalExposures();
 		
 		std::uint64_t nThreads = std::thread::hardware_concurrency();
-		std::uint64_t nJobs = nThreads;//*2;
+		std::uint64_t nJobs = nThreads;
 		if (nJobs < 1)
 			nJobs = 1;
 

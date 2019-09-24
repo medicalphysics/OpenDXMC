@@ -47,7 +47,6 @@ Q_DECLARE_METATYPE(std::vector<std::string>)
 Q_DECLARE_METATYPE(std::shared_ptr<AECFilter>)
 
 
-template<typename S>
 class CalculateCTNumberFromMaterials
 {
 public:
@@ -79,7 +78,7 @@ public:
 		CTThres[nThres - 1] = std::numeric_limits<T>::infinity();
 
 		std::transform(std::execution::par_unseq, CTArrayFirst, CTArrayLast, destination,
-			[&](const T ctNumber)
+			[&](const T ctNumber) -> U
 		{
 			for (std::size_t i = 0; i < nThres; ++i)
 			{
@@ -94,6 +93,8 @@ public:
 	{
 		//calculate density based on voxel_i CT number and estimated CT number from material M in voxel_i 
 		
+		typedef typename std::iterator_traits<iterD>::value_type D;
+
 		if (m_materialCTNumbers.size() > 0)
 		{
 			std::vector<double> ctNumbers(m_materialCTNumbers.size());
@@ -102,9 +103,9 @@ public:
 			const auto constant = (m_calibrationEnergy[0] * m_calibrationDensity[0] - m_calibrationEnergy[1] * m_calibrationDensity[1]) / 1000.0;
 
 			std::transform(std::execution::par_unseq, CTArrayFirst, CTArrayLast, materialIndex, destination,
-				[constant, &ctNumbers, this](auto val, auto index) -> double {
-				const double dens = (val - ctNumbers[index]) * constant / m_materialEnergy[index] + m_materialDensity[index];
-				return dens > 0.0 ? dens : 0.0;
+				[constant, &ctNumbers, this](auto val, auto index) -> D {
+				const D dens = (val - ctNumbers[index]) * constant / m_materialEnergy[index] + m_materialDensity[index];
+				return dens > 0.0 ? dens : D{0};
 			});
 			
 		}
@@ -112,7 +113,7 @@ public:
 		{
 			auto destination_stop = destination;
 			std::advance(destination_stop, std::distance(CTArrayFirst, CTArrayLast));
-			std::fill(destination, destination_stop, 0);
+			std::fill(destination, destination_stop, D{0});
 		}
 	}
 
@@ -153,12 +154,12 @@ private:
 			m_materialEnergy.push_back(std::transform_reduce(std::execution::par, attLut.attenuationTotalBegin(index), attLut.attenuationTotalEnd(index), specterIntensity.cbegin(), 0.0));
 			m_materialDensity.push_back((materialMap[index]).standardDensity());
 			double ctNumber = (m_materialEnergy[index] * m_materialDensity[index] - m_calibrationEnergy[0] * m_calibrationDensity[0]) / (m_calibrationEnergy[0] * m_calibrationDensity[0] - m_calibrationEnergy[1] * m_calibrationDensity[1]) * 1000.0; //Houndsfield units
-			m_materialCTNumbers.push_back(std::make_pair(static_cast<S>(index), ctNumber));
+			m_materialCTNumbers.push_back(std::make_pair(index, ctNumber));
 		}
 		std::sort(m_materialCTNumbers.begin(), m_materialCTNumbers.end(), [](const std::pair<std::size_t, double> &a, const std::pair<std::size_t, double> &b) {return a.second < b.second; });
 	}
 
-	std::vector<std::pair<S, double>> m_materialCTNumbers;
+	std::vector<std::pair<std::size_t, double>> m_materialCTNumbers;
 	std::vector<double> m_calibrationEnergy;
 	std::vector<double> m_calibrationDensity;
 	std::vector<double> m_materialEnergy;

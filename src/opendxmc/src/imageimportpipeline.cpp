@@ -176,11 +176,9 @@ void ImageImportPipeline::setBlurRadius(const double* blur)
 template<class Iter>
 std::pair<std::shared_ptr<std::vector<unsigned char>>, std::shared_ptr<std::vector<double>>> ImageImportPipeline::calculateMaterialAndDensityFromCTData(Iter first, Iter last)
 {
-	CalculateCTNumberFromMaterials<unsigned char> worker(m_ctImportMaterialMap, m_tube);
+	CalculateCTNumberFromMaterials worker(m_ctImportMaterialMap, m_tube);
 	auto materialIndex = std::make_shared<std::vector<unsigned char>>(std::distance(first, last)); // we must make new vector to not invalidate old vector 
-	auto nThreads = std::thread::hardware_concurrency();
-	if (nThreads == 0)
-		nThreads = 4;
+	
 	
 	//worker.generateMaterialMap(first, last, materialIndex->begin(), nThreads);
 	worker.generateMaterialMap(first, last, materialIndex->begin());
@@ -206,17 +204,19 @@ void ImageImportPipeline::processCTData(std::shared_ptr<ImageContainer> ctImage,
 	for (std::size_t i = 0; i < 3; ++i)
 		dimensions[i] = (ctImage->image->GetDimensions())[i];
 
+
+
 	if (ctImage->image->GetScalarType() == VTK_DOUBLE) {
 		auto begin = static_cast<double*>(ctImage->image->GetScalarPointer());
 		auto end = begin + dimensions[0] * dimensions[1] * dimensions[2];
-		auto p = calculateMaterialAndDensityFromCTData<double*>(begin, end);
+		auto p = calculateMaterialAndDensityFromCTData(begin, end);
 		materialIndex = p.first;
 		density = p.second;
 	}
 	else if (ctImage->image->GetScalarType() == VTK_FLOAT) {
 		auto begin = static_cast<float*>(ctImage->image->GetScalarPointer());
 		auto end = begin + dimensions[0] * dimensions[1] * dimensions[2];
-		auto p = calculateMaterialAndDensityFromCTData<float*>(begin, end);
+		auto p = calculateMaterialAndDensityFromCTData(begin, end);
 		materialIndex = p.first;
 		density = p.second;
 	}
@@ -238,6 +238,11 @@ void ImageImportPipeline::processCTData(std::shared_ptr<ImageContainer> ctImage,
 	densityImage->ID = ctImage->ID;
 	densityImage->dataUnits = "g/cm3";
 
+
+	emit imageDataChanged(materialImage);
+	emit imageDataChanged(densityImage);
+	emit materialDataChanged(m_ctImportMaterialMap);
+
 	//making exposure map for CT AEC
 	const auto& exposurename = exposureData.first;
 	const auto& exposure = exposureData.second;
@@ -250,9 +255,6 @@ void ImageImportPipeline::processCTData(std::shared_ptr<ImageContainer> ctImage,
 		emit aecFilterChanged(filtername, aecFilter);
 	}
 
-	emit imageDataChanged(materialImage);
-	emit imageDataChanged(densityImage);
-	emit materialDataChanged(m_ctImportMaterialMap);
 }
 
 std::pair<std::string, std::vector<double>> ImageImportPipeline::readExposureData(vtkSmartPointer<vtkDICOMReader>& dicomReader)

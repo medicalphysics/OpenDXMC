@@ -207,6 +207,8 @@ void ExportWidget::exportAllRawData()
 
 void ExportWidget::registerImage(std::shared_ptr<ImageContainer> image)
 {
+	if (!(image->image))
+		return;
 	auto currentID = image->ID;
 	bool newImageID = false;
 	for (const auto& im : m_images)

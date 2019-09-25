@@ -27,8 +27,6 @@ Copyright 2019 Erlend Andersen
 
 #include <thread>
 
-#include "include/spdlog/spdlog.h"
-
 
 int main (int argc, char *argv[])
 {

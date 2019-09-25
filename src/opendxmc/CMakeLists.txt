@@ -85,8 +85,23 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS}")
 
 
 #spdlog 
-add_subdirectory(external)
-file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/logs")
+#include(ExternalProject)
+#ExternalProject_Add(spdlog
+#	GIT_REPOSITORY https://github.com/gabime/spdlog.git
+#	TIMEOUT 5
+#	CMAKE_ARGS -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
+#	PREFIX "${CMAKE_CURRENT_BINARY_DIR}"
+#	CONFIGURE_COMMAND "" # Disable configure step
+#	BUILD_COMMAND "" # Disable build step
+#	INSTALL_COMMAND "" # Disable install step
+#	UPDATE_COMMAND "" # Disable update step: clones the project only once
+#)
+#ExternalProject_Get_Property(spdlog source_dir)
+#SET(spdlog_DIR ${source_dir})
+#set(spdlog_INCLUDE_DIRS ${SOURCE_DIR}/include)
+#include_directories(${spdlog_INCLUDE_DIRS})
+#message(STATUS "spdlog source is located at: ${source_dir}")
+#file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/logs")
 
 # Define an executable (WIN32 argument to prevent console window on windows)
 add_executable(OpenDXMC WIN32
@@ -132,8 +147,8 @@ add_executable(OpenDXMC WIN32
 	src/opendxmcconfig.h
     )
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/opendxmc")
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/opendxmc")
 
 # Define the libraries this project depends upon
 target_link_libraries(OpenDXMC
@@ -143,7 +158,7 @@ target_link_libraries(OpenDXMC
 		PRIVATE Qt5::Core
 		PRIVATE Qt5::Gui
 		PRIVATE Qt5::Charts
-		PRIVATE spdlog::spdlog_header_only
+#		PRIVATE spdlog::spdlog_header_only ## adding spdlog later
         )
 
 # Adding vtk modules (replaces include(${VTK_USE_FILE}) since vtk 8.90) 

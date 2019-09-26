@@ -23,8 +23,8 @@ Copyright 2019 Erlend Andersen
 void randomSeed(std::uint64_t s[2])
 {
 	std::random_device d;
-    s[0] = d() + d();
-    s[1] = d() + d();
+    s[0] = static_cast<std::uint64_t>(d()) + static_cast<std::uint64_t>(d());
+	s[1] = static_cast<std::uint64_t>(d()) + static_cast<std::uint64_t>(d());
 
 	while (s[0] == 0)
 	{
@@ -35,9 +35,6 @@ void randomSeed(std::uint64_t s[2])
 		s[1] = d();
 	}
 }
-
-
-
 
 RandomDistribution::RandomDistribution(const std::vector<double>& weights) 
 {

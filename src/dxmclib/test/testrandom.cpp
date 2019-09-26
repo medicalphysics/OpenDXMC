@@ -2,10 +2,34 @@
 #include "dxmcrandom.h"
 #include <iostream>
 #include <vector>
+#include <array>
 #include <algorithm>
 #include <cassert>
 #include <cmath>
-int main(int argc, char *argv[])
+
+
+void testUniform()
+{
+	constexpr std::size_t N = 100;
+	std::array<std::size_t, N> v;
+	v.fill(0);
+
+	std::uint64_t seed[2];
+	randomSeed(seed);
+
+	for (std::size_t i = 0; i < 10000000000; ++i)
+	{
+		const auto t = static_cast<std::size_t>(randomUniform<double>(seed, 100.0));
+		++v[t];
+	}
+	for (std::size_t i =0;i< N;++i)
+	{
+		std::cout << i << " " << v[i] << std::endl;
+	}
+	
+}
+
+void testWeights()
 {
 
 	std::uint64_t seed[2];
@@ -53,5 +77,11 @@ int main(int argc, char *argv[])
 	auto success = std::all_of(is_equal.begin(), is_equal.end(), [](auto v) {return v == true; });
 
 	assert(success);
-    return !success;
+}
+
+
+int main(int argc, char *argv[])
+{
+	testUniform();
+	return 0;
 }

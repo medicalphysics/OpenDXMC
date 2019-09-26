@@ -173,16 +173,21 @@ void VolumeRenderWidget::setImageData(std::shared_ptr<ImageContainer> image)
 {
 	if (!image)
 		return;
-
+	if (!image->image)
+		return;
+	int* dim = image->image->GetDimensions();
+	for (int i = 0; i < 3; ++i)
+		if (dim[i] < 2)
+			return;
 	if (m_imageData)
 	{
-		if ((image->image == m_imageData->image) || (image->image == nullptr))
+		if (image->image == m_imageData->image)
 		{
 			return;
 		}
 	}
 	m_imageData = image;
-	m_imageSmoother->SetInputData(image->image);
+	m_imageSmoother->SetInputData(m_imageData->image);
 	updateVolumeRendering();
 }
 

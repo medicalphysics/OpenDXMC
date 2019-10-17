@@ -30,6 +30,7 @@ Copyright 2019 Erlend Andersen
 #include "sourceeditorwidget.h"
 #include "phantomselectionwidget.h"
 #include "dosereportwidget.h"
+#include "binaryimportwidget.h"
 
 Q_DECLARE_METATYPE(std::vector<std::shared_ptr<Source>>)
 
@@ -94,6 +95,11 @@ MainWindow::MainWindow(QWidget* parent)
 	connect(phantomWidget, &PhantomSelectionWidget::readIRCUMalePhantom, m_importPipeline, &ImageImportPipeline::importICRUMalePhantom);
 	connect(phantomWidget, &PhantomSelectionWidget::readCTDIPhantom, m_importPipeline, &ImageImportPipeline::importCTDIPhantom);
 	connect(phantomWidget, &PhantomSelectionWidget::readAWSPhantom, m_importPipeline, &ImageImportPipeline::importAWSPhantom);
+
+	//binary import widget
+	BinaryImportWidget* binaryWidget = new BinaryImportWidget(this);
+	importWidget->addTab(binaryWidget, tr("Binary files"));
+
 
 	m_menuWidget->addTab(importWidget, tr("Import data"));
 

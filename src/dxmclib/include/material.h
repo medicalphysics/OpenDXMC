@@ -29,7 +29,6 @@ public:
 	bool isValid(void) const { return m_valid && m_hasDensity; }
 	const std::string& name(void) const { return m_name; }
 	const std::string& prettyName(void) const { return m_prettyName; }
-	
 
     bool hasStandardDensity(void) const {return m_hasDensity;}
     double standardDensity(void) const {return m_density;}
@@ -54,6 +53,7 @@ protected:
     void setByCompoundName(const std::string& name);
     void setByMaterialName(const std::string& name);
 	void setByAtomicNumber(int index);
+
 private:
 	std::string m_name;
 	std::string m_prettyName;

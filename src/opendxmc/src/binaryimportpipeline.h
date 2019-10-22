@@ -18,41 +18,25 @@ Copyright 2019 Erlend Andersen
 
 #pragma once
 
-#include <QWidget>
-#include <QLineEdit>
+#include <QObject>
 
-#include <array>
+#include "imagecontainer.h"
+#include "material.h"
+#include "beamfilters.h"
 
-class FileSelectWidget : public QWidget
+#include <memory>
+#include <vector>
+
+class BinaryImportPipeline : public QObject
 {
 	Q_OBJECT
 public:
-	FileSelectWidget(QWidget* parent = nullptr);
-private:
-	QLineEdit* m_lineEdit=nullptr;
-};
-
-class DimensionSpacingWidget :public QWidget
-{
-	Q_OBJECT
-public:
-	DimensionSpacingWidget(QWidget* parent = nullptr);
+	BinaryImportPipeline(QObject* parent = nullptr);
 signals:
-	void dimensionChanged(const std::array<std::size_t, 3>& dimensions) const;
-	void spacingChanged(const std::array<double, 3>& spacing) const;
-private:
-	std::array<std::size_t, 3> m_dimension = { 512, 512, 40 };
-	std::array<double, 3> m_spacing = { 1, 1, 1 };
-};
-
-class BinaryImportWidget : public QWidget
-{
-	Q_OBJECT
-public:
-	BinaryImportWidget(QWidget* parent = nullptr);
-
-signals:
-
-private:
-
+	void processingDataStarted();
+	void processingDataEnded();
+	void imageDataChanged(std::shared_ptr<ImageContainer> imageData);
+	void materialDataChanged(std::vector<Material>& materials);
+	void organDataChanged(std::vector<std::string>& organs);
+	void aecFilterChanged(QString name, std::shared_ptr<AECFilter> filter);
 };

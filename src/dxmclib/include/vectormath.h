@@ -166,9 +166,6 @@ inline void peturb(T vec[3], const T theta, const T phi)
     k[minInd] = 1.0;
 
     vectormath::cross(vec, k , vec_xy);
-    //normalize(vec_xy);
-
-
     
     // rotating the arbitrary orthogonal axis about vector direction
     rotate(vec_xy, vec, phi);

@@ -53,6 +53,16 @@ MainWindow::MainWindow(QWidget* parent)
 	//connections to disable widgets when simulationpipeline is working
 	connect(m_simulationPipeline, &SimulationPipeline::processingDataStarted, this, &MainWindow::setDisableEditing);
 	connect(m_simulationPipeline, &SimulationPipeline::processingDataEnded, this, &MainWindow::setEnableEditing);
+	//binary import pipeline
+	m_binaryImportPipeline = new BinaryImportPipeline();
+	m_binaryImportPipeline->moveToThread(&m_workerThread);
+	connect(m_binaryImportPipeline, &BinaryImportPipeline::processingDataStarted, this, &MainWindow::setDisableEditing);
+	connect(m_binaryImportPipeline, &BinaryImportPipeline::processingDataEnded, this, &MainWindow::setEnableEditing);
+	connect(m_binaryImportPipeline, &BinaryImportPipeline::imageDataChanged, m_simulationPipeline, &SimulationPipeline::setImageData);
+	connect(m_binaryImportPipeline, &BinaryImportPipeline::materialDataChanged, m_simulationPipeline, &SimulationPipeline::setMaterials);
+	connect(m_binaryImportPipeline, &BinaryImportPipeline::organDataChanged, m_simulationPipeline, &SimulationPipeline::setOrganList);
+
+
 
 	//statusbar and progress indicator widget
 	auto statusBar = this->statusBar();
@@ -99,8 +109,11 @@ MainWindow::MainWindow(QWidget* parent)
 	//binary import widget
 	BinaryImportWidget* binaryWidget = new BinaryImportWidget(this);
 	importWidget->addTab(binaryWidget, tr("Binary files"));
-
-
+	connect(binaryWidget, &BinaryImportWidget::dimensionChanged, m_binaryImportPipeline, &BinaryImportPipeline::setDimension);
+	connect(binaryWidget, &BinaryImportWidget::spacingChanged, m_binaryImportPipeline, &BinaryImportPipeline::setSpacing);
+	connect(binaryWidget, &BinaryImportWidget::materialArrayPathChanged, m_binaryImportPipeline, &BinaryImportPipeline::setMaterialArrayPath);
+	connect(binaryWidget, &BinaryImportWidget::densityArrayPathChanged, m_binaryImportPipeline, &BinaryImportPipeline::setDensityArrayPath);
+	connect(binaryWidget, &BinaryImportWidget::materialMapPathChanged, m_binaryImportPipeline, &BinaryImportPipeline::setMaterialMapPath);
 	m_menuWidget->addTab(importWidget, tr("Import data"));
 
 	//source edit widget

@@ -28,6 +28,8 @@ class FileSelectWidget : public QWidget
 	Q_OBJECT
 public:
 	FileSelectWidget(QWidget* parent = nullptr);
+signals:
+	void pathChanged(const QString& path);
 private:
 	QLineEdit* m_lineEdit=nullptr;
 };
@@ -36,7 +38,9 @@ class DimensionSpacingWidget :public QWidget
 {
 	Q_OBJECT
 public:
-	DimensionSpacingWidget(QWidget* parent = nullptr);
+	DimensionSpacingWidget(QWidget* parent = nullptr, 
+		const std::array<double, 3>& spacing = { 1,1,1 }, 
+		const std::array<std::size_t, 3> dimensions = {256,256,40});
 signals:
 	void dimensionChanged(const std::array<std::size_t, 3>& dimensions) const;
 	void spacingChanged(const std::array<double, 3>& spacing) const;
@@ -51,8 +55,16 @@ class BinaryImportWidget : public QWidget
 public:
 	BinaryImportWidget(QWidget* parent = nullptr);
 
+	void setErrorMessage(const QString& message);
+
 signals:
+	void dimensionChanged(const std::array<std::size_t, 3>& dimensions) const;
+	void spacingChanged(const std::array<double, 3>& spacing) const;
+	void materialArrayPathChanged(const QString& array);
+	void densityArrayPathChanged(const QString& array);
+	void materialMapPathChanged(const QString& array);
+
 
 private:
-
+	DimensionSpacingWidget* m_dsWidget = nullptr;
 };

@@ -23,3 +23,39 @@ BinaryImportPipeline::BinaryImportPipeline(QObject* parent)
 {
 
 }
+
+void BinaryImportPipeline::setDimension(const std::array<std::size_t, 3>& dimensions)
+{
+	for (int i = 0; i < 3; ++i)
+	{
+		if (dimensions[i] == 0 && dimensions[i] > 2048)
+			return;
+	}
+	m_dimensions = dimensions;
+}
+
+void BinaryImportPipeline::setSpacing(const std::array<double, 3>& spacing)
+{
+	for (int i = 0; i < 3; ++i)
+	{
+		if (spacing[i] <= 0.0)
+			return;
+	}
+	m_spacing = spacing;
+}
+
+void BinaryImportPipeline::setMaterialArrayPath(const QString& path)
+{
+	bool test = false;
+	// read data here
+}
+
+void BinaryImportPipeline::setDensityArrayPath(const QString& path)
+{
+	//read data here
+}
+
+void BinaryImportPipeline::setMaterialMapPath(const QString& path)
+{
+	//read data here
+}

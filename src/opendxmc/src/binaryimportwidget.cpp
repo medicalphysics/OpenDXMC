@@ -19,6 +19,8 @@ Copyright 2019 Erlend Andersen
 
 #include "binaryimportwidget.h"
 
+
+
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QSettings>
@@ -48,14 +50,17 @@ FileSelectWidget::FileSelectWidget(QWidget* parent)
 	completer->setCompletionMode(QCompleter::InlineCompletion);
 	m_lineEdit->setCompleter(completer);
 	
+	connect(m_lineEdit, &QLineEdit::textChanged, this, &FileSelectWidget::pathChanged);
+
+
 	auto browseButton = new QPushButton(tr("Browse"), this);
 	mainLayout->addWidget(browseButton);
 	this->setLayout(mainLayout);
 }
 
 
-DimensionSpacingWidget::DimensionSpacingWidget(QWidget* parent)
-	:QWidget(parent)
+DimensionSpacingWidget::DimensionSpacingWidget(QWidget* parent, const std::array<double, 3>& spacing, const std::array<std::size_t, 3> dimensions)
+	:QWidget(parent), m_dimension(dimensions), m_spacing(spacing)
 {
 	auto mainLayout = new QVBoxLayout;
 	mainLayout->setContentsMargins(0, 0, 0, 0);
@@ -106,9 +111,13 @@ BinaryImportWidget::BinaryImportWidget(QWidget* parent)
 	auto dsBox = new QGroupBox(tr("Dimensions and spacing"), this);
 	auto dsLayout = new QHBoxLayout;
 	dsBox->setLayout(dsLayout);
-	auto dsWidget = new DimensionSpacingWidget(this);
-	dsLayout->addWidget(dsWidget);
+	m_dsWidget = new DimensionSpacingWidget(this);
+	dsLayout->addWidget(m_dsWidget);
 	mainLayout->addWidget(dsBox);
+
+	
+	connect(m_dsWidget, &DimensionSpacingWidget::dimensionChanged, this, &BinaryImportWidget::dimensionChanged);
+	connect(m_dsWidget, &DimensionSpacingWidget::spacingChanged, this, &BinaryImportWidget::spacingChanged);
 
 	// material array
 	auto materialBox = new QGroupBox(tr("Materials array:"), this);
@@ -120,7 +129,6 @@ BinaryImportWidget::BinaryImportWidget(QWidget* parent)
 	auto materialFileSelect = new FileSelectWidget(this);
 	materialLayout->addWidget(materialFileSelect);
 	mainLayout->addWidget(materialBox);
-
 
 	// må legge til material velger, modifisere materialselectionwidegt???
 

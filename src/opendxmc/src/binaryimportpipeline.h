@@ -26,12 +26,19 @@ Copyright 2019 Erlend Andersen
 
 #include <memory>
 #include <vector>
+#include <array>
 
 class BinaryImportPipeline : public QObject
 {
 	Q_OBJECT
 public:
 	BinaryImportPipeline(QObject* parent = nullptr);
+	void setDimension(const std::array<std::size_t, 3>& dimensions);
+	void setSpacing(const std::array<double, 3>& spacing);
+	void setMaterialArrayPath(const QString& path);
+	void setDensityArrayPath(const QString& path);
+	void setMaterialMapPath(const QString& path);
+
 signals:
 	void processingDataStarted();
 	void processingDataEnded();
@@ -39,4 +46,7 @@ signals:
 	void materialDataChanged(std::vector<Material>& materials);
 	void organDataChanged(std::vector<std::string>& organs);
 	void aecFilterChanged(QString name, std::shared_ptr<AECFilter> filter);
+private:
+	std::array<std::size_t, 3> m_dimensions = {512, 512, 40};
+	std::array<double, 3> m_spacing = { 1, 1, 1 };
 };

@@ -20,6 +20,7 @@ Copyright 2019 Erlend Andersen
 
 #include <QWidget>
 #include <QLineEdit>
+#include <QLabel>
 
 #include <array>
 
@@ -67,4 +68,5 @@ signals:
 
 private:
 	DimensionSpacingWidget* m_dsWidget = nullptr;
+	QLabel* m_errorTxt = nullptr;
 };

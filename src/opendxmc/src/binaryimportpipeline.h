@@ -45,7 +45,11 @@ signals:
 	void imageDataChanged(std::shared_ptr<ImageContainer> imageData);
 	void materialDataChanged(std::vector<Material>& materials);
 	void organDataChanged(std::vector<std::string>& organs);
-	void aecFilterChanged(QString name, std::shared_ptr<AECFilter> filter);
+	void aecFilterChanged(const QString& name, std::shared_ptr<AECFilter> filter);
+	void errorMessage(const QString& errorMsg) const;
+protected:
+	template<typename T>
+	std::vector<T> readBinaryArray(const QString& path) const;
 private:
 	std::array<std::size_t, 3> m_dimensions = {512, 512, 40};
 	std::array<double, 3> m_spacing = { 1, 1, 1 };

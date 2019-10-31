@@ -17,6 +17,8 @@ Copyright 2019 Erlend Andersen
 */
 
 #include "binaryimportpipeline.h"
+#include <fstream>
+#include <string>
 
 BinaryImportPipeline::BinaryImportPipeline(QObject* parent)
 	:QObject(parent)
@@ -44,18 +46,82 @@ void BinaryImportPipeline::setSpacing(const std::array<double, 3>& spacing)
 	m_spacing = spacing;
 }
 
+template<typename T>
+std::vector<T> BinaryImportPipeline::readBinaryArray(const QString& path) const
+{
+	auto std_path = path.toStdString();
+	std::ifstream ifs(std_path, std::ios::binary | std::ios::ate);
+
+	if (!ifs)
+	{
+		auto msq = QString(tr("Error opening file: ")) + path;
+		emit errorMessage(msq);
+		return std::vector<T>();
+	}
+
+	auto end = ifs.tellg();
+	ifs.seekg(0, std::ios::beg);
+
+	auto size = std::size_t(end - ifs.tellg());
+
+	auto dim_size = m_dimensions[0] * m_dimensions[1] * m_dimensions[2] * sizeof(T);
+	if (dim_size != size)
+	{
+		auto msq = QString(tr("Dimensions and file size do not match for: ")) + path;
+		emit errorMessage(msq);
+		return std::vector<T>();
+	}
+
+	if (size == 0) // avoid undefined behavior 
+	{
+		auto msq = QString(tr("Error reading file: ")) + path;
+		emit errorMessage(msq);
+		return std::vector<T>();
+	}
+
+	std::vector<T> buffer(size);
+	buffer.resize(m_dimensions[0] * m_dimensions[1] * m_dimensions[2]);
+
+	if (!ifs.read(reinterpret_cast<char*>(buffer.data()), size))
+	{
+		auto msq = QString(tr("Error reading file: ")) + path;
+		emit errorMessage(msq);
+		return std::vector<T>();
+	}
+	return buffer;
+}
+
 void BinaryImportPipeline::setMaterialArrayPath(const QString& path)
 {
-	bool test = false;
-	// read data here
+	auto data = readBinaryArray<unsigned char>(path);
+	if (data.size() == 0)
+		return;
 }
 
 void BinaryImportPipeline::setDensityArrayPath(const QString& path)
 {
-	//read data here
+	auto data = readBinaryArray<double>(path);
+	if (data.size() == 0)
+		return;
 }
 
 void BinaryImportPipeline::setMaterialMapPath(const QString& path)
 {
-	//read data here
+	auto std_path = path.toStdString();
+	std::ifstream ifs(std_path);
+
+	if (!ifs)
+	{
+		auto msq = QString(tr("Error opening file: ")) + path;
+		emit errorMessage(msq);
+	}
+
+	std::vector<std::string> lines;
+	std::string str;
+	while (std::getline(in, str))
+	{
+		if(str.size() > 0)
+			lines.push_back(str);
+	}
+
 }

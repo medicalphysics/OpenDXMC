@@ -72,7 +72,7 @@ DimensionSpacingWidget::DimensionSpacingWidget(QWidget* parent, const std::array
 		auto dim = new QSpinBox(this);
 		dim->setSuffix(" px");
 		dim->setMinimum(1);
-		dim->setMinimum(2048);
+		dim->setMaximum(2048);
 		dim->setValue(m_dimension[i]);
 		dLayout->addWidget(dim);
 		connect(dim, QOverload<int>::of(&QSpinBox::valueChanged), [=](int value) {
@@ -130,7 +130,16 @@ BinaryImportWidget::BinaryImportWidget(QWidget* parent)
 	materialLayout->addWidget(materialFileSelect);
 	mainLayout->addWidget(materialBox);
 
-	// må legge til material velger, modifisere materialselectionwidegt???
+	//material map
+	auto materialMapBox = new QGroupBox(tr("Materials map file:"), this);
+	auto materialMapLayout = new QVBoxLayout;
+	materialMapBox->setLayout(materialMapLayout);
+	auto materialMapDescription = new QLabel(tr("Select material map file. The material map file must be a comma (',') separated text file with material ID, name, composition.  ID must match values in the material array. Material composition must be either atomic number or a chemical composition.  Chemical formulas may contain (nested) brackets, followed by an integer number or real number (with a dot) subscript indicating relative number fraction. Examples of accepted formulas are: 'H2O', 'Ca5(PO4)3F', 'Ca5(PO4)F0.33Cl0.33(OH)0.33'. Example of content in a such file is shown below:\n0, Air, N0.75O0.24Ar0.01\n1, Water, H2O\n3, PMMA, C0.3O0.13H0.53"), this);
+	materialMapDescription->setWordWrap(true);
+	materialMapLayout->addWidget(materialMapDescription);
+	auto materialMapFileSelect = new FileSelectWidget(this);
+	materialMapLayout->addWidget(materialMapFileSelect);
+	mainLayout->addWidget(materialMapBox);
 
 	// desnity array
 	auto densityBox = new QGroupBox(tr("Density array:"), this);
@@ -144,7 +153,8 @@ BinaryImportWidget::BinaryImportWidget(QWidget* parent)
 	mainLayout->addWidget(densityBox);
 
 
-
+	m_errorTxt = new QLabel(this);
+	mainLayout->addWidget(m_errorTxt);
 
 	mainLayout->addStretch();
 	this->setLayout(mainLayout);

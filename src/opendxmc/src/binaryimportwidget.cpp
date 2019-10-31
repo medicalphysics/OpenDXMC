@@ -31,6 +31,7 @@ Copyright 2019 Erlend Andersen
 #include <QLabel>
 #include <QSpinBox>
 #include <QDoubleSpinBox>
+#include <QFileDialog>
 
 FileSelectWidget::FileSelectWidget(QWidget* parent)
 	:QWidget(parent)
@@ -52,8 +53,15 @@ FileSelectWidget::FileSelectWidget(QWidget* parent)
 	
 	connect(m_lineEdit, &QLineEdit::textChanged, this, &FileSelectWidget::pathChanged);
 
-
 	auto browseButton = new QPushButton(tr("Browse"), this);
+	connect(browseButton, &QPushButton::clicked, [=](void) {
+		auto path = QFileDialog::getOpenFileName(this, tr("Select binary file"), ".");
+		if (!path.isEmpty())
+		{
+			completerModel->setRootPath(path);
+			m_lineEdit->setText(path);
+		}
+		});
 	mainLayout->addWidget(browseButton);
 	this->setLayout(mainLayout);
 }
@@ -73,7 +81,7 @@ DimensionSpacingWidget::DimensionSpacingWidget(QWidget* parent, const std::array
 		dim->setSuffix(" px");
 		dim->setMinimum(1);
 		dim->setMaximum(2048);
-		dim->setValue(m_dimension[i]);
+		dim->setValue(static_cast<int>(m_dimension[i]));
 		dLayout->addWidget(dim);
 		connect(dim, QOverload<int>::of(&QSpinBox::valueChanged), [=](int value) {
 			this->m_dimension[i] = static_cast<std::size_t>(value);
@@ -115,7 +123,6 @@ BinaryImportWidget::BinaryImportWidget(QWidget* parent)
 	dsLayout->addWidget(m_dsWidget);
 	mainLayout->addWidget(dsBox);
 
-	
 	connect(m_dsWidget, &DimensionSpacingWidget::dimensionChanged, this, &BinaryImportWidget::dimensionChanged);
 	connect(m_dsWidget, &DimensionSpacingWidget::spacingChanged, this, &BinaryImportWidget::spacingChanged);
 
@@ -129,6 +136,7 @@ BinaryImportWidget::BinaryImportWidget(QWidget* parent)
 	auto materialFileSelect = new FileSelectWidget(this);
 	materialLayout->addWidget(materialFileSelect);
 	mainLayout->addWidget(materialBox);
+	connect(materialFileSelect->getLineEditWidget(), &QLineEdit::textChanged, this, &BinaryImportWidget::materialArrayPathChanged);
 
 	//material map
 	auto materialMapBox = new QGroupBox(tr("Materials map file:"), this);
@@ -140,6 +148,7 @@ BinaryImportWidget::BinaryImportWidget(QWidget* parent)
 	auto materialMapFileSelect = new FileSelectWidget(this);
 	materialMapLayout->addWidget(materialMapFileSelect);
 	mainLayout->addWidget(materialMapBox);
+	connect(materialMapFileSelect->getLineEditWidget(), &QLineEdit::textChanged, this, &BinaryImportWidget::materialMapPathChanged);
 
 	// desnity array
 	auto densityBox = new QGroupBox(tr("Density array:"), this);
@@ -151,11 +160,20 @@ BinaryImportWidget::BinaryImportWidget(QWidget* parent)
 	auto densityFileSelect = new FileSelectWidget(this);
 	densityLayout->addWidget(densityFileSelect);
 	mainLayout->addWidget(densityBox);
-
+	connect(densityFileSelect->getLineEditWidget(), &QLineEdit::textChanged, this, &BinaryImportWidget::densityArrayPathChanged);
 
 	m_errorTxt = new QLabel(this);
+	m_errorTxt->setWordWrap(true);
 	mainLayout->addWidget(m_errorTxt);
 
 	mainLayout->addStretch();
 	this->setLayout(mainLayout);
+}
+
+void BinaryImportWidget::setErrorMessage(const QString& message)
+{
+	if (m_errorTxt)
+	{
+		m_errorTxt->setText(message);
+	}
 }

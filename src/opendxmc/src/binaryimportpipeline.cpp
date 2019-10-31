@@ -67,7 +67,7 @@ std::vector<T> BinaryImportPipeline::readBinaryArray(const QString& path) const
 	auto dim_size = m_dimensions[0] * m_dimensions[1] * m_dimensions[2] * sizeof(T);
 	if (dim_size != size)
 	{
-		auto msq = QString(tr("Dimensions and file size do not match for: ")) + path;
+		auto msq = QString(tr("Image dimensions and file size do not match for: ")) + path;
 		emit errorMessage(msq);
 		return std::vector<T>();
 	}
@@ -112,13 +112,13 @@ void BinaryImportPipeline::setMaterialMapPath(const QString& path)
 
 	if (!ifs)
 	{
-		auto msq = QString(tr("Error opening file: ")) + path;
+		auto msq = QString(tr("Error opening material map file: ")) + path;
 		emit errorMessage(msq);
 	}
 
 	std::vector<std::string> lines;
 	std::string str;
-	while (std::getline(in, str))
+	while (std::getline(ifs, str))
 	{
 		if(str.size() > 0)
 			lines.push_back(str);

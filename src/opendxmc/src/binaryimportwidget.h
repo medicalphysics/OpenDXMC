@@ -29,6 +29,7 @@ class FileSelectWidget : public QWidget
 	Q_OBJECT
 public:
 	FileSelectWidget(QWidget* parent = nullptr);
+	const QLineEdit* getLineEditWidget() const { return m_lineEdit; }
 signals:
 	void pathChanged(const QString& path);
 private:

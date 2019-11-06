@@ -32,6 +32,7 @@ struct DoseReportElement
 	double volume = 0.0;
 	double dose = 0.0;
 	double doseStd = 0.0;
+	double doseMax = 0.0;
 	std::size_t ID = 0;
 	std::string name;
 };

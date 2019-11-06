@@ -83,10 +83,12 @@ void DoseReportContainer::createOrganData(const std::vector<std::string>& organM
 	for (std::size_t i = 0; i < size; ++i)
 	{
 		auto idx = static_cast<std::size_t>(mBuffer[i]);
-		const double voxelMass = voxelVolume * dBuffer[i] * 0.001; //kg
+		const double voxelMass = voxelVolume * dBuffer[i] * 0.001; //g->kg
 		(*m_organValues)[idx].voxels += 1;
-		(*m_organValues)[idx].dose += doseBuffer[i] * voxelMass;
+		const double dose = doseBuffer[i] * voxelMass;
+		(*m_organValues)[idx].dose += dose;
 		(*m_organValues)[idx].mass += voxelMass;
+		(*m_organValues)[idx].doseMax = std::max((*m_organValues)[idx].doseMax, dose);
 	}
 	for (std::size_t i = 0; i < size; ++i)
 	{

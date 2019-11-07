@@ -60,7 +60,7 @@ std::shared_ptr<std::vector<T>> BinaryImportPipeline::readBinaryArray(const QStr
 	{
 		auto msq = QString(tr("Error opening file: ")) + path;
 		emit errorMessage(msq);
-		return std::vector<T>();
+		return nullptr;
 	}
 
 	auto end = ifs.tellg();
@@ -73,14 +73,14 @@ std::shared_ptr<std::vector<T>> BinaryImportPipeline::readBinaryArray(const QStr
 	{
 		auto msq = QString(tr("Image dimensions and file size do not match for: ")) + path;
 		emit errorMessage(msq);
-		return std::vector<T>();
+		return nullptr;
 	}
 
 	if (size == 0) // avoid undefined behavior 
 	{
 		auto msq = QString(tr("Error reading file: ")) + path;
 		emit errorMessage(msq);
-		return std::vector<T>();
+		return nullptr;
 	}
 
 	auto buffer = std::make_shared<std::vector<T>>(size);
@@ -91,7 +91,7 @@ std::shared_ptr<std::vector<T>> BinaryImportPipeline::readBinaryArray(const QStr
 	{
 		auto msq = QString(tr("Error reading file: ")) + path;
 		emit errorMessage(msq);
-		return std::vector<T>();
+		return nullptr;
 	}
 	return buffer;
 }
@@ -100,8 +100,7 @@ void BinaryImportPipeline::setMaterialArrayPath(const QString& path)
 {
 	emit resultsReady(false);
 	m_materialArray = readBinaryArray<unsigned char>(path);
-	if (m_materialArray->size() == 0) {
-		m_materialArray = nullptr;
+	if (!m_materialArray) {
 		auto msg = QString(tr("Error opening material array file: ")) + path;
 		emit errorMessage(msg);
 		return;
@@ -113,8 +112,7 @@ void BinaryImportPipeline::setDensityArrayPath(const QString& path)
 {
 	emit resultsReady(false);
 	m_densityArray = readBinaryArray<double>(path);
-	if (m_densityArray->size() == 0) {
-		m_densityArray = nullptr;
+	if (!m_densityArray) {
 		auto msg = QString(tr("Error opening density array file: ")) + path;
 		emit errorMessage(msg);
 		return;
@@ -202,7 +200,7 @@ void BinaryImportPipeline::setMaterialMapPath(const QString& path)
 			}
 		}
 	}
-	std::sort(m_materialMap.begin(), m_materialMap.end(), [](auto& a, auto& b) {a.first < b.first; });
+	std::sort(m_materialMap.begin(), m_materialMap.end(), [](auto& a, auto& b) {return a.first < b.first; });
 	validate();
 }
 
@@ -216,7 +214,7 @@ void BinaryImportPipeline::validate()
 	if (m_densityArray->size() != m_materialArray->size())
 		return;
 	//test for dimensions matching
-	std::size_t dim = std::accumulate(m_dimensions.begin(), m_dimensions.end(), 1, std::multiplies<std::size_t>());
+	std::size_t dim = std::accumulate(m_dimensions.begin(), m_dimensions.end(), static_cast<std::size_t>(1), std::multiplies<std::size_t>());
 	if (m_materialArray->size() != dim)
 		return;
 

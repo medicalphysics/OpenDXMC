@@ -47,10 +47,15 @@ signals:
 	void organDataChanged(std::vector<std::string>& organs);
 	void aecFilterChanged(const QString& name, std::shared_ptr<AECFilter> filter);
 	void errorMessage(const QString& errorMsg) const;
+	void resultsReady(bool ready);
 protected:
 	template<typename T>
-	std::vector<T> readBinaryArray(const QString& path) const;
+	std::shared_ptr<std::vector<T>> readBinaryArray(const QString& path) const;
+	void validate();
 private:
-	std::array<std::size_t, 3> m_dimensions = {512, 512, 40};
+	std::array<std::size_t, 3> m_dimensions = {256, 256, 256};
 	std::array<double, 3> m_spacing = { 1, 1, 1 };
+	std::shared_ptr<std::vector<double>> m_densityArray = nullptr;
+	std::shared_ptr<std::vector<unsigned char>> m_materialArray = nullptr;
+	std::vector<std::pair<std::uint8_t, Material>> m_materialMap;
 };

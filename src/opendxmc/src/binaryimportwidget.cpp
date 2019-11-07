@@ -33,7 +33,7 @@ Copyright 2019 Erlend Andersen
 #include <QDoubleSpinBox>
 #include <QFileDialog>
 
-FileSelectWidget::FileSelectWidget(QWidget* parent)
+FileSelectWidget::FileSelectWidget(QWidget* parent, const QString& title)
 	:QWidget(parent)
 {
 	auto* mainLayout = new QHBoxLayout;
@@ -55,7 +55,7 @@ FileSelectWidget::FileSelectWidget(QWidget* parent)
 
 	auto browseButton = new QPushButton(tr("Browse"), this);
 	connect(browseButton, &QPushButton::clicked, [=](void) {
-		auto path = QFileDialog::getOpenFileName(this, tr("Select binary file"), ".");
+		auto path = QFileDialog::getOpenFileName(this, title, ".");
 		if (!path.isEmpty())
 		{
 			completerModel->setRootPath(path);
@@ -130,10 +130,10 @@ BinaryImportWidget::BinaryImportWidget(QWidget* parent)
 	auto materialBox = new QGroupBox(tr("Materials array:"), this);
 	auto materialLayout = new QVBoxLayout;
 	materialBox->setLayout(materialLayout);
-	auto materialDescription = new QLabel(tr("Select binary material array. The material array must be a binary file consisting of one 8 bit number per index (type of unsigned char or int8). This supports up to 255 materials, note that 0 is reserved for air. The size of the array must be dimension_x * dimension_y * dimension_z bytes. The array is read in standard C-style, meaning the first index is varying most."), this);
+	auto materialDescription = new QLabel(tr("Select binary material array. The material array must be a binary file consisting of one 8 bit number per index (type of unsigned char or uint8). This supports up to 255 materials, note that 0 is reserved for air. The size of the array must be dimension_x * dimension_y * dimension_z bytes. The array is read in standard C-style, meaning the first index is varying most."), this);
 	materialDescription->setWordWrap(true);
 	materialLayout->addWidget(materialDescription);
-	auto materialFileSelect = new FileSelectWidget(this);
+	auto materialFileSelect = new FileSelectWidget(this, tr("Select material binary file"));
 	materialLayout->addWidget(materialFileSelect);
 	mainLayout->addWidget(materialBox);
 	connect(materialFileSelect->getLineEditWidget(), &QLineEdit::textChanged, this, &BinaryImportWidget::materialArrayPathChanged);
@@ -145,7 +145,7 @@ BinaryImportWidget::BinaryImportWidget(QWidget* parent)
 	auto materialMapDescription = new QLabel(tr("Select material map file. The material map file must be a comma (',') separated text file with material ID, name, composition.  ID must match values in the material array. Material composition must be either atomic number or a chemical composition.  Chemical formulas may contain (nested) brackets, followed by an integer number or real number (with a dot) subscript indicating relative number fraction. Examples of accepted formulas are: 'H2O', 'Ca5(PO4)3F', 'Ca5(PO4)F0.33Cl0.33(OH)0.33'. Example of content in a such file is shown below:\n0, Air, N0.75O0.24Ar0.01\n1, Water, H2O\n3, PMMA, C0.3O0.13H0.53"), this);
 	materialMapDescription->setWordWrap(true);
 	materialMapLayout->addWidget(materialMapDescription);
-	auto materialMapFileSelect = new FileSelectWidget(this);
+	auto materialMapFileSelect = new FileSelectWidget(this, tr("Select material map file"));
 	materialMapLayout->addWidget(materialMapFileSelect);
 	mainLayout->addWidget(materialMapBox);
 	connect(materialMapFileSelect->getLineEditWidget(), &QLineEdit::textChanged, this, &BinaryImportWidget::materialMapPathChanged);
@@ -157,7 +157,7 @@ BinaryImportWidget::BinaryImportWidget(QWidget* parent)
 	auto densityDescription = new QLabel(tr("Select binary density array. The density array must be a binary file consisting of one 64 bit number per index (type of double). The size of the array must be dimension_x * dimension_y * dimension_z * 8 bytes. The array is read in standard C-style, meaning the first index is varying most."), this);
 	densityDescription->setWordWrap(true);
 	densityLayout->addWidget(densityDescription);
-	auto densityFileSelect = new FileSelectWidget(this);
+	auto densityFileSelect = new FileSelectWidget(this, tr("Select density binary file"));
 	densityLayout->addWidget(densityFileSelect);
 	mainLayout->addWidget(densityBox);
 	connect(densityFileSelect->getLineEditWidget(), &QLineEdit::textChanged, this, &BinaryImportWidget::densityArrayPathChanged);

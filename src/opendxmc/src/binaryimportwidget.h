@@ -28,7 +28,7 @@ class FileSelectWidget : public QWidget
 {
 	Q_OBJECT
 public:
-	FileSelectWidget(QWidget* parent = nullptr);
+	FileSelectWidget(QWidget* parent = nullptr, const QString& title="");
 	const QLineEdit* getLineEditWidget() const { return m_lineEdit; }
 signals:
 	void pathChanged(const QString& path);
@@ -47,7 +47,7 @@ signals:
 	void dimensionChanged(const std::array<std::size_t, 3>& dimensions) const;
 	void spacingChanged(const std::array<double, 3>& spacing) const;
 private:
-	std::array<std::size_t, 3> m_dimension = { 512, 512, 40 };
+	std::array<std::size_t, 3> m_dimension = { 256, 256, 256 };
 	std::array<double, 3> m_spacing = { 1, 1, 1 };
 };
 

@@ -9,7 +9,7 @@ import numpy as np
 
 def generate():
     
-    dim = 256
+    dim = 64
     shape = (dim, dim, dim)
     #constructing water sphere
     matArr = np.zeros(shape, dtype=np.uint8)

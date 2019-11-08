@@ -42,12 +42,13 @@ class DimensionSpacingWidget :public QWidget
 public:
 	DimensionSpacingWidget(QWidget* parent = nullptr, 
 		const std::array<double, 3>& spacing = { 1,1,1 }, 
-		const std::array<std::size_t, 3> dimensions = {256,256,40});
+		const std::array<std::size_t, 3> dimensions = {64,64,64});
+	~DimensionSpacingWidget();
 signals:
-	void dimensionChanged(const std::array<std::size_t, 3>& dimensions) const;
-	void spacingChanged(const std::array<double, 3>& spacing) const;
+	void dimensionChanged(int position, int value);
+	void spacingChanged(int position, double value);
 private:
-	std::array<std::size_t, 3> m_dimension = { 256, 256, 256 };
+	std::array<std::size_t, 3> m_dimension = { 64,64,64 };
 	std::array<double, 3> m_spacing = { 1, 1, 1 };
 };
 
@@ -60,8 +61,8 @@ public:
 	void setErrorMessage(const QString& message);
 
 signals:
-	void dimensionChanged(const std::array<std::size_t, 3>& dimensions) const;
-	void spacingChanged(const std::array<double, 3>& spacing) const;
+	void dimensionChanged(int position, int value);
+	void spacingChanged(int position, double spacing);
 	void materialArrayPathChanged(const QString& array);
 	void densityArrayPathChanged(const QString& array);
 	void materialMapPathChanged(const QString& array);

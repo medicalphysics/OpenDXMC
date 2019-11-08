@@ -32,6 +32,11 @@ Copyright 2019 Erlend Andersen
 #include <QSpinBox>
 #include <QDoubleSpinBox>
 #include <QFileDialog>
+#include <QFileInfo>
+#include <QSettings>
+
+
+
 
 FileSelectWidget::FileSelectWidget(QWidget* parent, const QString& title)
 	:QWidget(parent)
@@ -55,10 +60,18 @@ FileSelectWidget::FileSelectWidget(QWidget* parent, const QString& title)
 
 	auto browseButton = new QPushButton(tr("Browse"), this);
 	connect(browseButton, &QPushButton::clicked, [=](void) {
-		auto path = QFileDialog::getOpenFileName(this, title, ".");
+		QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
+		auto folder = settings.value("binaryimport/browsepath").value<QString>();
+		if (folder.isEmpty())
+			folder = ".";
+		auto path = QFileDialog::getOpenFileName(this, title, folder);
 		if (!path.isEmpty())
 		{
-			completerModel->setRootPath(path);
+			QFileInfo fInfo(path);
+			auto dir = fInfo.dir().absolutePath();
+			completerModel->setRootPath(dir);
+			settings.setValue("binaryimport/browsepath", dir);
+			settings.sync();
 			m_lineEdit->setText(path);
 		}
 		});
@@ -75,6 +88,21 @@ DimensionSpacingWidget::DimensionSpacingWidget(QWidget* parent, const std::array
 	auto sLayout = new QHBoxLayout;
 	auto dLayout = new QHBoxLayout;
 
+	QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
+	if (settings.contains("binaryimport/dimensionX"))
+		m_dimension[0] = static_cast<std::size_t>(settings.value("binaryimport/dimensionX").value<int>());
+	if (settings.contains("binaryimport/dimensionY"))
+		m_dimension[1] = static_cast<std::size_t>(settings.value("binaryimport/dimensionY").value<int>());
+	if (settings.contains("binaryimport/dimensionZ"))
+		m_dimension[2] = static_cast<std::size_t>(settings.value("binaryimport/dimensionZ").value<int>());
+	if (settings.contains("binaryimport/spacingX"))
+		m_spacing[0] = static_cast<std::size_t>(settings.value("binaryimport/spacingX").value<double>());
+	if (settings.contains("binaryimport/spacingY"))
+		m_spacing[1] = static_cast<std::size_t>(settings.value("binaryimport/spacingY").value<double>());
+	if (settings.contains("binaryimport/spacingZ"))
+		m_spacing[2] = static_cast<std::size_t>(settings.value("binaryimport/spacingZ").value<double>());
+
+
 	for (int i = 0; i < 3; ++i)
 	{
 		auto dim = new QSpinBox(this);
@@ -85,8 +113,9 @@ DimensionSpacingWidget::DimensionSpacingWidget(QWidget* parent, const std::array
 		dLayout->addWidget(dim);
 		connect(dim, QOverload<int>::of(&QSpinBox::valueChanged), [=](int value) {
 			this->m_dimension[i] = static_cast<std::size_t>(value);
-			emit dimensionChanged(m_dimension);
+			emit this->dimensionChanged(i, value);
 			});
+
 	}
 	for (int i = 0; i < 3; ++i)
 	{
@@ -97,7 +126,7 @@ DimensionSpacingWidget::DimensionSpacingWidget(QWidget* parent, const std::array
 		sLayout->addWidget(sp);
 		connect(sp, QOverload<double>::of(&QDoubleSpinBox::valueChanged), [=](double value) {
 			this->m_spacing[i] = value; 
-			emit spacingChanged(m_spacing);
+			emit this->spacingChanged(i, value);
 			});
 	}
 	mainLayout->addWidget(new QLabel(tr("Dimensions (X Y Z):"), this));
@@ -106,8 +135,21 @@ DimensionSpacingWidget::DimensionSpacingWidget(QWidget* parent, const std::array
 	mainLayout->addLayout(sLayout);
 	mainLayout->addStretch();
 	this->setLayout(mainLayout);
-}
 
+
+	must trigger dimension and spacing update
+
+}
+DimensionSpacingWidget::~DimensionSpacingWidget()
+{
+	QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
+	settings.setValue("binaryimport/dimensionX", m_dimension[0]);
+	settings.setValue("binaryimport/dimensionY", m_dimension[1]);
+	settings.setValue("binaryimport/dimensionZ", m_dimension[2]);
+	settings.setValue("binaryimport/spacingX", m_spacing[0]);
+	settings.setValue("binaryimport/spacingY", m_spacing[1]);
+	settings.setValue("binaryimport/spacingZ", m_spacing[2]);
+}
 BinaryImportWidget::BinaryImportWidget(QWidget* parent)
 	:QWidget(parent)
 {
@@ -168,6 +210,7 @@ BinaryImportWidget::BinaryImportWidget(QWidget* parent)
 
 	mainLayout->addStretch();
 	this->setLayout(mainLayout);
+
 }
 
 void BinaryImportWidget::setErrorMessage(const QString& message)

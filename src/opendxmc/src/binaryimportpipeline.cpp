@@ -34,10 +34,17 @@ void BinaryImportPipeline::setDimension(const std::array<std::size_t, 3>& dimens
 {
 	for (int i = 0; i < 3; ++i)
 	{
-		if (dimensions[i] == 0 && dimensions[i] > 2048)
+		if (dimensions[i] == 0 || dimensions[i] > 2048)
 			return;
 	}
 	m_dimensions = dimensions;
+}
+
+void BinaryImportPipeline::setDimension(int position, int value)
+{
+	if (value <= 0 || value > 2048)
+		return;
+	m_dimensions[position] = static_cast<std::size_t>(value);
 }
 
 void BinaryImportPipeline::setSpacing(const std::array<double, 3>& spacing)
@@ -48,6 +55,13 @@ void BinaryImportPipeline::setSpacing(const std::array<double, 3>& spacing)
 			return;
 	}
 	m_spacing = spacing;
+}
+
+void BinaryImportPipeline::setSpacing(int position, double value)
+{
+	if (value <= 0)
+		return;
+	m_spacing[position] = value;
 }
 
 template<typename T>
@@ -101,8 +115,6 @@ void BinaryImportPipeline::setMaterialArrayPath(const QString& path)
 	emit resultsReady(false);
 	m_materialArray = readBinaryArray<unsigned char>(path);
 	if (!m_materialArray) {
-		auto msg = QString(tr("Error opening material array file: ")) + path;
-		emit errorMessage(msg);
 		return;
 	}
 	validate();	
@@ -113,8 +125,6 @@ void BinaryImportPipeline::setDensityArrayPath(const QString& path)
 	emit resultsReady(false);
 	m_densityArray = readBinaryArray<double>(path);
 	if (!m_densityArray) {
-		auto msg = QString(tr("Error opening density array file: ")) + path;
-		emit errorMessage(msg);
 		return;
 	}
 	validate();
@@ -188,6 +198,7 @@ void BinaryImportPipeline::setMaterialMapPath(const QString& path)
 						if (i == ind)
 						{
 							auto msq = QString(tr("Error in material map file: ")) + path + QString(tr(" index is already occupied: ")) + QString::fromStdString(strings[0]);
+							emit errorMessage(msq);
 							return;
 						}
 					}
@@ -195,6 +206,7 @@ void BinaryImportPipeline::setMaterialMapPath(const QString& path)
 				}
 				else {
 					auto msg = QString(tr("Error in material map file: ")) + path + QString(tr(" Not able to parse material definition ")) + QString::fromStdString(strings[2]);
+					emit errorMessage(msg);
 					return;
 				}
 			}
@@ -207,6 +219,7 @@ void BinaryImportPipeline::setMaterialMapPath(const QString& path)
 void BinaryImportPipeline::validate()
 {
 	emit resultsReady(false);
+	emit errorMessage(QString(tr("")));
 	//test for valid pointers
 	if (!m_densityArray || !m_materialArray)
 		return;
@@ -234,10 +247,13 @@ void BinaryImportPipeline::validate()
 	std::vector<unsigned char> matInter;
 	std::set_intersection(matInd.begin(), matInd.end(), matMapInd.begin(), matMapInd.end(), std::back_inserter(matInter));
 	std::vector<unsigned char> matDiff;
-	std::set_difference(matInd.begin(), matInd.end(), matInter.begin(), matInter.begin(), std::back_inserter(matDiff));
-	if (matDiff.size() != 0) 
+	std::set_difference(matInd.begin(), matInd.end(), matInter.begin(), matInter.end(), std::back_inserter(matDiff));
+	if (matDiff.size() != 0)
+	{
+		auto msg = QString(tr("Error: There is a mismatch between values in material array and material IDs in the material map file."));
+		emit errorMessage(msg);
 		return; // this means that there are material array values that does not have a corresponding material definition
-
+	}
 	//making sure all indices are concecutive
 	for (std::uint8_t i = 0; i < matInd.size(); ++i)
 	{
@@ -252,10 +268,26 @@ void BinaryImportPipeline::validate()
 			}
 		}
 	}
+	std::array<double, 3> origin;
+	for (std::size_t i = 0; i < 3; ++i)
+		origin[i] = -(m_dimensions[i] * m_spacing[i] * 0.5);
+	//generating image containers
+	auto densImage = std::make_shared<ImageContainer>(DensityImageContainer(m_densityArray, m_dimensions, m_spacing, origin));
+	auto matImage = std::make_shared<ImageContainer>(MaterialImageContainer(m_materialArray, m_dimensions, m_spacing, origin));
+	densImage->ID = ImageContainer::generateID();
+	matImage->ID = densImage->ID;
+
+	std::vector<Material> materials;
+	materials.reserve(matInd.size());
+	for (auto& [ind, m] : m_materialMap)
+	{
+		materials.push_back(m);
+	}
 
 	//emitting data
-
-
-
-
+	emit errorMessage(QString(""));
+	emit materialDataChanged(materials);
+	emit imageDataChanged(densImage);
+	emit imageDataChanged(matImage);
 }
+

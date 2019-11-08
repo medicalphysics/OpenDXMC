@@ -34,7 +34,9 @@ class BinaryImportPipeline : public QObject
 public:
 	BinaryImportPipeline(QObject* parent = nullptr);
 	void setDimension(const std::array<std::size_t, 3>& dimensions);
+	void setDimension(int position, int value);
 	void setSpacing(const std::array<double, 3>& spacing);
+	void setSpacing(int position, double value);
 	void setMaterialArrayPath(const QString& path);
 	void setDensityArrayPath(const QString& path);
 	void setMaterialMapPath(const QString& path);
@@ -53,7 +55,7 @@ protected:
 	std::shared_ptr<std::vector<T>> readBinaryArray(const QString& path) const;
 	void validate();
 private:
-	std::array<std::size_t, 3> m_dimensions = {256, 256, 256};
+	std::array<std::size_t, 3> m_dimensions = {64,64,64};
 	std::array<double, 3> m_spacing = { 1, 1, 1 };
 	std::shared_ptr<std::vector<double>> m_densityArray = nullptr;
 	std::shared_ptr<std::vector<unsigned char>> m_materialArray = nullptr;

@@ -48,7 +48,7 @@ public:
 	vtkSmartPointer<vtkImageData> image;
 	std::array<double, 6> directionCosines{ 1,0,0,0,1,0 };
 	std::array<double, 2> minMax{0,1};
-	ImageType imageType = Empty;
+	ImageType imageType = ImageType::Empty;
 	std::uint64_t ID = 0;
 	std::string dataUnits = "";
 

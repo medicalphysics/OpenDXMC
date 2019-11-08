@@ -543,7 +543,7 @@ void ImageImportPipeline::importICRUMalePhantom(bool ignoreArms)
 		return;
 	}
 
-	auto  organImage = std::make_shared<OrganImageContainer>(organArray, dimensions, spacing, origin);
+	auto organImage = std::make_shared<OrganImageContainer>(organArray, dimensions, spacing, origin);
 	auto materialImage= std::make_shared<MaterialImageContainer>(materialArray, dimensions, spacing, origin);
 	auto densityImage = std::make_shared<DensityImageContainer>(densityArray, dimensions, spacing, origin);
 	organImage->ID = ImageContainer::generateID();

@@ -34,7 +34,7 @@ Copyright 2019 Erlend Andersen
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QSettings>
-
+#include <QTimer>
 
 
 
@@ -56,7 +56,9 @@ FileSelectWidget::FileSelectWidget(QWidget* parent, const QString& title)
 	completer->setCompletionMode(QCompleter::InlineCompletion);
 	m_lineEdit->setCompleter(completer);
 	
-	connect(m_lineEdit, &QLineEdit::textChanged, this, &FileSelectWidget::pathChanged);
+	connect(m_lineEdit, &QLineEdit::editingFinished, [=](void) {
+		emit this->pathChanged(m_lineEdit->text());
+		});
 
 	auto browseButton = new QPushButton(tr("Browse"), this);
 	connect(browseButton, &QPushButton::clicked, [=](void) {
@@ -136,9 +138,14 @@ DimensionSpacingWidget::DimensionSpacingWidget(QWidget* parent, const std::array
 	mainLayout->addStretch();
 	this->setLayout(mainLayout);
 
-
-	must trigger dimension and spacing update
-
+	//Notify signal for updating spacing and dimensions
+	QTimer::singleShot(0, [=](void) {
+		for (int i = 0; i < 3; ++i)
+		{
+			emit this->spacingChanged(i, m_spacing[i]);
+			emit this->dimensionChanged(i, static_cast<int>(m_dimension[i]));
+		}
+		});
 }
 DimensionSpacingWidget::~DimensionSpacingWidget()
 {

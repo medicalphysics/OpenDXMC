@@ -267,6 +267,31 @@ if (WIN32)
 endif(WIN32)
 
 
+##adding gdcm dependency if installed
+FIND_PACKAGE(GDCM)
+IF(GDCM_FOUND)
+    INCLUDE(${GDCM_USE_FILE})
+	get_filename_component(GDCM_MAIN_DIR "${GDCM_LIBRARY_DIRS}/.." ABSOLUTE)
+	if (WIN32)
+		add_custom_target(gdcmdeploy ALL)
+		set(libnames "gdcmMSFF" "gdcmDSED" "gdcmCommon" 
+		"gdcmjpeg8" "gdcmDICT" "gdcmjpeg12" "gdcmIOD" 
+		"gdcmjpeg16" "gdcmopenjp2" "gdcmzlib" 
+		"gdcmcharls" "gdcmexpat" "gdcmmd5")
+		foreach(libname ${libnames})
+			set(libpath "${GDCM_MAIN_DIR}/bin/${libname}.dll")
+			set(outpath "${CMAKE_BINARY_DIR}/${PROJECT_NAME}/${libname}.dll")
+			add_custom_command(TARGET gdcmdeploy POST_BUILD
+				COMMENT "Copying GDCM dll ${libpath} to ${outpath}"
+				DEPENDS ${libpath}
+				COMMAND ${CMAKE_COMMAND} -E copy_if_different
+				${libpath}
+				${outpath}
+				)
+		endforeach()
+	endif(WIN32)
+ENDIF(GDCM_FOUND)
+
 
 
 #Copying application resources

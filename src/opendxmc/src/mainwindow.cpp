@@ -30,6 +30,7 @@ Copyright 2019 Erlend Andersen
 #include "sourceeditorwidget.h"
 #include "phantomselectionwidget.h"
 #include "dosereportwidget.h"
+#include "binaryimportwidget.h"
 
 Q_DECLARE_METATYPE(std::vector<std::shared_ptr<Source>>)
 
@@ -52,6 +53,16 @@ MainWindow::MainWindow(QWidget* parent)
 	//connections to disable widgets when simulationpipeline is working
 	connect(m_simulationPipeline, &SimulationPipeline::processingDataStarted, this, &MainWindow::setDisableEditing);
 	connect(m_simulationPipeline, &SimulationPipeline::processingDataEnded, this, &MainWindow::setEnableEditing);
+	//binary import pipeline
+	m_binaryImportPipeline = new BinaryImportPipeline();
+	m_binaryImportPipeline->moveToThread(&m_workerThread);
+	connect(m_binaryImportPipeline, &BinaryImportPipeline::processingDataStarted, this, &MainWindow::setDisableEditing);
+	connect(m_binaryImportPipeline, &BinaryImportPipeline::processingDataEnded, this, &MainWindow::setEnableEditing);
+	connect(m_binaryImportPipeline, &BinaryImportPipeline::imageDataChanged, m_simulationPipeline, &SimulationPipeline::setImageData);
+	connect(m_binaryImportPipeline, &BinaryImportPipeline::materialDataChanged, m_simulationPipeline, &SimulationPipeline::setMaterials);
+	connect(m_binaryImportPipeline, &BinaryImportPipeline::organDataChanged, m_simulationPipeline, &SimulationPipeline::setOrganList);
+
+
 
 	//statusbar and progress indicator widget
 	auto statusBar = this->statusBar();
@@ -95,6 +106,15 @@ MainWindow::MainWindow(QWidget* parent)
 	connect(phantomWidget, &PhantomSelectionWidget::readCTDIPhantom, m_importPipeline, &ImageImportPipeline::importCTDIPhantom);
 	connect(phantomWidget, &PhantomSelectionWidget::readAWSPhantom, m_importPipeline, &ImageImportPipeline::importAWSPhantom);
 
+	//binary import widget
+	BinaryImportWidget* binaryWidget = new BinaryImportWidget(this);
+	importWidget->addTab(binaryWidget, tr("Binary files"));
+	connect(binaryWidget, &BinaryImportWidget::dimensionChanged, m_binaryImportPipeline, QOverload<int, int>::of(&BinaryImportPipeline::setDimension));
+	connect(binaryWidget, &BinaryImportWidget::spacingChanged, m_binaryImportPipeline, QOverload<int, double>::of(&BinaryImportPipeline::setSpacing));
+	connect(binaryWidget, &BinaryImportWidget::materialArrayPathChanged, m_binaryImportPipeline, &BinaryImportPipeline::setMaterialArrayPath);
+	connect(binaryWidget, &BinaryImportWidget::densityArrayPathChanged, m_binaryImportPipeline, &BinaryImportPipeline::setDensityArrayPath);
+	connect(binaryWidget, &BinaryImportWidget::materialMapPathChanged, m_binaryImportPipeline, &BinaryImportPipeline::setMaterialMapPath);
+	connect(m_binaryImportPipeline, &BinaryImportPipeline::errorMessage, binaryWidget, &BinaryImportWidget::setErrorMessage);
 	m_menuWidget->addTab(importWidget, tr("Import data"));
 
 	//source edit widget
@@ -103,7 +123,7 @@ MainWindow::MainWindow(QWidget* parent)
 	auto sourceEditDelegate = sourceEditWidget->delegate();
 	connect(m_importPipeline, &ImageImportPipeline::aecFilterChanged, sourceEditDelegate, &SourceDelegate::addAecFilter);
 	connect(m_importPipeline, &ImageImportPipeline::imageDataChanged, sourceEditWidget->model(), &SourceModel::setImageData);
-
+	connect(m_binaryImportPipeline, &BinaryImportPipeline::imageDataChanged, sourceEditWidget->model(), &SourceModel::setImageData);
 
 	//dosereportWidget
 	auto doseReportWidget = new DoseReportWidget(this);
@@ -114,6 +134,7 @@ MainWindow::MainWindow(QWidget* parent)
 	auto exportWidget = new ExportWidget(this);
 	connect(m_simulationPipeline, &SimulationPipeline::imageDataChanged, exportWidget, &ExportWidget::registerImage);
 	connect(m_importPipeline, &ImageImportPipeline::imageDataChanged, exportWidget, &ExportWidget::registerImage);
+	connect(m_binaryImportPipeline, &BinaryImportPipeline::imageDataChanged, exportWidget, &ExportWidget::registerImage);
 	m_menuWidget->addTab(exportWidget, tr("Export data"));
 	splitter->addWidget(m_menuWidget);
 	
@@ -128,6 +149,7 @@ MainWindow::MainWindow(QWidget* parent)
 	splitter->addWidget(viewPort);
 	connect(m_importPipeline, &ImageImportPipeline::imageDataChanged, viewPort, &ViewPortWidget::setImageData);
 	connect(m_simulationPipeline, &SimulationPipeline::imageDataChanged, viewPort, &ViewPortWidget::setImageData);
+	connect(m_binaryImportPipeline, &BinaryImportPipeline::imageDataChanged, viewPort, &ViewPortWidget::setImageData);
 	setCentralWidget(splitter);
 
 	//setting up source 3d actor connection to viewpoert from sourceeditwidget

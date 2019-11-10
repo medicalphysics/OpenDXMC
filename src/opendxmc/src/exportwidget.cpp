@@ -169,31 +169,30 @@ void ExportWidget::writeArrayBin(std::shared_ptr<ImageContainer> image, const st
 	std::streamsize size = image->image->GetScalarSize() * image->image->GetNumberOfCells();
 	std::fstream file;
 	file.open(path, std::ios::out | std::ios::binary);
-	if (includeHeader)
+	if (file.is_open())
 	{
-		auto header = ExportWidget::getHeaderData(image);
-		file.write(header.data(), EXPORT_HEADER_SIZE);
+		if (includeHeader)
+		{
+			auto header = ExportWidget::getHeaderData(image);
+			file.write(header.data(), EXPORT_HEADER_SIZE);
+		}
+		file.write(reinterpret_cast<char*>(image->image->GetScalarPointer()), size);
+		file.close();
 	}
-	file.write(reinterpret_cast<char*>(image->image->GetScalarPointer()), size);
-	file.close();
 }
 
 void ExportWidget::exportAllRawData()
 {
 	QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
-	QString initPath;
+	QString dir;
 	if (settings.contains("dataexport/rawexportfolder"))
-		initPath = settings.value("dataexport/rawexportfolder").value<QString>();
+		dir = settings.value("dataexport/rawexportfolder").value<QString>();
 	else
 	{
-		initPath = ".";
+		dir = ".";
 	}
+	QDir cDir(dir);
 
-	QString dir = QFileDialog::getExistingDirectory(this, tr("Select folder for export"),
-		initPath,
-		QFileDialog::ShowDirsOnly);
-	if (dir.isEmpty())
-		return;
 	for (const auto& im : m_images)
 	{
 		std::string filenameBin(im->getImageName() + ".bin");

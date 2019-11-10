@@ -24,6 +24,7 @@ Copyright 2019 Erlend Andersen
 
 #include "imageimportpipeline.h"
 #include "simulationpipeline.h"
+#include "binaryimportpipeline.h"
 #include "progressbar.h"
 
 class MainWindow : public QMainWindow
@@ -38,9 +39,10 @@ public:
 	void updateProgressBar();
 private:
 	QThread m_workerThread;
-	ImageImportPipeline *m_importPipeline;
-	SimulationPipeline* m_simulationPipeline;
-	QTabWidget *m_menuWidget;
+	ImageImportPipeline *m_importPipeline = nullptr;
+	SimulationPipeline* m_simulationPipeline = nullptr;
+	BinaryImportPipeline* m_binaryImportPipeline = nullptr;
+	QTabWidget *m_menuWidget = nullptr;
 
 	std::shared_ptr<ProgressBar> m_progressBar = nullptr;
 	QTimer* m_progressTimer = nullptr;

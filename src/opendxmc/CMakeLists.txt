@@ -113,6 +113,10 @@ add_executable(OpenDXMC WIN32
     src/viewportwidget.h
     src/dicomimportwidget.h
     src/dicomimportwidget.cpp
+	src/binaryimportwidget.h
+	src/binaryimportwidget.cpp
+	src/binaryimportpipeline.h
+	src/binaryimportpipeline.cpp
 	src/imageimportpipeline.h
 	src/imageimportpipeline.cpp
 	src/progressindicator.h

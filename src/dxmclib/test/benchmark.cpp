@@ -70,7 +70,7 @@ void run()
 				auto dbuffer = dens->data();
 				auto mbuffer = mat->data();
 				dbuffer[idx] = materials[rIdx].standardDensity();
-				mbuffer[idx] = rIdx;
+				mbuffer[idx] = static_cast<int>(rIdx);
 			}
 
 

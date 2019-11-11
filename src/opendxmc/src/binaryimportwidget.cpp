@@ -179,7 +179,7 @@ BinaryImportWidget::BinaryImportWidget(QWidget* parent)
 	auto materialBox = new QGroupBox(tr("Materials array:"), this);
 	auto materialLayout = new QVBoxLayout;
 	materialBox->setLayout(materialLayout);
-	auto materialDescription = new QLabel(tr("Select binary material array. The material array must be a binary file consisting of one 8 bit number per index (type of unsigned char or uint8). This supports up to 255 materials, note that 0 is reserved for air. The size of the array must be dimension_x * dimension_y * dimension_z bytes. The array is read in standard C-style, meaning the first index is varying most."), this);
+	auto materialDescription = new QLabel(tr("Select binary material array. The material array must be a binary file consisting of one 8 bit number per index (type of unsigned char or uint8). This supports up to 255 materials. The size of the array must be dimension_x * dimension_y * dimension_z bytes. The array is read in standard C-style, meaning the first index is varying most."), this);
 	materialDescription->setWordWrap(true);
 	materialLayout->addWidget(materialDescription);
 	auto materialFileSelect = new FileSelectWidget(this, tr("Select material binary file"));

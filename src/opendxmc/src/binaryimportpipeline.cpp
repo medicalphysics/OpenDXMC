@@ -27,7 +27,6 @@ Copyright 2019 Erlend Andersen
 BinaryImportPipeline::BinaryImportPipeline(QObject* parent)
 	:QObject(parent)
 {
-
 }
 
 void BinaryImportPipeline::setDimension(const std::array<std::size_t, 3>& dimensions)
@@ -38,6 +37,7 @@ void BinaryImportPipeline::setDimension(const std::array<std::size_t, 3>& dimens
 			return;
 	}
 	m_dimensions = dimensions;
+	validate();
 }
 
 void BinaryImportPipeline::setDimension(int position, int value)
@@ -45,6 +45,7 @@ void BinaryImportPipeline::setDimension(int position, int value)
 	if (value <= 0 || value > 2048)
 		return;
 	m_dimensions[position] = static_cast<std::size_t>(value);
+	validate();
 }
 
 void BinaryImportPipeline::setSpacing(const std::array<double, 3>& spacing)
@@ -55,6 +56,7 @@ void BinaryImportPipeline::setSpacing(const std::array<double, 3>& spacing)
 			return;
 	}
 	m_spacing = spacing;
+	validate();
 }
 
 void BinaryImportPipeline::setSpacing(int position, double value)
@@ -62,6 +64,7 @@ void BinaryImportPipeline::setSpacing(int position, double value)
 	if (value <= 0)
 		return;
 	m_spacing[position] = value;
+	validate();
 }
 
 template<typename T>
@@ -272,11 +275,16 @@ void BinaryImportPipeline::validate()
 	for (std::size_t i = 0; i < 3; ++i)
 		origin[i] = -(m_dimensions[i] * m_spacing[i] * 0.5);
 	//generating image containers
-	auto densImage = std::make_shared<ImageContainer>(DensityImageContainer(m_densityArray, m_dimensions, m_spacing, origin));
-	auto matImage = std::make_shared<ImageContainer>(MaterialImageContainer(m_materialArray, m_dimensions, m_spacing, origin));
+	auto densImage = std::make_shared<DensityImageContainer>(m_densityArray, m_dimensions, m_spacing, origin);
+	auto matImage = std::make_shared<MaterialImageContainer>(m_materialArray, m_dimensions, m_spacing, origin);
 	densImage->ID = ImageContainer::generateID();
 	matImage->ID = densImage->ID;
 
+	//clear arrays
+	m_materialArray = nullptr;
+	m_densityArray = nullptr;
+
+	//make material definition array
 	std::vector<Material> materials;
 	materials.reserve(matInd.size());
 	for (auto& [ind, m] : m_materialMap)

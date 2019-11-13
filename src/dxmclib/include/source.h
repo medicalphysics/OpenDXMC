@@ -165,7 +165,7 @@ private:
 	std::uint64_t m_totalExposures = 1000;
 	Tube m_tube;
 	bool m_specterValid = false;
-	std::unique_ptr<SpecterDistribution> m_specterDistribution;
+	std::unique_ptr<SpecterDistribution> m_specterDistribution=nullptr;
 
 };
 
@@ -245,7 +245,7 @@ protected:
 	bool m_useXCareFilter = false;
 	bool m_specterValid = false;
 	Tube m_tube;
-	std::unique_ptr<SpecterDistribution> m_specterDistribution;
+	std::unique_ptr<SpecterDistribution> m_specterDistribution=nullptr;
 };
 
 class CTSpiralSource : public CTSource
@@ -339,7 +339,7 @@ protected:
 	void updateSpecterDistribution() override;
 private:
 	Tube m_tubeB;
-	std::unique_ptr<SpecterDistribution> m_specterDistributionB;
+	std::unique_ptr<SpecterDistribution> m_specterDistributionB=nullptr;
 	double m_sddB;
 	double m_fovB;
 	double m_startAngleB;

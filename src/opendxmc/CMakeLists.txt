@@ -129,6 +129,8 @@ add_executable(OpenDXMC WIN32
 	src/exportwidget.h
 	src/exportwidget.cpp
 	src/opendxmcconfig.h
+	src/saveload.cpp
+	src/saveload.h
     )
 
 

@@ -63,9 +63,9 @@ target_include_directories(dxmclib PUBLIC
 
 # If we have compiler requirements for this library, list them
 # here
-target_compile_features(dxmclib
-    PUBLIC cxx_auto_type cxx_std_17 cxx_constexpr cxx_generic_lambdas
-    PRIVATE cxx_variadic_templates)
+#target_compile_features(dxmclib
+#    PUBLIC cxx_auto_type cxx_std_17 cxx_constexpr cxx_generic_lambdas
+#    PRIVATE cxx_variadic_templates)
 
 # add some of my favorite flags
 #target_compile_options(dxmclib PRIVATE -W4)  #-Wall -Wextra

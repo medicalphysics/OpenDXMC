@@ -1,6 +1,6 @@
 
 
-
+##adding VTK dependency
 find_package(VTK COMPONENTS
   CommonColor
   CommonComputationalGeometry
@@ -66,14 +66,13 @@ find_package(VTK COMPONENTS
   )
 
 #include(${VTK_USE_FILE})  # depricated since vtk 8.90
-include_directories(${VTK_INCLUDE_DIRS})  # do we need this?
+include_directories(${VTK_INCLUDE_DIRS})
 
 #include QT
 ## QT specifics for CMake
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
-
 find_package(Qt5 REQUIRED COMPONENTS Core Widgets Charts )
 find_package(Qt5Charts)
 IF(UNIX AND NOT APPLE)
@@ -83,25 +82,6 @@ include_directories(${Qt5Widgets_INCLUDE_DIRS})
 include_directories(${Qt5Charts_INCLUDE_DIRS})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS}")
 
-
-#spdlog 
-#include(ExternalProject)
-#ExternalProject_Add(spdlog
-#	GIT_REPOSITORY https://github.com/gabime/spdlog.git
-#	TIMEOUT 5
-#	CMAKE_ARGS -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
-#	PREFIX "${CMAKE_CURRENT_BINARY_DIR}"
-#	CONFIGURE_COMMAND "" # Disable configure step
-#	BUILD_COMMAND "" # Disable build step
-#	INSTALL_COMMAND "" # Disable install step
-#	UPDATE_COMMAND "" # Disable update step: clones the project only once
-#)
-#ExternalProject_Get_Property(spdlog source_dir)
-#SET(spdlog_DIR ${source_dir})
-#set(spdlog_INCLUDE_DIRS ${SOURCE_DIR}/include)
-#include_directories(${spdlog_INCLUDE_DIRS})
-#message(STATUS "spdlog source is located at: ${source_dir}")
-#file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/logs")
 
 # Define an executable (WIN32 argument to prevent console window on windows)
 add_executable(OpenDXMC WIN32
@@ -152,8 +132,6 @@ add_executable(OpenDXMC WIN32
     )
 
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/opendxmc")
-
 # Define the libraries this project depends upon
 target_link_libraries(OpenDXMC
         PRIVATE dxmclib
@@ -162,8 +140,8 @@ target_link_libraries(OpenDXMC
 		PRIVATE Qt5::Core
 		PRIVATE Qt5::Gui
 		PRIVATE Qt5::Charts
-#		PRIVATE spdlog::spdlog_header_only ## adding spdlog later
         )
+
 
 # Adding vtk modules (replaces include(${VTK_USE_FILE}) since vtk 8.90) 
 vtk_module_autoinit(
@@ -172,8 +150,22 @@ vtk_module_autoinit(
     )
 
 
+#adding libnob dependency
+#including fetchcontent module and declearing target
+include(FetchContent)
+FetchContent_Declare(
+  libnobimport
+  GIT_REPOSITORY https://github.com/google/libnop.git
+  #GIT_TAG        release-1.8.0
+)
+##downloads target if not available
+FetchContent_MakeAvailable(libnobimport)
+target_include_directories(OpenDXMC PRIVATE "${libnobimport_SOURCE_DIR}/include")
+
+
 #making version available in code
 target_compile_definitions(OpenDXMC PRIVATE APP_VERSION="${PROJECT_VERSION}")
+
 
 ##adding REQUIRED dlls to the binary folder of executable
 #adding target to copy qt dlls 
@@ -189,16 +181,13 @@ endif(WIN32)
 if (WIN32)
 	add_custom_target(vtkdeploy ALL)
 	foreach(vtkdll ${VTK_LIBRARIES})
-		
 		set(libname "${vtkdll}-${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}.dll")
 		string(REPLACE "VTK::" "vtk" libname ${libname})
 		if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
 			string(REPLACE ".dll" "d.dll" libname ${libname})
 		endif()
 		set(libpath "${VTK_DIR}/bin/${CMAKE_BUILD_TYPE}/${libname}")
-		#set(libpath "${VTK_RUNTIME_LIBRARY_DIRS}/${CMAKE_BUILD_TYPE}/${libname}")
 		set(outpath "${CMAKE_BINARY_DIR}/${PROJECT_NAME}/${libname}")
-		
 		if(NOT vtkdll STREQUAL "VTK::sqlite") ##Ignores vtksqlite-X.X.dll to prevent cmake error in case vtk was not compiled with SQLite
 			add_custom_command(TARGET vtkdeploy POST_BUILD
 				COMMENT "Copying vtk dll ${libpath} to ${outpath}"
@@ -245,7 +234,6 @@ if (WIN32)
 		${libpath}
 		${outpath}
 		)
-
 endif(WIN32)
 
 
@@ -267,7 +255,8 @@ if (WIN32)
 endif(WIN32)
 
 
-##adding gdcm dependency if installed
+##adding gdcm dependency for vtkDICOM if installed. To use GDCM vtkDicom must be compiled with it.
+##this simply adds required dlls to buildfolder for GDCM 
 FIND_PACKAGE(GDCM)
 IF(GDCM_FOUND)
     INCLUDE(${GDCM_USE_FILE})
@@ -291,7 +280,6 @@ IF(GDCM_FOUND)
 		endforeach()
 	endif(WIN32)
 ENDIF(GDCM_FOUND)
-
 
 
 #Copying application resources

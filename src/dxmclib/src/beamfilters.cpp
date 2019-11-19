@@ -171,7 +171,7 @@ double XCareFilter::rampAngleDeg() const
 
 void XCareFilter::setRampAngle(double angle)
 {
-	if ((angle >= 0.0) && (angle <= 0.5*m_spanAngle))
+	if ((angle >= 0.0) && (angle <= 0.5 * m_spanAngle))
 	{
 		m_rampAngle = angle;
 	}

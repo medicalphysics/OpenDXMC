@@ -54,7 +54,7 @@ public:
 	void setFilterAngle(double angle);
 	void setFilterAngleDeg(double angle);
 
-	double spanAngle() const { return m_rampAngle; }
+	double spanAngle() const { return m_spanAngle; }
 	double spanAngleDeg() const;
 	void setSpanAngle(double angle);
 	void setSpanAngleDeg(double angle);

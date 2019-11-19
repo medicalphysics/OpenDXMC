@@ -18,6 +18,9 @@ Copyright 2019 Erlend Andersen
 
 #pragma once
 
+#include "imagecontainer.h"
+#include "material.h"
+
 #include <QObject>
 #include <QString>
 
@@ -28,13 +31,17 @@ public:
 	SaveLoad(QObject* parent = nullptr);
 
 	void saveToFile(const QString& path);
-
-
-
-signals:
-
-
+	void setImageData(std::shared_ptr<ImageContainer> image);
+	void setMaterials(const std::vector<Material>& materials);
+	void setOrganList(const std::vector<std::string>& organList) { m_organList = organList; }
 private:
-
+	std::uint64_t m_currentImageID = 0;
+	std::shared_ptr<ImageContainer> m_densityImage = nullptr;
+	std::shared_ptr<ImageContainer> m_materialImage = nullptr;
+	std::shared_ptr<ImageContainer> m_organImage = nullptr;
+	std::shared_ptr<ImageContainer> m_ctImage = nullptr;
+	std::shared_ptr<ImageContainer> m_doseImage = nullptr;
+	std::vector<std::string> m_organList;
+	std::vector<std::string> m_materialList;
 
 };

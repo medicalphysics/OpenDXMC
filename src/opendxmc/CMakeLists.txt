@@ -63,6 +63,7 @@ find_package(VTK COMPONENTS
   lz4
   lzma
   expat
+  hdf5
   )
 
 #include(${VTK_USE_FILE})  # depricated since vtk 8.90
@@ -154,22 +155,22 @@ vtk_module_autoinit(
 
 #adding libnob dependency
 #including fetchcontent module and declearing target
-include(FetchContent)
-FetchContent_Declare(
-  libnobimport
-  GIT_REPOSITORY https://github.com/google/libnop.git
-  #GIT_TAG        release-1.8.0
-)
+#include(FetchContent)
+#FetchContent_Declare(
+#  libnobimport
+#  GIT_REPOSITORY https://github.com/google/libnop.git
+#  #GIT_TAG        release-1.8.0
+#)
 ##downloads target if not available
-FetchContent_MakeAvailable(libnobimport)
-target_include_directories(OpenDXMC PRIVATE "${libnobimport_SOURCE_DIR}/include")
+#FetchContent_MakeAvailable(libnobimport)
+#target_include_directories(OpenDXMC PRIVATE "${libnobimport_SOURCE_DIR}/include")
 
 
 #making version available in code
 target_compile_definitions(OpenDXMC PRIVATE APP_VERSION="${PROJECT_VERSION}")
 
 
-##adding REQUIRED dlls to the binary folder of executable
+##adding REQUIRED dlls to the binary folder of executable for windows
 #adding target to copy qt dlls 
 if (WIN32)
     get_target_property(QT5_QMAKE_EXECUTABLE Qt5::qmake IMPORTED_LOCATION)

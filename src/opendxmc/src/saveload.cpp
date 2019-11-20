@@ -21,27 +21,7 @@ Copyright 2019 Erlend Andersen
 #include "imagecontainer.h"
 #include "source.h"
 
-#include <nop/serializer.h>
-#include <nop/utility/stream_writer.h>
-
-#include <sstream>
-
-
-
-struct Data {
-	nop::Entry<std::array<double, 3>, 0> origin;
-	nop::Entry<std::array<double, 3>, 1> spacing;
-	nop::Entry<std::array<std::size_t, 3>, 2> dimensions;
-	nop::Entry<std::vector<double>, 3> densityArray;
-	nop::Entry<std::vector<unsigned char>, 4> materialArray;
-	nop::Entry<std::vector<unsigned char>, 5> organArray;
-	nop::Entry<std::vector<double>, 6> doseArray;
-	nop::Entry<std::vector<float>, 7> ctArray;
-	nop::Entry<std::vector<std::string>, 8> materialNames;
-	nop::Entry<std::vector<std::string>, 9> organNames;
-	NOP_TABLE(Data, origin, spacing, dimensions, densityArray, materialArray, organArray, doseArray, ctArray, materialNames, organNames);
-};
-
+#include "vtk_hdf5.h"
 
 
 

@@ -12,14 +12,14 @@
       "inheritEnvironments": [ "msvc_x64_x64" ],
       "variables": [
         {
-          "name": "Qt5_DIR",
-          "value": "C:/Qt/5.13.1/msvc2017_64/lib/cmake/Qt5",
-          "type": "PATH"
-        },
-        {
           "name": "VTK_DIR",
           "value": "C:/VTK/bin/vtk",
           "type": "FILEPATH"
+        },
+        {
+          "name": "Qt5_DIR",
+          "value": "C:/Qt/5.13.2/msvc2017_64/lib/cmake/Qt5",
+          "type": "PATH"
         }
       ]
     },
@@ -41,7 +41,7 @@
         },
         {
           "name": "Qt5_DIR",
-          "value": "C:/Qt/5.13.1/msvc2017_64/lib/cmake/Qt5",
+          "value": "C:/Qt/5.13.2/msvc2017_64/lib/cmake/Qt5",
           "type": "PATH"
         }
       ]
@@ -64,7 +64,7 @@
         },
         {
           "name": "Qt5_DIR",
-          "value": "C:/Qt/5.13.1/msvc2017_64/lib/cmake/Qt5",
+          "value": "C:/Qt/5.13.2/msvc2017_64/lib/cmake/Qt5",
           "type": "PATH"
         }
       ]
@@ -87,7 +87,7 @@
         },
         {
           "name": "Qt5_DIR",
-          "value": "C:/Qt/5.13.1/msvc2017_64/lib/cmake/Qt5",
+          "value": "C:/Qt/5.13.2/msvc2017_64/lib/cmake/Qt5",
           "type": "PATH"
         }
       ]
@@ -105,7 +105,7 @@
       "variables": [
         {
           "name": "Qt5_DIR",
-          "value": "C:/Qt/5.13.1/msvc2017_64/lib/cmake/Qt5",
+          "value": "C:/Qt/5.13.2/msvc2017_64/lib/cmake/Qt5",
           "type": "PATH"
         },
         {
@@ -128,7 +128,7 @@
       "variables": [
         {
           "name": "Qt5_DIR",
-          "value": "C:/Qt/5.13.1/msvc2017_64/lib/cmake/Qt5",
+          "value": "C:/Qt/5.13.2/msvc2017_64/lib/cmake/Qt5",
           "type": "PATH"
         },
         {

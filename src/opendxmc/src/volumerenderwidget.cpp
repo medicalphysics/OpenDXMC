@@ -227,7 +227,9 @@ void VolumeRenderWidget::updateVolumeRendering()
 		m_volumeMapper->SetRequestedRenderModeToRayCast();
 	else if (m_renderMode == 1)
 		m_volumeMapper->SetRequestedRenderModeToGPU();
-	
+	else if (m_renderMode == 2)
+		m_volumeMapper->SetRequestedRenderModeToOSPRay();
+
 	m_volumeMapper->SetBlendModeToComposite();
 	m_volumeMapper->SetInputConnection(m_imageSmoother->GetOutputPort());
 	m_volumeMapper->Update();

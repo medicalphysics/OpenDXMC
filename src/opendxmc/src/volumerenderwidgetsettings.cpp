@@ -454,8 +454,11 @@ VolumeRenderSettingsWidget::VolumeRenderSettingsWidget(vtkSmartPointer<vtkVolume
 
 	//render box setting
 	auto renderModeSelector = new QComboBox(this);
-	renderModeSelector->addItem(tr("CPU (slooow but is more accurate)"));
-	renderModeSelector->addItem(tr("GPU (fast if your graphics card is up for it)"));
+	renderModeSelector->addItem(tr("CPU ray caster (slooow but is more accurate)"));
+	renderModeSelector->addItem(tr("GPU ray caster (fast if your graphics card is up for it)"));
+#ifdef ENABLE_OSPRAY
+	renderModeSelector->addItem(tr("OSPRay Intel CPU ray tracer"));
+#endif // ENABLE_OSPRAY
 	connect(renderModeSelector, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), [=](int mode) {emit this->renderModeChanged(mode); });
 	auto renderModeLayout = new QHBoxLayout;
 	renderModeLayout->setContentsMargins(0, 0, 0, 0);

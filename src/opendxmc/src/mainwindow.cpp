@@ -163,6 +163,11 @@ MainWindow::MainWindow(QWidget* parent)
 	//request to run simulation connection
 	connect(sourceEditWidget, &SourceEditWidget::runSimulation, m_simulationPipeline, &SimulationPipeline::runSimulation);
 
+
+	//setting up saveload
+	m_saveLoad = new SaveLoad(this);
+
+
 	//no connections to pipeline after this point
 	m_workerThread.start();
 

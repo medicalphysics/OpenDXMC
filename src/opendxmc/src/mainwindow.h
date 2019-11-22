@@ -26,6 +26,7 @@ Copyright 2019 Erlend Andersen
 #include "simulationpipeline.h"
 #include "binaryimportpipeline.h"
 #include "progressbar.h"
+#include "saveload.h"
 
 class MainWindow : public QMainWindow
 {
@@ -43,6 +44,8 @@ private:
 	SimulationPipeline* m_simulationPipeline = nullptr;
 	BinaryImportPipeline* m_binaryImportPipeline = nullptr;
 	QTabWidget *m_menuWidget = nullptr;
+
+	SaveLoad* m_saveLoad = nullptr;
 
 	std::shared_ptr<ProgressBar> m_progressBar = nullptr;
 	QTimer* m_progressTimer = nullptr;

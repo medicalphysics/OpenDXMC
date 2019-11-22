@@ -227,9 +227,10 @@ void VolumeRenderWidget::updateVolumeRendering()
 		m_volumeMapper->SetRequestedRenderModeToRayCast();
 	else if (m_renderMode == 1)
 		m_volumeMapper->SetRequestedRenderModeToGPU();
+#ifdef ENABLE_OSPRAY
 	else if (m_renderMode == 2)
 		m_volumeMapper->SetRequestedRenderModeToOSPRay();
-
+#endif // ENABLE_OSPRAY
 	m_volumeMapper->SetBlendModeToComposite();
 	m_volumeMapper->SetInputConnection(m_imageSmoother->GetOutputPort());
 	m_volumeMapper->Update();
@@ -260,6 +261,13 @@ void VolumeRenderWidget::setRenderMode(int mode)
 		{
 			m_volumeMapper->SetRequestedRenderModeToGPU();
 		}
+#ifdef ENABLE_OSPRAY
+		if (mode == 2)
+		{
+			m_volumeMapper->SetRequestedRenderModeToOSPRay();
+		}
+#endif // ENABLE_OSPRAY
+
 		updateRendering();
 	}
 }

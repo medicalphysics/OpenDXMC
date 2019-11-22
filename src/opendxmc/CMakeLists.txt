@@ -63,8 +63,15 @@ find_package(VTK COMPONENTS
   lz4
   lzma
   expat
+  RenderingRayTracing
+  RenderingSceneGraph
+  jsoncpp
   )
 
+
+  ##adding ospray dependency
+option(ENABLE_OSPRAY "Build the OSPRay rendering backend. Requires OSPRay" OFF)
+ 
 #include(${VTK_USE_FILE})  # depricated since vtk 8.90
 include_directories(${VTK_INCLUDE_DIRS})  # do we need this?
 
@@ -152,7 +159,11 @@ add_executable(OpenDXMC WIN32
     )
 
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/opendxmc")
+# Adding vtk modules (replaces include(${VTK_USE_FILE}) since vtk 8.90) 
+vtk_module_autoinit(
+    TARGETS OpenDXMC
+    MODULES ${VTK_LIBRARIES}
+    )
 
 # Define the libraries this project depends upon
 target_link_libraries(OpenDXMC
@@ -165,15 +176,16 @@ target_link_libraries(OpenDXMC
 #		PRIVATE spdlog::spdlog_header_only ## adding spdlog later
         )
 
-# Adding vtk modules (replaces include(${VTK_USE_FILE}) since vtk 8.90) 
-vtk_module_autoinit(
-    TARGETS OpenDXMC
-    MODULES ${VTK_LIBRARIES}
-    )
-
 
 #making version available in code
 target_compile_definitions(OpenDXMC PRIVATE APP_VERSION="${PROJECT_VERSION}")
+if (ENABLE_OSPRAY)
+	target_compile_definitions(OpenDXMC PRIVATE ENABLE_OSPRAY)
+	#add_definitions(-DENABLE_OSPRAY)
+endif()
+
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/opendxmc")
 
 ##adding REQUIRED dlls to the binary folder of executable
 #adding target to copy qt dlls 
@@ -292,6 +304,28 @@ IF(GDCM_FOUND)
 	endif(WIN32)
 ENDIF(GDCM_FOUND)
 
+##adding ospray dependency
+if (ENABLE_OSPRAY)
+	FIND_PACKAGE(OSPRAY)
+	add_definitions(-DENABLE_OSPRAY)
+	IF(WIN32)
+		message("${OSPRAY_ROOT}")
+		message("${OSPRAY_DIR}")
+		add_custom_target(ospraydeploy ALL)
+		set(libnames "ospray" "ospray_common" "tbb")
+		foreach(libname ${libnames})
+			set(libpath "${OSPRAY_ROOT}/bin/${libname}.dll")
+			set(outpath "${CMAKE_BINARY_DIR}/${PROJECT_NAME}/${libname}.dll")
+			add_custom_command(TARGET ospraydeploy POST_BUILD
+				COMMENT "Copying OSPRay dll ${libpath} to ${outpath}"
+				DEPENDS ${libpath}
+				COMMAND ${CMAKE_COMMAND} -E copy_if_different
+				${libpath}
+				${outpath}
+				)
+		endforeach()
+	ENDIF(WIN32)
+endif()
 
 
 #Copying application resources

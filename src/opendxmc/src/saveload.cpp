@@ -20,30 +20,44 @@ Copyright 2019 Erlend Andersen
 
 #include "imagecontainer.h"
 #include "source.h"
-#include <hdf5.h>
+#include <hdf5_hl.h>
 #include <vtk_hdf5.h>
+
 
 
 SaveLoad::SaveLoad(QObject* parent)
 	:QObject(parent)
 {
-	auto file_id = vtkhdf5_H5Fcreate("test.h5", H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-	std::vector<double> testArr(512 * 512 * 5, 0);
+	std::vector<int> testArr(512 * 512 * 5, 0);
 	std::array<hsize_t, 3> dims={ 512, 512, 5 };
-	auto dataspace_id = vtkhdf5_H5Screate_simple(2, dims.data(), NULL);
+	int* buffer = testArr.data();
 
-	auto dataset_id = vtkhdf5_H5Dcreate2(file_id, "/arrays/test", H5T_STD_U64LE, dataspace_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+	auto file_id = H5Fcreate("ex_lite1.h5", H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
 
-	/* Write the first dataset. */
-	auto status = vtkhdf5_H5Dwrite(dataset_id, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-		testArr.data());
+	/* create and write an integer type dataset named "dset" */
+	H5LTmake_dataset(file_id, "/dset", 3, dims.data(), H5T_NATIVE_INT, buffer);
 
-	/* Close the data space for the first dataset. */
-	status = H5Sclose(dataspace_id);
+	/* close file */
+	H5Fclose(file_id);
 
-	/* Close the first dataset. */
-	status = H5Dclose(dataset_id);
-	auto status = vtkhdf5_H5Fclose(file_id);
+
+
+	auto file = vtkhdf5_H5Fcreate("test.h5", H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+
+	auto dataspace = vtkhdf5_H5Screate_simple(3, dims.data(), NULL);
+	//auto datatype = vtkhdf5_H5Tcopy(H5T_NATIVE_INT64);
+	auto datatype = vtkhdf5_H5Tarray_create2(H5T_NATIVE_INT64, 3, dims.data());
+	auto status = H5Tset_order(datatype, H5T_ORDER_LE);
+
+	auto dset = H5Dcreate(file, "testArr", datatype, dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+	status = vtkhdf5_H5Dwrite(dset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+		buffer);
+
+	status = vtkhdf5_H5Tclose(datatype);
+	status = vtkhdf5_H5Dclose(dset);
+	status = vtkhdf5_H5Sclose(dataspace);
+	status = vtkhdf5_H5Fclose(file);
+
 }
 
 void SaveLoad::saveToFile(const QString& path)

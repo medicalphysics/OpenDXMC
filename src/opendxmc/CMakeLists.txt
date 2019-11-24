@@ -209,8 +209,7 @@ endif(WIN32)
 #adding target to copy vtk dlls 
 if (WIN32)
 	add_custom_target(vtkdeploy ALL)
-	foreach(vtkdll ${VTK_LIBRARIES})
-		
+	foreach(vtkdll ${VTK_LIBRARIES})	
 		set(libname "${vtkdll}-${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}.dll")
 		string(REPLACE "VTK::" "vtk" libname ${libname})
 		if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
@@ -231,41 +230,25 @@ if (WIN32)
 		endif()
 	endforeach()
 	
-	## vtkRenderingVolumeOpenGL2-8.X is not copied (BUG) a quick fix here
-	add_custom_target(vtkdeployBUGFIX ALL)
-	set(vtkdll "vtkRenderingVolumeOpenGL2")
-	set(libname "${vtkdll}-${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}.dll")
-	string(REPLACE "VTK::" "vtk" libname ${libname})
-	if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
-		string(REPLACE ".dll" "d.dll" libname ${libname})
-	endif()
-	set(libpath "${VTK_DIR}/bin/${CMAKE_BUILD_TYPE}/${libname}")
-	#set(libpath "${VTK_RUNTIME_LIBRARY_DIRS}/${CMAKE_BUILD_TYPE}/${libname}")
-	set(outpath "${CMAKE_BINARY_DIR}/${PROJECT_NAME}/${libname}")
-	add_custom_command(TARGET vtkdeployBUGFIX POST_BUILD
-		COMMENT "Copying vtk dll ${libpath} to ${outpath}"
-		DEPENDS ${libpath}
-		COMMAND ${CMAKE_COMMAND} -E copy_if_different
-		${libpath}
-		${outpath}
-		)
-
+	##BUGFIX vtkRenderingVolumeOpenGL2-8.X and vtkhdf5_hl-8.X are not copied (BUG) a quick fix here
 	## vtksys is not a component and must be copied manually
-	add_custom_target(vtkdeploySys ALL)
-	set(vtkdll "vtksys")
-	set(libname "${vtkdll}-${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}.dll")
-	if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
-		string(REPLACE ".dll" "d.dll" libname ${libname})
-	endif()
-	set(libpath "${VTK_DIR}/bin/${CMAKE_BUILD_TYPE}/${libname}")
-	set(outpath "${CMAKE_BINARY_DIR}/${PROJECT_NAME}/${libname}")
-	add_custom_command(TARGET vtkdeployBUGFIX POST_BUILD
-		COMMENT "Copying vtk dll ${libpath} to ${outpath}"
-		DEPENDS ${libpath}
-		COMMAND ${CMAKE_COMMAND} -E copy_if_different
-		${libpath}
-		${outpath}
-		)
+	set(VTKEXTRADEPLOY "vtkRenderingVolumeOpenGL2" "vtkhdf5_hl" "vtksys")
+	foreach(vtkdll ${VTKEXTRADEPLOY})	
+		set(libname "${vtkdll}-${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}.dll")
+		if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+			string(REPLACE ".dll" "d.dll" libname ${libname})
+		endif()
+		set(libpath "${VTK_DIR}/bin/${CMAKE_BUILD_TYPE}/${libname}")
+		set(outpath "${CMAKE_BINARY_DIR}/${PROJECT_NAME}/${libname}")
+		
+		add_custom_command(TARGET vtkdeploy POST_BUILD
+			COMMENT "Copying vtk dll ${libpath} to ${outpath}"
+			DEPENDS ${libpath}
+			COMMAND ${CMAKE_COMMAND} -E copy_if_different
+			${libpath}
+			${outpath}
+			)
+	endforeach()
 endif(WIN32)
 
 

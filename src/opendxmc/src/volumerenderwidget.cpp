@@ -216,9 +216,11 @@ void VolumeRenderWidget::updateVolumeRendering()
 	auto spacing = m_imageData->image->GetSpacing();
 	double meanSpacing = (spacing[0]+spacing[1]+spacing[2]) / 3.0;
 	double minSpacing = std::min(std::min(spacing[0], spacing[1]), spacing[2]);
-	volumeProperty->SetScalarOpacityUnitDistance(meanSpacing);
+	//volumeProperty->SetScalarOpacityUnitDistance(meanSpacing);
 	m_volumeMapper->SetInteractiveUpdateRate(0.00001);
-	m_volumeMapper->SetSampleDistance(minSpacing*1.2);
+	m_volumeMapper->AutoAdjustSampleDistancesOn();
+	//m_volumeMapper->SetLockSampleDistanceToInputSpacing(1)
+	//m_volumeMapper->SetSampleDistance(minSpacing*1.2);
 	m_volumeMapper->CroppingOn();
 	int *extent = m_imageData->image->GetExtent();
 	setCropPlanes(extent);

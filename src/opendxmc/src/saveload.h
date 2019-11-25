@@ -34,6 +34,7 @@ public:
 	void setImageData(std::shared_ptr<ImageContainer> image);
 	void setMaterials(const std::vector<Material>& materials);
 	void setOrganList(const std::vector<std::string>& organList) { m_organList = organList; }
+
 private:
 	std::uint64_t m_currentImageID = 0;
 	std::shared_ptr<ImageContainer> m_densityImage = nullptr;

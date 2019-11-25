@@ -166,6 +166,9 @@ MainWindow::MainWindow(QWidget* parent)
 
 	//setting up saveload
 	m_saveLoad = new SaveLoad(this);
+	connect(m_importPipeline, &ImageImportPipeline::imageDataChanged, m_saveLoad, &SaveLoad::setImageData);
+	connect(m_simulationPipeline, &SimulationPipeline::imageDataChanged, m_saveLoad, &SaveLoad::setImageData);
+	connect(m_binaryImportPipeline, &BinaryImportPipeline::imageDataChanged, m_saveLoad, &SaveLoad::setImageData);
 
 
 	//no connections to pipeline after this point

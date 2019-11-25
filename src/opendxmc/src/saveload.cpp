@@ -18,26 +18,29 @@ Copyright 2019 Erlend Andersen
 
 #include "saveload.h"
 
+#include <QByteArray>
+
 #include "imagecontainer.h"
 #include "source.h"
 #include <hdf5_hl.h>
 #include <vtk_hdf5.h>
 
-
+#include <memory>
+#include <string>
 
 SaveLoad::SaveLoad(QObject* parent)
 	:QObject(parent)
 {
-	std::vector<int> testArr(512 * 512 * 5, 0);
+	/*std::vector<int> testArr(512 * 512 * 5, 0);
 	std::array<hsize_t, 3> dims={ 512, 512, 5 };
 	int* buffer = testArr.data();
 
 	auto file_id = H5Fcreate("ex_lite1.h5", H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
 
-	/* create and write an integer type dataset named "dset" */
+	// create and write an integer type dataset named "dset" 
 	H5LTmake_dataset(file_id, "/dset", 3, dims.data(), H5T_NATIVE_INT, buffer);
 
-	/* close file */
+	// close file 
 	H5Fclose(file_id);
 
 
@@ -57,12 +60,82 @@ SaveLoad::SaveLoad(QObject* parent)
 	status = vtkhdf5_H5Dclose(dset);
 	status = vtkhdf5_H5Sclose(dataspace);
 	status = vtkhdf5_H5Fclose(file);
-
+	*/
 }
+
+
+herr_t createArray(hid_t file_id, std::shared_ptr<ImageContainer> image)
+{
+	if (!image)
+		return -1;
+	if (!(image->image))
+		return -1;
+	
+	//finding data type
+	hid_t type_id;
+	if (image->image->GetScalarType() == VTK_FLOAT)
+		type_id = H5T_IEEE_F32LE;
+	else if (image->image->GetScalarType() == VTK_DOUBLE)
+		type_id = H5T_IEEE_F64LE;
+	else if (image->image->GetScalarType() == VTK_UNSIGNED_CHAR)
+		type_id = H5T_STD_U8LE;
+	else
+		return -1;
+
+	//creating array group
+	hid_t group_id;
+	H5G_info_t group_info;
+	herr_t group_status = H5Gget_info_by_name(file_id, "arrays", &group_info, H5P_DEFAULT);
+	if (group_status < 0) // need to create group
+	{
+		group_id = H5Gcreate2(file_id, "arrays", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+	}
+	else {
+		group_id = H5Gopen2(file_id, "arrays", H5P_DEFAULT);
+	}
+
+	std::array<hsize_t, 3> dims;
+	int* vtk_dims = image->image->GetDimensions();
+	for (std::size_t i = 0; i < 3; ++i)
+		dims[i] = static_cast<hsize_t>(vtk_dims[i]);
+
+	std::string name = image->getImageName();
+
+	herr_t status = H5LTmake_dataset(group_id, name.c_str(), 3, dims.data(), type_id, image->image->GetScalarPointer());
+
+	//setting attributes
+	std::string att_name = "spacing";
+	auto att_status = H5LTset_attribute_double(group_id, name.c_str(), att_name.c_str(), image->image->GetSpacing(), 3);
+	att_name = "direction_cosines";
+	att_status = H5LTset_attribute_double(group_id, name.c_str(), att_name.c_str(), image->directionCosines.data(), 6);
+
+	auto group_id_status = H5Gclose(group_id); // close group
+	return status;
+}
+
 
 void SaveLoad::saveToFile(const QString& path)
 {
-	
+	//creating file 
+	QByteArray bytes = path.toLocal8Bit();
+	char* c_path = bytes.data();
+	hid_t fid = H5Fcreate(c_path, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+	if (fid < 0)
+	{
+		//error creating file 
+		return;
+	}
+	if (m_ctImage)
+		auto status = createArray(fid, m_ctImage);
+	if (m_densityImage)
+		auto status = createArray(fid, m_densityImage);
+	if (m_organImage)
+		auto status = createArray(fid, m_organImage);
+	if (m_materialImage)
+		auto status = createArray(fid, m_materialImage);
+	if (m_doseImage)
+		auto status = createArray(fid, m_doseImage);
+	H5Fclose(fid);
 }
 
 void SaveLoad::setImageData(std::shared_ptr<ImageContainer> image)
@@ -86,6 +159,9 @@ void SaveLoad::setImageData(std::shared_ptr<ImageContainer> image)
 		m_materialImage = image;
 	else if (image->imageType == ImageContainer::OrganImage)
 		m_organImage = image;
+
+	if (image->imageType == ImageContainer::DensityImage)
+		saveToFile("atest.h5");
 }
 
 void SaveLoad::setMaterials(const std::vector<Material>& materials)

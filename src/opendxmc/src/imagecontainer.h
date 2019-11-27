@@ -28,7 +28,6 @@ Copyright 2019 Erlend Andersen
 #include <vtkImageData.h>
 #include <vtkType.h>
 #include <vtkImageImport.h>
-#include <vtkImageGaussianSmooth.h>
 
 
 //used onlu for viz
@@ -70,41 +69,44 @@ public:
 	}
 	std::string getImageName(void)
 	{
-		if (imageType == CTImage)
+		return getImageName(imageType);
+	}
+	static std::string getImageName(ImageContainer::ImageType type)
+	{
+		if (type == ImageContainer::CTImage)
 			return "CTImage";
-		else if (imageType == DensityImage)
+		else if (type == ImageContainer::DensityImage)
 			return "DensityImage";
-		else if (imageType == MaterialImage)
+		else if (type == ImageContainer::MaterialImage)
 			return "MaterialImage";
-		else if (imageType == DoseImage)
+		else if (type == ImageContainer::DoseImage)
 			return "DoseImage";
-		else if (imageType == OrganImage)
+		else if (type == ImageContainer::OrganImage)
 			return "OrganImage";
-		
 		return "Unknown";
 	}
-protected:
-	
-
-	ImageContainer(ImageType imageType, std::shared_ptr<std::vector<double>> imageData, const std::array<std::size_t, 3> &dimensions, const std::array<double, 3> &dataSpacing, const std::array<double, 3> &origin, bool smooth = false)
+	ImageContainer(ImageType imageType, std::shared_ptr<std::vector<double>> imageData, const std::array<std::size_t, 3> &dimensions, const std::array<double, 3> &dataSpacing, const std::array<double, 3> &origin, const std::string& units="")
 	{
 		this->imageType = imageType;
-		registerVector(imageData, dimensions, dataSpacing, origin, VTK_DOUBLE, smooth);
+		dataUnits = units;
+		registerVector(imageData, dimensions, dataSpacing, origin, VTK_DOUBLE);
 	}
-	ImageContainer(ImageType imageType, std::shared_ptr<std::vector<float>> imageData, const std::array<std::size_t, 3> &dimensions, const std::array<double, 3> &dataSpacing, const std::array<double, 3> &origin, bool smooth = false)
+	ImageContainer(ImageType imageType, std::shared_ptr<std::vector<float>> imageData, const std::array<std::size_t, 3> &dimensions, const std::array<double, 3> &dataSpacing, const std::array<double, 3> &origin, const std::string& units = "")
 	{
 		this->imageType = imageType;
-		registerVector(imageData, dimensions, dataSpacing, origin, VTK_FLOAT, smooth);
+		dataUnits = units;
+		registerVector(imageData, dimensions, dataSpacing, origin, VTK_FLOAT);
 	}
-	ImageContainer(ImageType imageType, std::shared_ptr<std::vector<unsigned char>> imageData, const std::array<std::size_t, 3> &dimensions, const std::array<double, 3> &dataSpacing, const std::array<double, 3> &origin, bool smooth = false)
+	ImageContainer(ImageType imageType, std::shared_ptr<std::vector<unsigned char>> imageData, const std::array<std::size_t, 3> &dimensions, const std::array<double, 3> &dataSpacing, const std::array<double, 3> &origin, const std::string& units = "")
 	{
 		this->imageType = imageType;
-		registerVector(imageData, dimensions, dataSpacing, origin, VTK_UNSIGNED_CHAR, smooth);
+		dataUnits = units;
+		registerVector(imageData, dimensions, dataSpacing, origin, VTK_UNSIGNED_CHAR);
 	}
 
 private:
 	template<typename T>
-	void registerVector(std::shared_ptr<std::vector<T>> imageData, const std::array<std::size_t, 3> &dimensions, const std::array<double, 3> &dataSpacing, const std::array<double, 3> &origin, int vtkType, bool smooth=false)
+	void registerVector(std::shared_ptr<std::vector<T>> imageData, const std::array<std::size_t, 3> &dimensions, const std::array<double, 3> &dataSpacing, const std::array<double, 3> &origin, int vtkType)
 	{
 		if (imageData)
 		{
@@ -118,22 +120,9 @@ private:
 			importer->SetImportVoidPointer(static_cast<void*>(imageData->data()));
 			importer->SetDataOrigin(origin[0], origin[1], origin[2]);
 			
-			if (smooth)
-			{
-				vtkSmartPointer<vtkImageGaussianSmooth> smoother = vtkSmartPointer<vtkImageGaussianSmooth>::New();
-				smoother->SetDimensionality(3);
-				smoother->SetStandardDeviations(1.0, 1.0, 1.0);
-				smoother->SetRadiusFactors(2.0, 2.0, 2.0);
-				smoother->SetReleaseDataFlag(1);
-				smoother->SetInputConnection(importer->GetOutputPort());
-				smoother->Update();
-				image = smoother->GetOutput();
-			}
-			else
-			{
-				importer->Update();
-				image = importer->GetOutput();
-			}
+			importer->Update();
+			image = importer->GetOutput();
+			
 			image->GetDimensions();
 			auto* minmax = image->GetScalarRange();
 			minMax[0] = minmax[0];
@@ -144,14 +133,34 @@ private:
 };
 
 
+class CTImageContainer :public ImageContainer
+{
+public:
+	CTImageContainer() :ImageContainer() { imageType = CTImage; dataUnits = "HU"; }
+	CTImageContainer(std::shared_ptr<std::vector<float>> imageData, const std::array<std::size_t, 3>& dimensions, const std::array<double, 3>& dataSpacing, const std::array<double, 3>& origin)
+		:ImageContainer(CTImage, imageData, dimensions, dataSpacing, origin)
+	{
+		m_image_data = imageData;
+		dataUnits = "HU";
+	}
+	virtual ~CTImageContainer() = default;
+	std::shared_ptr<std::vector<float>> imageData(void)
+	{
+		return m_image_data;
+	}
+private:
+	std::shared_ptr<std::vector<float>> m_image_data;
+};
+
 class DensityImageContainer :public ImageContainer
 {
 public:
 	DensityImageContainer() :ImageContainer() { imageType = DensityImage; dataUnits = "g/cm3"; }
-	DensityImageContainer(std::shared_ptr<std::vector<double>> imageData, const std::array<std::size_t, 3> &dimensions, const std::array<double, 3> &dataSpacing, const std::array<double, 3> &origin, bool smooth=false)
-		:ImageContainer(DensityImage, imageData, dimensions, dataSpacing, origin, smooth)
+	DensityImageContainer(std::shared_ptr<std::vector<double>> imageData, const std::array<std::size_t, 3> &dimensions, const std::array<double, 3> &dataSpacing, const std::array<double, 3> &origin)
+		:ImageContainer(DensityImage, imageData, dimensions, dataSpacing, origin)
 	{
 		m_image_data = imageData;
+		dataUnits = "g/cm3";
 	}
 	virtual ~DensityImageContainer() = default;
 	std::shared_ptr<std::vector<double>> imageData(void)
@@ -167,8 +176,8 @@ class DoseImageContainer :public ImageContainer
 {
 public:
 	DoseImageContainer() :ImageContainer() { imageType = DoseImage; }
-	DoseImageContainer(std::shared_ptr<std::vector<double>> imageData, const std::array<std::size_t, 3> &dimensions, const std::array<double, 3> &dataSpacing, const std::array<double, 3> &origin, bool smooth = false)
-		:ImageContainer(DoseImage, imageData, dimensions, dataSpacing, origin, smooth)
+	DoseImageContainer(std::shared_ptr<std::vector<double>> imageData, const std::array<std::size_t, 3> &dimensions, const std::array<double, 3> &dataSpacing, const std::array<double, 3> &origin)
+		:ImageContainer(DoseImage, imageData, dimensions, dataSpacing, origin)
 	{
 		m_image_data = imageData;
 	}

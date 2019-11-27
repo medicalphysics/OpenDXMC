@@ -169,7 +169,14 @@ MainWindow::MainWindow(QWidget* parent)
 	connect(m_importPipeline, &ImageImportPipeline::imageDataChanged, m_saveLoad, &SaveLoad::setImageData);
 	connect(m_simulationPipeline, &SimulationPipeline::imageDataChanged, m_saveLoad, &SaveLoad::setImageData);
 	connect(m_binaryImportPipeline, &BinaryImportPipeline::imageDataChanged, m_saveLoad, &SaveLoad::setImageData);
+	connect(m_saveLoad, &SaveLoad::imageDataChanged, m_simulationPipeline, &SimulationPipeline::setImageData);
+	connect(m_saveLoad, &SaveLoad::imageDataChanged, exportWidget, &ExportWidget::registerImage);
+	connect(m_saveLoad, &SaveLoad::imageDataChanged, sourceEditWidget->model(), &SourceModel::setImageData);
 
+	connect(m_saveLoad, &SaveLoad::::processingDataStarted, this, &MainWindow::setDisableEditing);
+	connect(m_saveLoad, &SaveLoad::::processingDataEnded, this, &MainWindow::setEnableEditing);
+	connect(m_saveLoad, &SaveLoad::::processingDataStarted, progressIndicator, &ProgressIndicator::startAnimation);
+	connect(m_saveLoad, &SaveLoad::::processingDataEnded, progressIndicator, &ProgressIndicator::stopAnimation);
 
 	//no connections to pipeline after this point
 	m_workerThread.start();

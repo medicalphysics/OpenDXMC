@@ -30,11 +30,18 @@ class SaveLoad : public QObject
 public:
 	SaveLoad(QObject* parent = nullptr);
 
+	void loadFromFile(const QString& path);
 	void saveToFile(const QString& path);
 	void setImageData(std::shared_ptr<ImageContainer> image);
 	void setMaterials(const std::vector<Material>& materials);
 	void setOrganList(const std::vector<std::string>& organList) { m_organList = organList; }
-
+signals:
+	void processingDataStarted();
+	void processingDataEnded();
+	void imageDataChanged(std::shared_ptr<ImageContainer> image);
+	void materialDataChanged(std::vector<Material>& materials);
+	void organDataChanged(std::vector<std::string>& organs);
+	void aecFilterChanged(QString name, std::shared_ptr<AECFilter> filter);
 private:
 	std::uint64_t m_currentImageID = 0;
 	std::shared_ptr<ImageContainer> m_densityImage = nullptr;

@@ -27,42 +27,152 @@ Copyright 2019 Erlend Andersen
 
 #include <memory>
 #include <string>
+#include <type_traits>
 
 SaveLoad::SaveLoad(QObject* parent)
 	:QObject(parent)
 {
-	/*std::vector<int> testArr(512 * 512 * 5, 0);
-	std::array<hsize_t, 3> dims={ 512, 512, 5 };
-	int* buffer = testArr.data();
-
-	auto file_id = H5Fcreate("ex_lite1.h5", H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-
-	// create and write an integer type dataset named "dset" 
-	H5LTmake_dataset(file_id, "/dset", 3, dims.data(), H5T_NATIVE_INT, buffer);
-
-	// close file 
-	H5Fclose(file_id);
-
-
-
-	auto file = vtkhdf5_H5Fcreate("test.h5", H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-
-	auto dataspace = vtkhdf5_H5Screate_simple(3, dims.data(), NULL);
-	//auto datatype = vtkhdf5_H5Tcopy(H5T_NATIVE_INT64);
-	auto datatype = vtkhdf5_H5Tarray_create2(H5T_NATIVE_INT64, 3, dims.data());
-	auto status = H5Tset_order(datatype, H5T_ORDER_LE);
-
-	auto dset = H5Dcreate(file, "testArr", datatype, dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-	status = vtkhdf5_H5Dwrite(dset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-		buffer);
-
-	status = vtkhdf5_H5Tclose(datatype);
-	status = vtkhdf5_H5Dclose(dset);
-	status = vtkhdf5_H5Sclose(dataspace);
-	status = vtkhdf5_H5Fclose(file);
-	*/
+	
 }
 
+
+
+template<typename T, ImageContainer::ImageType type>
+std::shared_ptr<ImageContainer> readArrayBuffer(hid_t group_id, const std::array<std::size_t, 3>& dimensions, const std::array<double, 3>& dataSpacing, const std::array<double, 3>& origin, const std::string& units)
+{
+	auto array_name = ImageContainer::getImageName(type);
+	hid_t data_type;
+	if (std::is_same<T, double>::value)
+		data_type = H5T_IEEE_F64LE;
+	else if (std::is_same<T, float>::value)
+		data_type = H5T_IEEE_F32LE;
+	else if (std::is_same<T, unsigned char>::value)
+		data_type = H5T_STD_U8LE;
+	else
+		return nullptr;
+
+	
+	auto data_size = dimensions[0] * dimensions[1] * dimensions[2];
+	auto data = std::make_shared<std::vector<T>>(data_size);
+	T* data_buffer = data->data();
+	auto read_status = H5LTread_dataset(group_id, array_name.c_str(), data_type, data_buffer);
+
+	if (read_status < 0)
+		return nullptr;
+
+	auto image = std::make_shared<ImageContainer>(type, data, dimensions, dataSpacing, origin, units);
+	return image;
+
+}
+
+std::shared_ptr<ImageContainer> readArray(hid_t file_id, ImageContainer::ImageType type)
+{
+
+	auto array_name = ImageContainer::getImageName(type);
+
+	//opening array group
+	hid_t group_id;
+	H5G_info_t group_info;
+	herr_t group_status = H5Gget_info_by_name(file_id, "arrays", &group_info, H5P_DEFAULT);
+	if (group_status < 0)
+	{
+		// error no group named array
+		return nullptr;
+	}
+	group_id = H5Gopen2(file_id, "arrays", H5P_DEFAULT);
+
+	//finding dataset
+	herr_t dataset_exists = H5LTfind_dataset(group_id, array_name.c_str());
+	if (dataset_exists < 0)
+	{
+		//dataset do not exists
+		return nullptr;
+	}
+
+	std::array<hsize_t, 3> h5_dims;
+	H5T_class_t class_id;
+	size_t data_size;
+	herr_t dataset_status = H5LTget_dataset_info(group_id, array_name.c_str(), h5_dims.data(), &class_id, &data_size);
+	if (dataset_status < 0)
+	{
+		return nullptr; //some error, this should never happend
+	}
+
+
+	//creating attributes 
+	std::array<std::size_t, 3> dims{ h5_dims[0], h5_dims[1] , h5_dims[2] };
+	char units_buffer[64];
+	herr_t units_status = H5LTget_attribute_string(group_id, array_name.c_str(), "units", units_buffer);
+	std::string units(units_buffer);
+	std::array<double, 3> spacing;
+	herr_t spacing_status = H5LTget_attribute_double(group_id, array_name.c_str(), "spacing", spacing.data());
+	std::array<double, 6> cosines;
+	herr_t cosines_status = H5LTget_attribute_double(group_id, array_name.c_str(), "direction_cosines", cosines.data());
+	std::array<double, 3> origin{ 0,0,0 };
+	if (units_status < 0 || spacing_status < 0 || cosines_status < 0)
+	{
+		return nullptr; // error
+	}
+
+	
+
+	std::shared_ptr<ImageContainer> image = nullptr;
+
+	if (type == ImageContainer::CTImage)
+	{
+		image = readArrayBuffer<float, ImageContainer::CTImage>(group_id, dims, spacing, origin, units);
+	}
+	else if (type == ImageContainer::DensityImage)
+	{
+		image = readArrayBuffer<double, ImageContainer::DensityImage>(group_id, dims, spacing, origin, units);
+	}
+	else if (type == ImageContainer::DoseImage)
+	{
+		image = readArrayBuffer<double, ImageContainer::DoseImage>(group_id, dims, spacing, origin, units);
+	}
+	else if (type == ImageContainer::MaterialImage)
+	{
+		image = readArrayBuffer<unsigned char, ImageContainer::MaterialImage>(group_id, dims, spacing, origin, units);
+	}
+	else if (type == ImageContainer::OrganImage)
+	{
+		image = readArrayBuffer<unsigned char, ImageContainer::OrganImage>(group_id, dims, spacing, origin, units);
+	}
+	if (image)
+	{
+		image->directionCosines = cosines;
+	}
+	return image;
+}
+
+void SaveLoad::loadFromFile(const QString& path)
+{
+	emit processingDataStarted();
+	QByteArray bytes = path.toLocal8Bit();
+	char* c_path = bytes.data();
+	hid_t fid = H5Fopen(c_path, H5F_ACC_RDONLY, H5P_DEFAULT);
+	if (fid < 0)
+	{
+		return; //error opening file
+	}
+	m_ctImage = readArray(fid, ImageContainer::CTImage);
+	m_doseImage = readArray(fid, ImageContainer::DoseImage);
+	m_densityImage = readArray(fid, ImageContainer::DensityImage);
+	m_organImage = readArray(fid, ImageContainer::OrganImage);
+	m_materialImage = readArray(fid, ImageContainer::MaterialImage);
+
+	std::array<std::shared_ptr<ImageContainer>, 6> images{ m_ctImage, m_doseImage, m_densityImage, m_organImage, m_materialImage };
+	auto ID = ImageContainer::generateID();
+	for (auto im : images)
+	{
+		if (im)
+		{
+			im->ID = ID;
+			emit imageDataChanged(im);
+		}
+	}
+	emir processingDataEnded();
+}
 
 herr_t createArray(hid_t file_id, std::shared_ptr<ImageContainer> image)
 {
@@ -70,7 +180,7 @@ herr_t createArray(hid_t file_id, std::shared_ptr<ImageContainer> image)
 		return -1;
 	if (!(image->image))
 		return -1;
-	
+
 	//finding data type
 	hid_t type_id;
 	if (image->image->GetScalarType() == VTK_FLOAT)
@@ -108,14 +218,15 @@ herr_t createArray(hid_t file_id, std::shared_ptr<ImageContainer> image)
 	auto att_status = H5LTset_attribute_double(group_id, name.c_str(), att_name.c_str(), image->image->GetSpacing(), 3);
 	att_name = "direction_cosines";
 	att_status = H5LTset_attribute_double(group_id, name.c_str(), att_name.c_str(), image->directionCosines.data(), 6);
-
+	att_name = "units";
+	att_status = H5LTset_attribute_string(group_id, name.c_str(), att_name.c_str(), image->dataUnits.c_str());
 	auto group_id_status = H5Gclose(group_id); // close group
 	return status;
 }
 
-
 void SaveLoad::saveToFile(const QString& path)
 {
+	emit processingDataStarted();
 	//creating file 
 	QByteArray bytes = path.toLocal8Bit();
 	char* c_path = bytes.data();
@@ -136,6 +247,7 @@ void SaveLoad::saveToFile(const QString& path)
 	if (m_doseImage)
 		auto status = createArray(fid, m_doseImage);
 	H5Fclose(fid);
+	emit processingDataEnded();
 }
 
 void SaveLoad::setImageData(std::shared_ptr<ImageContainer> image)
@@ -159,9 +271,6 @@ void SaveLoad::setImageData(std::shared_ptr<ImageContainer> image)
 		m_materialImage = image;
 	else if (image->imageType == ImageContainer::OrganImage)
 		m_organImage = image;
-
-	if (image->imageType == ImageContainer::DensityImage)
-		saveToFile("atest.h5");
 }
 
 void SaveLoad::setMaterials(const std::vector<Material>& materials)

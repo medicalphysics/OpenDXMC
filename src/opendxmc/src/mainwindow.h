@@ -38,6 +38,8 @@ public:
 	void setDisableEditing(void);
 	void setProgressBar(std::shared_ptr<ProgressBar> progressBar);
 	void updateProgressBar();
+protected:
+	void createMenu();
 private:
 	QThread m_workerThread;
 	ImageImportPipeline *m_importPipeline = nullptr;

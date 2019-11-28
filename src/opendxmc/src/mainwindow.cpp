@@ -20,6 +20,7 @@ Copyright 2019 Erlend Andersen
 #include <QStatusBar>
 #include <QAction>
 #include <QMenuBar>
+#include <QAction>
 
 #include "mainwindow.h"
 #include "viewportwidget.h"
@@ -172,11 +173,16 @@ MainWindow::MainWindow(QWidget* parent)
 	connect(m_saveLoad, &SaveLoad::imageDataChanged, m_simulationPipeline, &SimulationPipeline::setImageData);
 	connect(m_saveLoad, &SaveLoad::imageDataChanged, exportWidget, &ExportWidget::registerImage);
 	connect(m_saveLoad, &SaveLoad::imageDataChanged, sourceEditWidget->model(), &SourceModel::setImageData);
+	connect(m_saveLoad, &SaveLoad::imageDataChanged, viewPort, &ViewPortWidget::setImageData);
 
-	connect(m_saveLoad, &SaveLoad::::processingDataStarted, this, &MainWindow::setDisableEditing);
-	connect(m_saveLoad, &SaveLoad::::processingDataEnded, this, &MainWindow::setEnableEditing);
-	connect(m_saveLoad, &SaveLoad::::processingDataStarted, progressIndicator, &ProgressIndicator::startAnimation);
-	connect(m_saveLoad, &SaveLoad::::processingDataEnded, progressIndicator, &ProgressIndicator::stopAnimation);
+	connect(m_saveLoad, &SaveLoad::processingDataStarted, this, &MainWindow::setDisableEditing);
+	connect(m_saveLoad, &SaveLoad::processingDataEnded, this, &MainWindow::setEnableEditing);
+	connect(m_saveLoad, &SaveLoad::processingDataStarted, progressIndicator, &ProgressIndicator::startAnimation);
+	connect(m_saveLoad, &SaveLoad::processingDataEnded, progressIndicator, &ProgressIndicator::stopAnimation);
+
+
+	//setting up window menu
+	createMenu();
 
 	//no connections to pipeline after this point
 	m_workerThread.start();
@@ -191,6 +197,24 @@ MainWindow::~MainWindow()
 	m_importPipeline = nullptr;
 	delete m_simulationPipeline;
 	m_simulationPipeline = nullptr;
+}
+
+void MainWindow::createMenu()
+{
+	auto fileMenu = menuBar()->addMenu(tr("&File"));
+	
+	auto saveAction = new QAction(tr("Save as"), this);
+	saveAction->setShortcut(QKeySequence::SaveAs);
+	saveAction->setStatusTip(tr("Save current simulation as"));
+	connect(saveAction, &QAction::triggered, m_saveLoad, &SaveLoad::saveToFile);
+	fileMenu->addAction(saveAction);
+
+	auto openAction = new QAction(tr("Open"), this);
+	openAction->setShortcut(QKeySequence::Open);
+	openAction->setStatusTip(tr("Open a previously saved simulation"));
+	connect(openAction, &QAction::triggered, m_saveLoad, &SaveLoad::loadFromFile);
+	fileMenu->addAction(openAction);
+
 }
 
 void MainWindow::setEnableEditing(void)

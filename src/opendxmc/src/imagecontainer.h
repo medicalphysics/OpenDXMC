@@ -85,25 +85,32 @@ public:
 			return "OrganImage";
 		return "Unknown";
 	}
+
 	ImageContainer(ImageType imageType, std::shared_ptr<std::vector<double>> imageData, const std::array<std::size_t, 3> &dimensions, const std::array<double, 3> &dataSpacing, const std::array<double, 3> &origin, const std::string& units="")
 	{
 		this->imageType = imageType;
 		dataUnits = units;
 		registerVector(imageData, dimensions, dataSpacing, origin, VTK_DOUBLE);
+		m_image_data_double = imageData;
 	}
 	ImageContainer(ImageType imageType, std::shared_ptr<std::vector<float>> imageData, const std::array<std::size_t, 3> &dimensions, const std::array<double, 3> &dataSpacing, const std::array<double, 3> &origin, const std::string& units = "")
 	{
 		this->imageType = imageType;
 		dataUnits = units;
 		registerVector(imageData, dimensions, dataSpacing, origin, VTK_FLOAT);
+		m_image_data_float = imageData;
 	}
 	ImageContainer(ImageType imageType, std::shared_ptr<std::vector<unsigned char>> imageData, const std::array<std::size_t, 3> &dimensions, const std::array<double, 3> &dataSpacing, const std::array<double, 3> &origin, const std::string& units = "")
 	{
 		this->imageType = imageType;
 		dataUnits = units;
 		registerVector(imageData, dimensions, dataSpacing, origin, VTK_UNSIGNED_CHAR);
+		m_image_data_uchar = imageData;
 	}
-
+protected:
+	std::shared_ptr<std::vector<double>> m_image_data_double=nullptr;
+	std::shared_ptr<std::vector<float>> m_image_data_float=nullptr;
+	std::shared_ptr<std::vector<unsigned char>> m_image_data_uchar=nullptr;
 private:
 	template<typename T>
 	void registerVector(std::shared_ptr<std::vector<T>> imageData, const std::array<std::size_t, 3> &dimensions, const std::array<double, 3> &dataSpacing, const std::array<double, 3> &origin, int vtkType)
@@ -112,7 +119,6 @@ private:
 		{
 			vtkSmartPointer<vtkImageImport> importer = vtkSmartPointer<vtkImageImport>::New();
 			importer->SetDataSpacing(dataSpacing[0], dataSpacing[1], dataSpacing[2]);
-			importer->SetDataOrigin(0.0, 0.0, 0.0);
 			importer->SetWholeExtent(0, static_cast<int>(dimensions[0]) - 1, 0, static_cast<int>(dimensions[1]) - 1, 0, static_cast<int>(dimensions[2]) - 1);
 			importer->SetDataExtentToWholeExtent();
 			importer->SetDataScalarType(vtkType);
@@ -122,8 +128,8 @@ private:
 			
 			importer->Update();
 			image = importer->GetOutput();
-			
 			image->GetDimensions();
+			image->ComputeBounds();
 			auto* minmax = image->GetScalarRange();
 			minMax[0] = minmax[0];
 			minMax[1] = minmax[1];
@@ -132,24 +138,20 @@ private:
 	}
 };
 
-
 class CTImageContainer :public ImageContainer
 {
 public:
 	CTImageContainer() :ImageContainer() { imageType = CTImage; dataUnits = "HU"; }
 	CTImageContainer(std::shared_ptr<std::vector<float>> imageData, const std::array<std::size_t, 3>& dimensions, const std::array<double, 3>& dataSpacing, const std::array<double, 3>& origin)
-		:ImageContainer(CTImage, imageData, dimensions, dataSpacing, origin)
+		:ImageContainer(CTImage, imageData, dimensions, dataSpacing, origin, "HU")
 	{
-		m_image_data = imageData;
-		dataUnits = "HU";
+		
 	}
 	virtual ~CTImageContainer() = default;
 	std::shared_ptr<std::vector<float>> imageData(void)
 	{
-		return m_image_data;
+		return m_image_data_float;
 	}
-private:
-	std::shared_ptr<std::vector<float>> m_image_data;
 };
 
 class DensityImageContainer :public ImageContainer
@@ -157,18 +159,14 @@ class DensityImageContainer :public ImageContainer
 public:
 	DensityImageContainer() :ImageContainer() { imageType = DensityImage; dataUnits = "g/cm3"; }
 	DensityImageContainer(std::shared_ptr<std::vector<double>> imageData, const std::array<std::size_t, 3> &dimensions, const std::array<double, 3> &dataSpacing, const std::array<double, 3> &origin)
-		:ImageContainer(DensityImage, imageData, dimensions, dataSpacing, origin)
+		:ImageContainer(DensityImage, imageData, dimensions, dataSpacing, origin, "g/cm3")
 	{
-		m_image_data = imageData;
-		dataUnits = "g/cm3";
 	}
 	virtual ~DensityImageContainer() = default;
 	std::shared_ptr<std::vector<double>> imageData(void)
 	{
-		return m_image_data;
+		return m_image_data_double;
 	}
-private:
-	std::shared_ptr<std::vector<double>> m_image_data;
 };
 
 
@@ -179,15 +177,12 @@ public:
 	DoseImageContainer(std::shared_ptr<std::vector<double>> imageData, const std::array<std::size_t, 3> &dimensions, const std::array<double, 3> &dataSpacing, const std::array<double, 3> &origin)
 		:ImageContainer(DoseImage, imageData, dimensions, dataSpacing, origin)
 	{
-		m_image_data = imageData;
 	}
 	virtual ~DoseImageContainer() = default;
 	std::shared_ptr<std::vector<double>> imageData(void)
 	{
-		return m_image_data;
+		return m_image_data_double;
 	}
-private:
-	std::shared_ptr<std::vector<double>> m_image_data;
 };
 
 
@@ -198,15 +193,12 @@ public:
 	OrganImageContainer(std::shared_ptr<std::vector<unsigned char>> imageData, const std::array<std::size_t, 3> &dimensions, const std::array<double, 3> &dataSpacing, const std::array<double, 3> &origin)
 		:ImageContainer(OrganImage, imageData, dimensions, dataSpacing, origin)
 	{
-		m_image_data = imageData;
 	}
 	virtual ~OrganImageContainer() = default;
 	std::shared_ptr<std::vector<unsigned char>> imageData(void)
 	{
-		return m_image_data;
+		return m_image_data_uchar;
 	}
-private:
-	std::shared_ptr<std::vector<unsigned char>> m_image_data;
 };
 
 class MaterialImageContainer :public ImageContainer
@@ -216,13 +208,10 @@ public:
 	MaterialImageContainer(std::shared_ptr<std::vector<unsigned char>> imageData, const std::array<std::size_t, 3> &dimensions, const std::array<double, 3> &dataSpacing, const std::array<double, 3> &origin)
 		:ImageContainer(MaterialImage, imageData, dimensions, dataSpacing, origin)
 	{
-		m_image_data = imageData;
 	}
 	virtual ~MaterialImageContainer() = default;
 	std::shared_ptr<std::vector<unsigned char>> imageData(void)
 	{
-		return m_image_data;
+		return m_image_data_uchar;
 	}
-private:
-	std::shared_ptr<std::vector<unsigned char>> m_image_data;
 };

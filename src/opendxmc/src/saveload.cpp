@@ -19,6 +19,9 @@ Copyright 2019 Erlend Andersen
 #include "saveload.h"
 
 #include <QByteArray>
+#include <QFileDialog>
+#include <QSettings>
+#include <QApplication>
 
 #include "imagecontainer.h"
 #include "source.h"
@@ -35,8 +38,6 @@ SaveLoad::SaveLoad(QObject* parent)
 	
 }
 
-
-
 template<typename T, ImageContainer::ImageType type>
 std::shared_ptr<ImageContainer> readArrayBuffer(hid_t group_id, const std::array<std::size_t, 3>& dimensions, const std::array<double, 3>& dataSpacing, const std::array<double, 3>& origin, const std::string& units)
 {
@@ -51,7 +52,6 @@ std::shared_ptr<ImageContainer> readArrayBuffer(hid_t group_id, const std::array
 	else
 		return nullptr;
 
-	
 	auto data_size = dimensions[0] * dimensions[1] * dimensions[2];
 	auto data = std::make_shared<std::vector<T>>(data_size);
 	T* data_buffer = data->data();
@@ -62,12 +62,10 @@ std::shared_ptr<ImageContainer> readArrayBuffer(hid_t group_id, const std::array
 
 	auto image = std::make_shared<ImageContainer>(type, data, dimensions, dataSpacing, origin, units);
 	return image;
-
 }
 
 std::shared_ptr<ImageContainer> readArray(hid_t file_id, ImageContainer::ImageType type)
 {
-
 	auto array_name = ImageContainer::getImageName(type);
 
 	//opening array group
@@ -83,9 +81,10 @@ std::shared_ptr<ImageContainer> readArray(hid_t file_id, ImageContainer::ImageTy
 
 	//finding dataset
 	herr_t dataset_exists = H5LTfind_dataset(group_id, array_name.c_str());
-	if (dataset_exists < 0)
+	if (dataset_exists == 0)
 	{
 		//dataset do not exists
+		H5Gclose(group_id);
 		return nullptr;
 	}
 
@@ -95,9 +94,9 @@ std::shared_ptr<ImageContainer> readArray(hid_t file_id, ImageContainer::ImageTy
 	herr_t dataset_status = H5LTget_dataset_info(group_id, array_name.c_str(), h5_dims.data(), &class_id, &data_size);
 	if (dataset_status < 0)
 	{
+		H5Gclose(group_id);
 		return nullptr; //some error, this should never happend
 	}
-
 
 	//creating attributes 
 	std::array<std::size_t, 3> dims{ h5_dims[0], h5_dims[1] , h5_dims[2] };
@@ -109,12 +108,12 @@ std::shared_ptr<ImageContainer> readArray(hid_t file_id, ImageContainer::ImageTy
 	std::array<double, 6> cosines;
 	herr_t cosines_status = H5LTget_attribute_double(group_id, array_name.c_str(), "direction_cosines", cosines.data());
 	std::array<double, 3> origin{ 0,0,0 };
+	herr_t origin_status = H5LTget_attribute_double(group_id, array_name.c_str(), "origin", origin.data());
 	if (units_status < 0 || spacing_status < 0 || cosines_status < 0)
 	{
+		H5Gclose(group_id);
 		return nullptr; // error
 	}
-
-	
 
 	std::shared_ptr<ImageContainer> image = nullptr;
 
@@ -142,11 +141,27 @@ std::shared_ptr<ImageContainer> readArray(hid_t file_id, ImageContainer::ImageTy
 	{
 		image->directionCosines = cosines;
 	}
+	H5Gclose(group_id);
 	return image;
 }
 
-void SaveLoad::loadFromFile(const QString& path)
+void SaveLoad::loadFromFile()
 {
+	//getting file
+	QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
+
+	QString path = settings.value("saveload/path").value<QString>();
+	if (path.isNull())
+		path = ".";
+	auto topList = QApplication::topLevelWidgets();
+	QWidget* parent = nullptr;
+	if (topList.size() > 0)
+		parent = topList[0];
+
+	path = QFileDialog::getOpenFileName(parent, tr("Open simulation"), path, tr("HDF5 (*.h5)"));
+	if (path.isNull())
+		return;
+
 	emit processingDataStarted();
 	QByteArray bytes = path.toLocal8Bit();
 	char* c_path = bytes.data();
@@ -160,8 +175,8 @@ void SaveLoad::loadFromFile(const QString& path)
 	m_densityImage = readArray(fid, ImageContainer::DensityImage);
 	m_organImage = readArray(fid, ImageContainer::OrganImage);
 	m_materialImage = readArray(fid, ImageContainer::MaterialImage);
-
-	std::array<std::shared_ptr<ImageContainer>, 6> images{ m_ctImage, m_doseImage, m_densityImage, m_organImage, m_materialImage };
+	H5Fclose(fid);
+	std::array<std::shared_ptr<ImageContainer>, 6> images{ m_ctImage, m_densityImage, m_organImage, m_materialImage, m_doseImage };
 	auto ID = ImageContainer::generateID();
 	for (auto im : images)
 	{
@@ -171,7 +186,8 @@ void SaveLoad::loadFromFile(const QString& path)
 			emit imageDataChanged(im);
 		}
 	}
-	emir processingDataEnded();
+	emit processingDataEnded();
+	settings.setValue("saveload/path", path);
 }
 
 herr_t createArray(hid_t file_id, std::shared_ptr<ImageContainer> image)
@@ -220,12 +236,29 @@ herr_t createArray(hid_t file_id, std::shared_ptr<ImageContainer> image)
 	att_status = H5LTset_attribute_double(group_id, name.c_str(), att_name.c_str(), image->directionCosines.data(), 6);
 	att_name = "units";
 	att_status = H5LTset_attribute_string(group_id, name.c_str(), att_name.c_str(), image->dataUnits.c_str());
+	att_name = "origin";
+	att_status = H5LTset_attribute_double(group_id, name.c_str(), att_name.c_str(), image->image->GetOrigin(), 3);
 	auto group_id_status = H5Gclose(group_id); // close group
 	return status;
 }
 
-void SaveLoad::saveToFile(const QString& path)
+void SaveLoad::saveToFile()
 {
+	//getting file
+	QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
+
+	QString path = settings.value("saveload/path").value<QString>();
+	if (path.isNull())
+		path = ".";
+	auto topList = QApplication::topLevelWidgets();
+	QWidget* parent = nullptr;
+	if (topList.size() > 0)
+		parent = topList[0];
+
+	path = QFileDialog::getSaveFileName(parent, tr("Save simulation"), path, tr("HDF5 (*.h5)"));
+	if (path.isNull())
+		return;
+
 	emit processingDataStarted();
 	//creating file 
 	QByteArray bytes = path.toLocal8Bit();
@@ -248,6 +281,7 @@ void SaveLoad::saveToFile(const QString& path)
 		auto status = createArray(fid, m_doseImage);
 	H5Fclose(fid);
 	emit processingDataEnded();
+	settings.setValue("saveload/path", path);
 }
 
 void SaveLoad::setImageData(std::shared_ptr<ImageContainer> image)

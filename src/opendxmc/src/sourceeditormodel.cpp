@@ -327,6 +327,7 @@ void SourceModel::addSource(Source::Type type)
 		m_actors.push_back(std::static_pointer_cast<VolumeActorContainer>(actor));
 		auto actor_raw = std::static_pointer_cast<VolumeActorContainer>(actor).get();
 		emit sourceActorAdded(actor_raw);
+		emit sourceAdded(std::static_pointer_cast<Source>(src));
 		emit layoutChanged();
 	}
 	else if (type == Source::CTAxial)
@@ -361,6 +362,7 @@ void SourceModel::addSource(Source::Type type)
 		m_actors.push_back(std::static_pointer_cast<VolumeActorContainer>(actor));
 		auto actor_raw = std::static_pointer_cast<VolumeActorContainer>(actor).get();
 		emit sourceActorAdded(actor_raw);
+		emit sourceAdded(std::static_pointer_cast<Source>(src));
 		emit layoutChanged();
 	}
 	else if (type == Source::CTDual)
@@ -395,6 +397,7 @@ void SourceModel::addSource(Source::Type type)
 		m_actors.push_back(std::static_pointer_cast<VolumeActorContainer>(actor));
 		auto actor_raw = std::static_pointer_cast<VolumeActorContainer>(actor).get();
 		emit sourceActorAdded(actor_raw);
+		emit sourceAdded(std::static_pointer_cast<Source>(src));
 		emit layoutChanged();
 	}
 	else if (type == Source::DX)
@@ -413,6 +416,7 @@ void SourceModel::addSource(Source::Type type)
 		m_actors.push_back(std::static_pointer_cast<VolumeActorContainer>(actor));
 		auto actor_raw = std::static_pointer_cast<VolumeActorContainer>(actor).get();
 		emit sourceActorAdded(actor_raw);
+		emit sourceAdded(std::static_pointer_cast<Source>(src));
 		emit layoutChanged();
 	}
 }
@@ -428,6 +432,7 @@ bool SourceModel::removeSource(std::shared_ptr<Source> src)
 
 		auto actor_raw = std::static_pointer_cast<VolumeActorContainer>(*apos).get();
 		emit sourceActorRemoved(actor_raw);
+		emit sourceRemoved(src);
 		m_sources.erase(pos);
 		m_actors.erase(apos);
 		return true;

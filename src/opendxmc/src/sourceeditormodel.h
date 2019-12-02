@@ -87,6 +87,8 @@ public:
 signals:
 	void sourceActorAdded(VolumeActorContainer* actorContainer);
 	void sourceActorRemoved(VolumeActorContainer* actorContainer);
+	void sourceAdded(std::shared_ptr<Source> source);
+	void sourceRemoved(std::shared_ptr<Source> source)
 	void actorsChanged();
 	void sourcesForSimulation(const std::vector<std::shared_ptr<Source>>& sources);
 protected:

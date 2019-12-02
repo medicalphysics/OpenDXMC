@@ -25,6 +25,7 @@ Copyright 2019 Erlend Andersen
 
 #include <QObject>
 #include <QString>
+#include <memory>
 
 
 #ifndef Q_DECLARE_METATYPE_IMAGECONTAINER
@@ -43,6 +44,11 @@ Q_DECLARE_METATYPE(std::vector<std::string>)
 #define Q_DECLARE_METATYPE_DOSEREPORTCONTAINER
 Q_DECLARE_METATYPE(DoseReportContainer)
 #endif 
+#ifndef Q_DECLARE_METATYPE_SOURCEVECTOR
+#define Q_DECLARE_METATYPE_SOURCEVECTOR
+Q_DECLARE_METATYPE(std::vector<std::shared_ptr<Source>>)
+#endif 
+
 
 class SaveLoad : public QObject
 {
@@ -55,6 +61,8 @@ public:
 	void setImageData(std::shared_ptr<ImageContainer> image);
 	void setMaterials(const std::vector<Material>& materials);
 	void setOrganList(const std::vector<std::string>& organList) { m_organList = organList; }
+	void addSource(std::shared_ptr<Source> source);
+	void removeSource(std::shared_ptr<Source> source);
 	void clear(void);
 signals:
 	void processingDataStarted();
@@ -73,5 +81,6 @@ private:
 	std::shared_ptr<ImageContainer> m_doseImage = nullptr;
 	std::vector<std::string> m_organList;
 	std::vector<std::string> m_materialList;
+	std::vector<std::shared_ptr<Source>> m_sources;
 
 };

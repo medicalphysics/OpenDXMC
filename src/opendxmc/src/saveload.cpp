@@ -354,6 +354,75 @@ herr_t createArray(hid_t file_id, const std::string& name, const std::vector<std
 	H5Gclose(group_id); // close group
 	return status;
 }
+
+herr_t saveSource(hid_t gid, std::shared_ptr<CTAxialSource> source, const std::string& name)
+{
+	hid_t group_id;
+	H5G_info_t group_info;
+	herr_t group_status = H5Gget_info_by_name(gid, "CTAxialSources", &group_info, H5P_DEFAULT);
+	if (group_status < 0) // need to create group
+	{
+		group_id = H5Gcreate2(gid, "CTAxialSources", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+	}
+	else {
+		group_id = H5Gopen2(gid, "CTAxialSources", H5P_DEFAULT);
+	}
+
+
+	H5Gclose(group_id);
+	return 0;
+}
+herr_t saveSource(hid_t gid, std::shared_ptr<CTDualSource> source, const std::string& name)
+{
+	hid_t group_id;
+	H5G_info_t group_info;
+	herr_t group_status = H5Gget_info_by_name(gid, "CTDualSources", &group_info, H5P_DEFAULT);
+	if (group_status < 0) // need to create group
+	{
+		group_id = H5Gcreate2(gid, "CTDualSources", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+	}
+	else {
+		group_id = H5Gopen2(gid, "CTDualSources", H5P_DEFAULT);
+	}
+
+	H5Gclose(group_id);
+	return 0;
+}
+herr_t saveSource(hid_t gid, std::shared_ptr<CTSpiralSource> source, const std::string& name)
+{
+	hid_t group_id;
+	H5G_info_t group_info;
+	herr_t group_status = H5Gget_info_by_name(gid, "CTSpiralSources", &group_info, H5P_DEFAULT);
+	if (group_status < 0) // need to create group
+	{
+		group_id = H5Gcreate2(gid, "CTSpiralSources", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+	}
+	else {
+		group_id = H5Gopen2(gid, "CTSpiralSources", H5P_DEFAULT);
+	}
+
+	H5Gclose(group_id);
+	return 0;
+}
+herr_t saveSource(hid_t gid, std::shared_ptr<DXSource> source, const std::string& name)
+{
+	hid_t group_id;
+	H5G_info_t group_info;
+	herr_t group_status = H5Gget_info_by_name(gid, "DXSources", &group_info, H5P_DEFAULT);
+	if (group_status < 0) // need to create group
+	{
+		group_id = H5Gcreate2(gid, "DXSources", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+	}
+	else {
+		group_id = H5Gopen2(gid, "DXSources", H5P_DEFAULT);
+	}
+
+
+
+	H5Gclose(group_id);
+	return 0;
+}
+
 void SaveLoad::saveToFile(const QString& path)
 {
 	emit processingDataStarted();
@@ -378,6 +447,35 @@ void SaveLoad::saveToFile(const QString& path)
 		createArray(fid, m_doseImage);
 	createArray(fid, "OrganList", m_organList);
 	createArray(fid, "MaterialList", m_materialList);
+	
+	//saving sources
+	hid_t source_group_id;
+	H5G_info_t source_group_info;
+	herr_t source_group_status = H5Gget_info_by_name(fid, "sources", &source_group_info, H5P_DEFAULT);
+	if (source_group_status < 0) // need to create group
+	{
+		source_group_id = H5Gcreate2(fid, "sources", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+	}
+	else {
+		source_group_id = H5Gopen2(fid, "sources", H5P_DEFAULT);
+	}
+	int teller = 0;
+	for (std::shared_ptr<Source> s : m_sources)
+	{
+		const std::string name = std::to_string(teller);
+		if (s->type() == Source::CTAxial)
+			saveSource(source_group_id, std::static_pointer_cast<CTAxialSource>(s), name);
+		else if (s->type() == Source::CTSpiral)
+			saveSource(source_group_id, std::static_pointer_cast<CTSpiralSource>(s), name);
+		else if (s->type() == Source::CTDual)
+			saveSource(source_group_id, std::static_pointer_cast<CTDualSource>(s), name);
+		else if (s->type() == Source::DX)
+			saveSource(source_group_id, std::static_pointer_cast<DXSource>(s), name);
+		teller++;
+	}
+	H5Gclose(source_group_id);
+
+
 	H5Fclose(fid);
 	emit processingDataEnded();
 }
@@ -424,4 +522,17 @@ void SaveLoad::clear(void)
 	m_ctImage = nullptr;
 	m_organList.clear();
 	m_materialList.clear();
+	// we do not clear m_sources here
+}
+
+void SaveLoad::addSource(std::shared_ptr<Source> source)
+{
+	m_sources.push_back(source);
+}
+
+void SaveLoad::removeSource(std::shared_ptr<Source> source)
+{
+	auto pos = std::find(m_sources.begin(), m_sources.end(), source);
+	if (pos != m_sources.end()) // we found it
+		m_sources.erase(pos);
 }

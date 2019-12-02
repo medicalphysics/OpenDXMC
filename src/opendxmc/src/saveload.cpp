@@ -17,14 +17,13 @@ Copyright 2019 Erlend Andersen
 */
 
 #include "saveload.h"
+#include "stringmanipulation.h"
 
 #include <QByteArray>
 #include <QFileDialog>
 #include <QSettings>
 #include <QApplication>
 
-#include "imagecontainer.h"
-#include "source.h"
 #include <hdf5_hl.h>
 #include <vtk_hdf5.h>
 
@@ -109,7 +108,7 @@ std::shared_ptr<ImageContainer> readArray(hid_t file_id, ImageContainer::ImageTy
 	herr_t cosines_status = H5LTget_attribute_double(group_id, array_name.c_str(), "direction_cosines", cosines.data());
 	std::array<double, 3> origin{ 0,0,0 };
 	herr_t origin_status = H5LTget_attribute_double(group_id, array_name.c_str(), "origin", origin.data());
-	if (units_status < 0 || spacing_status < 0 || cosines_status < 0)
+	if (units_status < 0 || spacing_status < 0 || cosines_status < 0 || origin_status < 0)
 	{
 		H5Gclose(group_id);
 		return nullptr; // error
@@ -145,6 +144,59 @@ std::shared_ptr<ImageContainer> readArray(hid_t file_id, ImageContainer::ImageTy
 	return image;
 }
 
+
+
+std::vector<std::string> readStringArray(hid_t file_id, const std::string& name)
+{
+	std::vector<std::string> stringArray;
+	//opening array group
+	hid_t group_id;
+	H5G_info_t group_info;
+	herr_t group_status = H5Gget_info_by_name(file_id, "arrays", &group_info, H5P_DEFAULT);
+	if (group_status < 0)
+	{
+		// error no group named array
+		return stringArray;
+	}
+	group_id = H5Gopen2(file_id, "arrays", H5P_DEFAULT);
+
+	//finding dataset
+	herr_t dataset_exists = H5LTfind_dataset(group_id, name.c_str());
+	if (dataset_exists == 0)
+	{
+		//dataset do not exists
+		H5Gclose(group_id);
+		return stringArray;
+	}
+
+	hsize_t h5_dims;
+	H5T_class_t class_id;
+	size_t data_size;
+	herr_t dataset_status = H5LTget_dataset_info(group_id, name.c_str(), &h5_dims, &class_id, &data_size);
+	if (dataset_status < 0)
+	{
+		H5Gclose(group_id);
+		return stringArray; //some error, this should never happend
+	}
+	if (class_id != H5T_STRING)
+	{
+		//data is not string
+		H5Gclose(group_id);
+		return stringArray; //some error, this should never happend
+	}
+	std::string joined; // making buffer for data
+	joined.resize(data_size);
+	
+	herr_t read_status =  H5LTread_dataset_string(group_id, name.c_str(), joined.data());
+	H5Gclose(group_id);
+	if (read_status < 0)
+	{
+		//error reading data
+		return stringArray; //some error, this should never happend
+	}
+	stringArray = string_split(joined, ';');
+	return stringArray;
+}
 void SaveLoad::loadFromFile()
 {
 	//getting file
@@ -175,7 +227,28 @@ void SaveLoad::loadFromFile()
 	m_densityImage = readArray(fid, ImageContainer::DensityImage);
 	m_organImage = readArray(fid, ImageContainer::OrganImage);
 	m_materialImage = readArray(fid, ImageContainer::MaterialImage);
+	m_organList = readStringArray(fid, "OrganList");
+	m_materialList = readStringArray(fid, "MaterialList");
 	H5Fclose(fid);
+
+	//making material array
+	std::vector<Material> materials;
+	materials.reserve(m_materialList.size());
+	for (const auto& m : m_materialList)
+	{
+		Material mat(m);
+		mat.setStandardDensity(1.0);
+		if (!mat.isValid())
+		{
+			emit processingDataEnded();
+			this->clear();
+			return;
+		}
+		materials.push_back(Material(m));
+		materials[-1].setStandardDensity(1.0);	
+	}
+
+
 	std::array<std::shared_ptr<ImageContainer>, 6> images{ m_ctImage, m_densityImage, m_organImage, m_materialImage, m_doseImage };
 	auto ID = ImageContainer::generateID();
 	for (auto im : images)
@@ -186,6 +259,31 @@ void SaveLoad::loadFromFile()
 			emit imageDataChanged(im);
 		}
 	}
+	emit materialDataChanged(materials);
+	emit organDataChanged(m_organList);
+
+	//creating dose data
+	if (m_materialImage && m_densityImage && m_doseImage) {
+		if (m_organImage) {
+			DoseReportContainer cont(
+				materials, 
+				m_organList, 
+				std::static_pointer_cast<MaterialImageContainer>(m_materialImage),
+				std::static_pointer_cast<OrganImageContainer>(m_organImage),
+				std::static_pointer_cast<DensityImageContainer>(m_densityImage),
+				std::static_pointer_cast<DoseImageContainer>(m_doseImage));
+			emit doseDataChanged(cont);
+		}
+		else {
+			DoseReportContainer cont(
+				materials, 
+				std::static_pointer_cast<MaterialImageContainer>(m_materialImage),
+				std::static_pointer_cast<DensityImageContainer>(m_densityImage),
+				std::static_pointer_cast<DoseImageContainer>(m_doseImage));
+			emit doseDataChanged(cont);
+		}
+	}
+	
 	emit processingDataEnded();
 	settings.setValue("saveload/path", path);
 }
@@ -231,17 +329,60 @@ herr_t createArray(hid_t file_id, std::shared_ptr<ImageContainer> image)
 
 	//setting attributes
 	std::string att_name = "spacing";
-	auto att_status = H5LTset_attribute_double(group_id, name.c_str(), att_name.c_str(), image->image->GetSpacing(), 3);
+	H5LTset_attribute_double(group_id, name.c_str(), att_name.c_str(), image->image->GetSpacing(), 3);
 	att_name = "direction_cosines";
-	att_status = H5LTset_attribute_double(group_id, name.c_str(), att_name.c_str(), image->directionCosines.data(), 6);
+	H5LTset_attribute_double(group_id, name.c_str(), att_name.c_str(), image->directionCosines.data(), 6);
 	att_name = "units";
-	att_status = H5LTset_attribute_string(group_id, name.c_str(), att_name.c_str(), image->dataUnits.c_str());
+	H5LTset_attribute_string(group_id, name.c_str(), att_name.c_str(), image->dataUnits.c_str());
 	att_name = "origin";
-	att_status = H5LTset_attribute_double(group_id, name.c_str(), att_name.c_str(), image->image->GetOrigin(), 3);
-	auto group_id_status = H5Gclose(group_id); // close group
+	H5LTset_attribute_double(group_id, name.c_str(), att_name.c_str(), image->image->GetOrigin(), 3);
+	H5Gclose(group_id); // close group
+
 	return status;
 }
 
+
+herr_t createArray(hid_t file_id, const std::string& name, const std::vector<std::string>& stringArray)
+{
+	if (name.empty())
+		return -1;
+	if (stringArray.size() == 0)
+		return-1;
+
+
+	//making semicolon sep string from array
+	std::string joined = stringArray[0]; 
+	if (stringArray.size() > 1) {
+		for (std::size_t i = 0; i < stringArray.size(); ++i)
+		{
+			joined += ";" + stringArray[i];
+		}
+	}
+
+	//creating array group
+	hid_t group_id;
+	H5G_info_t group_info;
+	herr_t group_status = H5Gget_info_by_name(file_id, "arrays", &group_info, H5P_DEFAULT);
+	if (group_status < 0) // need to create group
+	{
+		group_id = H5Gcreate2(file_id, "arrays", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+	}
+	else {
+		group_id = H5Gopen2(file_id, "arrays", H5P_DEFAULT);
+	}
+
+	if (group_id < 0)
+		return -1;
+
+	herr_t status = H5LTmake_dataset_string(group_id, name.c_str(), joined.c_str());
+	if (status < 0)
+	{
+		H5Gclose(group_id); // close group
+		return status;
+	}
+	H5Gclose(group_id); // close group
+	return status;
+}
 void SaveLoad::saveToFile()
 {
 	//getting file
@@ -270,15 +411,17 @@ void SaveLoad::saveToFile()
 		return;
 	}
 	if (m_ctImage)
-		auto status = createArray(fid, m_ctImage);
+		createArray(fid, m_ctImage);
 	if (m_densityImage)
-		auto status = createArray(fid, m_densityImage);
+		createArray(fid, m_densityImage);
 	if (m_organImage)
-		auto status = createArray(fid, m_organImage);
+		createArray(fid, m_organImage);
 	if (m_materialImage)
-		auto status = createArray(fid, m_materialImage);
+		createArray(fid, m_materialImage);
 	if (m_doseImage)
-		auto status = createArray(fid, m_doseImage);
+		createArray(fid, m_doseImage);
+	createArray(fid, "OrganList", m_organList);
+	createArray(fid, "MaterialList", m_materialList);
 	H5Fclose(fid);
 	emit processingDataEnded();
 	settings.setValue("saveload/path", path);
@@ -315,4 +458,15 @@ void SaveLoad::setMaterials(const std::vector<Material>& materials)
 	{
 		m_materialList.push_back(m.name());
 	}
+}
+
+void SaveLoad::clear(void)
+{
+	m_currentImageID = 0;
+	m_densityImage = nullptr;
+	m_materialImage = nullptr;
+	m_organImage = nullptr;
+	m_ctImage = nullptr;
+	m_organList.clear();
+	m_materialList.clear();
 }

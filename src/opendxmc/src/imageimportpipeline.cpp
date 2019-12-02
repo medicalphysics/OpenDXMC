@@ -16,7 +16,9 @@ along with OpenDXMC. If not, see < https://www.gnu.org/licenses/>.
 Copyright 2019 Erlend Andersen
 */
 
+
 #include "imageimportpipeline.h"
+#include "stringmanipulation.h"
 #include "material.h"
 #include "world.h"
 #include "beamfilters.h"
@@ -60,7 +62,6 @@ ImageImportPipeline::ImageImportPipeline(QObject *parent)
 	m_blurRadius[2] = 0.0;
 	m_tube.setVoltage(120.0);
 	m_tube.setAlFiltration(7.0);
-
 }
 
 
@@ -318,8 +319,6 @@ std::vector<organElement> readICRPOrgans(const std::string& path)
 	airElement.density = airMaterial.standardDensity();
 	airElement.name = airMaterial.name();
 	organs.push_back(airElement);
-
-	
 
 	for (std::string line; getline(input, line); )
 	{
@@ -642,35 +641,6 @@ void ImageImportPipeline::importICRUFemalePhantom(bool ignoreArms)
 	emit imageDataChanged(materialImage);
 }
 
-std::string trim(const std::string& str, const std::string& chars = "\t\n\v\f\r ")
-{
-	auto strc = str;
-	strc.erase(0, strc.find_first_not_of(chars));
-	strc.erase(strc.find_last_not_of(chars) + 1);
-	return strc;
-}
-
-
-//string split
-std::vector<std::string> stringSplit(const std::string& txt,  char delimiter)
-{
-	size_t pos = txt.find(delimiter);
-	size_t initialPos = 0;
-	std::vector<std::string> strs;
-	// Decompose statement
-	while (pos != std::string::npos) {
-		auto substr = trim(txt.substr(initialPos, pos - initialPos));
-		if (substr.size() > 0)
-			strs.push_back(substr);
-		initialPos = pos + 1;
-		pos = txt.find(delimiter, initialPos);
-	}
-	// Add the last one
-	auto substr = trim(txt.substr(initialPos, std::min(pos, txt.size()) - initialPos + 1));
-	if (substr.size() > 0)
-		strs.push_back(substr);
-	return strs;
-}
 
 
 struct AWSImageData
@@ -696,7 +666,7 @@ AWSImageData readAWSData(const std::string& path)
 	// first line, this shoul be "# HEADER_DATA_BEGIN: 4096" (type version header lenght) if valid file
 	std::string firstline;
 	std::getline(input, firstline);
-	auto strings = stringSplit(firstline, ':');
+	auto strings = string_split(firstline, ':');
 	if (strings.size() > 1)
 	{
 		if (strings[0].compare("# HEADER_DATA_BEGIN") == 0)
@@ -716,10 +686,10 @@ AWSImageData readAWSData(const std::string& path)
 	//reading dimension data
 	std::string header(headerSize, ' ');
 	input.read(&header[0], headerSize);
-	auto lines = stringSplit(header, '\n');
+	auto lines = string_split(header, '\n');
 	for (const auto& line : lines)
 	{
-		auto lv = stringSplit(line, ':');
+		auto lv = string_split(line, ':');
 		if (lv.size() == 2)
 		{
 			if (lv[0].compare("# WIDTH") == 0)

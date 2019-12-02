@@ -166,6 +166,8 @@ add_executable(OpenDXMC WIN32
 	src/opendxmcconfig.h
 	src/saveload.cpp
 	src/saveload.h
+	src/stringmanipulation.h
+	src/stringmanipulation.cpp
     )
 
 

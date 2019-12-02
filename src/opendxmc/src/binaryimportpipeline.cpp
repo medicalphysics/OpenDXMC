@@ -17,6 +17,7 @@ Copyright 2019 Erlend Andersen
 */
 
 #include "binaryimportpipeline.h"
+#include "stringmanipulation.h"
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -133,23 +134,6 @@ void BinaryImportPipeline::setDensityArrayPath(const QString& path)
 	validate();
 }
 
-inline std::string trim(const std::string &s)
-{
-   auto wsfront=std::find_if_not(s.begin(),s.end(),[](int c){return std::isspace(c);});
-   auto wsback=std::find_if_not(s.rbegin(),s.rend(),[](int c){return std::isspace(c);}).base();
-   return (wsback<=wsfront ? std::string() : std::string(wsfront,wsback));
-}
-std::vector<std::string> split(const std::string& s, char delimiter)
-{
-   std::vector<std::string> tokens;
-   std::string token;
-   std::istringstream tokenStream(s);
-   while (std::getline(tokenStream, token, delimiter))
-   {
-      tokens.push_back(trim(token));
-   }
-   return tokens;
-}
 void BinaryImportPipeline::setMaterialMapPath(const QString& path)
 {
 	emit resultsReady(false);
@@ -168,7 +152,7 @@ void BinaryImportPipeline::setMaterialMapPath(const QString& path)
 	{
 		if(str.size() > 0)
 		{
-			auto strings = split(str, ',');
+			auto strings = string_split(str, ',');
 			if (strings.size() >= 3)
 			{
 				std::uint8_t ind = 0;

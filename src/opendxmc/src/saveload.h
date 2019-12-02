@@ -23,9 +23,26 @@ Copyright 2019 Erlend Andersen
 #include "source.h"
 #include "dosereportcontainer.h"
 
-
 #include <QObject>
 #include <QString>
+
+
+#ifndef Q_DECLARE_METATYPE_IMAGECONTAINER
+#define Q_DECLARE_METATYPE_IMAGECONTAINER
+Q_DECLARE_METATYPE(std::shared_ptr<ImageContainer>)
+#endif 
+#ifndef Q_DECLARE_METATYPE_MATERIALVECTOR
+#define Q_DECLARE_METATYPE_MATERIALVECTOR
+Q_DECLARE_METATYPE(std::vector<Material>)
+#endif 
+#ifndef Q_DECLARE_METATYPE_STRINGVECTOR
+#define Q_DECLARE_METATYPE_STRINGVECTOR
+Q_DECLARE_METATYPE(std::vector<std::string>)
+#endif 
+#ifndef Q_DECLARE_METATYPE_DOSEREPORTCONTAINER
+#define Q_DECLARE_METATYPE_DOSEREPORTCONTAINER
+Q_DECLARE_METATYPE(DoseReportContainer)
+#endif 
 
 class SaveLoad : public QObject
 {

@@ -30,6 +30,11 @@ Copyright 2019 Erlend Andersen
 #include <vector>
 #include <map>
 
+#ifndef Q_DECLARE_METATYPE_SOURCEVECTOR
+#define Q_DECLARE_METATYPE_SOURCEVECTOR
+Q_DECLARE_METATYPE(std::vector<std::shared_ptr<Source>>)
+#endif 
+
 class BowtieFilterReader :public QWidget
 {
 	Q_OBJECT

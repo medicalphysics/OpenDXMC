@@ -34,6 +34,30 @@ Copyright 2019 Erlend Andersen
 #include <functional>
 #include <array>
 
+
+#ifndef Q_DECLARE_METATYPE_SOURCEVECTOR
+#define Q_DECLARE_METATYPE_SOURCEVECTOR
+Q_DECLARE_METATYPE(std::vector<std::shared_ptr<Source>>)
+#endif 
+#ifndef Q_DECLARE_METATYPE_VOLUMEACTORCONTAINERPTR
+#define Q_DECLARE_METATYPE_VOLUMEACTORCONTAINERPTR
+Q_DECLARE_METATYPE(VolumeActorContainer*)
+#endif 
+#ifndef Q_DECLARE_METATYPE_POSITIONALFILTER
+#define Q_DECLARE_METATYPE_POSITIONALFILTER
+Q_DECLARE_METATYPE(std::shared_ptr<PositionalFilter>)
+#endif 
+#ifndef Q_DECLARE_METATYPE_AECFILTER
+#define Q_DECLARE_METATYPE_AECFILTER
+Q_DECLARE_METATYPE(std::shared_ptr<AECFilter>)
+#endif 
+#ifndef Q_DECLARE_METATYPE_BEAMFILTER
+#define Q_DECLARE_METATYPE_BEAMFILTER
+Q_DECLARE_METATYPE(std::shared_ptr<BeamFilter>)
+#endif 
+
+
+
 template<class S, typename T>
 class SourceItem :public QStandardItem
 {
@@ -48,8 +72,6 @@ private:
 
 	std::shared_ptr<S> m_source;
 };
-Q_DECLARE_METATYPE(std::shared_ptr<BeamFilter>);
-Q_DECLARE_METATYPE(std::shared_ptr<PositionalFilter>);
 
 class SourceModel :public QStandardItemModel
 {
@@ -61,7 +83,6 @@ public:
 	std::vector<std::shared_ptr<Source>>& sources() { return m_sources; }
 	bool removeRow(int row, const QModelIndex &parent = QModelIndex());
 	bool removeRows(int rows, int count, const QModelIndex &parent = QModelIndex()) override;
-
 	void setImageData(std::shared_ptr<ImageContainer> image);
 
 signals:

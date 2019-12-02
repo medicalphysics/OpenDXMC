@@ -205,7 +205,6 @@ bool MaterialTableModel::setData(const QModelIndex & index, const QVariant & val
 	return false;
 }
 
-Q_DECLARE_METATYPE(std::vector<Material>)
 MaterialSelectionWidget::MaterialSelectionWidget(QWidget *parent)
 	:QWidget(parent)
 {

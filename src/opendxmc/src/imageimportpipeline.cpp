@@ -49,11 +49,6 @@ Copyright 2019 Erlend Andersen
 ImageImportPipeline::ImageImportPipeline(QObject *parent)
 	:QObject(parent)
 {
-	qRegisterMetaType<std::shared_ptr<ImageContainer>>();
-	qRegisterMetaType<std::vector<Material>>();
-	qRegisterMetaType<std::vector<std::string>>();
-	qRegisterMetaType<std::shared_ptr<AECFilter>>();
-
 	m_outputSpacing[0] = 1.0;
 	m_outputSpacing[1] = 1.0;
 	m_outputSpacing[2] = 1.0;

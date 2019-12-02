@@ -33,12 +33,18 @@ Copyright 2019 Erlend Andersen
 #include "dosereportwidget.h"
 #include "binaryimportwidget.h"
 
-Q_DECLARE_METATYPE(std::vector<std::shared_ptr<Source>>)
+
 
 MainWindow::MainWindow(QWidget* parent) 
 	: QMainWindow(parent)
 {
-	qRegisterMetaType<std::vector<std::shared_ptr<Source>>>();
+	//This must happend before any signals/slots are connected
+	/*qRegisterMetaType<std::vector<std::shared_ptr<Source>>>();
+	qRegisterMetaType<std::shared_ptr<ImageContainer>>();
+	qRegisterMetaType<std::vector<Material>&>();
+	qRegisterMetaType<std::vector<std::string>&>();
+	qRegisterMetaType<std::shared_ptr<AECFilter>>();
+	*/
 
 	//image import pipeline
 	m_importPipeline = new ImageImportPipeline();
@@ -170,6 +176,11 @@ MainWindow::MainWindow(QWidget* parent)
 	connect(m_importPipeline, &ImageImportPipeline::imageDataChanged, m_saveLoad, &SaveLoad::setImageData);
 	connect(m_simulationPipeline, &SimulationPipeline::imageDataChanged, m_saveLoad, &SaveLoad::setImageData);
 	connect(m_binaryImportPipeline, &BinaryImportPipeline::imageDataChanged, m_saveLoad, &SaveLoad::setImageData);
+	connect(m_importPipeline, &ImageImportPipeline::materialDataChanged, m_saveLoad, &SaveLoad::materialDataChanged);
+	connect(m_importPipeline, &ImageImportPipeline::organDataChanged, m_saveLoad, &SaveLoad::organDataChanged);
+	connect(m_binaryImportPipeline, &BinaryImportPipeline::materialDataChanged, m_saveLoad, &SaveLoad::materialDataChanged);
+	connect(m_binaryImportPipeline, &BinaryImportPipeline::organDataChanged, m_saveLoad, &SaveLoad::organDataChanged);
+	
 	connect(m_saveLoad, &SaveLoad::imageDataChanged, m_simulationPipeline, &SimulationPipeline::setImageData);
 	connect(m_saveLoad, &SaveLoad::imageDataChanged, exportWidget, &ExportWidget::registerImage);
 	connect(m_saveLoad, &SaveLoad::imageDataChanged, sourceEditWidget->model(), &SourceModel::setImageData);
@@ -177,7 +188,6 @@ MainWindow::MainWindow(QWidget* parent)
 
 	connect(m_saveLoad, &SaveLoad::materialDataChanged, m_simulationPipeline, &SimulationPipeline::setMaterials);
 	connect(m_saveLoad, &SaveLoad::organDataChanged, m_simulationPipeline, &SimulationPipeline::setOrganList);
-
 
 	connect(m_saveLoad, &SaveLoad::processingDataStarted, this, &MainWindow::setDisableEditing);
 	connect(m_saveLoad, &SaveLoad::processingDataEnded, this, &MainWindow::setEnableEditing);

@@ -36,6 +36,12 @@ Copyright 2019 Erlend Andersen
 
 #include <memory>
 
+
+#ifndef Q_DECLARE_METATYPE_IMAGECONTAINER
+#define Q_DECLARE_METATYPE_IMAGECONTAINER
+Q_DECLARE_METATYPE(std::shared_ptr<ImageContainer>)
+#endif 
+
 class VolumeRenderWidget : public QWidget
 {
 	Q_OBJECT

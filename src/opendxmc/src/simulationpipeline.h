@@ -36,8 +36,19 @@ Copyright 2019 Erlend Andersen
 #include <memory>
 #include <vector>
 
-Q_DECLARE_METATYPE(DoseReportContainer)
+#ifndef Q_DECLARE_METATYPE_IMAGECONTAINER
+#define Q_DECLARE_METATYPE_IMAGECONTAINER
+Q_DECLARE_METATYPE(std::shared_ptr<ImageContainer>)
+#endif 
+#ifndef Q_DECLARE_METATYPE_PROGRESSBAR
+#define Q_DECLARE_METATYPE_PROGRESSBAR
 Q_DECLARE_METATYPE(std::shared_ptr<ProgressBar>)
+#endif 
+#ifndef Q_DECLARE_METATYPE_DOSEREPORTCONTAINER
+#define Q_DECLARE_METATYPE_DOSEREPORTCONTAINER
+Q_DECLARE_METATYPE(DoseReportContainer)
+#endif 
+
 
 class SimulationPipeline : public QObject
 {

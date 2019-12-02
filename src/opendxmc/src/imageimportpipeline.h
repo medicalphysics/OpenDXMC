@@ -41,11 +41,23 @@ Copyright 2019 Erlend Andersen
 #include <thread>
 #include <limits>
 
-Q_DECLARE_METATYPE(std::shared_ptr<ImageContainer>) // to use ImageData in QT signal slots
-Q_DECLARE_METATYPE(std::vector<Material>)
-Q_DECLARE_METATYPE(std::vector<std::string>)
-Q_DECLARE_METATYPE(std::shared_ptr<AECFilter>)
 
+#ifndef Q_DECLARE_METATYPE_IMAGECONTAINER
+#define Q_DECLARE_METATYPE_IMAGECONTAINER
+Q_DECLARE_METATYPE(std::shared_ptr<ImageContainer>)
+#endif 
+#ifndef Q_DECLARE_METATYPE_MATERIALVECTOR
+#define Q_DECLARE_METATYPE_MATERIALVECTOR
+Q_DECLARE_METATYPE(std::vector<Material>)
+#endif 
+#ifndef Q_DECLARE_METATYPE_STRINGVECTOR
+#define Q_DECLARE_METATYPE_STRINGVECTOR
+Q_DECLARE_METATYPE(std::vector<std::string>)
+#endif 
+#ifndef Q_DECLARE_METATYPE_AECFILTER
+#define Q_DECLARE_METATYPE_AECFILTER
+Q_DECLARE_METATYPE(std::shared_ptr<AECFilter>)
+#endif 
 
 class CalculateCTNumberFromMaterials
 {
@@ -193,7 +205,7 @@ signals:
 	void imageDataChanged(std::shared_ptr<ImageContainer> imageData);
 	void materialDataChanged(std::vector<Material>& materials);
 	void organDataChanged(std::vector<std::string>& organs);
-	void aecFilterChanged(QString name, std::shared_ptr<AECFilter> filter);
+	void aecFilterChanged(QString& name, std::shared_ptr<AECFilter> filter);
 protected:
 	template<class Iter>
 	std::pair<std::shared_ptr<std::vector<unsigned char>>, std::shared_ptr<std::vector<double>>> calculateMaterialAndDensityFromCTData(Iter first, Iter last);

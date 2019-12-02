@@ -33,6 +33,10 @@ Copyright 2019 Erlend Andersen
 
 #include <vector>
 
+#ifndef Q_DECLARE_METATYPE_MATERIALVECTOR
+#define Q_DECLARE_METATYPE_MATERIALVECTOR
+Q_DECLARE_METATYPE(std::vector<Material>)
+#endif 
 
 class MaterialTableModel :public QAbstractTableModel
 {

@@ -334,13 +334,9 @@ SourceEditWidget::SourceEditWidget(QWidget *parent)
 	m_delegate = new SourceDelegate(this);
 	modelView->setItemDelegate(m_delegate);
 
-
-	
 	///////////// adding bowtie filters
 	auto test = new BowtieFilterReader(this);
 	test->loadFilters();
-	
-	
 	
 	for (auto[name, filter] : test->filters())
 	{

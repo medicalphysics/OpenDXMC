@@ -28,6 +28,9 @@ Copyright 2019 Erlend Andersen
 #include "progressbar.h"
 #include "saveload.h"
 
+
+
+
 class MainWindow : public QMainWindow
 {
 	Q_OBJECT

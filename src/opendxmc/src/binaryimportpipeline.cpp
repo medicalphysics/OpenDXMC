@@ -28,6 +28,9 @@ Copyright 2019 Erlend Andersen
 BinaryImportPipeline::BinaryImportPipeline(QObject* parent)
 	:QObject(parent)
 {
+	qRegisterMetaType<std::shared_ptr<ImageContainer>>();
+	qRegisterMetaType<std::vector<Material>>();
+	qRegisterMetaType<std::vector<std::string>>();
 }
 
 void BinaryImportPipeline::setDimension(const std::array<std::size_t, 3>& dimensions)

@@ -44,6 +44,8 @@ Copyright 2019 Erlend Andersen
 DicomImportWidget::DicomImportWidget(QWidget *parent)
 	: QWidget(parent)
 {
+	qRegisterMetaType<std::vector<Material>>();
+
 	QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
 
 	auto *mainlayout = new QVBoxLayout;

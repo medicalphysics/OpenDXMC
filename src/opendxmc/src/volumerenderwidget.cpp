@@ -47,7 +47,7 @@ Copyright 2019 Erlend Andersen
 VolumeRenderWidget::VolumeRenderWidget(QWidget *parent)
 	:QWidget(parent), m_renderMode(0)
 {
-	
+	qRegisterMetaType<std::shared_ptr<ImageContainer>>();
 	m_openGLWidget = new QVTKOpenGLNativeWidget(this);
 	vtkNew<vtkGenericOpenGLRenderWindow> renderWindow;
 	m_openGLWidget->setRenderWindow(renderWindow);

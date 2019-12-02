@@ -60,8 +60,8 @@ signals:
 	void processingDataStarted();
 	void processingDataEnded();
 	void imageDataChanged(std::shared_ptr<ImageContainer> imageData);
-	void materialDataChanged(std::vector<Material>& materials);
-	void organDataChanged(std::vector<std::string>& organs);
+	void materialDataChanged(const std::vector<Material>& materials);
+	void organDataChanged(const std::vector<std::string>& organs);
 	void aecFilterChanged(const QString& name, std::shared_ptr<AECFilter> filter);
 	void errorMessage(const QString& errorMsg) const;
 	void resultsReady(bool ready);

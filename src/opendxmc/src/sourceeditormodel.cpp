@@ -272,6 +272,8 @@ void SourceItem<Source, std::array<double, 6>>::setData(const QVariant& data, in
 SourceModel::SourceModel(QObject *parent)
 	:QStandardItemModel(parent)
 {
+	qRegisterMetaType<std::vector<std::shared_ptr<Source>>>();
+	qRegisterMetaType<VolumeActorContainer*>();
 	setColumnCount(2);
 	connect(this, &SourceModel::dataChanged, this, &SourceModel::sourceDataChanged);
 }

@@ -34,7 +34,11 @@ Copyright 2019 Erlend Andersen
 SaveLoad::SaveLoad(QObject* parent)
 	:QObject(parent)
 {
-	
+	qRegisterMetaType<std::shared_ptr<ImageContainer>>();
+	qRegisterMetaType<std::vector<Material>>();
+	qRegisterMetaType<std::vector<std::string >>();
+	qRegisterMetaType<std::shared_ptr<ImageContainer>>();
+	qRegisterMetaType<DoseReportContainer>();
 }
 
 template<typename T, ImageContainer::ImageType type>

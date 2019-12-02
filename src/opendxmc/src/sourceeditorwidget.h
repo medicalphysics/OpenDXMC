@@ -91,7 +91,7 @@ public:
 	SourceModel* model() { return m_model; }
 	SourceDelegate* delegate() { return m_delegate; }
 signals:
-	void runSimulation(std::vector<std::shared_ptr<Source>> sources);
+	void runSimulation(const std::vector<std::shared_ptr<Source>> sources);
 protected:
 	void setCurrentSourceTypeSelected(int index) { m_currentSourceTypeSelected = index; }
 	void addCurrentSourceType(void);

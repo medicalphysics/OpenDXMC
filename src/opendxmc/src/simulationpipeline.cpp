@@ -27,6 +27,7 @@ SimulationPipeline::SimulationPipeline(QObject *parent)
 {
 	qRegisterMetaType<DoseReportContainer>();
 	qRegisterMetaType<std::shared_ptr<ProgressBar>>();
+	qRegisterMetaType<std::shared_ptr<ImageContainer>>();
 	m_world = World();	
 }
 

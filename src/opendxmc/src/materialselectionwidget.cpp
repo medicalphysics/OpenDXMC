@@ -209,7 +209,6 @@ MaterialSelectionWidget::MaterialSelectionWidget(QWidget *parent)
 	:QWidget(parent)
 {
 	qRegisterMetaType<std::vector<Material>>();
-	
 
 	m_tableModel = new MaterialTableModel(this);
 	auto mainLayout = new QVBoxLayout(this);

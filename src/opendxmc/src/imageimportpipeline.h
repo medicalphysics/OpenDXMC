@@ -203,9 +203,9 @@ signals:
 	void processingDataStarted();
 	void processingDataEnded();
 	void imageDataChanged(std::shared_ptr<ImageContainer> imageData);
-	void materialDataChanged(std::vector<Material>& materials);
-	void organDataChanged(std::vector<std::string>& organs);
-	void aecFilterChanged(QString& name, std::shared_ptr<AECFilter> filter);
+	void materialDataChanged(const std::vector<Material>& materials);
+	void organDataChanged(const std::vector<std::string>& organs);
+	void aecFilterChanged(const QString& name, std::shared_ptr<AECFilter> filter);
 protected:
 	template<class Iter>
 	std::pair<std::shared_ptr<std::vector<unsigned char>>, std::shared_ptr<std::vector<double>>> calculateMaterialAndDensityFromCTData(Iter first, Iter last);

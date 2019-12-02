@@ -302,6 +302,8 @@ void SourceModelView::keyPressEvent(QKeyEvent* event)
 SourceEditWidget::SourceEditWidget(QWidget *parent)
 	:QWidget(parent)
 {
+	qRegisterMetaType<std::vector<std::shared_ptr<Source>>>();
+
 	auto mainLayout = new QVBoxLayout(this);
 	//defining available sources
 	m_sourceTypes[0] = "DX tube";

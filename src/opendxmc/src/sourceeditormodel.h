@@ -89,7 +89,7 @@ signals:
 	void sourceAdded(VolumeActorContainer* actorContainer);
 	void sourceRemoved(VolumeActorContainer* actorContainer);
 	void actorsChanged();
-	void sourcesForSimulation(std::vector<std::shared_ptr<Source>>& sources);
+	void sourcesForSimulation(const std::vector<std::shared_ptr<Source>>& sources);
 protected:
 	void setupSource(std::shared_ptr<Source> src, QStandardItem *parent);
 	void setupCTSource(std::shared_ptr<CTSource> src, QStandardItem *parent);

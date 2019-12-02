@@ -37,19 +37,12 @@ class Source
 public:
 	enum Type { None, CTSpiral, CTAxial, DX, CTDual, Pencil };
     Source();
-	//virtual ~Source() = default;
     virtual bool getExposure(Exposure& exposure, std::uint64_t i) const = 0;
-	
-	//Tube& tube(void);
-	//const Tube& tube(void) const { return m_tube; }
-	
 	virtual double maxPhotonEnergyProduced() const {return  Tube::maxVoltage(); }
 
 	void setPositionalFilter(std::shared_ptr<PositionalFilter> filter) { m_positionalFilter = filter; }
 	std::shared_ptr<PositionalFilter> positionalFilter(void) { return m_positionalFilter; }
 	const std::shared_ptr<PositionalFilter> positionalFilter() const { return m_positionalFilter; }
-	
-	//virtual const SpecterDistribution* specterDistribution(void) const { return m_specterDistribution.get(); }
 	
 	void setPosition(const std::array<double, 3>& position) { m_position = position; }
 	std::array<double, 3>& position(void) { return m_position; }
@@ -64,7 +57,7 @@ public:
 
 	virtual std::uint64_t totalExposures(void) const = 0;
 
-	Type type() { return m_type; }
+	Source::Type type() { return m_type; }
 
 	virtual double getCalibrationValue(std::uint64_t nHistories, ProgressBar*) = 0;
 	
@@ -73,13 +66,11 @@ public:
 	void updateFromWorld(const World& world) { if (m_positionalFilter) m_positionalFilter->updateFromWorld(world); }
 
 protected:
-	
 	std::array<double, 3> m_position = { 0,0,0 };
 	std::array<double, 6> m_directionCosines = { 1,0,0,0,1,0 };
 	std::uint64_t m_historiesPerExposure = 1;
 	std::shared_ptr<PositionalFilter> m_positionalFilter;
 	Type m_type = None;
-	
 private:
 	void normalizeDirectionCosines(void);
 };

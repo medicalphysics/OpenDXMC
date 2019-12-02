@@ -119,7 +119,6 @@ public:
 				const D dens = (val - ctNumbers[index]) * constant / m_materialEnergy[index] + m_materialDensity[index];
 				return dens > 0.0 ? dens : D{0};
 			});
-			
 		}
 		else
 		{
@@ -218,5 +217,4 @@ private:
 	bool m_useOutputSpacing = false;
 	Tube m_tube;
 	std::vector<Material> m_ctImportMaterialMap;
-	
 };

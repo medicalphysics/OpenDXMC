@@ -20,9 +20,6 @@ Copyright 2019 Erlend Andersen
 #include "stringmanipulation.h"
 
 #include <QByteArray>
-#include <QFileDialog>
-#include <QSettings>
-#include <QApplication>
 
 #include <hdf5_hl.h>
 #include <vtk_hdf5.h>
@@ -121,29 +118,17 @@ std::shared_ptr<ImageContainer> readArray(hid_t file_id, ImageContainer::ImageTy
 	std::shared_ptr<ImageContainer> image = nullptr;
 
 	if (type == ImageContainer::CTImage)
-	{
 		image = readArrayBuffer<float, ImageContainer::CTImage>(group_id, dims, spacing, origin, units);
-	}
 	else if (type == ImageContainer::DensityImage)
-	{
 		image = readArrayBuffer<double, ImageContainer::DensityImage>(group_id, dims, spacing, origin, units);
-	}
 	else if (type == ImageContainer::DoseImage)
-	{
 		image = readArrayBuffer<double, ImageContainer::DoseImage>(group_id, dims, spacing, origin, units);
-	}
 	else if (type == ImageContainer::MaterialImage)
-	{
 		image = readArrayBuffer<unsigned char, ImageContainer::MaterialImage>(group_id, dims, spacing, origin, units);
-	}
 	else if (type == ImageContainer::OrganImage)
-	{
 		image = readArrayBuffer<unsigned char, ImageContainer::OrganImage>(group_id, dims, spacing, origin, units);
-	}
 	if (image)
-	{
 		image->directionCosines = cosines;
-	}
 	H5Gclose(group_id);
 	return image;
 }
@@ -201,23 +186,8 @@ std::vector<std::string> readStringArray(hid_t file_id, const std::string& name)
 	stringArray = string_split(joined, ';');
 	return stringArray;
 }
-void SaveLoad::loadFromFile()
+void SaveLoad::loadFromFile(const QString& path)
 {
-	//getting file
-	QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
-
-	QString path = settings.value("saveload/path").value<QString>();
-	if (path.isNull())
-		path = ".";
-	auto topList = QApplication::topLevelWidgets();
-	QWidget* parent = nullptr;
-	if (topList.size() > 0)
-		parent = topList[0];
-
-	path = QFileDialog::getOpenFileName(parent, tr("Open simulation"), path, tr("HDF5 (*.h5)"));
-	if (path.isNull())
-		return;
-
 	emit processingDataStarted();
 	QByteArray bytes = path.toLocal8Bit();
 	char* c_path = bytes.data();
@@ -251,7 +221,6 @@ void SaveLoad::loadFromFile()
 		materials.push_back(Material(m));
 		materials[-1].setStandardDensity(1.0);	
 	}
-
 
 	std::array<std::shared_ptr<ImageContainer>, 6> images{ m_ctImage, m_densityImage, m_organImage, m_materialImage, m_doseImage };
 	auto ID = ImageContainer::generateID();
@@ -287,9 +256,7 @@ void SaveLoad::loadFromFile()
 			emit doseDataChanged(cont);
 		}
 	}
-	
 	emit processingDataEnded();
-	settings.setValue("saveload/path", path);
 }
 
 herr_t createArray(hid_t file_id, std::shared_ptr<ImageContainer> image)
@@ -387,23 +354,8 @@ herr_t createArray(hid_t file_id, const std::string& name, const std::vector<std
 	H5Gclose(group_id); // close group
 	return status;
 }
-void SaveLoad::saveToFile()
+void SaveLoad::saveToFile(const QString& path)
 {
-	//getting file
-	QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
-
-	QString path = settings.value("saveload/path").value<QString>();
-	if (path.isNull())
-		path = ".";
-	auto topList = QApplication::topLevelWidgets();
-	QWidget* parent = nullptr;
-	if (topList.size() > 0)
-		parent = topList[0];
-
-	path = QFileDialog::getSaveFileName(parent, tr("Save simulation"), path, tr("HDF5 (*.h5)"));
-	if (path.isNull())
-		return;
-
 	emit processingDataStarted();
 	//creating file 
 	QByteArray bytes = path.toLocal8Bit();
@@ -428,7 +380,6 @@ void SaveLoad::saveToFile()
 	createArray(fid, "MaterialList", m_materialList);
 	H5Fclose(fid);
 	emit processingDataEnded();
-	settings.setValue("saveload/path", path);
 }
 
 void SaveLoad::setImageData(std::shared_ptr<ImageContainer> image)

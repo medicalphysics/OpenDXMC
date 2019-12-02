@@ -213,7 +213,6 @@ void VolumeRenderWidget::updateVolumeRendering()
 	m_volumeMapper = vtkSmartPointer<vtkSmartVolumeMapper>::New();
 	m_volume = vtkSmartPointer<vtkVolume>::New();
 	auto volumeProperty = m_settingsWidget->getVolumeProperty();
-	auto spacing = m_imageData->image->GetSpacing();
 	m_volumeMapper->SetInteractiveUpdateRate(0.00001);
 	m_volumeMapper->AutoAdjustSampleDistancesOn();
 	m_volumeMapper->CroppingOn();

@@ -83,6 +83,7 @@ PencilSource::PencilSource()
 	m_type = Pencil;
 }
 
+
 bool PencilSource::getExposure(Exposure& exposure, std::uint64_t i) const
 {
 	exposure.setNumberOfHistories(m_historiesPerExposure);

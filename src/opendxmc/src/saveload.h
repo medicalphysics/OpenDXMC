@@ -50,8 +50,8 @@ class SaveLoad : public QObject
 public:
 	SaveLoad(QObject* parent = nullptr);
 
-	void loadFromFile();
-	void saveToFile();
+	void loadFromFile(const QString& path);
+	void saveToFile(const QString& path);
 	void setImageData(std::shared_ptr<ImageContainer> image);
 	void setMaterials(const std::vector<Material>& materials);
 	void setOrganList(const std::vector<std::string>& organList) { m_organList = organList; }

@@ -21,6 +21,8 @@ Copyright 2019 Erlend Andersen
 #include <QAction>
 #include <QMenuBar>
 #include <QAction>
+#include <QSettings>
+#include <QFileDialog>
 
 #include "mainwindow.h"
 #include "viewportwidget.h"
@@ -69,8 +71,6 @@ MainWindow::MainWindow(QWidget* parent)
 	connect(m_binaryImportPipeline, &BinaryImportPipeline::materialDataChanged, m_simulationPipeline, &SimulationPipeline::setMaterials);
 	connect(m_binaryImportPipeline, &BinaryImportPipeline::organDataChanged, m_simulationPipeline, &SimulationPipeline::setOrganList);
 
-
-
 	//statusbar and progress indicator widget
 	auto statusBar = this->statusBar();
 	auto progressIndicator = new ProgressIndicator(this);
@@ -82,13 +82,10 @@ MainWindow::MainWindow(QWidget* parent)
 	connect(m_simulationPipeline, &SimulationPipeline::processingDataEnded, progressIndicator, &ProgressIndicator::stopAnimation);
 	statusBar->addPermanentWidget(progressIndicator);
 
-
-
 	QSplitter* splitter = new QSplitter(Qt::Horizontal);
 
 	m_menuWidget = new QTabWidget(this);
 	m_menuWidget->setTabPosition(QTabWidget::West);
-	
 	
 	//import widgets share å tabbed widget
 	auto importWidget = new QTabWidget(this);
@@ -106,7 +103,6 @@ MainWindow::MainWindow(QWidget* parent)
 	connect(dicomImportWidget, &DicomImportWidget::aqusitionCuFiltrationChanged, m_importPipeline, &ImageImportPipeline::setCTImportAqusitionCuFiltration);
 	connect(dicomImportWidget, &DicomImportWidget::segmentationMaterialsChanged, m_importPipeline, &ImageImportPipeline::setCTImportMaterialMap);
 	
-
 	//phantom import widget
 	PhantomSelectionWidget* phantomWidget = new PhantomSelectionWidget(this);
 	importWidget->addTab(phantomWidget, tr("Digital phantoms"));
@@ -163,9 +159,9 @@ MainWindow::MainWindow(QWidget* parent)
 
 	//setting up source 3d actor connection to viewpoert from sourceeditwidget
 	auto model = sourceEditWidget->model();
-	connect(model, &SourceModel::sourceAdded, viewPort, &ViewPortWidget::addActorContainer);
+	connect(model, &SourceModel::sourceActorAdded, viewPort, &ViewPortWidget::addActorContainer);
 	connect(model, &SourceModel::actorsChanged, viewPort, &ViewPortWidget::render);
-	connect(model, &SourceModel::sourceRemoved, viewPort, &ViewPortWidget::removeActorContainer);
+	connect(model, &SourceModel::sourceActorRemoved, viewPort, &ViewPortWidget::removeActorContainer);
 	
 	//request to run simulation connection
 	connect(sourceEditWidget, &SourceEditWidget::runSimulation, m_simulationPipeline, &SimulationPipeline::runSimulation);
@@ -220,15 +216,40 @@ void MainWindow::createMenu()
 	auto saveAction = new QAction(tr("Save as"), this);
 	saveAction->setShortcut(QKeySequence::SaveAs);
 	saveAction->setStatusTip(tr("Save current simulation as"));
-	connect(saveAction, &QAction::triggered, m_saveLoad, &SaveLoad::saveToFile);
+	connect(saveAction, &QAction::triggered, [=]() {
+		QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
+		QString path = settings.value("saveload/path").value<QString>();
+		if (path.isNull())
+			path = ".";
+		QWidget* parent = this;
+		
+		path = QFileDialog::getSaveFileName(parent, tr("Save simulation"), path, tr("HDF5 (*.h5)"));
+		if (path.isNull())
+			return;
+		emit requestSaveToFile(path);
+		settings.setValue("saveload/path", path);
+		});
 	fileMenu->addAction(saveAction);
+	connect(this, &MainWindow::requestSaveToFile, m_saveLoad, &SaveLoad::saveToFile);
 
 	auto openAction = new QAction(tr("Open"), this);
 	openAction->setShortcut(QKeySequence::Open);
 	openAction->setStatusTip(tr("Open a previously saved simulation"));
-	connect(openAction, &QAction::triggered, m_saveLoad, &SaveLoad::loadFromFile);
+	connect(openAction, &QAction::triggered, [=]() {
+		//getting file
+		QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
+		QString path = settings.value("saveload/path").value<QString>();
+		if (path.isNull())
+			path = ".";
+		QWidget* parent = this;
+		path = QFileDialog::getOpenFileName(parent, tr("Open simulation"), path, tr("HDF5 (*.h5)"));
+		if (path.isNull())
+			return;
+		emit requestOpenSaveFile(path);
+		settings.setValue("saveload/path", path);
+		});
 	fileMenu->addAction(openAction);
-
+	connect(this, &MainWindow::requestOpenSaveFile, m_saveLoad, &SaveLoad::loadFromFile);
 }
 
 void MainWindow::setEnableEditing(void)

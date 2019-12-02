@@ -278,7 +278,7 @@ void AECFilter::setCurrentDensityImage(const std::vector<double>& densityImage, 
 	}
 	m_valid = true;
 }
-void AECFilter::setCurrentDensityImage(std::shared_ptr<std::vector<double>>& densityImage, const std::array<double, 3> spacing, const std::array<std::size_t, 3> dimensions, const std::array<double, 3> &origin)
+void AECFilter::setCurrentDensityImage(std::shared_ptr<std::vector<double>> densityImage, const std::array<double, 3> spacing, const std::array<std::size_t, 3> dimensions, const std::array<double, 3> &origin)
 {
 	std::size_t size = dimensions[0] * dimensions[1] * dimensions[2];
 	if (densityImage->size() != size)
@@ -354,7 +354,7 @@ void AECFilter::generateDensityWeightMap(const std::vector<double>& densityImage
 	std::sort(m_massWeightMap.begin(), m_massWeightMap.end());
 }
 
-void AECFilter::generateDensityWeightMap(std::shared_ptr<std::vector<double>>& densityImage, const std::array<double, 3> spacing, const std::array<std::size_t, 3> dimensions, const std::vector<double>& exposure)
+void AECFilter::generateDensityWeightMap(std::shared_ptr<std::vector<double>> densityImage, const std::array<double, 3> spacing, const std::array<std::size_t, 3> dimensions, const std::vector<double>& exposure)
 {
 	std::size_t size = dimensions[0] * dimensions[1] * dimensions[2];
 	if (densityImage->size() != size)

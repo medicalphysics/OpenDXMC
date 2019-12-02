@@ -69,7 +69,6 @@ protected:
 	std::function<void(T)> f_setData;
 	std::function<T()> f_data;
 private:
-
 	std::shared_ptr<S> m_source;
 };
 
@@ -86,8 +85,8 @@ public:
 	void setImageData(std::shared_ptr<ImageContainer> image);
 
 signals:
-	void sourceAdded(VolumeActorContainer* actorContainer);
-	void sourceRemoved(VolumeActorContainer* actorContainer);
+	void sourceActorAdded(VolumeActorContainer* actorContainer);
+	void sourceActorRemoved(VolumeActorContainer* actorContainer);
 	void actorsChanged();
 	void sourcesForSimulation(const std::vector<std::shared_ptr<Source>>& sources);
 protected:

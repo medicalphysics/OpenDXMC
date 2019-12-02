@@ -117,7 +117,7 @@ void DoseReportModel::sort(int column, Qt::SortOrder order)
 	else if (column == 8)
 		if (order == Qt::AscendingOrder)
 			std::sort(beg, end, [=](auto &left, auto &right) {return left.ID < right.ID; });
-		else
+		else 
 			std::sort(beg, end, [=](auto& left, auto& right) {return left.ID > right.ID; });
 		
 	emit layoutChanged(changedList);

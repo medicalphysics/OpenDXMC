@@ -75,7 +75,6 @@ private:
 	double m_spanAngle;
 	double m_rampAngle;
 	double m_lowWeight;
-
 };
 
 
@@ -99,13 +98,12 @@ public:
 	bool isValid() const { return m_valid; }
 protected:
 	void setCurrentDensityImage(const std::vector<double>& densityImage, const std::array<double, 3> spacing, const std::array<std::size_t, 3> dimensions, const std::array<double, 3> &origin);
-	void setCurrentDensityImage(std::shared_ptr<std::vector<double>>& densityImage, const std::array<double, 3> spacing, const std::array<std::size_t, 3> dimensions, const std::array<double, 3> &origin);
+	void setCurrentDensityImage(std::shared_ptr<std::vector<double>> densityImage, const std::array<double, 3> spacing, const std::array<std::size_t, 3> dimensions, const std::array<double, 3> &origin);
 	void generateDensityWeightMap(const std::vector<double>& densityImage, const std::array<double, 3> spacing, const std::array<std::size_t, 3> dimensions, const std::vector<double>& exposuremapping);
-	void generateDensityWeightMap(std::shared_ptr<std::vector<double>>& densityImage, const std::array<double, 3> spacing, const std::array<std::size_t, 3> dimensions, const std::vector<double>& exposuremapping);
+	void generateDensityWeightMap(std::shared_ptr<std::vector<double>> densityImage, const std::array<double, 3> spacing, const std::array<std::size_t, 3> dimensions, const std::vector<double>& exposuremapping);
 	double interpolateMassWeight(double mass) const;
 private:
 	bool m_valid = false;
 	std::vector<std::pair<double, double>> m_massWeightMap;
 	std::vector<std::pair<double, double>> m_positionWeightMap;
-
 };

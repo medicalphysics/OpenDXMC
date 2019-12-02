@@ -75,7 +75,6 @@ void testWeights()
 	std::transform(weights.begin(), weights.end(), res_norm.begin(), std::back_inserter(is_equal), [](double w, double r) {return std::abs(w - r) < 0.01; });
 
 	auto success = std::all_of(is_equal.begin(), is_equal.end(), [](auto v) {return v == true; });
-
 	assert(success);
 }
 

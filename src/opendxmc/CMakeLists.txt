@@ -77,12 +77,8 @@ if(NOT ENABLE_OSPRAY)
 #	message("${VTK_LIBRARIES}")
 endif()
  
-
-
-
-
 #include(${VTK_USE_FILE})  # depricated since vtk 8.90
-include_directories(${VTK_INCLUDE_DIRS})  # do we need this?
+#include_directories(${VTK_INCLUDE_DIRS})  # do we need this?
 
 #include QT
 ## QT specifics for CMake
@@ -98,25 +94,9 @@ include_directories(${Qt5Widgets_INCLUDE_DIRS})
 include_directories(${Qt5Charts_INCLUDE_DIRS})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS}")
 
-
-#spdlog 
-#include(ExternalProject)
-#ExternalProject_Add(spdlog
-#	GIT_REPOSITORY https://github.com/gabime/spdlog.git
-#	TIMEOUT 5
-#	CMAKE_ARGS -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
-#	PREFIX "${CMAKE_CURRENT_BINARY_DIR}"
-#	CONFIGURE_COMMAND "" # Disable configure step
-#	BUILD_COMMAND "" # Disable build step
-#	INSTALL_COMMAND "" # Disable install step
-#	UPDATE_COMMAND "" # Disable update step: clones the project only once
-#)
-#ExternalProject_Get_Property(spdlog source_dir)
-#SET(spdlog_DIR ${source_dir})
-#set(spdlog_INCLUDE_DIRS ${SOURCE_DIR}/include)
-#include_directories(${spdlog_INCLUDE_DIRS})
-#message(STATUS "spdlog source is located at: ${source_dir}")
-#file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/logs")
+#include HDF5
+find_package(HDF5 REQUIRED COMPONENTS CXX)
+include_directories(${HDF5_CXX_INCLUDE_DIRS})
 
 # Define an executable (WIN32 argument to prevent console window on windows)
 add_executable(OpenDXMC WIN32
@@ -168,6 +148,8 @@ add_executable(OpenDXMC WIN32
 	src/saveload.h
 	src/stringmanipulation.h
 	src/stringmanipulation.cpp
+	src/h5wrapper.h
+	src/h5wrapper.cpp
     )
 
 
@@ -185,6 +167,8 @@ target_link_libraries(OpenDXMC
 		PRIVATE Qt5::Core
 		PRIVATE Qt5::Gui
 		PRIVATE Qt5::Charts
+		PRIVATE ${HDF5_CXX_LIBRARIES}
+		PRIVATE ${HDF5_CXX_HL_LIBRARIES}
         )
 
 

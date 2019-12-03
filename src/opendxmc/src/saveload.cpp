@@ -186,6 +186,9 @@ std::vector<std::string> readStringArray(hid_t file_id, const std::string& name)
 	stringArray = string_split(joined, ';');
 	return stringArray;
 }
+
+
+
 void SaveLoad::loadFromFile(const QString& path)
 {
 	emit processingDataStarted();
@@ -354,6 +357,8 @@ herr_t createArray(hid_t file_id, const std::string& name, const std::vector<std
 	H5Gclose(group_id); // close group
 	return status;
 }
+
+herr_t saveTube(hid_t gid, const Tube& tube)
 
 herr_t saveSource(hid_t gid, std::shared_ptr<CTAxialSource> source, const std::string& name)
 {

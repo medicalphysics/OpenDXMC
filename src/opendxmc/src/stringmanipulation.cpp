@@ -19,7 +19,7 @@ Copyright 2019 Erlend Andersen
 
 #include "stringmanipulation.h"
 
-std::string trim(const std::string& str, const std::string& chars)
+std::string string_trim(const std::string& str, const std::string& chars)
 {
 	auto strc = str;
 	strc.erase(0, strc.find_first_not_of(chars));

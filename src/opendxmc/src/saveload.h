@@ -26,6 +26,7 @@ Copyright 2019 Erlend Andersen
 #include <QObject>
 #include <QString>
 #include <memory>
+#include <vector>
 
 
 #ifndef Q_DECLARE_METATYPE_IMAGECONTAINER

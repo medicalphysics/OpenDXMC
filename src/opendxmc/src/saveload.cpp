@@ -18,6 +18,7 @@ Copyright 2019 Erlend Andersen
 
 #include "saveload.h"
 #include "stringmanipulation.h"
+#include "h5wrapper.h"
 
 #include <QByteArray>
 
@@ -36,6 +37,9 @@ SaveLoad::SaveLoad(QObject* parent)
 	qRegisterMetaType<std::vector<std::string >>();
 	qRegisterMetaType<std::shared_ptr<ImageContainer>>();
 	qRegisterMetaType<DoseReportContainer>();
+
+	auto test = H5Wrapper("test.h5");
+
 }
 
 template<typename T, ImageContainer::ImageType type>
@@ -358,7 +362,7 @@ herr_t createArray(hid_t file_id, const std::string& name, const std::vector<std
 	return status;
 }
 
-herr_t saveTube(hid_t gid, const Tube& tube)
+//herr_t saveTube(hid_t gid, const Tube& tube)
 
 herr_t saveSource(hid_t gid, std::shared_ptr<CTAxialSource> source, const std::string& name)
 {

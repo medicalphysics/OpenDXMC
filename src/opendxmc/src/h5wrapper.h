@@ -17,20 +17,33 @@ Copyright 2019 Erlend Andersen
 */
 #pragma once
 
-#include <hdf5_hl.h>
+#include "imagecontainer.h"
+#include "material.h"
+#include "source.h"
+
+#include "H5Cpp.h"
+
 #include <string>
+#include <memory>
 
 class H5Wrapper
 {
 public:
 	H5Wrapper(const std::string& filePath);
 	~H5Wrapper();
-	hid_t getGroup(const std::string& groupPath, bool create = true);
-	bool saveImage()
-
+	bool saveImage(std::shared_ptr<ImageContainer> image);
+	std::shared_ptr<ImageContainer> loadImage(ImageContainer::ImageType type);
+	bool saveOrganList(const std::vector<std::string>& organList);
+	std::vector<std::string> loadOrganList(void);
+	bool saveMaterials(const std::vector<Material>& materials);
+	std::vector<Material> loadMaterials(void);
+	bool saveSources(const std::vector<std::shared_ptr<Source>>& sources);
+	std::vector<std::shared_ptr<Source>> loadSources(void);
 protected:
-private:
-	hid_t m_fileID = -1;
+	std::unique_ptr<H5::Group> getGroup(const std::string& path, bool create = true);
+	std::unique_ptr<H5::DataSet> getDataSet(std::shared_ptr<ImageContainer> image, const std::string& groupPath);
 
+private:
+	std::unique_ptr<H5::H5File> m_file = nullptr;
 
 };

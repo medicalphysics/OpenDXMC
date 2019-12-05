@@ -20,5 +20,5 @@ Copyright 2019 Erlend Andersen
 #include <string>
 #include <vector>
 
-std::string trim(const std::string& str, const std::string& chars = "\t\n\v\f\r ");
+std::string string_trim(const std::string& str, const std::string& chars = "\t\n\v\f\r ");
 std::vector<std::string> string_split(const std::string& text, char sep);

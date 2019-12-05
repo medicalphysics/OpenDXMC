@@ -19,12 +19,158 @@ Copyright 2019 Erlend Andersen
 
 
 #include "h5wrapper.h"
-#include "H5Cpp.h"
+#include "stringmanipulation.h"
 
 H5Wrapper::H5Wrapper(const std::string& filePath)
 {
+	try {
+		m_file = std::make_unique<H5::H5File>(filePath.c_str(), H5F_ACC_TRUNC);
+	}
+	catch (...)
+	{
+		m_file = nullptr;
+	}
+	auto test = getGroup("/test1/test2");
 }
+
 
 H5Wrapper::~H5Wrapper()
 {
+}
+
+bool H5Wrapper::saveImage(std::shared_ptr<ImageContainer> image)
+{
+	std::string arrayPath = "/arrays";
+	auto dataset = getDataSet(image, arrayPath);
+	if (!dataset)
+		return false;
+
+	
+	//writing spacing
+	const hsize_t dim3 = 3;
+	H5::DataSpace doubleSpace3(1, &dim3);
+	auto spacing = dataset->createAttribute("spacing", H5::PredType::NATIVE_DOUBLE, doubleSpace3);
+	spacing.write(H5::PredType::NATIVE_DOUBLE, image->image->GetSpacing());
+	//writing origin
+	auto origin = dataset->createAttribute("origin", H5::PredType::NATIVE_DOUBLE, doubleSpace3);
+	origin.write(H5::PredType::NATIVE_DOUBLE, image->image->GetOrigin());
+	//writing direction cosines
+	const hsize_t dim6 = 6;
+	H5::DataSpace doubleSpace6(1, &dim6);
+	auto cosines = dataset->createAttribute("direction_cosines", H5::PredType::NATIVE_DOUBLE, doubleSpace6);
+	double* cosines_data = image->directionCosines.data();
+	cosines.write(H5::PredType::NATIVE_DOUBLE, static_cast<void*>(image->directionCosines.data()));
+	//writing data units
+	H5::DataSpace stringSpace(H5S_SCALAR);
+	H5::StrType stringType(0, H5T_VARIABLE);
+	auto dataUnits = dataset->createAttribute("dataUnits", stringType, stringSpace);
+	dataUnits.write(stringType, image->dataUnits.c_str());
+
+	return true;
+}
+
+std::shared_ptr<ImageContainer> H5Wrapper::loadImage(ImageContainer::ImageType type)
+{
+	return std::shared_ptr<ImageContainer>();
+}
+
+bool H5Wrapper::saveOrganList(const std::vector<std::string>& organList)
+{
+	return false;
+}
+
+std::vector<std::string> H5Wrapper::loadOrganList(void)
+{
+	return std::vector<std::string>();
+}
+
+bool H5Wrapper::saveMaterials(const std::vector<Material>& materials)
+{
+	return false;
+}
+
+std::vector<Material> H5Wrapper::loadMaterials(void)
+{
+	return std::vector<Material>();
+}
+
+bool H5Wrapper::saveSources(const std::vector<std::shared_ptr<Source>>& sources)
+{
+	return false;
+}
+
+std::vector<std::shared_ptr<Source>> H5Wrapper::loadSources(void)
+{
+	return std::vector<std::shared_ptr<Source>>();
+}
+
+
+std::unique_ptr<H5::Group> H5Wrapper::getGroup(const std::string& groupPath, bool create)
+{
+	if (!m_file)
+		return nullptr;
+
+	auto names = string_split(groupPath, '/');
+	std::string fullname;
+	std::unique_ptr<H5::Group> group = nullptr;
+	for (const auto& name : names) {
+		fullname += "/" + name;
+		if(!m_file->nameExists(fullname.c_str())) {
+			if (create) {
+				group = std::make_unique<H5::Group>(m_file->createGroup(fullname.c_str()));
+			}
+			else {
+				return nullptr;
+			}
+		}
+		else {
+			group = std::make_unique<H5::Group>(m_file->openGroup(fullname.c_str()));
+		}
+	}
+	return group;
+}
+
+std::unique_ptr<H5::DataSet> H5Wrapper::getDataSet(std::shared_ptr<ImageContainer> image, const std::string& groupPath)
+{
+	/*
+	Creates a dataset from image data and writes array
+	*/
+	if (!image)
+		return nullptr;
+	if (!image->image)
+		return nullptr;
+	auto name = image->getImageName();
+
+	auto group = getGroup(groupPath, true);
+	if (!group)
+		return nullptr;
+	auto namePath = groupPath + "/" + name;
+
+	constexpr hsize_t rank = 3;
+	hsize_t dims[3];
+	for (std::size_t i = 0; i < 3; ++i)
+		dims[i] = static_cast<hsize_t>(image->image->GetDimensions()[i]);
+
+	auto dataspace = std::make_unique<H5::DataSpace>(rank, dims);
+	
+	H5::DSetCreatPropList ds_createplist;
+	hsize_t cdims[3];
+	cdims[0] = dims[0];
+	cdims[1] = dims[1];
+	cdims[2] = 1;
+	ds_createplist.setChunk(rank, cdims);
+	ds_createplist.setDeflate(6);
+
+	auto type = H5::PredType::NATIVE_UCHAR;
+	if (image->image->GetScalarType() == VTK_DOUBLE)
+		type = H5::PredType::NATIVE_DOUBLE;
+	else if (image->image->GetScalarType() == VTK_FLOAT)
+		type = H5::PredType::NATIVE_FLOAT;
+	else if (image->image->GetScalarType() == VTK_UNSIGNED_CHAR)
+		type = H5::PredType::NATIVE_UCHAR;
+	else
+		return nullptr;
+	auto dataset = std::make_unique<H5::DataSet>(group->createDataSet(namePath.c_str(), type, *dataspace, ds_createplist));
+	dataset->write(image->image->GetScalarPointer(), type);
+	return dataset;
 }

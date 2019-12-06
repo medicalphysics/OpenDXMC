@@ -30,7 +30,6 @@ H5Wrapper::H5Wrapper(const std::string& filePath)
 	{
 		m_file = nullptr;
 	}
-	auto test = getGroup("/test1/test2");
 }
 
 
@@ -41,11 +40,10 @@ H5Wrapper::~H5Wrapper()
 bool H5Wrapper::saveImage(std::shared_ptr<ImageContainer> image)
 {
 	std::string arrayPath = "/arrays";
-	auto dataset = getDataSet(image, arrayPath);
+	auto dataset = createDataSet(image, arrayPath);
 	if (!dataset)
 		return false;
 
-	
 	//writing spacing
 	const hsize_t dim3 = 3;
 	H5::DataSpace doubleSpace3(1, &dim3);
@@ -61,16 +59,21 @@ bool H5Wrapper::saveImage(std::shared_ptr<ImageContainer> image)
 	double* cosines_data = image->directionCosines.data();
 	cosines.write(H5::PredType::NATIVE_DOUBLE, static_cast<void*>(image->directionCosines.data()));
 	//writing data units
-	H5::DataSpace stringSpace(H5S_SCALAR);
-	H5::StrType stringType(0, H5T_VARIABLE);
-	auto dataUnits = dataset->createAttribute("dataUnits", stringType, stringSpace);
-	dataUnits.write(stringType, image->dataUnits.c_str());
-
+	if (image->dataUnits.length() > 0) {
+		hsize_t strLen = static_cast<hsize_t>(image->dataUnits.length());
+		H5::StrType stringType(0, strLen);
+		H5::DataSpace stringSpace(H5S_SCALAR);
+		auto dataUnits = dataset->createAttribute("dataUnits", stringType, stringSpace);
+		dataUnits.write(stringType, image->dataUnits.c_str());
+	}
 	return true;
 }
 
 std::shared_ptr<ImageContainer> H5Wrapper::loadImage(ImageContainer::ImageType type)
 {
+
+
+
 	return std::shared_ptr<ImageContainer>();
 }
 
@@ -130,11 +133,13 @@ std::unique_ptr<H5::Group> H5Wrapper::getGroup(const std::string& groupPath, boo
 	return group;
 }
 
-std::unique_ptr<H5::DataSet> H5Wrapper::getDataSet(std::shared_ptr<ImageContainer> image, const std::string& groupPath)
+std::unique_ptr<H5::DataSet> H5Wrapper::createDataSet(std::shared_ptr<ImageContainer> image, const std::string& groupPath)
 {
 	/*
 	Creates a dataset from image data and writes array
 	*/
+	if (!m_file)
+		return nullptr;
 	if (!image)
 		return nullptr;
 	if (!image->image)
@@ -173,4 +178,28 @@ std::unique_ptr<H5::DataSet> H5Wrapper::getDataSet(std::shared_ptr<ImageContaine
 	auto dataset = std::make_unique<H5::DataSet>(group->createDataSet(namePath.c_str(), type, *dataspace, ds_createplist));
 	dataset->write(image->image->GetScalarPointer(), type);
 	return dataset;
+}
+
+std::unique_ptr<H5::DataSet> H5Wrapper::loadDataSet(ImageContainer::ImageType type, const std::string& groupPath)
+{
+	if (!m_file)
+		return nullptr;
+	
+	auto group = getGroup(groupPath, false);
+	if (!group)
+		return nullptr;
+
+	auto path = groupPath + "/" + ImageContainer::getImageName(type);
+
+	std::unique_ptr<H5::DataSet> dataset = nullptr;
+	try {
+		dataset = std::make_unique<H5::DataSet>(m_file->openDataSet(path.c_str()));
+	}
+	catch (H5::FileIException notFoundError){
+		return nullptr;
+	}
+	
+	auto type_class = dataset->getTypeClass();
+	
+	return nullptr;
 }

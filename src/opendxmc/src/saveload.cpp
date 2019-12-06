@@ -19,7 +19,6 @@ Copyright 2019 Erlend Andersen
 #include "saveload.h"
 #include "stringmanipulation.h"
 #include "h5wrapper.h"
-
 #include <QByteArray>
 
 #include <hdf5_hl.h>
@@ -434,10 +433,30 @@ herr_t saveSource(hid_t gid, std::shared_ptr<DXSource> source, const std::string
 
 void SaveLoad::saveToFile(const QString& path)
 {
+	std::string p1 = "test1.h5";
+	std::string p2 = "test2.h5";
+
 	emit processingDataStarted();
 	//creating file 
 	QByteArray bytes = path.toLocal8Bit();
-	char* c_path = bytes.data();
+	//char* c_path = bytes.data();
+
+
+	H5Wrapper wrapper(p2);
+	if (m_ctImage)
+		wrapper.saveImage(m_ctImage);
+	if (m_densityImage)
+		wrapper.saveImage(m_densityImage);
+	if (m_organImage)
+		wrapper.saveImage(m_organImage);
+	if (m_materialImage)
+		wrapper.saveImage(m_materialImage);
+	if (m_doseImage)
+		wrapper.saveImage(m_doseImage);
+
+	auto c_path = p1.c_str();
+
+
 	hid_t fid = H5Fcreate(c_path, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
 	if (fid < 0)
 	{

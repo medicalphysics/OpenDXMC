@@ -41,7 +41,8 @@ public:
 	std::vector<std::shared_ptr<Source>> loadSources(void);
 protected:
 	std::unique_ptr<H5::Group> getGroup(const std::string& path, bool create = true);
-	std::unique_ptr<H5::DataSet> getDataSet(std::shared_ptr<ImageContainer> image, const std::string& groupPath);
+	std::unique_ptr<H5::DataSet> createDataSet(std::shared_ptr<ImageContainer> image, const std::string& groupPath);
+	std::unique_ptr<H5::DataSet> loadDataSet(ImageContainer::ImageType type, const std::string& groupPath);
 
 private:
 	std::unique_ptr<H5::H5File> m_file = nullptr;

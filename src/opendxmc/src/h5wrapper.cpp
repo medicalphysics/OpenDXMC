@@ -79,22 +79,58 @@ std::shared_ptr<ImageContainer> H5Wrapper::loadImage(ImageContainer::ImageType t
 
 bool H5Wrapper::saveOrganList(const std::vector<std::string>& organList)
 {
+	saveStringList(organList, "organList", "/arrays");
 	return false;
 }
 
 std::vector<std::string> H5Wrapper::loadOrganList(void)
 {
-	return std::vector<std::string>();
+	std::vector<std::string> list = loadStringList("organList", "/arrays");
+	return list;
 }
 
 bool H5Wrapper::saveMaterials(const std::vector<Material>& materials)
 {
+	std::vector<std::string> names;
+	std::vector<std::string> prettyNames;
+	names.reserve(materials.size());
+	for (const Material& m : materials)
+	{
+		names.push_back(m.name());
+		prettyNames.push_back(m.prettyName());
+	}
+	saveStringList(names, "materialList", "/arrays");
+	saveStringList(prettyNames, "materialPrettyList", "/arrays");
 	return false;
 }
 
 std::vector<Material> H5Wrapper::loadMaterials(void)
 {
-	return std::vector<Material>();
+	auto materialNames = loadStringList("materialList", "/arrays");
+	auto materialPrettyNames = loadStringList("materialPrettyList", "/arrays");
+	if (materialNames.size() != materialPrettyNames.size())
+		return std::vector<Material>();
+	std::vector<Material> materials;
+	materials.reserve(materialNames.size());
+
+	for (std::size_t i = 0; i < materialNames.size(); ++i)
+	{
+		Material m(materialNames[i], materialPrettyNames[i]);
+		m.setStandardDensity(1.0);
+		if (!m.isValid())
+			return std::vector<Material>();
+		materials.push_back(m);
+	}
+
+	//this is better but we must loop anyway to prevent invalid materials
+	/*std::transform(materialNames.begin(), materialNames.end(), materialPrettyNames.begin(), std::back_inserter(materials), [](const auto& name, const auto& pname) {
+		Material m(name, pname);
+		m.setStandardDensity(1.0);
+		return m;
+		});
+	*/
+	
+	return materials;
 }
 
 bool H5Wrapper::saveSources(const std::vector<std::shared_ptr<Source>>& sources)
@@ -162,7 +198,7 @@ std::unique_ptr<H5::DataSet> H5Wrapper::createDataSet(std::shared_ptr<ImageConta
 	hsize_t cdims[3];
 	cdims[0] = dims[0];
 	cdims[1] = dims[1];
-	cdims[2] = 1;
+	cdims[2] = dims[2];
 	ds_createplist.setChunk(rank, cdims);
 	ds_createplist.setDeflate(6);
 
@@ -233,9 +269,6 @@ std::shared_ptr<ImageContainer> H5Wrapper::loadDataSet(ImageContainer::ImageType
 		return nullptr;
 	}
 	
-	
-	
-
 	std::shared_ptr<ImageContainer> image = nullptr;
 
 	auto type_class = dataset->getTypeClass();
@@ -280,6 +313,80 @@ std::shared_ptr<ImageContainer> H5Wrapper::loadDataSet(ImageContainer::ImageType
 
 bool H5Wrapper::saveStringList(const std::vector<std::string>& list, const std::string& name, const std::string& groupPath)
 {
-	return false;
+	if (list.size() == 0)
+		return false;
 
+	auto group = getGroup(groupPath, true);
+	if (!group)
+		return nullptr;
+
+	std::size_t maxStrLen = 0;
+	for (const auto& s : list)
+		maxStrLen = std::max(maxStrLen, s.size());
+	if (maxStrLen == 0)
+		return false;
+
+	std::vector<char> rawData(maxStrLen * list.size(), ' ');
+	for (std::size_t i = 0; i < list.size(); ++i)
+	{
+		auto idx = i * maxStrLen;
+		for (const char& c : list[i])
+			rawData[idx++] = c;
+	}
+
+	auto namePath = groupPath + "/" + name;
+
+	hsize_t size[2];
+	size[0] = list.size(); 
+	size[1] = maxStrLen;
+
+	auto dataspace = std::make_unique<H5::DataSpace>(2, size);
+	auto type = H5::PredType::NATIVE_CHAR;
+	auto dataset = std::make_unique<H5::DataSet>(group->createDataSet(namePath.c_str(), type, *dataspace));
+	dataset->write(rawData.data(), H5::PredType::NATIVE_CHAR);
+	return true;
+}
+
+std::vector<std::string> H5Wrapper::loadStringList(const std::string& name, const std::string& groupPath)
+{
+	 std::vector<std::string> list;
+	 auto group = getGroup(groupPath, false);
+	 if (!group)
+		 return list;
+
+	 auto path = groupPath + "/" + name;
+
+	 std::unique_ptr<H5::DataSet> dataset = nullptr;
+	 try {
+		 dataset = std::make_unique<H5::DataSet>(m_file->openDataSet(path.c_str()));
+	 }
+	 catch (H5::FileIException notFoundError) {
+		 return list;
+	 }
+
+	 auto space = dataset->getSpace();
+	 auto rank = space.getSimpleExtentNdims();
+	 if (rank != 2)
+		 return list;
+	 hsize_t h5dims[2];
+	 space.getSimpleExtentDims(h5dims);
+	 std::size_t rawSize(h5dims[0] * h5dims[1]);
+	 if (rawSize == 0)
+		 return list;
+	 std::vector<char> rawData(rawSize, ' ');
+	 auto type = H5::PredType::NATIVE_CHAR;
+
+	 dataset->read(rawData.data(), type);
+
+	 const auto nStrings = static_cast<std::size_t>(h5dims[0]);
+	 const auto nChars = static_cast<std::size_t>(h5dims[1]);
+
+	 list.reserve(nStrings);
+	 for (std::size_t i = 0; i < nStrings; ++i)
+	 {
+		 std::string s(rawData.begin() + i * nChars, rawData.begin() + (i + 1) * nChars);
+		 list.push_back(string_trim(s));
+	 }
+
+	 return list;
 }

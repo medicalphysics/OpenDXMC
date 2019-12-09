@@ -1,6 +1,6 @@
 
 #include "h5wrapper.h"
-
+#include "material.h"
 #include <memory>
 #include <vector>
 
@@ -29,7 +29,23 @@ std::vector<std::shared_ptr<ImageContainer>> getImages(void)
 }
 
 
+std::vector<std::string> getOrganList()
+{
+	std::vector<std::string> l;
+	l.push_back("muskel");
+	l.push_back("thorax");
+	l.push_back("thorax og abdomen");
+	return l;
+}
 
+std::vector<Material> getMaterials()
+{
+	std::vector<Material> m;
+	m.push_back(Material(1));
+	m.push_back(Material("H2O", "water"));
+	m.push_back(Material("Blood (ICRP)", "blood"));
+	return m;
+}
 
 int main(int argc, char* argv[])
 {
@@ -40,11 +56,16 @@ int main(int argc, char* argv[])
 	{
 		w.saveImage(im);
 	}
-	
+	auto organList = getOrganList();
+	w.saveOrganList(organList);
+	auto materials = getMaterials();
+	w.saveMaterials(materials);
 
 	auto ctImageLoaded = w.loadImage(ImageContainer::CTImage);
 	auto densImageLoaded = w.loadImage(ImageContainer::DensityImage);
 	auto matImageLoaded = w.loadImage(ImageContainer::MaterialImage);
+	auto organListLoaded = w.loadOrganList();
+	auto materialsLoaded = w.loadMaterials();
 	return 0;
 
 }

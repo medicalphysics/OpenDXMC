@@ -345,3 +345,23 @@ foreach(fileresource ${fileresources})
 	)
 endforeach()
 
+##test hdf5
+add_executable(test_H5Wrapper WIN32
+	src/h5wrapper_test.cpp
+	src/imagecontainer.h
+	src/h5wrapper.h
+	src/h5wrapper.cpp
+	src/stringmanipulation.h
+	src/stringmanipulation.cpp
+    )
+
+vtk_module_autoinit(
+    TARGETS test_H5Wrapper
+    MODULES ${VTK_LIBRARIES}
+    )
+target_link_libraries(test_H5Wrapper
+        PRIVATE dxmclib
+		PRIVATE ${VTK_LIBRARIES}
+		PRIVATE ${HDF5_CXX_LIBRARIES}
+		PRIVATE ${HDF5_CXX_HL_LIBRARIES}
+        )

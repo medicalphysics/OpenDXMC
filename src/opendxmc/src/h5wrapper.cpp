@@ -72,9 +72,9 @@ bool H5Wrapper::saveImage(std::shared_ptr<ImageContainer> image)
 std::shared_ptr<ImageContainer> H5Wrapper::loadImage(ImageContainer::ImageType type)
 {
 
+	auto image = loadDataSet(type, "/arrays");
 
-
-	return std::shared_ptr<ImageContainer>();
+	return image;
 }
 
 bool H5Wrapper::saveOrganList(const std::vector<std::string>& organList)
@@ -180,7 +180,7 @@ std::unique_ptr<H5::DataSet> H5Wrapper::createDataSet(std::shared_ptr<ImageConta
 	return dataset;
 }
 
-std::unique_ptr<H5::DataSet> H5Wrapper::loadDataSet(ImageContainer::ImageType type, const std::string& groupPath)
+std::shared_ptr<ImageContainer> H5Wrapper::loadDataSet(ImageContainer::ImageType type, const std::string& groupPath)
 {
 	if (!m_file)
 		return nullptr;
@@ -199,7 +199,87 @@ std::unique_ptr<H5::DataSet> H5Wrapper::loadDataSet(ImageContainer::ImageType ty
 		return nullptr;
 	}
 	
-	auto type_class = dataset->getTypeClass();
+	auto space = dataset->getSpace();
+	auto rank = space.getSimpleExtentNdims();
+	if (rank != 3)
+		return nullptr;
+	hsize_t h5dims[3];
+	space.getSimpleExtentDims(h5dims);
 	
-	return nullptr;
+	std::array<std::size_t, 3> dim{ h5dims[0], h5dims[1], h5dims[2] };
+	std::array<double, 3> origin{ 0,0,0 };
+	std::array<double, 3> spacing{ 1,1,1 };
+	std::array<double, 6> direction{ 1,0,0,0,1,0 };
+	std::string units("");
+
+	try {
+		auto origin_attr = dataset->openAttribute("origin");
+		origin_attr.read(H5T_NATIVE_DOUBLE, origin.data());
+		auto spacing_attr = dataset->openAttribute("spacing");
+		spacing_attr.read(H5T_NATIVE_DOUBLE, spacing.data());
+		auto dir_attr = dataset->openAttribute("direction_cosines");
+		dir_attr.read(H5T_NATIVE_DOUBLE, direction.data());
+		if (dataset->attrExists("dataUnits"))
+		{
+			auto units_attr = dataset->openAttribute("dataUnits");
+			std::size_t units_size = units_attr.getInMemDataSize();
+			units.resize(units_size);
+			H5::StrType stringType(0, units_size);
+			units_attr.read(stringType, units.data());
+		}
+	}
+	catch (...)
+	{
+		return nullptr;
+	}
+	
+	
+	
+
+	std::shared_ptr<ImageContainer> image = nullptr;
+
+	auto type_class = dataset->getTypeClass();
+	auto size = dim[0] * dim[1] * dim[2];
+	if (type_class == H5T_FLOAT)
+	{
+		auto double_type_class = dataset->getFloatType();
+		auto type_size = double_type_class.getSize();
+		if (type_size = 4)
+		{
+			auto data = std::make_shared<std::vector<float>>(size);
+			float* buffer = data->data();
+			dataset->read(buffer, H5::PredType::NATIVE_FLOAT);
+			image = std::make_shared<ImageContainer>(type, data, dim, spacing, origin);
+		}
+		else if (type_size = 8)
+		{
+			auto data = std::make_shared<std::vector<double>>(size);
+			double* buffer = data->data();
+			dataset->read(buffer, H5::PredType::NATIVE_DOUBLE);
+			image = std::make_shared<ImageContainer>(type, data, dim, spacing, origin);
+		}
+	}
+	else if (type_class == H5T_INTEGER)
+	{
+		auto int_type_class = dataset->getIntType();
+		auto type_size = int_type_class.getSize();
+		if (type_size = 1)
+		{
+			auto data = std::make_shared<std::vector<unsigned char>>(size);
+			unsigned char* buffer = data->data();
+			dataset->read(buffer, H5::PredType::NATIVE_UCHAR);
+			image = std::make_shared<ImageContainer>(type, data, dim, spacing, origin);
+		}
+	}
+	if (!image)
+		return nullptr;
+	image->directionCosines = direction;
+	image->dataUnits = units;
+	return image;
+}
+
+bool H5Wrapper::saveStringList(const std::vector<std::string>& list, const std::string& name, const std::string& groupPath)
+{
+	return false;
+
 }

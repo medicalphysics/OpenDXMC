@@ -36,9 +36,6 @@ SaveLoad::SaveLoad(QObject* parent)
 	qRegisterMetaType<std::vector<std::string >>();
 	qRegisterMetaType<std::shared_ptr<ImageContainer>>();
 	qRegisterMetaType<DoseReportContainer>();
-
-	auto test = H5Wrapper("test.h5");
-
 }
 
 template<typename T, ImageContainer::ImageType type>
@@ -194,7 +191,21 @@ std::vector<std::string> readStringArray(hid_t file_id, const std::string& name)
 
 void SaveLoad::loadFromFile(const QString& path)
 {
+
 	emit processingDataStarted();
+
+	H5Wrapper wrapper(path.toStdString().c_str());
+	wrapper.loadImage(ImageContainer::CTImage);
+
+
+
+
+
+
+
+
+
+
 	QByteArray bytes = path.toLocal8Bit();
 	char* c_path = bytes.data();
 	hid_t fid = H5Fopen(c_path, H5F_ACC_RDONLY, H5P_DEFAULT);

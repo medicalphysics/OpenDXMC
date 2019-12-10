@@ -55,19 +55,16 @@ public:
 	void clearFiltrationMaterials() { m_filtrationMaterials.clear(); }
 	
 	void setEnergyResolution(double energyResolution) { m_energyResolution = energyResolution;}
+	double energyResolution() const { return m_energyResolution; }
 	std::vector<double> getEnergy() const;
 
 	std::vector<std::pair<double, double>> getSpecter(bool normalize = true) const;
 	std::vector<double> getSpecter(const std::vector<double> &energies, bool normalize = true) const;
-	
-
 protected:
 	void addCharacteristicEnergy(const std::vector<double>& energy, std::vector<double>& specter) const;
 	void filterSpecter(const std::vector<double>& energies, std::vector<double>& specter) const;
 	void normalizeSpecter(std::vector<double>& specter) const;
 private:
-	
 	double m_voltage, m_energyResolution, m_angle;
 	std::vector<std::pair<Material, double>> m_filtrationMaterials;
-
 };

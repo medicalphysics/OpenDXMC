@@ -135,7 +135,46 @@ std::vector<Material> H5Wrapper::loadMaterials(void)
 
 bool H5Wrapper::saveSources(const std::vector<std::shared_ptr<Source>>& sources)
 {
-	return false;
+
+	std::size_t tellerDX = 1;
+	std::size_t tellerCTAxial = 1;
+	std::size_t tellerCTSpiral = 1;
+	std::size_t tellerCTDual = 1;
+
+	std::string groupPath = "/sources";
+	for (auto s : sources)
+	{
+
+		if (s->type == Source::DX)
+		{
+			auto s_downcast = std::static_pointer_cast<DXSource>(s);
+			auto path = groupPath + "/" + "DX";
+			auto name = std::to_string(tellerDX++);
+			saveSource(s_downcast, name, path);
+		}
+		else if (s->type == Source::CTAxial)
+		{
+			auto s_downcast = std::static_pointer_cast<CTAxialSource>(s);
+			auto path = groupPath + "/" + "CTAxial";
+			auto name = std::to_string(tellerCTAxial++);
+			saveSource(s_downcast, name, path);
+		}
+		else if (s->type == Source::CTSpiral)
+		{
+			auto s_downcast = std::static_pointer_cast<CTSpiralSource>(s);
+			auto path = groupPath + "/" + "CTSpiral";
+			auto name = std::to_string(tellerCTSpiral++);
+			saveSource(s_downcast, name, path);
+		}
+		else if (s->type == Source::CTDual)
+		{
+			auto s_downcast = std::static_pointer_cast<CTDualSource>(s);
+			auto path = groupPath + "/" + "CTDual";
+			auto name = std::to_string(tellerCTDual++);
+			saveSource(s_downcast, name, path);
+		}
+	}
+	return true;
 }
 
 std::vector<std::shared_ptr<Source>> H5Wrapper::loadSources(void)
@@ -318,7 +357,7 @@ bool H5Wrapper::saveStringList(const std::vector<std::string>& list, const std::
 
 	auto group = getGroup(groupPath, true);
 	if (!group)
-		return nullptr;
+		return false;
 
 	std::size_t maxStrLen = 0;
 	for (const auto& s : list)
@@ -389,4 +428,163 @@ std::vector<std::string> H5Wrapper::loadStringList(const std::string& name, cons
 	 }
 
 	 return list;
+}
+
+bool H5Wrapper::saveDoubleList(const std::vector<double>& values, const std::string& name, const std::string& groupPath)
+{
+	if (values.size() == 0)
+		return false;
+
+	auto group = getGroup(groupPath, true);
+	if (!group)
+		return false;
+
+	auto namePath = groupPath + "/" + name;
+
+	hsize_t size(values.size());
+	
+	auto dataspace = std::make_unique<H5::DataSpace>(1, &size);
+	auto type = H5::PredType::NATIVE_DOUBLE;
+	auto dataset = std::make_unique<H5::DataSet>(group->createDataSet(namePath.c_str(), type, *dataspace));
+	dataset->write(values.data(), H5::PredType::NATIVE_DOUBLE);
+	return true;
+}
+
+std::vector<double> H5Wrapper::loadDoubleList(const std::string& name, const std::string& groupPath)
+{
+	std::vector<double> list;
+	auto group = getGroup(groupPath, false);
+	if (!group)
+		return list;
+
+	auto path = groupPath + "/" + name;
+
+	std::unique_ptr<H5::DataSet> dataset = nullptr;
+	try {
+		dataset = std::make_unique<H5::DataSet>(m_file->openDataSet(path.c_str()));
+	}
+	catch (H5::FileIException notFoundError) {
+		return list;
+	}
+
+	auto space = dataset->getSpace();
+	auto rank = space.getSimpleExtentNdims();
+	if (rank != 1)
+		return list;
+	hsize_t h5dims;
+	space.getSimpleExtentDims(&h5dims);
+	
+	list.resize(static_cast<std::size_t>(h5dims));
+	//TODO error catching here
+	dataset->read(list.data(), H5::PredType::NATIVE_DOUBLE);
+	return list;
+}
+
+std::unique_ptr<H5::Group> H5Wrapper::saveTube(const Tube& tube, const std::string& name, const std::string& groupPath)
+{
+	if (!m_file)
+		return nullptr;
+	auto path = groupPath + "/" + name;
+	auto group = getGroup(path, true);
+	if (!group)
+		return nullptr;
+
+	const hsize_t dim1 = 1;
+	H5::DataSpace doubleSpace1(1, &dim1);
+	std::map<std::string, double> valueMap;
+	valueMap["voltage"] = tube.voltage();
+	valueMap["energyResolution"] = tube.energyResolution();
+	valueMap["angle"] = tube.tubeAngle();
+
+	for (const auto& [key, val] : valueMap)
+	{
+		auto att = group->createAttribute(key.c_str(), H5::PredType::NATIVE_DOUBLE, doubleSpace1);
+		att.write(H5::PredType::NATIVE_DOUBLE, &val);
+	}
+
+	auto filtrationMaterials = tube.filtrationMaterials();
+	if (filtrationMaterials.size() > 0)
+	{
+		std::vector<std::string> matNames;
+		std::vector<double> matDensities;
+		std::vector<double> matMm;
+		for (const auto& [mat, mm] : filtrationMaterials)
+		{
+			matNames.push_back(mat.name());
+			matDensities.push_back(mat.standardDensity());
+			matMm.push_back(mm);
+		}
+		saveStringList(matNames, "filtrationMaterialNames", path.c_str());
+		saveDoubleList(matDensities, "filtrationMaterialDensities", path.c_str());
+		saveDoubleList(matMm, "filtrationMaterialThickness", path.c_str());
+	}
+	return group;
+}
+
+void H5Wrapper::loadTube(Tube& tube, const std::string& name, const std::string& groupPath)
+{
+	if (!m_file)
+		return;
+
+	auto tubePath = groupPath + "/" + name;
+	auto tubeGroup = getGroup(tubePath, false);
+
+	if (!tubeGroup)
+		return;
+
+	double voltage, energyResolution, angle;
+
+	try {
+		auto voltage_attr = tubeGroup->openAttribute("voltage");
+		voltage_attr.read(H5T_NATIVE_DOUBLE, &voltage);
+		auto er_attr = tubeGroup->openAttribute("energyResolution");
+		er_attr.read(H5T_NATIVE_DOUBLE, &energyResolution);
+		auto angle_attr = tubeGroup->openAttribute("voltage");
+		angle_attr.read(H5T_NATIVE_DOUBLE, &angle);
+	}
+	catch (...)
+	{
+		return;
+	}
+	tube.setVoltage(voltage);
+	tube.setTubeAngle(angle);
+	tube.setEnergyResolution(energyResolution);
+	if (tubeGroup->nameExists("filtrationMaterialNames"))
+	{
+		auto matNames = loadStringList("filtrationMaterialNames", tubePath.c_str());
+		auto matDens = loadDoubleList("filtrationMaterialDensities", tubePath.c_str());
+		auto matThick = loadDoubleList("filtrationMaterialThickness", tubePath.c_str());
+		if (matDens.size() == matNames.size() && matThick.size() == matNames.size())
+		{
+			for (std::size_t i = 0; i < matNames.size(); ++i)
+			{
+				Material m(matNames[i]);
+				m.setStandardDensity(matDens[i]);
+				tube.addFiltrationMaterial(m, matThick[i]);
+			}
+		}
+	}
+	return;
+}
+
+bool H5Wrapper::saveSource(std::shared_ptr<DXSource> src, const std::string& name, const std::string& groupPath)
+{
+	if (!m_file)
+		return false;
+	auto srcPath = groupPath + "/" + name;
+	auto srcGroup = getGroup(srcPath, true);
+	if (!srcGroup)
+		return false;
+	
+	auto tubeGroup = saveTube(src->tube(), "Tube", srcPath);
+	if (!tubeGroup)
+		return false;
+
+
+
+
+
+
+
+	return false;
 }

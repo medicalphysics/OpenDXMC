@@ -1,6 +1,8 @@
 
 #include "h5wrapper.h"
 #include "material.h"
+#include "source.h"
+
 #include <memory>
 #include <vector>
 
@@ -47,6 +49,24 @@ std::vector<Material> getMaterials()
 	return m;
 }
 
+
+std::vector<std::shared_ptr<Source>> getSources() {
+
+	std::shared_ptr<Source> dx = std::make_shared<DXSource>();
+	std::shared_ptr<Source> cta = std::make_shared<CTAxialSource>();
+	std::shared_ptr<Source> cts = std::make_shared<CTSpiralSource>();
+	std::shared_ptr<Source> ctd = std::make_shared<CTDualSource>();
+
+	std::vector<std::shared_ptr<Source>> s;
+	s.push_back(dx);
+	s.push_back(cta);
+	s.push_back(cts);
+	s.push_back(ctd);
+	return s;
+}
+
+
+
 int main(int argc, char* argv[])
 {
 
@@ -61,11 +81,16 @@ int main(int argc, char* argv[])
 	auto materials = getMaterials();
 	w.saveMaterials(materials);
 
+	auto sources = getSources();
+	w.saveSources(sources);
+
+
 	auto ctImageLoaded = w.loadImage(ImageContainer::CTImage);
 	auto densImageLoaded = w.loadImage(ImageContainer::DensityImage);
 	auto matImageLoaded = w.loadImage(ImageContainer::MaterialImage);
 	auto organListLoaded = w.loadOrganList();
 	auto materialsLoaded = w.loadMaterials();
+	auto sourcesLoaded = w.loadSources();
 	return 0;
 
 }

@@ -83,7 +83,7 @@ public:
 	bool removeRow(int row, const QModelIndex &parent = QModelIndex());
 	bool removeRows(int rows, int count, const QModelIndex &parent = QModelIndex()) override;
 	void setImageData(std::shared_ptr<ImageContainer> image);
-
+	adding sources vector from saveload
 signals:
 	void sourceActorAdded(VolumeActorContainer* actorContainer);
 	void sourceActorRemoved(VolumeActorContainer* actorContainer);

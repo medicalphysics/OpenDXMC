@@ -43,37 +43,12 @@ bool H5Wrapper::saveImage(std::shared_ptr<ImageContainer> image)
 	auto dataset = createDataSet(image, arrayPath);
 	if (!dataset)
 		return false;
-
-	//writing spacing
-	const hsize_t dim3 = 3;
-	H5::DataSpace doubleSpace3(1, &dim3);
-	auto spacing = dataset->createAttribute("spacing", H5::PredType::NATIVE_DOUBLE, doubleSpace3);
-	spacing.write(H5::PredType::NATIVE_DOUBLE, image->image->GetSpacing());
-	//writing origin
-	auto origin = dataset->createAttribute("origin", H5::PredType::NATIVE_DOUBLE, doubleSpace3);
-	origin.write(H5::PredType::NATIVE_DOUBLE, image->image->GetOrigin());
-	//writing direction cosines
-	const hsize_t dim6 = 6;
-	H5::DataSpace doubleSpace6(1, &dim6);
-	auto cosines = dataset->createAttribute("direction_cosines", H5::PredType::NATIVE_DOUBLE, doubleSpace6);
-	double* cosines_data = image->directionCosines.data();
-	cosines.write(H5::PredType::NATIVE_DOUBLE, static_cast<void*>(image->directionCosines.data()));
-	//writing data units
-	if (image->dataUnits.length() > 0) {
-		hsize_t strLen = static_cast<hsize_t>(image->dataUnits.length());
-		H5::StrType stringType(0, strLen);
-		H5::DataSpace stringSpace(H5S_SCALAR);
-		auto dataUnits = dataset->createAttribute("dataUnits", stringType, stringSpace);
-		dataUnits.write(stringType, image->dataUnits.c_str());
-	}
 	return true;
 }
 
 std::shared_ptr<ImageContainer> H5Wrapper::loadImage(ImageContainer::ImageType type)
 {
-
 	auto image = loadDataSet(type, "/arrays");
-
 	return image;
 }
 
@@ -93,14 +68,19 @@ bool H5Wrapper::saveMaterials(const std::vector<Material>& materials)
 {
 	std::vector<std::string> names;
 	std::vector<std::string> prettyNames;
+	std::vector<double> densities;
 	names.reserve(materials.size());
+	prettyNames.reserve(materials.size());
+	densities.reserve(materials.size());
 	for (const Material& m : materials)
 	{
 		names.push_back(m.name());
 		prettyNames.push_back(m.prettyName());
+		densities.push_back(m.standardDensity());
 	}
 	saveStringList(names, "materialList", "/arrays");
 	saveStringList(prettyNames, "materialPrettyList", "/arrays");
+	saveDoubleList(densities, "materialDensityList", "/arrays");
 	return false;
 }
 
@@ -108,7 +88,8 @@ std::vector<Material> H5Wrapper::loadMaterials(void)
 {
 	auto materialNames = loadStringList("materialList", "/arrays");
 	auto materialPrettyNames = loadStringList("materialPrettyList", "/arrays");
-	if (materialNames.size() != materialPrettyNames.size())
+	auto densities = loadDoubleList("materialDensityList", "/arrays");
+	if (materialNames.size() != materialPrettyNames.size() || materialNames.size() != densities.size())
 		return std::vector<Material>();
 	std::vector<Material> materials;
 	materials.reserve(materialNames.size());
@@ -116,7 +97,7 @@ std::vector<Material> H5Wrapper::loadMaterials(void)
 	for (std::size_t i = 0; i < materialNames.size(); ++i)
 	{
 		Material m(materialNames[i], materialPrettyNames[i]);
-		m.setStandardDensity(1.0);
+		m.setStandardDensity(densities[i]);
 		if (!m.isValid())
 			return std::vector<Material>();
 		materials.push_back(m);
@@ -135,7 +116,6 @@ std::vector<Material> H5Wrapper::loadMaterials(void)
 
 bool H5Wrapper::saveSources(const std::vector<std::shared_ptr<Source>>& sources)
 {
-
 	std::size_t tellerDX = 1;
 	std::size_t tellerCTAxial = 1;
 	std::size_t tellerCTSpiral = 1;
@@ -144,41 +124,101 @@ bool H5Wrapper::saveSources(const std::vector<std::shared_ptr<Source>>& sources)
 	std::string groupPath = "/sources";
 	for (auto s : sources)
 	{
-
-		if (s->type == Source::DX)
+		bool valid = false;
+		if (s->type() == Source::DX)
 		{
 			auto s_downcast = std::static_pointer_cast<DXSource>(s);
 			auto path = groupPath + "/" + "DX";
 			auto name = std::to_string(tellerDX++);
-			saveSource(s_downcast, name, path);
+			valid = saveSource(s_downcast, name, path);
 		}
-		else if (s->type == Source::CTAxial)
+		else if (s->type() == Source::CTAxial)
 		{
 			auto s_downcast = std::static_pointer_cast<CTAxialSource>(s);
 			auto path = groupPath + "/" + "CTAxial";
 			auto name = std::to_string(tellerCTAxial++);
-			saveSource(s_downcast, name, path);
+			valid = saveSource(s_downcast, name, path);
 		}
-		else if (s->type == Source::CTSpiral)
+		else if (s->type() == Source::CTSpiral)
 		{
 			auto s_downcast = std::static_pointer_cast<CTSpiralSource>(s);
 			auto path = groupPath + "/" + "CTSpiral";
 			auto name = std::to_string(tellerCTSpiral++);
-			saveSource(s_downcast, name, path);
+			valid = saveSource(s_downcast, name, path);
 		}
-		else if (s->type == Source::CTDual)
+		else if (s->type() == Source::CTDual)
 		{
 			auto s_downcast = std::static_pointer_cast<CTDualSource>(s);
 			auto path = groupPath + "/" + "CTDual";
 			auto name = std::to_string(tellerCTDual++);
-			saveSource(s_downcast, name, path);
+			valid = saveSource(s_downcast, name, path);
 		}
+		if (!valid)
+			return false;
 	}
 	return true;
 }
 
 std::vector<std::shared_ptr<Source>> H5Wrapper::loadSources(void)
 {
+	std::vector<std::shared_ptr<Source>> sources;
+
+	if (!m_file->nameExists("sources"))
+		return sources;
+
+	auto sourceGroup = getGroup("sources/", false);
+	if (!sourceGroup)
+		return sources;
+
+	std::map<std::string, Source::Type> sourceFolders;
+	sourceFolders["CTDual"] = Source::CTDual;
+	sourceFolders["CTAxial"] = Source::CTAxial;
+	sourceFolders["CTSpiral"] = Source::CTSpiral;
+	sourceFolders["DX"] = Source::DX;
+	
+	for (const auto [sourceFolder, type] : sourceFolders)
+	{
+		auto folderPath = "sources/" + sourceFolder;
+		auto folderGroup = getGroup(folderPath, false);
+		if (folderGroup)
+		{
+			std::size_t teller = 1;
+			auto name = std::to_string(teller);
+			auto sourcepath = folderPath + "/" + name;
+			while (getGroup(sourcepath, false))
+			{
+				if (type == Source::DX)
+				{
+					auto src = std::make_shared<DXSource>();
+					bool valid = loadSource(src, name, folderPath);
+					if (valid)
+						sources.push_back(src);
+				} else if (type == Source::CTSpiral)
+				{
+					auto src = std::make_shared<CTSpiralSource>();
+					bool valid = loadSource(src, name, folderPath);
+					if (valid)
+						sources.push_back(src);
+				} else if (type == Source::CTAxial)
+				{
+					auto src = std::make_shared<CTAxialSource>();
+					bool valid = loadSource(src, name, folderPath);
+					if (valid)
+						sources.push_back(src);
+				} else if (type == Source::CTDual)
+				{
+					auto src = std::make_shared<CTDualSource>();
+					bool valid = loadSource(src, name, folderPath);
+					if (valid)
+						sources.push_back(src);
+				}
+
+				teller++;
+				name = std::to_string(teller);
+				sourcepath = folderPath + "/" + name;
+			}
+		}
+	}
 	return std::vector<std::shared_ptr<Source>>();
 }
 
@@ -252,6 +292,37 @@ std::unique_ptr<H5::DataSet> H5Wrapper::createDataSet(std::shared_ptr<ImageConta
 		return nullptr;
 	auto dataset = std::make_unique<H5::DataSet>(group->createDataSet(namePath.c_str(), type, *dataspace, ds_createplist));
 	dataset->write(image->image->GetScalarPointer(), type);
+
+	//saving attributes
+	//writing spacing
+	const hsize_t dim3 = 3;
+	H5::DataSpace doubleSpace3(1, &dim3);
+	auto spacing = dataset->createAttribute("spacing", H5::PredType::NATIVE_DOUBLE, doubleSpace3);
+	spacing.write(H5::PredType::NATIVE_DOUBLE, image->image->GetSpacing());
+	//writing origin
+	auto origin = dataset->createAttribute("origin", H5::PredType::NATIVE_DOUBLE, doubleSpace3);
+	origin.write(H5::PredType::NATIVE_DOUBLE, image->image->GetOrigin());
+	//writing direction cosines
+	const hsize_t dim6 = 6;
+	H5::DataSpace doubleSpace6(1, &dim6);
+	auto cosines = dataset->createAttribute("direction_cosines", H5::PredType::NATIVE_DOUBLE, doubleSpace6);
+	double* cosines_data = image->directionCosines.data();
+	cosines.write(H5::PredType::NATIVE_DOUBLE, static_cast<void*>(image->directionCosines.data()));
+	//writing ID
+	const hsize_t dim1 = 1;
+	auto id = image->ID;
+	H5::DataSpace idSpace6(1, &dim1);
+	auto id_attr = dataset->createAttribute("ID", H5::PredType::NATIVE_UINT64, idSpace6);
+	id_attr.write(H5::PredType::NATIVE_UINT64, &id);
+	//writing data units
+	if (image->dataUnits.length() > 0) {
+		hsize_t strLen = static_cast<hsize_t>(image->dataUnits.length());
+		H5::StrType stringType(0, strLen);
+		H5::DataSpace stringSpace(H5S_SCALAR);
+		auto dataUnits = dataset->createAttribute("dataUnits", stringType, stringSpace);
+		dataUnits.write(stringType, image->dataUnits.c_str());
+	}
+
 	return dataset;
 }
 
@@ -285,15 +356,18 @@ std::shared_ptr<ImageContainer> H5Wrapper::loadDataSet(ImageContainer::ImageType
 	std::array<double, 3> origin{ 0,0,0 };
 	std::array<double, 3> spacing{ 1,1,1 };
 	std::array<double, 6> direction{ 1,0,0,0,1,0 };
+	std::uint64_t id = 0;
 	std::string units("");
 
 	try {
 		auto origin_attr = dataset->openAttribute("origin");
-		origin_attr.read(H5T_NATIVE_DOUBLE, origin.data());
+		origin_attr.read(H5::PredType::NATIVE_DOUBLE, origin.data());
 		auto spacing_attr = dataset->openAttribute("spacing");
-		spacing_attr.read(H5T_NATIVE_DOUBLE, spacing.data());
+		spacing_attr.read(H5::PredType::NATIVE_DOUBLE, spacing.data());
 		auto dir_attr = dataset->openAttribute("direction_cosines");
-		dir_attr.read(H5T_NATIVE_DOUBLE, direction.data());
+		dir_attr.read(H5::PredType::NATIVE_DOUBLE, direction.data());
+		auto id_attr = dataset->openAttribute("ID");
+		id_attr.read(H5::PredType::NATIVE_UINT64, &id);
 		if (dataset->attrExists("dataUnits"))
 		{
 			auto units_attr = dataset->openAttribute("dataUnits");
@@ -316,14 +390,14 @@ std::shared_ptr<ImageContainer> H5Wrapper::loadDataSet(ImageContainer::ImageType
 	{
 		auto double_type_class = dataset->getFloatType();
 		auto type_size = double_type_class.getSize();
-		if (type_size = 4)
+		if (type_size == 4)
 		{
 			auto data = std::make_shared<std::vector<float>>(size);
 			float* buffer = data->data();
 			dataset->read(buffer, H5::PredType::NATIVE_FLOAT);
 			image = std::make_shared<ImageContainer>(type, data, dim, spacing, origin);
 		}
-		else if (type_size = 8)
+		else if (type_size == 8)
 		{
 			auto data = std::make_shared<std::vector<double>>(size);
 			double* buffer = data->data();
@@ -335,7 +409,7 @@ std::shared_ptr<ImageContainer> H5Wrapper::loadDataSet(ImageContainer::ImageType
 	{
 		auto int_type_class = dataset->getIntType();
 		auto type_size = int_type_class.getSize();
-		if (type_size = 1)
+		if (type_size == 1)
 		{
 			auto data = std::make_shared<std::vector<unsigned char>>(size);
 			unsigned char* buffer = data->data();
@@ -347,6 +421,7 @@ std::shared_ptr<ImageContainer> H5Wrapper::loadDataSet(ImageContainer::ImageType
 		return nullptr;
 	image->directionCosines = direction;
 	image->dataUnits = units;
+	image->ID = id;
 	return image;
 }
 
@@ -536,11 +611,11 @@ void H5Wrapper::loadTube(Tube& tube, const std::string& name, const std::string&
 
 	try {
 		auto voltage_attr = tubeGroup->openAttribute("voltage");
-		voltage_attr.read(H5T_NATIVE_DOUBLE, &voltage);
+		voltage_attr.read(H5::PredType::NATIVE_DOUBLE, &voltage);
 		auto er_attr = tubeGroup->openAttribute("energyResolution");
-		er_attr.read(H5T_NATIVE_DOUBLE, &energyResolution);
+		er_attr.read(H5::PredType::NATIVE_DOUBLE, &energyResolution);
 		auto angle_attr = tubeGroup->openAttribute("voltage");
-		angle_attr.read(H5T_NATIVE_DOUBLE, &angle);
+		angle_attr.read(H5::PredType::NATIVE_DOUBLE, &angle);
 	}
 	catch (...)
 	{
@@ -566,6 +641,70 @@ void H5Wrapper::loadTube(Tube& tube, const std::string& name, const std::string&
 	}
 	return;
 }
+bool H5Wrapper::saveSource(std::shared_ptr<Source> src, const std::string& name, const std::string& groupPath)
+{
+	if (!m_file)
+		return false;
+	auto path = groupPath + "/" + name;
+	auto group = getGroup(path, false);
+	if (!group)
+		return false;
+
+	const hsize_t dim1 = 1;
+	const hsize_t dim3 = 3;
+	const hsize_t dim6 = 6;
+	H5::DataSpace doubleSpace3(1, &dim3);
+	H5::DataSpace doubleSpace6(1, &dim6);
+	H5::DataSpace doubleSpace1(1, &dim1);
+
+	auto pos_att = group->createAttribute("position", H5::PredType::NATIVE_DOUBLE, doubleSpace3);
+	pos_att.write(H5::PredType::NATIVE_DOUBLE, src->position().data());
+	auto dir_att = group->createAttribute("directionCosines", H5::PredType::NATIVE_DOUBLE, doubleSpace6);
+	dir_att.write(H5::PredType::NATIVE_DOUBLE, src->directionCosines().data());
+	auto he = src->historiesPerExposure();
+	auto he_att = group->createAttribute("historiesPerExposure", H5::PredType::NATIVE_UINT64, doubleSpace1);
+	he_att.write(H5::PredType::NATIVE_UINT64, &he);
+
+	return true;
+}
+
+bool H5Wrapper::loadSource(std::shared_ptr<Source> src, const std::string& name, const std::string& groupPath)
+{
+	if (!m_file)
+		return false;
+	auto path = groupPath + "/" + name;
+	auto group = getGroup(path, false);
+	if (!group)
+		return false;
+
+	std::array<double, 3> position;
+	std::array<double, 6> cosines;
+	std::uint64_t he;
+
+	const hsize_t dim3 = 3;
+	const hsize_t dim6 = 6;
+	H5::DataSpace doubleSpace3(1, &dim3);
+	H5::DataSpace doubleSpace6(1, &dim6);
+
+	try {
+		auto pos_attr = group->openAttribute("position");
+		pos_attr.read(H5::PredType::NATIVE_DOUBLE, position.data());
+		auto co_attr = group->openAttribute("directionCosines");
+		co_attr.read(H5::PredType::NATIVE_DOUBLE, cosines.data());
+		auto he_attr = group->openAttribute("historiesPerExposure");
+		he_attr.read(H5::PredType::NATIVE_UINT64, &he);
+	}
+	catch (...)
+	{
+		return false;
+	}
+	src->setPosition(position);
+	src->setDirectionCosines(cosines);
+	src->setHistoriesPerExposure(he);
+	return true;
+}
+
+
 
 bool H5Wrapper::saveSource(std::shared_ptr<DXSource> src, const std::string& name, const std::string& groupPath)
 {
@@ -576,15 +715,370 @@ bool H5Wrapper::saveSource(std::shared_ptr<DXSource> src, const std::string& nam
 	if (!srcGroup)
 		return false;
 	
+	if (!saveSource(std::static_pointer_cast<Source>(src), name, groupPath))
+		return false;
+
 	auto tubeGroup = saveTube(src->tube(), "Tube", srcPath);
 	if (!tubeGroup)
 		return false;
 
+	const hsize_t dim1 = 1;
+	const hsize_t dim2 = 2;
+	H5::DataSpace doubleSpace1(1, &dim1);
+	H5::DataSpace doubleSpace2(1, &dim2);
 
+	double sdd = src->sourceDetectorDistance();
+	auto sdd_att = srcGroup->createAttribute("sdd", H5::PredType::NATIVE_DOUBLE, doubleSpace1);
+	sdd_att.write(H5::PredType::NATIVE_DOUBLE, &sdd);
 
+	double dap = src->dap();
+	auto dap_att = srcGroup->createAttribute("dap", H5::PredType::NATIVE_DOUBLE, doubleSpace1);
+	dap_att.write(H5::PredType::NATIVE_DOUBLE, &dap);
 
+	auto fs_att = srcGroup->createAttribute("fieldSize", H5::PredType::NATIVE_DOUBLE, doubleSpace2);
+	fs_att.write(H5::PredType::NATIVE_DOUBLE, src->fieldSize().data());
 
+	auto ca_att = srcGroup->createAttribute("collimationAngles", H5::PredType::NATIVE_DOUBLE, doubleSpace2);
+	ca_att.write(H5::PredType::NATIVE_DOUBLE, src->collimationAngles().data());
 
-
-	return false;
+	auto te = src->totalExposures();
+	auto te_att = srcGroup->createAttribute("totalExposures", H5::PredType::NATIVE_UINT64, doubleSpace1);
+	te_att.write(H5::PredType::NATIVE_UINT64, &te);
+	
+	return true;
 }
+
+bool H5Wrapper::saveSource(std::shared_ptr<CTSource> src, const std::string& name, const std::string& groupPath)
+{
+	if (!m_file)
+		return false;
+	auto srcPath = groupPath + "/" + name;
+	auto srcGroup = getGroup(srcPath, true);
+	if (!srcGroup)
+		return false;
+
+	if (!saveSource(std::static_pointer_cast<Source>(src), name, groupPath))
+		return false;
+
+	auto tubeGroup = saveTube(src->tube(), "Tube", srcPath);
+	if (!tubeGroup)
+		return false;
+
+	const hsize_t dim1 = 1;
+	H5::DataSpace doubleSpace1(1, &dim1);
+
+	std::map<std::string, double> d1par;
+	d1par["sdd"] = src->sourceDetectorDistance();
+	d1par["collimation"] = src->collimation();
+	d1par["fov"] = src->fieldOfView();
+	d1par["startAngle"] = src->startAngle();
+	d1par["exposureAngleStep"] = src->exposureAngleStep();
+	d1par["scanLenght"] = src->scanLenght();
+	d1par["ctdivol"] = src->ctdiVol();
+	
+	auto xcarefilter = src->xcareFilter();
+	d1par["filterAngle"] = xcarefilter.filterAngle();
+	d1par["spanAngle"] = xcarefilter.spanAngle();
+	d1par["rampAngle"] = xcarefilter.rampAngle();
+	d1par["lowWeight"] = xcarefilter.lowWeight();
+
+	for (auto [key, val] : d1par)
+	{
+		auto att = srcGroup->createAttribute(key.c_str(), H5::PredType::NATIVE_DOUBLE, doubleSpace1);
+		att.write(H5::PredType::NATIVE_DOUBLE, &val);
+	}
+
+	auto pd = src->ctdiPhantomDiameter();
+	auto pd_att = srcGroup->createAttribute("ctdiPhantomDiameter", H5::PredType::NATIVE_UINT64, doubleSpace1);
+	pd_att.write(H5::PredType::NATIVE_UINT64, &pd);
+
+	auto xc = src->useXCareFilter();
+	auto xc_att = srcGroup->createAttribute("useXCareFilter", H5::PredType::NATIVE_HBOOL, doubleSpace1);
+	xc_att.write(H5::PredType::NATIVE_HBOOL, &pd);
+	return true;
+}
+
+bool H5Wrapper::saveSource(std::shared_ptr<CTSpiralSource> src, const std::string& name, const std::string& groupPath)
+{
+	if (!m_file)
+		return false;
+	auto srcPath = groupPath + "/" + name;
+	auto srcGroup = getGroup(srcPath, true);
+	if (!srcGroup)
+		return false;
+
+	if (!saveSource(std::static_pointer_cast<CTSource>(src), name, groupPath))
+		return false;
+
+	const hsize_t dim1 = 1;
+	H5::DataSpace doubleSpace1(1, &dim1);
+	auto pitch = src->pitch();
+	auto att = srcGroup->createAttribute("pitch", H5::PredType::NATIVE_DOUBLE, doubleSpace1);
+	att.write(H5::PredType::NATIVE_DOUBLE, &pitch);
+	return true;
+}
+bool H5Wrapper::saveSource(std::shared_ptr<CTAxialSource> src, const std::string& name, const std::string& groupPath)
+{
+	if (!m_file)
+		return false;
+	auto srcPath = groupPath + "/" + name;
+	auto srcGroup = getGroup(srcPath, true);
+	if (!srcGroup)
+		return false;
+
+	if (!saveSource(std::static_pointer_cast<CTSource>(src), name, groupPath))
+		return false;
+
+	const hsize_t dim1 = 1;
+	H5::DataSpace doubleSpace1(1, &dim1);
+	auto step = src->step();
+	auto att = srcGroup->createAttribute("step", H5::PredType::NATIVE_UINT64, doubleSpace1);
+	att.write(H5::PredType::NATIVE_UINT64, &step);
+	return true;
+}
+
+bool H5Wrapper::saveSource(std::shared_ptr<CTDualSource> src, const std::string& name, const std::string& groupPath)
+{
+	if (!m_file)
+		return false;
+	auto srcPath = groupPath + "/" + name;
+	auto srcGroup = getGroup(srcPath, true);
+	if (!srcGroup)
+		return false;
+
+	if (!saveSource(std::static_pointer_cast<CTSource>(src), name, groupPath))
+		return false;
+	auto tubeB = src->tubeB();
+	if (!saveTube(tubeB, "TubeB", srcPath))
+		return false;
+
+	const hsize_t dim1 = 1;
+	H5::DataSpace doubleSpace1(1, &dim1);
+
+	std::map<std::string, double> d1par;
+	d1par["sddB"] = src->sourceDetectorDistanceB();
+	d1par["fovB"] = src->fieldOfView();
+	d1par["startAngleB"] = src->startAngleB();
+	d1par["pitch"] = src->pitch();
+	d1par["tubeAmas"] = src->tubeAmas();
+	d1par["tubeBmas"] = src->tubeBmas();
+
+	for (auto [key, val] : d1par)
+	{
+		auto att = srcGroup->createAttribute(key.c_str(), H5::PredType::NATIVE_DOUBLE, doubleSpace1);
+		att.write(H5::PredType::NATIVE_DOUBLE, &val);
+	}
+	return true;
+}
+
+
+bool H5Wrapper::loadSource(std::shared_ptr<DXSource> src, const std::string& name, const std::string& groupPath)
+{
+	if (!m_file)
+		return false;
+	auto path = groupPath + "/" + name;
+	auto group = getGroup(path, false);
+	if (!group)
+		return false;
+
+	if (!loadSource(std::static_pointer_cast<Source>(src), name.c_str(), groupPath.c_str()))
+		return false;
+	loadTube(src->tube(), "Tube", path.c_str());
+
+	double sdd = 0;
+	double dap = 0;
+	std::uint64_t te = 0;
+	std::array<double, 2> fe;
+	std::array<double, 2> ca;
+	try {
+		
+		auto sdd_attr = group->openAttribute("sdd");
+		sdd_attr.read(H5::PredType::NATIVE_DOUBLE, &sdd);
+		auto dap_attr = group->openAttribute("dap");
+		dap_attr.read(H5::PredType::NATIVE_DOUBLE, &dap);
+		auto te_attr = group->openAttribute("totalExposures");
+		te_attr.read(H5::PredType::NATIVE_UINT64, &te);
+		auto fe_attr = group->openAttribute("fieldSize");
+		fe_attr.read(H5::PredType::NATIVE_DOUBLE, fe.data());
+		auto ca_attr = group->openAttribute("collimationAngles");
+		ca_attr.read(H5::PredType::NATIVE_DOUBLE, ca.data());
+	}
+	catch (const H5::DataTypeIException e)
+	{
+		auto msg = e.getDetailMsg();
+		return false;
+	}
+	catch (const H5::AttributeIException e)
+	{
+		auto msg = e.getDetailMsg();
+		return false;
+	}
+	src->setSourceDetectorDistance(sdd);
+	src->setDap(dap);
+	src->setTotalExposures(te);
+	src->setFieldSize(fe);
+	src->setCollimationAngles(ca);
+	return true;
+}
+
+bool H5Wrapper::loadSource(std::shared_ptr<CTSource> src, const std::string& name, const std::string& groupPath)
+{
+	if (!m_file)
+		return false;
+	auto path = groupPath + "/" + name;
+	auto group = getGroup(path, false);
+	if (!group)
+		return false;
+
+	if (!loadSource(std::static_pointer_cast<Source>(src), name.c_str(), groupPath.c_str()))
+		return false;
+	loadTube(src->tube(), "Tube", path.c_str());
+
+	
+	std::map<std::string, double> d1par;
+	d1par["sdd"] = src->sourceDetectorDistance();
+	d1par["collimation"] = src->collimation();
+	d1par["fov"] = src->fieldOfView();
+	d1par["startAngle"] = src->startAngle();
+	d1par["exposureAngleStep"] = src->exposureAngleStep();
+	d1par["scanLenght"] = src->scanLenght();
+	d1par["ctdivol"] = src->ctdiVol();
+
+	auto xcarefilter = src->xcareFilter();
+	d1par["filterAngle"] = xcarefilter.filterAngle();
+	d1par["spanAngle"] = xcarefilter.spanAngle();
+	d1par["rampAngle"] = xcarefilter.rampAngle();
+	d1par["lowWeight"] = xcarefilter.lowWeight();
+
+	for (auto& [key, val] : d1par)
+	{
+		try {
+			auto attr = group->openAttribute(key.c_str());
+			attr.read(H5::PredType::NATIVE_DOUBLE, &val);
+		}
+		catch (...)
+		{
+			return false;
+		}
+	}
+	auto pd = src->ctdiPhantomDiameter();
+	auto xc = src->useXCareFilter();
+	try {
+
+		auto pd_attr = group->openAttribute("ctdiPhantomDiameter");
+		pd_attr.read(H5::PredType::NATIVE_UINT64, &pd);
+		auto xc_attr = group->openAttribute("useXCareFilter");
+		xc_attr.read(H5::PredType::NATIVE_HBOOL, &xc);
+	}
+	catch (...)
+	{
+		return false;
+	}
+	src->setCtdiPhantomDiameter(pd);
+	src->setUseXCareFilter(xc);
+	src->setSourceDetectorDistance(d1par["sdd"]);
+	src->setCollimation(d1par["collimation"]);
+	src->setFieldOfView(d1par["fov"]);
+	src->setStartAngle(d1par["startAngle"]);
+	src->setExposureAngleStep(d1par["exposureAngleStep"]);
+	src->setScanLenght(d1par["scanLenght"]);
+	src->setCtdiVol(d1par["ctdivol"]);
+	xcarefilter.setFilterAngle(d1par["filterAngle"]);
+	xcarefilter.setRampAngle(d1par["rampAngle"]);
+	xcarefilter.setSpanAngle(d1par["spanAngle"]);
+	xcarefilter.setLowWeight(d1par["lowWeight"]);
+
+	return true;
+}
+bool H5Wrapper::loadSource(std::shared_ptr<CTSpiralSource> src, const std::string& name, const std::string& groupPath)
+{
+	if (!m_file)
+		return false;
+	auto path = groupPath + "/" + name;
+	auto group = getGroup(path, false);
+	if (!group)
+		return false;
+
+	if (!loadSource(std::static_pointer_cast<CTSource>(src), name.c_str(), groupPath.c_str()))
+		return false;
+
+	double pitch = src->pitch();
+	try {
+
+		auto attr = group->openAttribute("pitch");
+		attr.read(H5::PredType::NATIVE_DOUBLE, &pitch);
+	}
+	catch (...)
+	{
+		return false;
+	}
+	src->setPitch(pitch);
+	return true;
+}
+
+bool H5Wrapper::loadSource(std::shared_ptr<CTAxialSource> src, const std::string& name, const std::string& groupPath)
+{
+	if (!m_file)
+		return false;
+	auto path = groupPath + "/" + name;
+	auto group = getGroup(path, false);
+	if (!group)
+		return false;
+
+	if (!loadSource(std::static_pointer_cast<CTSource>(src), name.c_str(), groupPath.c_str()))
+		return false;
+
+	std::uint64_t step = src->step();
+	try {
+
+		auto attr = group->openAttribute("step");
+		attr.read(H5::PredType::NATIVE_UINT64, &step);
+	}
+	catch (...)
+	{
+		return false;
+	}
+	src->setStep(step);
+	return true;
+}
+
+bool H5Wrapper::loadSource(std::shared_ptr<CTDualSource> src, const std::string& name, const std::string& groupPath)
+{
+	if (!m_file)
+		return false;
+	auto path = groupPath + "/" + name;
+	auto group = getGroup(path, false);
+	if (!group)
+		return false;
+
+	if (!loadSource(std::static_pointer_cast<CTSource>(src), name.c_str(), groupPath.c_str()))
+		return false;
+	loadTube(src->tubeB(), "TubeB", path.c_str());
+
+	std::map<std::string, double> d1par;
+	d1par["sddB"] = src->sourceDetectorDistanceB();
+	d1par["fovB"] = src->fieldOfView();
+	d1par["startAngleB"] = src->startAngleB();
+	d1par["pitch"] = src->pitch();
+	d1par["tubeAmas"] = src->tubeAmas();
+	d1par["tubeBmas"] = src->tubeBmas();
+	for (auto& [key, val] : d1par)
+	{
+		try {
+			auto attr = group->openAttribute(key.c_str());
+			attr.read(H5::PredType::NATIVE_DOUBLE, &val);
+		}
+		catch (...)
+		{
+			return false;
+		}
+	}
+	src->setSourceDetectorDistanceB(d1par["sddB"]);
+	src->setFieldOfViewB(d1par["fovB"]);
+	src->setStartAngleB(d1par["startAngleB"]);
+	src->setPitch(d1par["pitch"]);
+	src->setTubeAmas(d1par["tubeAmas"]);
+	src->setTubeBmas(d1par["tubeBmas"]);
+	return true;
+}
+

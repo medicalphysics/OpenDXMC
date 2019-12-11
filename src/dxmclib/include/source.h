@@ -305,7 +305,6 @@ public:
 	std::uint64_t exposuresPerRotatition() const override;
 	double getCalibrationValue(std::uint64_t nHistories, ProgressBar* = nullptr) override;
 
-
 	// CT
 
 	void setBowTieFilterB(std::shared_ptr<BeamFilter> filter) { m_bowTieFilterB = filter; }

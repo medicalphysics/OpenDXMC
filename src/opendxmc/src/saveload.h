@@ -27,6 +27,7 @@ Copyright 2019 Erlend Andersen
 #include <QString>
 #include <memory>
 #include <vector>
+#include <string>
 
 
 #ifndef Q_DECLARE_METATYPE_IMAGECONTAINER
@@ -72,6 +73,7 @@ signals:
 	void materialDataChanged(const std::vector<Material>& materials);
 	void organDataChanged(const std::vector<std::string>& organs);
 	void doseDataChanged(const DoseReportContainer& doses);
+	void sourcesChanged(std::vector<std::shared_ptr<Source>> sources);
 	//void aecFilterChanged(QString name, std::shared_ptr<AECFilter> filter);
 private:
 	std::uint64_t m_currentImageID = 0;
@@ -81,7 +83,7 @@ private:
 	std::shared_ptr<ImageContainer> m_ctImage = nullptr;
 	std::shared_ptr<ImageContainer> m_doseImage = nullptr;
 	std::vector<std::string> m_organList;
-	std::vector<std::string> m_materialList;
+	std::vector<Material> m_materialList;
 	std::vector<std::shared_ptr<Source>> m_sources;
 
 };

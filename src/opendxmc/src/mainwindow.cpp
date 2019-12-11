@@ -158,10 +158,10 @@ MainWindow::MainWindow(QWidget* parent)
 	setCentralWidget(splitter);
 
 	//setting up source 3d actor connection to viewpoert from sourceeditwidget
-	auto model = sourceEditWidget->model();
-	connect(model, &SourceModel::sourceActorAdded, viewPort, &ViewPortWidget::addActorContainer);
-	connect(model, &SourceModel::actorsChanged, viewPort, &ViewPortWidget::render);
-	connect(model, &SourceModel::sourceActorRemoved, viewPort, &ViewPortWidget::removeActorContainer);
+	auto sourceModel = sourceEditWidget->model();
+	connect(sourceModel, &SourceModel::sourceActorAdded, viewPort, &ViewPortWidget::addActorContainer);
+	connect(sourceModel, &SourceModel::actorsChanged, viewPort, &ViewPortWidget::render);
+	connect(sourceModel, &SourceModel::sourceActorRemoved, viewPort, &ViewPortWidget::removeActorContainer);
 	
 	//request to run simulation connection
 	connect(sourceEditWidget, &SourceEditWidget::runSimulation, m_simulationPipeline, &SimulationPipeline::runSimulation);
@@ -189,6 +189,9 @@ MainWindow::MainWindow(QWidget* parent)
 	connect(m_saveLoad, &SaveLoad::processingDataEnded, this, &MainWindow::setEnableEditing);
 	connect(m_saveLoad, &SaveLoad::processingDataStarted, progressIndicator, &ProgressIndicator::startAnimation);
 	connect(m_saveLoad, &SaveLoad::processingDataEnded, progressIndicator, &ProgressIndicator::stopAnimation);
+
+	connect(sourceModel, &SourceModel::sourceAdded, m_saveLoad, &SaveLoad::addSource);
+	connect(sourceModel, &SourceModel::sourceRemoved, m_saveLoad, &SaveLoad::removeSource);
 
 
 	//setting up window menu

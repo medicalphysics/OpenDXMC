@@ -38,7 +38,7 @@ void SaveLoad::loadFromFile(const QString& path)
 	clear();
 	m_sources.clear();
 
-	H5Wrapper wrapper(path.toStdString());
+	H5Wrapper wrapper(path.toStdString(), H5Wrapper::FileOpenType::ReadOnly);
 	m_ctImage = wrapper.loadImage(ImageContainer::CTImage);
 	m_materialImage= wrapper.loadImage(ImageContainer::MaterialImage);
 	m_densityImage = wrapper.loadImage(ImageContainer::DensityImage);
@@ -47,20 +47,6 @@ void SaveLoad::loadFromFile(const QString& path)
 
 	m_materialList = wrapper.loadMaterials();
 	m_organList = wrapper.loadOrganList();
-
-	if (m_ctImage)
-		emit imageDataChanged(m_ctImage);
-	if (m_materialImage)
-		emit imageDataChanged(m_materialImage);
-	if (m_densityImage)
-		emit imageDataChanged(m_densityImage);
-	if (m_organImage)
-		emit imageDataChanged(m_organImage);
-	if (m_doseImage)
-		emit imageDataChanged(m_doseImage);
-	
-	emit materialDataChanged(m_materialList);
-	emit organDataChanged(m_organList);
 
 	//creating dose data
 	if (m_materialImage && m_densityImage && m_doseImage) {
@@ -84,6 +70,20 @@ void SaveLoad::loadFromFile(const QString& path)
 		}
 	}
 	m_sources = wrapper.loadSources();
+
+	if (m_ctImage)
+		emit imageDataChanged(m_ctImage);
+	if (m_materialImage)
+		emit imageDataChanged(m_materialImage);
+	if (m_densityImage)
+		emit imageDataChanged(m_densityImage);
+	if (m_organImage)
+		emit imageDataChanged(m_organImage);
+	if (m_doseImage)
+		emit imageDataChanged(m_doseImage);
+
+	emit materialDataChanged(m_materialList);
+	emit organDataChanged(m_organList);
 	emit sourcesChanged(m_sources);
 
 	emit processingDataEnded();
@@ -154,7 +154,9 @@ void SaveLoad::clear(void)
 
 void SaveLoad::addSource(std::shared_ptr<Source> source)
 {
-	m_sources.push_back(source);
+	auto pos = std::find(m_sources.begin(), m_sources.end(), source);
+	if (pos == m_sources.end())
+		m_sources.push_back(source);
 }
 
 void SaveLoad::removeSource(std::shared_ptr<Source> source)

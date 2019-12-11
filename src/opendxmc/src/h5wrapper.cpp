@@ -21,15 +21,20 @@ Copyright 2019 Erlend Andersen
 #include "h5wrapper.h"
 #include "stringmanipulation.h"
 
-H5Wrapper::H5Wrapper(const std::string& filePath)
+H5Wrapper::H5Wrapper(const std::string& filePath, FileOpenType type)
 {
+	m_file = nullptr;
 	try {
-		m_file = std::make_unique<H5::H5File>(filePath.c_str(), H5F_ACC_TRUNC);
+		if (type == FileOpenType::WriteOver)
+			m_file = std::make_unique<H5::H5File>(filePath.c_str(), H5F_ACC_TRUNC);
+		else if (type == FileOpenType::ReadOnly)
+			m_file = std::make_unique<H5::H5File>(filePath.c_str(), H5F_ACC_RDONLY);
 	}
 	catch (...)
 	{
 		m_file = nullptr;
 	}
+
 }
 
 
@@ -219,7 +224,7 @@ std::vector<std::shared_ptr<Source>> H5Wrapper::loadSources(void)
 			}
 		}
 	}
-	return std::vector<std::shared_ptr<Source>>();
+	return sources;
 }
 
 
@@ -832,8 +837,8 @@ bool H5Wrapper::saveSource(std::shared_ptr<CTAxialSource> src, const std::string
 	const hsize_t dim1 = 1;
 	H5::DataSpace doubleSpace1(1, &dim1);
 	auto step = src->step();
-	auto att = srcGroup->createAttribute("step", H5::PredType::NATIVE_UINT64, doubleSpace1);
-	att.write(H5::PredType::NATIVE_UINT64, &step);
+	auto att = srcGroup->createAttribute("step", H5::PredType::NATIVE_DOUBLE, doubleSpace1);
+	att.write(H5::PredType::NATIVE_DOUBLE, &step);
 	return true;
 }
 
@@ -1028,11 +1033,11 @@ bool H5Wrapper::loadSource(std::shared_ptr<CTAxialSource> src, const std::string
 	if (!loadSource(std::static_pointer_cast<CTSource>(src), name.c_str(), groupPath.c_str()))
 		return false;
 
-	std::uint64_t step = src->step();
+	double step = src->step();
 	try {
 
 		auto attr = group->openAttribute("step");
-		attr.read(H5::PredType::NATIVE_UINT64, &step);
+		attr.read(H5::PredType::NATIVE_DOUBLE, &step);
 	}
 	catch (...)
 	{

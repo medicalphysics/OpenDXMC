@@ -29,7 +29,8 @@ Copyright 2019 Erlend Andersen
 class H5Wrapper
 {
 public:
-	H5Wrapper(const std::string& filePath);
+	enum class FileOpenType {WriteOver, ReadOnly};
+	H5Wrapper(const std::string& filePath, FileOpenType type = FileOpenType::WriteOver);
 	~H5Wrapper();
 	bool saveImage(std::shared_ptr<ImageContainer> image);
 	std::shared_ptr<ImageContainer> loadImage(ImageContainer::ImageType type);

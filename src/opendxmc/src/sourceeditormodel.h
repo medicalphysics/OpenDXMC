@@ -39,6 +39,11 @@ Copyright 2019 Erlend Andersen
 #define Q_DECLARE_METATYPE_SOURCEVECTOR
 Q_DECLARE_METATYPE(std::vector<std::shared_ptr<Source>>)
 #endif 
+#ifndef Q_DECLARE_METATYPE_SOURCE
+#define Q_DECLARE_METATYPE_SOURCE
+Q_DECLARE_METATYPE(std::shared_ptr<Source>)
+#endif 
+
 #ifndef Q_DECLARE_METATYPE_VOLUMEACTORCONTAINERPTR
 #define Q_DECLARE_METATYPE_VOLUMEACTORCONTAINERPTR
 Q_DECLARE_METATYPE(VolumeActorContainer*)
@@ -79,11 +84,12 @@ public:
 	SourceModel(QObject *parent = nullptr);
 	QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
 	void addSource(Source::Type type = Source::CTSpiral);
+	void addSource(std::shared_ptr<Source> src);
+	void setSources(const std::vector<std::shared_ptr<Source>>& sources);
 	std::vector<std::shared_ptr<Source>>& sources() { return m_sources; }
 	bool removeRow(int row, const QModelIndex &parent = QModelIndex());
 	bool removeRows(int rows, int count, const QModelIndex &parent = QModelIndex()) override;
 	void setImageData(std::shared_ptr<ImageContainer> image);
-	adding sources vector from saveload
 signals:
 	void sourceActorAdded(VolumeActorContainer* actorContainer);
 	void sourceActorRemoved(VolumeActorContainer* actorContainer);

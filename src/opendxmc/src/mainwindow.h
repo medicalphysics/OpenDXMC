@@ -44,6 +44,8 @@ public:
 
 protected:
 	void createMenu();
+	void saveFileAction();
+	void loadFileAction();
 signals:
 	void requestOpenSaveFile(const QString& path);
 	void requestSaveToFile(const QString& path);

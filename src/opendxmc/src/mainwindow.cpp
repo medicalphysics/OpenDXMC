@@ -168,7 +168,8 @@ MainWindow::MainWindow(QWidget* parent)
 
 
 	//setting up saveload
-	m_saveLoad = new SaveLoad(this);
+	m_saveLoad = new SaveLoad();
+	m_saveLoad->moveToThread(&m_workerThread);
 	connect(m_importPipeline, &ImageImportPipeline::imageDataChanged, m_saveLoad, &SaveLoad::setImageData);
 	connect(m_simulationPipeline, &SimulationPipeline::imageDataChanged, m_saveLoad, &SaveLoad::setImageData);
 	connect(m_binaryImportPipeline, &BinaryImportPipeline::imageDataChanged, m_saveLoad, &SaveLoad::setImageData);
@@ -192,7 +193,7 @@ MainWindow::MainWindow(QWidget* parent)
 
 	connect(sourceModel, &SourceModel::sourceAdded, m_saveLoad, &SaveLoad::addSource);
 	connect(sourceModel, &SourceModel::sourceRemoved, m_saveLoad, &SaveLoad::removeSource);
-
+	connect(m_saveLoad, & SaveLoad::sourcesChanged, sourceModel, & SourceModel::setSources);
 
 	//setting up window menu
 	createMenu();
@@ -210,6 +211,8 @@ MainWindow::~MainWindow()
 	m_importPipeline = nullptr;
 	delete m_simulationPipeline;
 	m_simulationPipeline = nullptr;
+	delete m_saveLoad;
+	m_saveLoad = nullptr;
 }
 
 void MainWindow::createMenu()
@@ -219,40 +222,46 @@ void MainWindow::createMenu()
 	auto saveAction = new QAction(tr("Save as"), this);
 	saveAction->setShortcut(QKeySequence::SaveAs);
 	saveAction->setStatusTip(tr("Save current simulation as"));
-	connect(saveAction, &QAction::triggered, [=]() {
-		QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
-		QString path = settings.value("saveload/path").value<QString>();
-		if (path.isNull())
-			path = ".";
-		QWidget* parent = this;
-		
-		path = QFileDialog::getSaveFileName(parent, tr("Save simulation"), path, tr("HDF5 (*.h5)"));
-		if (path.isNull())
-			return;
-		emit requestSaveToFile(path);
-		settings.setValue("saveload/path", path);
-		});
+	connect(saveAction, &QAction::triggered, this,  &MainWindow::saveFileAction);
 	fileMenu->addAction(saveAction);
 	connect(this, &MainWindow::requestSaveToFile, m_saveLoad, &SaveLoad::saveToFile);
 
 	auto openAction = new QAction(tr("Open"), this);
 	openAction->setShortcut(QKeySequence::Open);
 	openAction->setStatusTip(tr("Open a previously saved simulation"));
-	connect(openAction, &QAction::triggered, [=]() {
-		//getting file
-		QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
-		QString path = settings.value("saveload/path").value<QString>();
-		if (path.isNull())
-			path = ".";
-		QWidget* parent = this;
-		path = QFileDialog::getOpenFileName(parent, tr("Open simulation"), path, tr("HDF5 (*.h5)"));
-		if (path.isNull())
-			return;
-		emit requestOpenSaveFile(path);
-		settings.setValue("saveload/path", path);
-		});
+	connect(openAction, &QAction::triggered, this, &MainWindow::loadFileAction);
 	fileMenu->addAction(openAction);
 	connect(this, &MainWindow::requestOpenSaveFile, m_saveLoad, &SaveLoad::loadFromFile);
+}
+
+void MainWindow::saveFileAction()
+{
+	QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
+	QString path = settings.value("saveload/path").value<QString>();
+	if (path.isNull())
+		path = ".";
+	QWidget* parent = this;
+
+	path = QFileDialog::getSaveFileName(parent, tr("Save simulation"), path, tr("HDF5 (*.h5)"));
+	if (path.isNull())
+		return;
+	emit requestSaveToFile(path);
+	settings.setValue("saveload/path", path);
+}
+
+void MainWindow::loadFileAction()
+{
+	//getting file
+	QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
+	QString path = settings.value("saveload/path").value<QString>();
+	if (path.isNull())
+		path = ".";
+	QWidget* parent = this;
+	path = QFileDialog::getOpenFileName(parent, tr("Open simulation"), path, tr("HDF5 (*.h5)"));
+	if (path.isNull())
+		return;
+	emit requestOpenSaveFile(path);
+	settings.setValue("saveload/path", path);
 }
 
 void MainWindow::setEnableEditing(void)

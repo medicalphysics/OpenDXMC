@@ -274,6 +274,7 @@ SourceModel::SourceModel(QObject *parent)
 {
 	qRegisterMetaType<std::vector<std::shared_ptr<Source>>>();
 	qRegisterMetaType<VolumeActorContainer*>();
+	qRegisterMetaType<std::shared_ptr<Source>>();
 	setColumnCount(2);
 	connect(this, &SourceModel::dataChanged, this, &SourceModel::sourceDataChanged);
 }
@@ -418,6 +419,50 @@ void SourceModel::addSource(Source::Type type)
 		emit sourceActorAdded(actor_raw);
 		emit sourceAdded(std::static_pointer_cast<Source>(src));
 		emit layoutChanged();
+	}
+}
+
+void SourceModel::addSource(std::shared_ptr<Source> src)
+{
+	std::shared_ptr<VolumeActorContainer> actor = nullptr;
+	switch (src->type()) {
+	case Source::DX:
+		actor = std::make_shared<DXSourceContainer>(std::static_pointer_cast<DXSource>(src));
+		setupDXSource(std::static_pointer_cast<DXSource>(src));
+		break;
+	case Source::CTAxial:
+		actor = std::make_shared<CTAxialSourceContainer>(std::static_pointer_cast<CTAxialSource>(src));
+		setupCTAxialSource(std::static_pointer_cast<CTAxialSource>(src));
+		break;
+	case Source::CTSpiral:
+		actor = std::make_shared<CTSpiralSourceContainer>(std::static_pointer_cast<CTSpiralSource>(src));
+		setupCTSpiralSource(std::static_pointer_cast<CTSpiralSource>(src));
+		break;
+	case Source::CTDual:
+		actor = std::make_shared<CTDualSourceContainer>(std::static_pointer_cast<CTDualSource>(src));
+		setupCTDualSource(std::static_pointer_cast<CTDualSource>(src));
+		break;
+	default:
+		return;
+	}
+
+	m_sources.push_back(src);
+	m_actors.push_back(actor);
+	emit sourceActorAdded(actor.get());
+	emit sourceAdded(src);
+	emit layoutChanged();
+}
+
+void SourceModel::setSources(const std::vector<std::shared_ptr<Source>>& sources)
+{
+	auto old_sources = m_sources;
+	for (auto s : old_sources)
+	{
+		removeSource(s);
+	}
+	for (auto s : sources)
+	{
+		addSource(s);
 	}
 }
 

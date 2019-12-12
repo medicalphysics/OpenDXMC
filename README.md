@@ -17,6 +17,7 @@ OpenDXMC is build with CMake and depends on the following libraries:
 * xraylib by T. Schoonjans: https://github.com/tschoonj/xraylib
 * VTK Visualization Toolkit: https://vtk.org/. Version 8.2 is not supported due to issues with vtkDICOM module. For OpenDXMC it is recommended to download and bild VTK master branch for linking with OpenDXMC. When building vtk set the flag VTK_MODULE_ENABLE_vtkDICOM to WANT, since OpenDXMC require this module.
 * Qt: https://www.qt.io/ version >= 5.12.
+* HDF5: https://www.hdfgroup.org/.
 
 These libraries must be installed. Running cmake with standard settings should suffice to generate makefiles for your platform. The application is currently only tested for Windows 10, but should compile on Linux and Mac. Errors when building for Linux and Mac are considered bugs. 
 

@@ -63,7 +63,6 @@ find_package(VTK COMPONENTS
   lz4
   lzma
   expat
-  hdf5
   OPTIONAL_COMPONENTS
   RenderingRayTracing
   RenderingSceneGraph
@@ -192,6 +191,23 @@ if (WIN32)
        COMMAND ${QT5_WINDEPLOYQT_EXECUTABLE} --qmldir ${CMAKE_BINARY_DIR} $<TARGET_FILE_DIR:OpenDXMC>)
 endif(WIN32)
 
+#adding target to copy xraylib dlls 
+if (WIN32)
+	add_custom_target(xraylibdeploy ALL)
+	set(XRAYLIB_LIBRARY_SHARED_NAME "libxrl-7.dll")
+	set(XRAYLIB_LIBRARY_SHARED_PATH "C:/Windows/sysnative/${XRAYLIB_LIBRARY_SHARED_NAME}")
+	set(outpath "${CMAKE_BINARY_DIR}/${PROJECT_NAME}/${XRAYLIB_LIBRARY_SHARED_NAME}")
+	set(inpath "${XRAYLIB_LIBRARY_SHARED_PATH}")
+	add_custom_command(TARGET xraylibdeploy POST_BUILD
+		COMMENT "Copying ${XRAYLIB_LIBRARY_SHARED_NAME} from ${inpath} to ${outpath}"
+		DEPENDS ${inpath}
+		COMMAND ${CMAKE_COMMAND} -E copy_if_different 
+		${inpath}
+		${outpath}
+	)
+	#configure_file(${inpath} ${outpath} COPYONLY)
+endif(WIN32)
+
 #adding target to copy vtk dlls 
 if (WIN32)
 	add_custom_target(vtkdeploy ALL)
@@ -237,25 +253,6 @@ if (WIN32)
 	endforeach()
 endif(WIN32)
 
-
-#adding target to copy xraylib dlls 
-if (WIN32)
-	add_custom_target(xraylibdeploy ALL)
-	set(XRAYLIB_LIBRARY_SHARED_NAME "libxrl-7.dll")
-	set(XRAYLIB_LIBRARY_SHARED_PATH "C:/Windows/sysnative/${XRAYLIB_LIBRARY_SHARED_NAME}")
-	set(outpath "${CMAKE_BINARY_DIR}/${PROJECT_NAME}/${XRAYLIB_LIBRARY_SHARED_NAME}")
-	set(inpath "${XRAYLIB_LIBRARY_SHARED_PATH}")
-	add_custom_command(TARGET xraylibdeploy POST_BUILD
-		COMMENT "Copying ${XRAYLIB_LIBRARY_SHARED_NAME} from ${inpath} to ${outpath}"
-		DEPENDS ${inpath}
-		COMMAND ${CMAKE_COMMAND} -E copy_if_different 
-		${inpath}
-		${outpath}
-	)
-	#configure_file(${inpath} ${outpath} COPYONLY)
-endif(WIN32)
-
-
 ##adding gdcm dependency for vtkDICOM if installed. To use GDCM vtkDicom must be compiled with it.
 ##this simply adds required dlls to buildfolder for GDCM 
 FIND_PACKAGE(GDCM)
@@ -263,6 +260,7 @@ IF(GDCM_FOUND)
     INCLUDE(${GDCM_USE_FILE})
 	get_filename_component(GDCM_MAIN_DIR "${GDCM_LIBRARY_DIRS}/.." ABSOLUTE)
 	if (WIN32)
+		message(STATUS "Using GDCM library ${GDCM_MAIN_DIR}")
 		add_custom_target(gdcmdeploy ALL)
 		set(libnames "gdcmMSFF" "gdcmDSED" "gdcmCommon" 
 		"gdcmjpeg8" "gdcmDICT" "gdcmjpeg12" "gdcmIOD" 
@@ -281,6 +279,26 @@ IF(GDCM_FOUND)
 		endforeach()
 	endif(WIN32)
 ENDIF(GDCM_FOUND)
+
+## adding target for HDF5 libraries
+IF(WIN32)
+	get_filename_component(HDF5_MAIN_DIR "${HDF5_DIR}/../.." ABSOLUTE)
+	message (STATUS "Using HDF5 install ${HDF5_MAIN_DIR}")
+	set(HDF5_BINARY_DIR "${HDF5_MAIN_DIR}/bin")
+	add_custom_target(hdf5deploy ALL)
+	set(HDF5_LIBNAMES "hdf5" "hdf5_cpp")
+	foreach(libname ${HDF5_LIBNAMES})
+			set(libpath "${HDF5_BINARY_DIR}/${libname}.dll")
+			set(outpath "${CMAKE_BINARY_DIR}/${PROJECT_NAME}/${libname}.dll")
+			add_custom_command(TARGET hdf5deploy POST_BUILD
+				COMMENT "Copying HDF5 dll ${libpath} to ${outpath}"
+				DEPENDS ${libpath}
+				COMMAND ${CMAKE_COMMAND} -E copy_if_different
+				${libpath}
+				${outpath}
+				)
+		endforeach()
+ENDIF(WIN32)
 
 ##adding ospray dependency
 if (ENABLE_OSPRAY)

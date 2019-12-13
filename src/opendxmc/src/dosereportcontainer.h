@@ -58,15 +58,16 @@ public:
 	const std::string& doseUnits(void) const { return m_doseUnits; }
 
 protected:
-	void createMaterialData(const std::vector<Material>& materialMap,
-		std::shared_ptr<MaterialImageContainer> materialImage,
+	template<typename RegionImage>
+	std::vector<DoseReportElement> createData(const std::vector<std::string>& nameMap,
+		RegionImage regionImage,
 		std::shared_ptr<DensityImageContainer> densityImage,
-		std::shared_ptr<DoseImageContainer> doseImage);
-	void createOrganData(
-		const std::vector<std::string>& organMap, 
-		std::shared_ptr<OrganImageContainer> organImage, 
-		std::shared_ptr<DensityImageContainer> densityImage, 
-		std::shared_ptr<DoseImageContainer> doseImage);
+		std::shared_ptr<DoseImageContainer> doseImage) const;
+	template<typename RegionImage>
+	std::vector<DoseReportElement> createData(const std::vector<Material>& nameMap,
+		RegionImage regionImage,
+		std::shared_ptr<DensityImageContainer> densityImage,
+		std::shared_ptr<DoseImageContainer> doseImage) const;
 	void setDoseUnits(const std::string& units) { m_doseUnits = units; }
 
 private:

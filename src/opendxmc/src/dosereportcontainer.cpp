@@ -20,57 +20,38 @@ Copyright 2019 Erlend Andersen
 
 DoseReportContainer::DoseReportContainer(const std::vector<Material>& materialMap, std::shared_ptr<MaterialImageContainer> materialImage, std::shared_ptr<DensityImageContainer> densityImage, std::shared_ptr<DoseImageContainer> doseImage)
 {
-	createMaterialData(materialMap, materialImage, densityImage, doseImage);
+	//createMaterialData(materialMap, materialImage, densityImage, doseImage);
+	m_materialValues = std::make_shared<std::vector<DoseReportElement>>(createData(materialMap, materialImage, densityImage, doseImage));
 	m_organValues = std::make_shared<std::vector<DoseReportElement>>();
 	setDoseUnits(doseImage->dataUnits);
 }
 
 DoseReportContainer::DoseReportContainer(const std::vector<Material>& materialMap, const std::vector<std::string>& organMap, std::shared_ptr<MaterialImageContainer> materialImage, std::shared_ptr<OrganImageContainer> organImage, std::shared_ptr<DensityImageContainer> densityImage, std::shared_ptr<DoseImageContainer> doseImage)
 {
-	createMaterialData(materialMap, materialImage, densityImage, doseImage);
-	createOrganData(organMap, organImage, densityImage, doseImage);
+	//createMaterialData(materialMap, materialImage, densityImage, doseImage);
+	m_materialValues = std::make_shared<std::vector<DoseReportElement>>(createData(materialMap, materialImage, densityImage, doseImage));
+	//createOrganData(organMap, organImage, densityImage, doseImage);
+	m_organValues = std::make_shared<std::vector<DoseReportElement>>(createData(organMap, organImage, densityImage, doseImage));
 	setDoseUnits(doseImage->dataUnits);
 }
 
-void DoseReportContainer::createMaterialData(const std::vector<Material>& materialMap, std::shared_ptr<MaterialImageContainer> materialImage, std::shared_ptr<DensityImageContainer> densityImage, std::shared_ptr<DoseImageContainer> doseImage)
+template<typename RegionImage>
+std::vector<DoseReportElement> DoseReportContainer::createData(const std::vector<Material>& organMap, RegionImage organImage, std::shared_ptr<DensityImageContainer> densityImage, std::shared_ptr<DoseImageContainer> doseImage) const
 {
-	m_materialValues = std::make_shared<std::vector<DoseReportElement>>(materialMap.size());
-	for (std::size_t i = 0; i < materialMap.size(); ++i)
-	{
-		(*m_materialValues)[i].name = materialMap[i].prettyName();
-		(*m_materialValues)[i].ID = i;
-	}
-
-	auto spacing = materialImage->image->GetSpacing();
-	double voxelVolume = spacing[0] * spacing[1] * spacing[2] / 1000.0;
-	std::size_t size = materialImage->imageData()->size();
-
-	auto mBuffer = materialImage->imageData()->data();
-	auto dBuffer = densityImage->imageData()->data();
-	auto doseBuffer = doseImage->imageData()->data();
-
-	for (std::size_t i = 0; i < size; ++i)
-	{
-		auto idx = static_cast<std::size_t>(mBuffer[i]);
-		(*m_materialValues)[idx].voxels += 1;
-		(*m_materialValues)[idx].dose += doseBuffer[i];
-		(*m_materialValues)[idx].mass += dBuffer[i];
-	}
-	for (auto& el : *m_materialValues)
-	{
-		el.volume = el.voxels * voxelVolume;
-		el.dose /= el.voxels;
-		el.mass *= voxelVolume / 1000.0; // kg
-	}
+	std::vector<std::string> names;
+	names.reserve(organMap.size());
+	for (const auto& m : organMap)
+		names.push_back(m.prettyName());
+	return createData(names, organImage, densityImage, doseImage);
 }
-
-void DoseReportContainer::createOrganData(const std::vector<std::string>& organMap, std::shared_ptr<OrganImageContainer> organImage, std::shared_ptr<DensityImageContainer> densityImage, std::shared_ptr<DoseImageContainer> doseImage)
+template<typename RegionImage>
+std::vector<DoseReportElement> DoseReportContainer::createData(const std::vector<std::string>& organMap, RegionImage organImage, std::shared_ptr<DensityImageContainer> densityImage, std::shared_ptr<DoseImageContainer> doseImage) const
 {
-	m_organValues = std::make_shared<std::vector<DoseReportElement>>(organMap.size());
+	std::vector<DoseReportElement> organValues(organMap.size());
 	for (std::size_t i = 0; i < organMap.size(); ++i)
 	{
-		(*m_organValues)[i].name = organMap[i];
-		(*m_organValues)[i].ID = i;
+		organValues[i].name = organMap[i];
+		organValues[i].ID = i;
 	}
 	auto spacing = organImage->image->GetSpacing();
 	double voxelVolume = spacing[0] * spacing[1] * spacing[2] / 1000.0;
@@ -84,21 +65,21 @@ void DoseReportContainer::createOrganData(const std::vector<std::string>& organM
 	{
 		auto idx = static_cast<std::size_t>(mBuffer[i]);
 		const double voxelMass = voxelVolume * dBuffer[i] * 0.001; //g->kg
-		(*m_organValues)[idx].voxels += 1;
+		organValues[idx].voxels += 1;
 		const double dose = doseBuffer[i] * voxelMass;
-		(*m_organValues)[idx].dose += dose;
-		(*m_organValues)[idx].mass += voxelMass;
-		(*m_organValues)[idx].doseMax = std::max((*m_organValues)[idx].doseMax, dose);
+		organValues[idx].dose += dose;
+		organValues[idx].mass += voxelMass;
+		organValues[idx].doseMax = std::max(organValues[idx].doseMax, dBuffer[i]);
 	}
 	for (std::size_t i = 0; i < size; ++i)
 	{
 		auto idx = static_cast<std::size_t>(mBuffer[i]);
 		const double voxelMass = voxelVolume * dBuffer[i] * 0.001; //kg
 		const double energy = doseBuffer[i] * voxelMass;
-		(*m_organValues)[idx].doseStd += (energy - (*m_organValues)[idx].dose)*(energy - (*m_organValues)[idx].dose);
-		
+		organValues[idx].doseStd += (energy - organValues[idx].dose) * (energy - organValues[idx].dose);
+
 	}
-	for (auto& el : *m_organValues)
+	for (auto& el : organValues)
 	{
 		el.volume = el.voxels * voxelVolume;
 		if (el.mass > 0.0)
@@ -108,5 +89,5 @@ void DoseReportContainer::createOrganData(const std::vector<std::string>& organM
 		}
 
 	}
-
+	return organValues;
 }

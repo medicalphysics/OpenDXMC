@@ -32,7 +32,6 @@ SaveLoad::SaveLoad(QObject* parent)
 
 void SaveLoad::loadFromFile(const QString& path)
 {
-
 	emit processingDataStarted();
 
 	clear();
@@ -114,13 +113,18 @@ void SaveLoad::saveToFile(const QString& path)
 
 void SaveLoad::setImageData(std::shared_ptr<ImageContainer> image)
 {
+	if (!image)
+		return;
 	if (m_currentImageID != image->ID)
 	{
-		m_ctImage = nullptr;
-		m_densityImage = nullptr;
-		m_organImage = nullptr;
-		m_materialImage = nullptr;
-		m_doseImage = nullptr;
+		if (image->image)
+		{
+			m_ctImage = nullptr;
+			m_densityImage = nullptr;
+			m_organImage = nullptr;
+			m_materialImage = nullptr;
+			m_doseImage = nullptr;
+		}
 	}
 	m_currentImageID = image->ID;
 	if (image->imageType == ImageContainer::CTImage)

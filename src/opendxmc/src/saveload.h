@@ -23,6 +23,7 @@ Copyright 2019 Erlend Andersen
 #include "source.h"
 #include "dosereportcontainer.h"
 
+
 #include <QObject>
 #include <QString>
 #include <memory>

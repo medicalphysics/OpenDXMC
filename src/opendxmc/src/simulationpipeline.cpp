@@ -54,6 +54,9 @@ void SimulationPipeline::runSimulation(const std::vector<std::shared_ptr<Source>
 	emit processingDataStarted();
 
 	auto dummyImage = std::make_shared<DoseImageContainer>();
+	if(m_densityImage)
+		dummyImage->ID = m_densityImage->ID;
+
 	emit imageDataChanged(dummyImage);
 	DoseReportContainer dummyContainer;
 	emit doseDataChanged(dummyContainer);

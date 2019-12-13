@@ -156,6 +156,8 @@ void BinaryImportPipeline::setMaterialMapPath(const QString& path)
 		if(str.size() > 0)
 		{
 			auto strings = string_split(str, ',');
+			for (std::size_t i = 0; i < strings.size(); ++i)
+				strings[i] = string_trim(strings[i]);
 			if (strings.size() >= 3)
 			{
 				std::uint8_t ind = 0;

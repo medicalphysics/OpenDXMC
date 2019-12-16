@@ -402,7 +402,7 @@ double CTSource::getCalibrationValue(std::uint64_t nHistories, ProgressBar* prog
 
 	std::array<CTDIPhantom::HolePosition, 5> position = { CTDIPhantom::Center, CTDIPhantom::West, CTDIPhantom::East, CTDIPhantom::South, CTDIPhantom::North };
 
-	bool usingXCare = m_useXCareFilter;
+	const bool usingXCare = m_useXCareFilter;
 	m_useXCareFilter = false; // we need to disable organ aec for ctdi statistics, this should be ok 
 
 	std::size_t statCounter = CTDI_MIN_HISTORIES / (this->exposuresPerRotatition() * m_historiesPerExposure);

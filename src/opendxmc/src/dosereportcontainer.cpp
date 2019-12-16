@@ -54,30 +54,29 @@ std::vector<DoseReportElement> DoseReportContainer::createData(const std::vector
 		organValues[i].ID = i;
 	}
 	auto spacing = organImage->image->GetSpacing();
-	double voxelVolume = spacing[0] * spacing[1] * spacing[2] / 1000.0;
+	const double voxelVolume = spacing[0] * spacing[1] * spacing[2] / 1000.0; //cm
 	std::size_t size = organImage->imageData()->size();
 
 	auto mBuffer = organImage->imageData()->data();
-	auto dBuffer = densityImage->imageData()->data();
+	auto densBuffer = densityImage->imageData()->data();
 	auto doseBuffer = doseImage->imageData()->data();
 
 	for (std::size_t i = 0; i < size; ++i)
 	{
 		auto idx = static_cast<std::size_t>(mBuffer[i]);
-		const double voxelMass = voxelVolume * dBuffer[i] * 0.001; //g->kg
+		const double voxelMass = voxelVolume * densBuffer[i] * 0.001; //g->kg
 		organValues[idx].voxels += 1;
 		const double dose = doseBuffer[i] * voxelMass;
 		organValues[idx].dose += dose;
 		organValues[idx].mass += voxelMass;
-		organValues[idx].doseMax = std::max(organValues[idx].doseMax, dBuffer[i]);
+		organValues[idx].doseMax = std::max(organValues[idx].doseMax, doseBuffer[i]);
 	}
 	for (std::size_t i = 0; i < size; ++i)
 	{
 		auto idx = static_cast<std::size_t>(mBuffer[i]);
-		const double voxelMass = voxelVolume * dBuffer[i] * 0.001; //kg
+		const double voxelMass = voxelVolume * densBuffer[i] * 0.001; //kg
 		const double energy = doseBuffer[i] * voxelMass;
 		organValues[idx].doseStd += (energy - organValues[idx].dose) * (energy - organValues[idx].dose);
-
 	}
 	for (auto& el : organValues)
 	{

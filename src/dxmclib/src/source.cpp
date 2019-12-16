@@ -408,7 +408,7 @@ double CTSource::getCalibrationValue(std::uint64_t nHistories, ProgressBar* prog
 	std::size_t statCounter = CTDI_MIN_HISTORIES / (this->exposuresPerRotatition() * m_historiesPerExposure);
 	if (statCounter < 1)
 		statCounter = 1;
-	auto histories = m_historiesPerExposure;
+	const auto histories = m_historiesPerExposure;
 	m_historiesPerExposure = histories * statCounter; // ensuring enough histories for ctdi measurement
 
 	std::array<double, 5> measureDose;

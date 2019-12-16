@@ -5,7 +5,7 @@
 #include <iostream>
 #include <vector>
 
-#define M_PI 3.14159265358979323846  /* pi */
+constexpr double pi = 3.14159265358979323846;  /* pi */
 
 void testBowTieFilter()
 {
@@ -40,7 +40,7 @@ void testSource()
     e1.sampleParticle(p1, seed);
 
 	Exposure e2;
-	s1.setStartAngle(M_PI);
+	s1.setStartAngle(pi);
 	s1.validate();
 	s1.getExposure(e2, 0);
 	Particle p2;

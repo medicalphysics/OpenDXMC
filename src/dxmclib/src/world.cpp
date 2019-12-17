@@ -292,9 +292,12 @@ CTDIPhantom::CTDIPhantom(std::size_t diameter)
 	:World()
 {
 	setDirectionCosines(1.0, 0.0, 0.0, 0.0, 1.0, 0.0);
-	setOrigin(0.0, 0.0, 0.0);
 	setSpacing(1.0, 1.0, 25.0);
-	setDimensions(diameter+3, diameter+3, 6);
+	setOrigin(0.0, 0.0, 0.0);
+	if (diameter % 2 == 0) // make sure odd dimensions in xy
+		setDimensions(diameter + 3, diameter + 3, 6);
+	else
+		setDimensions(diameter + 2, diameter + 2, 6);
 	
 
 	auto air = Material("Air, Dry (near sea level)");
@@ -307,7 +310,7 @@ CTDIPhantom::CTDIPhantom(std::size_t diameter)
 
 	constexpr double holeDiameter = 13.1;
 	constexpr double holeRadii = holeDiameter / 2.0;
-	constexpr double holeDisplacement = 10.0;
+	const double holeDisplacement = diameter % 2 == 0 ? 10 + 3 : 10 + 2;
 	const double radii = static_cast<double>(diameter) / 2.0;
 	const auto dim = dimensions();
 	const auto sp = spacing();
@@ -339,15 +342,20 @@ CTDIPhantom::CTDIPhantom(std::size_t diameter)
 			cvec[i] += fcenter[i];
 	
 	//setting up measurement indices
-	for (std::size_t k = 1; k < 5; ++k) // from 2.5 to 12.5 cm into the phantom
+	for (std::size_t k = 0; k < dim[2]; ++k) 
 	{
-		const std::size_t offset = k * dim[0] * dim[1];
-		for (std::size_t i = 0; i < 5; ++i)
+		const double slicePosCenter = k * sp[2] - dim[2] * sp[2] * 0.5 + sp[2] * 0.5;
+		if (std::abs(slicePosCenter) <= 50.0) // from -50 to +50 mm into center of the phantom
 		{
-			auto idx = circleIndices2D(fdim, fspacing, hcenters[i], holeRadii);
-			std::transform(idx.begin(), idx.end(), idx.begin(), [=](std::size_t ind) {return ind + offset; }); //adding offset
-			auto &indices = m_holePositions[i];
-			indices.insert(indices.end(), idx.begin(), idx.end());
+			const std::size_t offset = k * dim[0] * dim[1];
+			for (std::size_t i = 0; i < 5; ++i)
+			{
+				auto idx = circleIndices2D(fdim, fspacing, hcenters[i], holeRadii);
+				std::transform(idx.begin(), idx.end(), idx.begin(), [=](std::size_t ind) {return ind + offset; }); //adding offset
+				auto& indices = m_holePositions[i];
+				indices.reserve(idx.size());
+				indices.insert(indices.end(), idx.begin(), idx.end());
+			}
 		}
 	}
 
@@ -376,7 +384,7 @@ CTDIPhantom::CTDIPhantom(std::size_t diameter)
 	validate();
 }
 
-const std::vector<std::size_t>& CTDIPhantom::holeIndices(HolePosition position)
+const std::vector<std::size_t>& CTDIPhantom::holeIndices(CTDIPhantom::HolePosition position)
 {
 	if (position == West)
 		return m_holePositions[4];

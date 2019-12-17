@@ -427,7 +427,7 @@ double CTSource::getCalibrationValue(std::uint64_t nHistories, ProgressBar* prog
 	const double ctdiPher = (measureDose[1] + measureDose[2] + measureDose[3] + measureDose[4]) / 4.0;
 	const double ctdiCent = measureDose[0];
 	const double ctdivol = (ctdiCent + 2.0 * ctdiPher) / 3.0 / static_cast<double>(statCounter);
-	const double factor = m_ctdivol / ctdivol * meanWeight;
+	const double factor = m_ctdivol / ctdivol / meanWeight;
 	m_useXCareFilter = usingXCare; // re-enable organ aec if it was used
 	return factor;
 

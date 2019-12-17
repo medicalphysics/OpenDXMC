@@ -105,8 +105,9 @@ class CTDIPhantom : public World
 public:
 	enum HolePosition {Center, West, East, South, North};
 	CTDIPhantom(std::size_t size = 320); // size im mm
-	const std::vector<std::size_t>& holeIndices(HolePosition position = Center);
+	const std::vector<std::size_t>& holeIndices(CTDIPhantom::HolePosition position = Center);
 	double airDensity() { return m_airDensity; }
+
 private:
 	std::array<std::vector<std::size_t>, 5> m_holePositions;
 	double m_airDensity = 0.0;

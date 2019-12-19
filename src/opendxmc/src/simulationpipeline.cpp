@@ -92,8 +92,8 @@ void SimulationPipeline::runSimulation(const std::vector<std::shared_ptr<Source>
 		
 		m_world.setAttenuationLutMaxEnergy(s->maxPhotonEnergyProduced());
 		m_world.validate();
-		auto progressBar = std::make_shared<ProgressBar>(s->totalExposures());
-		emit progressBarChanged(progressBar);
+		auto progressBar = std::make_unique<ProgressBar>(s->totalExposures());
+		emit progressBarChanged(progressBar.get());
 		auto dose = transport::run(m_world, s.get(), progressBar.get());
 		std::transform(std::execution::par_unseq, totalDose->begin(), totalDose->end(), dose.begin(), totalDose->begin(), std::plus<double>());
 		emit progressBarChanged(nullptr);

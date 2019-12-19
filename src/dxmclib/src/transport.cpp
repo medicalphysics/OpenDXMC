@@ -498,6 +498,9 @@ namespace transport {
 			const auto& worldBasis = w.directionCosines();
 			for (std::size_t i = expBeg; i < expEnd; i++)
 			{
+				if (progressbar)
+					if (progressbar->cancel())
+						return 0;
 				source->getExposure(exposure, i);
 				exposure.alignToDirectionCosines(worldBasis);
 				transport(w, exposure, seed, energyImparted);
@@ -526,11 +529,13 @@ namespace transport {
 			const auto& worldBasis = w.directionCosines();
 			for (std::size_t i = expBeg; i < expEnd; i++)
 			{
+				if (progressbar)
+					if (progressbar->cancel())
+						return 0;
 				source->getExposure(exposure, i);
 				auto pos = source->position();
 				exposure.subtractPosition(pos); // aligning to center of phantom
-				exposure.alignToDirectionCosines(worldBasis);
-				
+				exposure.alignToDirectionCosines(worldBasis);				
 				exposure.setBeamIntensityWeight(1.0);
 				transport(w, exposure, seed, energyImparted);
 				if (progressbar)
@@ -542,8 +547,7 @@ namespace transport {
 		auto mid = expBeg + len / 2;
 		auto handle = std::async(std::launch::async, parallell_run_ctdi, w, source, energyImparted, mid, expEnd, nJobs, progressbar);
 		std::uint64_t nHistories = parallell_run_ctdi(w, source, energyImparted, expBeg, mid, nJobs, progressbar);
-		return handle.get() + nHistories;
-		
+		return handle.get() + nHistories;	
 	}
 
 	void energyImpartedToDose(const World & world, const Source* source, std::vector<double>& energyImparted, const double calibrationValue)
@@ -585,6 +589,12 @@ namespace transport {
 
 		auto nHistories = parallell_run(world, source, dose.data(), 0, totalExposures, nJobs, progressbar);
 		
+		if (progressbar)
+			if (progressbar->cancel())
+			{ 
+				std::fill(dose.begin(), dose.end(), 0.0);
+				return dose;
+			}
 		double calibrationValue = source->getCalibrationValue(nHistories, progressbar);
 		//energy imparted to dose
 		energyImpartedToDose(world, source, dose, calibrationValue);

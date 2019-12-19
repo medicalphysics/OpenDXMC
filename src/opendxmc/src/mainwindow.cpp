@@ -205,6 +205,11 @@ MainWindow::MainWindow(QWidget* parent)
 
 MainWindow::~MainWindow()
 {
+	if (m_progressBar)
+	{
+		m_progressBar->setCancel(true);
+	}
+
 	m_workerThread.quit();
 	m_workerThread.wait();
 	delete m_importPipeline;
@@ -213,6 +218,8 @@ MainWindow::~MainWindow()
 	m_simulationPipeline = nullptr;
 	delete m_saveLoad;
 	m_saveLoad = nullptr;
+	delete m_binaryImportPipeline;
+	m_binaryImportPipeline = nullptr;
 }
 
 void MainWindow::createMenu()
@@ -282,7 +289,7 @@ void MainWindow::setDisableEditing(void)
 	}
 }
 
-void MainWindow::setProgressBar(std::shared_ptr<ProgressBar> progressBar)
+void MainWindow::setProgressBar(ProgressBar* progressBar)
 {
 	m_progressBar = progressBar;
 	m_progressTimer->start(5000);
@@ -293,7 +300,7 @@ void MainWindow::updateProgressBar()
 	if (m_progressBar)
 	{
 		auto msg = m_progressBar->getETA();
-		this->statusBar()->showMessage(QString::fromStdString(msg), 5000);
+		this->statusBar()->showMessage(QString::fromStdString(msg), 6000);
 	}
 	else {
 		m_progressTimer->stop();

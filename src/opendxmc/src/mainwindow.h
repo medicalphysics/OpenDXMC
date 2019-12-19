@@ -39,7 +39,7 @@ public:
 	~MainWindow();
 	void setEnableEditing(void);
 	void setDisableEditing(void);
-	void setProgressBar(std::shared_ptr<ProgressBar> progressBar);
+	void setProgressBar(ProgressBar* progressBar);
 	void updateProgressBar();
 
 protected:
@@ -58,6 +58,6 @@ private:
 
 	SaveLoad* m_saveLoad = nullptr;
 
-	std::shared_ptr<ProgressBar> m_progressBar = nullptr;
+	ProgressBar* m_progressBar = nullptr;
 	QTimer* m_progressTimer = nullptr;
 };

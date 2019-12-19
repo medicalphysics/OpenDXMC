@@ -66,7 +66,7 @@ public:
 signals:
 	void processingDataStarted();
 	void processingDataEnded();
-	void progressBarChanged(std::shared_ptr<ProgressBar> progressBar);
+	void progressBarChanged(ProgressBar* progressBar);
 	void imageDataChanged(std::shared_ptr<ImageContainer> image);
 	void doseDataChanged(const DoseReportContainer& doses);
 
@@ -77,5 +77,4 @@ private:
 	std::shared_ptr<MaterialImageContainer> m_materialImage;
 	std::shared_ptr<OrganImageContainer> m_organImage;
 	std::vector<std::string> m_organList;
-	
 };

@@ -29,11 +29,19 @@ public:
 		auto secondsRemaining = m_secondsElapsed.load() / m_currentExposures.load() * (m_totalExposures.load() - m_currentExposures.load());
 		return makePrettyTime(secondsRemaining);
 	}
+	void setCancel(bool cancel) // threadsafe
+	{
+		m_cancel.exchange(cancel);
+	}
+	bool cancel(void) const // threadsafe
+	{
+		return m_cancel.load();
+	}
 protected:
 	std::string makePrettyTime(double seconds) const {
 		std::stringstream ss;
 		ss << std::fixed << std::setprecision(0);
-		ss << m_message << " ETA: ";
+		ss << m_message << " ETA: about ";
 		if (seconds > 120.0)
 			ss << seconds / 60.0 << " minutes";
 		else
@@ -46,4 +54,5 @@ private:
 	std::chrono::system_clock::time_point m_startTime;
 	std::atomic<double> m_secondsElapsed;
 	std::string m_message;
+	std::atomic<bool> m_cancel = false;
 };

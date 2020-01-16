@@ -91,7 +91,7 @@ ipch/
 
 /src/out/build/x64-Debug
 /src/CMakeSettings.json
-out
+out/*
 /src/opendxmc/resources/binaryimporttemplate/materialTemplate.dat
 /src/opendxmc/resources/binaryimporttemplate/densityTemplate.dat
 /src/opendxmc/resources/binaryimporttemplate/materialMapTemplate.dat

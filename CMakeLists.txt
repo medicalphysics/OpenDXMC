@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
-option(BUILD_SHARED_LIBS "Build shared libraries (.dll/.so) instead of static ones (.lib/.a)" ON)
+#option(BUILD_SHARED_LIBS "Build shared libraries (.dll/.so) instead of static ones (.lib/.a)" OFF)
 
 # Let's nicely support folders in IDE's
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -101,6 +101,12 @@ find_package(VTK COMPONENTS
       jsoncpp
   )
 
+option(ENABLE_OSPRAY "Build the OSPRay rendering backend. Requires OSPRay" OFF)
+if(NOT ENABLE_OSPRAY)
+	list(REMOVE_ITEM VTK_LIBRARIES "VTK::RenderingRayTracing" "VTK::RenderingSceneGraph" "VTK::jsoncpp")
+endif()
+
+
 ## Include QT
 ## QT specifics for CMake
 set(CMAKE_AUTOMOC ON)
@@ -116,8 +122,8 @@ include_directories(${Qt5Charts_INCLUDE_DIRS})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS}")
 
 #include HDF5
+set(HDF5_USE_STATIC_LIBRARIES OFF)
 find_package(HDF5 REQUIRED COMPONENTS CXX HL C)
-#include_directories(${HDF5_INCLUDE_DIR})
 
 ## Fetch packages
 include(FetchContent)
@@ -151,3 +157,10 @@ if(BUILD_TESTING)
     add_subdirectory(tests)
 endif()
 
+install(TARGETS opendxmc
+    EXPORT libopendxmc
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+    RUNTIME DESTINATION bin
+    INCLUDES DESTINATION include
+    )

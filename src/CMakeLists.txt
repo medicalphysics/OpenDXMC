@@ -36,20 +36,23 @@ add_library(libopendxmc STATIC
 
 # We need this directory, and users of our library will need it too
 target_include_directories(libopendxmc PUBLIC ../include)
-target_include_directories(libopendxmc PUBLIC ${libdxmc_SOURCE_DIR}/include)
-#target_include_directories(opendxmclib PUBLIC ${HDF5_CXX_INCLUDE_DIRS})
-target_include_directories(libopendxmc PUBLIC ${HDF5_INCLUDE_DIRS})
+target_include_directories(libopendxmc PRIVATE ${libdxmc_SOURCE_DIR}/include)
+target_include_directories(libopendxmc PRIVATE ${HDF5_INCLUDE_DIRS})
 
-target_link_libraries(libopendxmc
-	PUBLIC libdxmc
-	PUBLIC ${VTK_LIBRARIES}
-    PUBLIC Qt5::Widgets
-	PUBLIC Qt5::Core
-	PUBLIC Qt5::Gui
-	PUBLIC Qt5::Charts
-	PUBLIC ${HDF5_LIBRARIES}
-	#${HDF5_CXX_SHARED_LIBRARY}
-	#PUBLIC ${HDF5_CXX_HL_LIBRARIES}
+target_compile_definitions(libopendxmc PRIVATE ${HDF5_DEFINITIONS})
+if (ENABLE_OSPRAY)
+	target_compile_definitions(OpenDXMC PRIVATE ENABLE_OSPRAY)
+endif()
+
+
+target_link_libraries(libopendxmc PUBLIC
+	${VTK_LIBRARIES}
+	Qt5::Widgets
+	Qt5::Core
+	Qt5::Gui
+	Qt5::Charts
+	${HDF5_LIBRARIES}
+	libdxmc	
 	)
 
 

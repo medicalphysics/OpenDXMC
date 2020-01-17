@@ -89,9 +89,6 @@ ipch/
 # Visual Studio Trace Files
 *.e2e
 
-/src/out/build/x64-Debug
+/src/out/*
 /src/CMakeSettings.json
 out/*
-/src/opendxmc/resources/binaryimporttemplate/materialTemplate.dat
-/src/opendxmc/resources/binaryimporttemplate/densityTemplate.dat
-/src/opendxmc/resources/binaryimporttemplate/materialMapTemplate.dat

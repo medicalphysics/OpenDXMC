@@ -123,7 +123,10 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS}")
 
 #include HDF5
 set(HDF5_USE_STATIC_LIBRARIES OFF)
-find_package(HDF5 REQUIRED COMPONENTS CXX HL C)
+find_package(HDF5 REQUIRED COMPONENTS CXX)
+if(NOT HDF5_ROOT AND HDF5_FOUND)
+    get_filename_component(HDF5_ROOT "${HDF5_INCLUDE_DIRS}/.." ABSOLUTE)
+endif()
 
 ## Fetch packages
 include(FetchContent)
@@ -157,10 +160,15 @@ if(BUILD_TESTING)
     add_subdirectory(tests)
 endif()
 
+# Install targets
+include(InstallRequiredSystemLibraries)
 install(TARGETS opendxmc
     EXPORT libopendxmc
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
     RUNTIME DESTINATION bin
     INCLUDES DESTINATION include
+    PROGRAMS ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS} DESTINATION bin
     )
+
+

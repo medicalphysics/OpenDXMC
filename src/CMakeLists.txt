@@ -7,7 +7,7 @@ file(GLOB HEADER_LIST CONFIGURE_DEPENDS "${OpenDXMC_SOURCE_DIR}/include/opendxmc
 
 # Make an automatic library - will be static or dynamic based on user setting
 
-add_library(opendxmclib
+add_library(libopendxmc STATIC
 	mainwindow.cpp
     viewportwidget.cpp
     dicomimportwidget.cpp
@@ -35,25 +35,27 @@ add_library(opendxmclib
 	)
 
 # We need this directory, and users of our library will need it too
-target_include_directories(opendxmclib PUBLIC ../include)
-target_include_directories(opendxmclib PUBLIC ${dxmclib_SOURCE_DIR}/include)
-target_include_directories(opendxmclib PUBLIC ${HDF5_CXX_INCLUDE_DIRS})
-# This depends on (header only) boost
-target_link_libraries(opendxmclib
+target_include_directories(libopendxmc PUBLIC ../include)
+target_include_directories(libopendxmc PUBLIC ${libdxmc_SOURCE_DIR}/include)
+#target_include_directories(opendxmclib PUBLIC ${HDF5_CXX_INCLUDE_DIRS})
+target_include_directories(libopendxmc PUBLIC ${HDF5_INCLUDE_DIRS})
+
+target_link_libraries(libopendxmc
 	PUBLIC libdxmc
 	PUBLIC ${VTK_LIBRARIES}
     PUBLIC Qt5::Widgets
 	PUBLIC Qt5::Core
 	PUBLIC Qt5::Gui
 	PUBLIC Qt5::Charts
-	PUBLIC ${HDF5_CXX_LIBRARIES}
-	PUBLIC ${HDF5_CXX_HL_LIBRARIES}
+	PUBLIC ${HDF5_LIBRARIES}
+	#${HDF5_CXX_SHARED_LIBRARY}
+	#PUBLIC ${HDF5_CXX_HL_LIBRARIES}
 	)
 
 
 # Adding vtk modules (replaces include(${VTK_USE_FILE}) since vtk 8.90) 
 vtk_module_autoinit(
-    TARGETS opendxmclib
+    TARGETS libopendxmc
     MODULES ${VTK_LIBRARIES}
     )
 

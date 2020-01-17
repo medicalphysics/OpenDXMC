@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.14...3.16)
 
-project(OpenDXMC VERSION 0.1.10 DESCRIPTION "OpenDXMC description" LANGUAGES CXX)
+project(OpenDXMC VERSION 0.1.10 DESCRIPTION "OpenDXMC description" LANGUAGES CXX C)
 
 set(CMAKE_CONFIGURATION_TYPES Debug Release RelWithDebInfo MinSizeRel)
 
@@ -8,12 +8,14 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
+option(BUILD_SHARED_LIBS "Build shared libraries (.dll/.so) instead of static ones (.lib/.a)" ON)
+
 # Let's nicely support folders in IDE's
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 # Must use GNUInstallDirs to install libraries into correct
 # locations on all platforms.
-include(GNUInstallDirs)
+#include(GNUInstallDirs)
 
 # Testing only available if this is the main app
 # Note this needs to be done in the main CMakeLists
@@ -31,7 +33,6 @@ endif()
 
 
 # Adding VTK package
-##adding VTK dependency
 find_package(VTK COMPONENTS
       CommonColor
       CommonComputationalGeometry
@@ -115,8 +116,8 @@ include_directories(${Qt5Charts_INCLUDE_DIRS})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS}")
 
 #include HDF5
-find_package(HDF5 REQUIRED COMPONENTS CXX)
-include_directories(${HDF5_CXX_INCLUDE_DIRS})
+find_package(HDF5 REQUIRED COMPONENTS CXX HL C)
+#include_directories(${HDF5_INCLUDE_DIR})
 
 ## Fetch packages
 include(FetchContent)
@@ -135,7 +136,7 @@ if(NOT CMAKE_BUILD_TYPE)
 	message("Defaulting to release build.") 
 	set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build, options are: ${CMAKE_CONFIGURATION_TYPES}." FORCE) 
 endif()
-
+set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "${CMAKE_CONFIGURATION_TYPES}")
 
 # Targets that we develop here
 # The compiled library code is here

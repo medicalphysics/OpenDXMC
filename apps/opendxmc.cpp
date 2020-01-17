@@ -42,7 +42,7 @@ int main (int argc, char *argv[])
 	app.setWindowIcon(QIcon("resources/icons/icon.png"));
 
 	MainWindow win;
-	QString title = "OpenDXMC v";// +QString(APP_VERSION);
+	QString title = "OpenDXMC v" + QString(APP_VERSION);
 	win.setWindowTitle(title);
 	win.show();
 	

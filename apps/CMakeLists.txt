@@ -1,5 +1,5 @@
 
-add_executable(opendxmc WIN32 opendxmc.cpp data/resources.rc)
+add_executable(opendxmc WIN32 opendxmc.cpp ../data/resources.rc)
 
 vtk_module_autoinit(
     TARGETS opendxmc

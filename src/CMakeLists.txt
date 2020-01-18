@@ -41,7 +41,7 @@ target_include_directories(libopendxmc PRIVATE ${HDF5_INCLUDE_DIRS})
 
 target_compile_definitions(libopendxmc PRIVATE ${HDF5_DEFINITIONS})
 if (ENABLE_OSPRAY)
-	target_compile_definitions(OpenDXMC PRIVATE ENABLE_OSPRAY)
+	target_compile_definitions(libopendxmc PRIVATE ENABLE_OSPRAY)
 endif()
 
 

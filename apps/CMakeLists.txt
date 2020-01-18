@@ -8,26 +8,22 @@ vtk_module_autoinit(
 
 target_compile_definitions(opendxmc PRIVATE APP_VERSION="${PROJECT_VERSION}")
 
-if (ENABLE_OSPRAY)
-	target_compile_definitions(opendxmc PRIVATE ENABLE_OSPRAY)
-endif(ENABLE_OSPRAY)
-
 target_link_libraries(opendxmc 
 	PRIVATE libopendxmc
 	)
 
+# Install data folder
+install(DIRECTORY "${CMAKE_SOURCE_DIR}/data/" DESTINATION "bin/resources")
+
 # On windows install we copy all dependent shared libraries and data to binary folder 
 if (WIN32)
     set(OPENDXMC_DEPLOY "${CMAKE_CURRENT_BINARY_DIR}/opendxmcdeploy/")
-    # Data folder
-    install(DIRECTORY "${CMAKE_SOURCE_DIR}/data/" DESTINATION "${CMAKE_INSTALL_PREFIX}/bin/resources")
-
+    
     # QT deploy on windows
     get_target_property(QT5_QMAKE_EXECUTABLE Qt5::qmake IMPORTED_LOCATION)
     get_filename_component(QT5_WINDEPLOYQT_EXECUTABLE ${QT5_QMAKE_EXECUTABLE} PATH)
     set(QT5_WINDEPLOYQT_EXECUTABLE "${QT5_WINDEPLOYQT_EXECUTABLE}/windeployqt.exe")
 	add_custom_command(TARGET opendxmc POST_BUILD
-        #COMMAND ${QT5_WINDEPLOYQT_EXECUTABLE} --dir "${CMAKE_CURRENT_BINARY_DIR}/winqtdeploy/" "$<TARGET_FILE_DIR:opendxmc>/$<TARGET_FILE_NAME:opendxmc>"
         COMMAND ${QT5_WINDEPLOYQT_EXECUTABLE} --dir "${OPENDXMC_DEPLOY}" "$<TARGET_FILE_DIR:opendxmc>/$<TARGET_FILE_NAME:opendxmc>"
         )
     
@@ -95,8 +91,7 @@ if (WIN32)
 	endforeach()
 
 	#Install windows requirered dlls
-    #install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/winqtdeploy/" DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")
-    install(DIRECTORY "${OPENDXMC_DEPLOY}" DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")
+    install(DIRECTORY "${OPENDXMC_DEPLOY}" DESTINATION bin)
 
 endif(WIN32)
 

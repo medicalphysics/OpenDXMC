@@ -5,7 +5,6 @@
 file(GLOB HEADER_LIST CONFIGURE_DEPENDS "${OpenDXMC_SOURCE_DIR}/include/opendxmc/*.h")
 #set(HEADER_LIST "${ModernCMakeExample_SOURCE_DIR}/include/modern/lib.hpp")
 
-# Make an automatic library - will be static or dynamic based on user setting
 
 add_library(libopendxmc STATIC
 	mainwindow.cpp
@@ -36,7 +35,7 @@ add_library(libopendxmc STATIC
 
 # We need this directory, and users of our library will need it too
 target_include_directories(libopendxmc PUBLIC ../include)
-target_include_directories(libopendxmc PRIVATE ${libdxmc_SOURCE_DIR}/include)
+target_include_directories(libopendxmc PUBLIC ${libdxmc_SOURCE_DIR}/include)
 target_include_directories(libopendxmc PRIVATE ${HDF5_INCLUDE_DIRS})
 
 target_compile_definitions(libopendxmc PRIVATE ${HDF5_DEFINITIONS})
@@ -51,6 +50,7 @@ target_link_libraries(libopendxmc PUBLIC
 	Qt5::Core
 	Qt5::Gui
 	Qt5::Charts
+	PRIVATE
 	${HDF5_LIBRARIES}
 	libdxmc	
 	)

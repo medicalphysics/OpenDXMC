@@ -91,4 +91,7 @@ ipch/
 
 /src/out/*
 /src/CMakeSettings.json
-out/*
+/out/*
+/data/binaryimporttemplate/densityTemplate.dat
+/data/binaryimporttemplate/materialTemplate.dat
+/data/binaryimporttemplate/materialMapTemplate.dat

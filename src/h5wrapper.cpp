@@ -776,6 +776,7 @@ bool H5Wrapper::saveSource(std::shared_ptr<CTSource> src, const std::string& nam
 	d1par["sdd"] = src->sourceDetectorDistance();
 	d1par["collimation"] = src->collimation();
 	d1par["fov"] = src->fieldOfView();
+	d1par["gantryTiltAngle"] = src->gantryTiltAngle();
 	d1par["startAngle"] = src->startAngle();
 	d1par["exposureAngleStep"] = src->exposureAngleStep();
 	d1par["scanLenght"] = src->scanLenght();
@@ -944,6 +945,7 @@ bool H5Wrapper::loadSource(std::shared_ptr<CTSource> src, const std::string& nam
 	d1par["sdd"] = src->sourceDetectorDistance();
 	d1par["collimation"] = src->collimation();
 	d1par["fov"] = src->fieldOfView();
+	d1par["gantryTiltAngle"] = src->gantryTiltAngle();
 	d1par["startAngle"] = src->startAngle();
 	d1par["exposureAngleStep"] = src->exposureAngleStep();
 	d1par["scanLenght"] = src->scanLenght();
@@ -984,6 +986,7 @@ bool H5Wrapper::loadSource(std::shared_ptr<CTSource> src, const std::string& nam
 	src->setSourceDetectorDistance(d1par["sdd"]);
 	src->setCollimation(d1par["collimation"]);
 	src->setFieldOfView(d1par["fov"]);
+	src->setGantryTiltAngle(d1par["gantryTiltAngle"]);
 	src->setStartAngle(d1par["startAngle"]);
 	src->setExposureAngleStep(d1par["exposureAngleStep"]);
 	src->setScanLenght(d1par["scanLenght"]);

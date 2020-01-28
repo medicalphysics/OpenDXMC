@@ -698,6 +698,11 @@ void SourceModel::setupCTSource(std::shared_ptr<CTSource> src, QStandardItem* pa
 	setupXCare(src, xcareItem);
 	nodes.append(qMakePair(QString(), xcareItem));
 
+	auto gangItem = new SourceItem<CTSource, double>(src,
+		[=](double val) {src->setGantryTiltAngleDeg(val); },
+		[=]() {return src->gantryTiltAngleDeg(); });
+	nodes.append(qMakePair(QString("Gantry tilt angle [deg]"), static_cast<QStandardItem*>(gangItem)));
+
 	auto sangItem = new SourceItem<CTSource, double>(src,
 		[=](double val) {src->setStartAngleDeg(val); },
 		[=]() {return src->startAngleDeg(); });
@@ -887,6 +892,11 @@ void SourceModel::setupCTDualSource(std::shared_ptr<CTDualSource> src)
 	auto xcareItem = new QStandardItem("Organ exposure control");
 	setupXCare(src, xcareItem);
 	commonNodes.append(qMakePair(QString(), xcareItem));
+
+	auto gangItem = new SourceItem<CTSource, double>(src,
+		[=](double val) {src->setGantryTiltAngleDeg(val); },
+		[=]() {return src->gantryTiltAngleDeg(); });
+	commonNodes.append(qMakePair(QString("Gantry tilt angle [deg]"), static_cast<QStandardItem*>(gangItem)));
 
 	auto sangItema = new SourceItem<CTDualSource, double>(src,
 		[=](double val) {src->setStartAngleDeg(val); },

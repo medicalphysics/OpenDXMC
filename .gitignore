@@ -1,7 +1,4 @@
 
-
-
-
 #local cmake stuff
 CMakeSettings.json
 
@@ -95,3 +92,4 @@ ipch/
 /data/binaryimporttemplate/densityTemplate.dat
 /data/binaryimporttemplate/materialTemplate.dat
 /data/binaryimporttemplate/materialMapTemplate.dat
+/build

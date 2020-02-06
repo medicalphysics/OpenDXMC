@@ -1,7 +1,4 @@
 
-
-
-
 #local cmake stuff
 CMakeSettings.json
 
@@ -89,9 +86,10 @@ ipch/
 # Visual Studio Trace Files
 *.e2e
 
-/src/out/build/x64-Debug
+/src/out/*
 /src/CMakeSettings.json
-out
-/src/opendxmc/resources/binaryimporttemplate/materialTemplate.dat
-/src/opendxmc/resources/binaryimporttemplate/densityTemplate.dat
-/src/opendxmc/resources/binaryimporttemplate/materialMapTemplate.dat
+/out/*
+/data/binaryimporttemplate/densityTemplate.dat
+/data/binaryimporttemplate/materialTemplate.dat
+/data/binaryimporttemplate/materialMapTemplate.dat
+/build

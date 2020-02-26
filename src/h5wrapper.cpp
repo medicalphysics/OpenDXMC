@@ -574,7 +574,7 @@ std::unique_ptr<H5::Group> H5Wrapper::saveTube(const Tube& tube, const std::stri
 	std::map<std::string, double> valueMap;
 	valueMap["voltage"] = tube.voltage();
 	valueMap["energyResolution"] = tube.energyResolution();
-	valueMap["angle"] = tube.tubeAngle();
+	valueMap["angle"] = tube.anodeAngle();
 
 	for (const auto& [key, val] : valueMap)
 	{
@@ -627,7 +627,7 @@ void H5Wrapper::loadTube(Tube& tube, const std::string& name, const std::string&
 		return;
 	}
 	tube.setVoltage(voltage);
-	tube.setTubeAngle(angle);
+	tube.setAnodeAngle(angle);
 	tube.setEnergyResolution(energyResolution);
 	if (tubeGroup->nameExists("filtrationMaterialNames"))
 	{

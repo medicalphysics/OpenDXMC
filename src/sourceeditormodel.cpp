@@ -532,8 +532,8 @@ void setupTube(std::shared_ptr<S> src, QStandardItem * parent)
 	nodes.append(qMakePair(QString("Tube voltage [kV]"), static_cast<QStandardItem*>(l2Item)));
 
 	auto l3Item = new SourceItem<S, double>(src,
-		[=](double val) {src->tube().setTubeAngleDeg(val); },
-		[=]() {return src->tube().tubeAngleDeg(); });
+		[=](double val) {src->tube().setAnodeAngleDeg(val); },
+		[=]() {return src->tube().anodeAngleDeg(); });
 	nodes.append(qMakePair(QString("Tube angle [deg]"), static_cast<QStandardItem*>(l3Item)));
 
 	auto l4Item = new SourceItem<S, double>(src,
@@ -571,8 +571,8 @@ void setupTubeB(std::shared_ptr<CTDualSource> src, QStandardItem * parent)
 	nodes.append(qMakePair(QString("Tube voltage [kV]"), static_cast<QStandardItem*>(l2Item)));
 
 	auto l3Item = new SourceItem<CTDualSource, double>(src,
-		[=](double val) {src->tubeB().setTubeAngleDeg(val); },
-		[=]() {return src->tubeB().tubeAngleDeg(); });
+		[=](double val) {src->tubeB().setAnodeAngleDeg(val); },
+		[=]() {return src->tubeB().anodeAngleDeg(); });
 	nodes.append(qMakePair(QString("Tube angle [deg]"), static_cast<QStandardItem*>(l3Item)));
 
 	auto l4Item = new SourceItem<CTDualSource, double>(src,

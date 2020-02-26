@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.14...3.16)
 
-project(OpenDXMC VERSION 0.1.11 DESCRIPTION "OpenDXMC description" LANGUAGES CXX C)
+project(OpenDXMC VERSION 0.1.12 DESCRIPTION "OpenDXMC description" LANGUAGES CXX C)
 
 set(CMAKE_CONFIGURATION_TYPES Debug Release RelWithDebInfo MinSizeRel)
 
@@ -15,7 +15,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 # Must use GNUInstallDirs to install libraries into correct
 # locations on all platforms.
-#include(GNUInstallDirs)
+include(GNUInstallDirs)
 
 # Testing only available if this is the main app
 # Note this needs to be done in the main CMakeLists
@@ -134,6 +134,7 @@ include(FetchContent)
 FetchContent_Declare(
     libdxmc
     GIT_REPOSITORY https://github.com/medicalphysics/DXMClib.git
+    GIT_TAG master
     )
 FetchContent_MakeAvailable(libdxmc)
 

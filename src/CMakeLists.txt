@@ -30,6 +30,7 @@ add_library(libopendxmc STATIC
 	saveload.cpp
 	stringmanipulation.cpp
 	h5wrapper.cpp
+	progresswidget.cpp
 	${HEADER_LIST}
 	)
 

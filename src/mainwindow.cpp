@@ -299,7 +299,7 @@ void MainWindow::updateProgressBar()
 {
 	if (m_progressBar)
 	{
-		auto msg = m_progressBar->getETA();
+		const auto msg = m_progressBar->getETA();
 		this->statusBar()->showMessage(QString::fromStdString(msg), 6000);
 	}
 	else {

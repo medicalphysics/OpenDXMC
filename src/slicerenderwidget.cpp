@@ -415,9 +415,12 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 			vtkSmartPointer<vtkWindowToImageFilter> windowToImageFilter =
 				vtkSmartPointer<vtkWindowToImageFilter>::New();
 			windowToImageFilter->SetInput(renderWindow);
-			windowToImageFilter->SetScale(3, 3); //set the resolution of the output image (3 times the current resolution of vtk render window)
+			//this is somehow broken
+			//windowToImageFilter->SetScale(3, 3); //set the resolution of the output image (3 times the current resolution of vtk render window)
+			windowToImageFilter->SetFixBoundary(true);
+			windowToImageFilter->ShouldRerenderOn();
 			windowToImageFilter->SetInputBufferTypeToRGBA(); //also record the alpha (transparency) channel
-			windowToImageFilter->ReadFrontBufferOff(); // read from the back buffer
+			windowToImageFilter->ReadFrontBufferOn(); // read from the front buffer
 			windowToImageFilter->Update();
 			vtkSmartPointer<vtkPNGWriter> writer =
 				vtkSmartPointer<vtkPNGWriter>::New();

@@ -1,3 +1,4 @@
+
 /*This file is part of OpenDXMC.
 
 OpenDXMC is free software : you can redistribute it and/or modify
@@ -15,3 +16,57 @@ along with OpenDXMC. If not, see < https://www.gnu.org/licenses/>.
 
 Copyright 2019 Erlend Andersen
 */
+
+#include "opendxmc/progresswidget.h"
+#include "opendxmc/colormap.h"
+#include <QVBoxLayout>
+#include <QImage>
+#include <QGraphicsScene>
+#include <QTransform>
+#include <QPixmap>
+#include <QColor>
+#include <QBrush>
+
+ProgressWidget::ProgressWidget(QWidget* parent) 
+	: QWidget(parent)
+{
+	auto mainLayout = new QVBoxLayout(this);
+	//mainLayout->setContentsMargins(0, 0, 0, 0);
+	setLayout(mainLayout);
+	m_view = new QGraphicsView(this);
+	auto scene = new QGraphicsScene(m_view);
+	m_view->setScene(scene);
+	mainLayout->addWidget(m_view);
+	m_pixItem = new QGraphicsPixmapItem();
+	scene->addItem(m_pixItem);
+
+	m_colormap = generateStandardQTColorTable(HOT_IRON);
+	QColor background(m_colormap[0]);
+	m_view->setBackgroundBrush(QBrush(background));
+
+	hide(); // we start hiding
+}
+
+void ProgressWidget::setImageData(std::shared_ptr<DoseProgressImageData> data)
+{
+	if (data) {
+		
+		int width = static_cast<int>(data->dimensions[0]);
+		int height = static_cast<int>(data->dimensions[1]);
+		
+		auto transform = QTransform::fromScale(data->spacing[0], data->spacing[1]);
+
+		QImage qim(data->image.data(), width, height, width, QImage::Format_Indexed8);
+		qim.setColorTable(m_colormap);
+		auto scene = m_view->scene();
+		m_pixItem->setPixmap(QPixmap::fromImage(qim.mirrored(false, true)));
+		m_pixItem->setTransform(transform);
+		m_view->fitInView(m_pixItem, Qt::KeepAspectRatio);
+		
+
+		show(); // we show ourselves
+	}
+	else {
+		hide();// hide stuff
+	}
+}

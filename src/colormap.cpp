@@ -58,3 +58,17 @@ std::array<double, 768> generateStandardColorTable(const QVector<double> & color
 		lut[255 * 3 + j] = colorTable[(nColors-1) * 3 + j];
 	return lut;
 }
+
+QVector<QRgb> generateStandardQTColorTable(const QVector<double>& colorTable)
+{
+	QVector<QRgb> cmap(256);
+	auto lut = generateStandardColorTable(colorTable);
+	for (std::size_t i = 0; i < 256; ++i)
+	{
+		const int r = static_cast<int>(lut[i * 3] * 255.0);
+		const int g = static_cast<int>(lut[i * 3 + 1] * 255.0);
+		const int b = static_cast<int>(lut[i * 3 + 2] * 255.0);
+		cmap[i] = qRgb(r, g, b);
+	}
+	return cmap;
+}

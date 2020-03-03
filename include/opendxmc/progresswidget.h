@@ -17,13 +17,22 @@ Copyright 2019 Erlend Andersen
 */
 
 #pragma once
-
 #include <QWidget>
-
+#include <QGraphicsView>
+#include <QGraphicsPixmapItem>
+#include <dxmc/progressbar.h>
+#include <array>
+#include <memory>
 
 class ProgressWidget :public QWidget
 {
-	ProgressWidget(QWidget parent = nullptr);
-	void setImageData(const double* imageData, const std::size_t dimensions[2]);
+public:
+	ProgressWidget(QWidget* parent = nullptr);
+	void setImageData(std::shared_ptr<DoseProgressImageData> data);
 
+protected:
+private:
+	QGraphicsView* m_view = nullptr;
+	QGraphicsPixmapItem* m_pixItem = nullptr;
+	QVector<QRgb> m_colormap;
 };

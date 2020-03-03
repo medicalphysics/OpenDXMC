@@ -26,7 +26,7 @@ Copyright 2019 Erlend Andersen
 #include "opendxmc/simulationpipeline.h"
 #include "opendxmc/binaryimportpipeline.h"
 #include "opendxmc/saveload.h"
-
+#include "opendxmc/progresswidget.h"
 #include "dxmc/progressbar.h"
 
 
@@ -58,5 +58,6 @@ private:
 	SaveLoad* m_saveLoad = nullptr;
 
 	ProgressBar* m_progressBar = nullptr;
+	ProgressWidget* m_progressWidget = nullptr;
 	QTimer* m_progressTimer = nullptr;
 };

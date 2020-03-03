@@ -23,6 +23,7 @@ Copyright 2019 Erlend Andersen
 #include <QAction>
 #include <QSettings>
 #include <QFileDialog>
+#include <QHBoxLayout>
 
 #include "opendxmc/mainwindow.h"
 #include "opendxmc/viewportwidget.h"
@@ -36,17 +37,9 @@ Copyright 2019 Erlend Andersen
 #include "opendxmc/binaryimportwidget.h"
 
 
-
 MainWindow::MainWindow(QWidget* parent) 
 	: QMainWindow(parent)
 {
-	//This must happend before any signals/slots are connected
-	/*qRegisterMetaType<std::vector<std::shared_ptr<Source>>>();
-	qRegisterMetaType<std::shared_ptr<ImageContainer>>();
-	qRegisterMetaType<std::vector<Material>&>();
-	qRegisterMetaType<std::vector<std::string>&>();
-	qRegisterMetaType<std::shared_ptr<AECFilter>>();
-	*/
 
 	//image import pipeline
 	m_importPipeline = new ImageImportPipeline();
@@ -82,12 +75,13 @@ MainWindow::MainWindow(QWidget* parent)
 	connect(m_simulationPipeline, &SimulationPipeline::processingDataEnded, progressIndicator, &ProgressIndicator::stopAnimation);
 	statusBar->addPermanentWidget(progressIndicator);
 
-	QSplitter* splitter = new QSplitter(Qt::Horizontal);
 
 	m_menuWidget = new QTabWidget(this);
 	m_menuWidget->setTabPosition(QTabWidget::West);
 	
-	//import widgets share å tabbed widget
+
+
+	//import widgets share a tabbed widget
 	auto importWidget = new QTabWidget(this);
 	importWidget->setTabPosition(QTabWidget::North);
 
@@ -141,8 +135,10 @@ MainWindow::MainWindow(QWidget* parent)
 	connect(m_importPipeline, &ImageImportPipeline::imageDataChanged, exportWidget, &ExportWidget::registerImage);
 	connect(m_binaryImportPipeline, &BinaryImportPipeline::imageDataChanged, exportWidget, &ExportWidget::registerImage);
 	m_menuWidget->addTab(exportWidget, tr("Export data"));
-	splitter->addWidget(m_menuWidget);
+
+
 	
+
 	//simulation progress
 	m_progressTimer = new QTimer(this);
 	m_progressTimer->setTimerType(Qt::CoarseTimer);
@@ -151,11 +147,10 @@ MainWindow::MainWindow(QWidget* parent)
 
 	//Viewport
 	ViewPortWidget* viewPort = new ViewPortWidget(this);
-	splitter->addWidget(viewPort);
 	connect(m_importPipeline, &ImageImportPipeline::imageDataChanged, viewPort, &ViewPortWidget::setImageData);
 	connect(m_simulationPipeline, &SimulationPipeline::imageDataChanged, viewPort, &ViewPortWidget::setImageData);
 	connect(m_binaryImportPipeline, &BinaryImportPipeline::imageDataChanged, viewPort, &ViewPortWidget::setImageData);
-	setCentralWidget(splitter);
+	
 
 	//setting up source 3d actor connection to viewpoert from sourceeditwidget
 	auto sourceModel = sourceEditWidget->model();
@@ -194,6 +189,29 @@ MainWindow::MainWindow(QWidget* parent)
 	connect(sourceModel, &SourceModel::sourceAdded, m_saveLoad, &SaveLoad::addSource);
 	connect(sourceModel, &SourceModel::sourceRemoved, m_saveLoad, &SaveLoad::removeSource);
 	connect(m_saveLoad, & SaveLoad::sourcesChanged, sourceModel, & SourceModel::setSources);
+
+
+	//dose progress image widget
+	m_progressWidget = new ProgressWidget(this);
+
+	// setting up layout
+	QSplitter* splitter = new QSplitter(Qt::Horizontal);
+	QWidget* menuHolder = new QWidget(this);
+	QVBoxLayout* holderLayout = new QVBoxLayout;
+	holderLayout->setContentsMargins(0, 0, 0, 0);
+	holderLayout->addWidget(m_menuWidget);
+	holderLayout->addWidget(m_progressWidget);
+	menuHolder->setLayout(holderLayout);
+
+	splitter->addWidget(menuHolder);
+	splitter->addWidget(viewPort);
+	setCentralWidget(splitter);
+
+
+
+
+
+
 
 	//setting up window menu
 	createMenu();
@@ -300,6 +318,8 @@ void MainWindow::updateProgressBar()
 	if (m_progressBar)
 	{
 		const auto msg = m_progressBar->getETA();
+		auto test = m_progressBar->computeDoseProgressImage();
+		m_progressWidget->setImageData(m_progressBar->computeDoseProgressImage());
 		this->statusBar()->showMessage(QString::fromStdString(msg), 6000);
 	}
 	else {

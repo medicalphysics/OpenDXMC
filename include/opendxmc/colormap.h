@@ -19,6 +19,7 @@ Copyright 2019 Erlend Andersen
 #pragma once
 #include <QColor>
 #include <QVector>
+#include <QRgb>
 #include <array>
 #include <cmath>
 
@@ -41,4 +42,4 @@ const QVector<double> TURBO = { 0.18995,0.07176,0.23217,0.225,0.16354,0.45096,0.
 QColor getQColor(int index);
 std::array<double, 3> getColor(int index);
 std::array<double, 768> generateStandardColorTable(const QVector<double>& colorTable);
-
+QVector<QRgb> generateStandardQTColorTable(const QVector<double>& colorTable);

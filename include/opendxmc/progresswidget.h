@@ -31,6 +31,7 @@ public:
 	void setImageData(std::shared_ptr<DoseProgressImageData> data);
 
 protected:
+	void resizeEvent(QResizeEvent* event);
 private:
 	QGraphicsView* m_view = nullptr;
 	QGraphicsPixmapItem* m_pixItem = nullptr;

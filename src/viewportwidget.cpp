@@ -50,11 +50,13 @@ ViewPortWidget::ViewPortWidget(QWidget* parent)
 	QSplitter* vSplitter = new QSplitter(Qt::Vertical);
 	QSplitter* upperHSplitter = new QSplitter(Qt::Horizontal);
 	QSplitter* lowerHSplitter = new QSplitter(Qt::Horizontal);
+	vSplitter->setOpaqueResize(false);
+	upperHSplitter->setOpaqueResize(false);
+	lowerHSplitter->setOpaqueResize(false);
 	vSplitter->addWidget(upperHSplitter);
 	vSplitter->addWidget(lowerHSplitter);
 	vSplitter->setContentsMargins(0, 0, 0, 0);
 	mainLayout->addWidget(vSplitter);
-
 	
 	m_volumeRenderWidget = new VolumeRenderWidget(this);
 	m_sliceRenderWidgetAxial = new SliceRenderWidget(this, SliceRenderWidget::Axial);
@@ -67,12 +69,8 @@ ViewPortWidget::ViewPortWidget(QWidget* parent)
 	lowerHSplitter->addWidget(m_sliceRenderWidgetCoronal);
 	lowerHSplitter->addWidget(m_sliceRenderWidgetSagittal);
 	
-	//adding volumerender settings to toolbar
-	
-	
 	this->setLayout(mainLayout);
 
-	
 }
 
 ViewPortWidget::~ViewPortWidget()

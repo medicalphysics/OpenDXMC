@@ -26,6 +26,7 @@ Copyright 2019 Erlend Andersen
 #include <QPixmap>
 #include <QColor>
 #include <QBrush>
+#include <QTransform>
 
 ProgressWidget::ProgressWidget(QWidget* parent) 
 	: QWidget(parent)
@@ -51,22 +52,34 @@ void ProgressWidget::setImageData(std::shared_ptr<DoseProgressImageData> data)
 {
 	if (data) {
 		
-		int width = static_cast<int>(data->dimensions[0]);
-		int height = static_cast<int>(data->dimensions[1]);
+		const int width = static_cast<int>(data->dimensions[0]);
+		const int height = static_cast<int>(data->dimensions[1]);
 		
-		auto transform = QTransform::fromScale(data->spacing[0], data->spacing[1]);
+		const double dw = data->spacing[0];
+		const double dh = data->spacing[1];
 
 		QImage qim(data->image.data(), width, height, width, QImage::Format_Indexed8);
 		qim.setColorTable(m_colormap);
+		QTransform transform(dw, .0, .0, -dh, .0, .0); //scale and mirror y axis
+		if (height > width)
+		{
+			QTransform rot;
+			rot.rotate(90.0); // flipping image
+			transform = transform * rot;
+		}
 		auto scene = m_view->scene();
-		m_pixItem->setPixmap(QPixmap::fromImage(qim.mirrored(false, true)));
+		m_pixItem->setPixmap(QPixmap::fromImage(qim));
 		m_pixItem->setTransform(transform);
-		m_view->fitInView(m_pixItem, Qt::KeepAspectRatio);
-		
-
 		show(); // we show ourselves
+		m_view->fitInView(m_pixItem, Qt::KeepAspectRatio);
 	}
 	else {
 		hide();// hide stuff
 	}
+}
+
+void ProgressWidget::resizeEvent(QResizeEvent* event)
+{
+	QWidget::resizeEvent(event);
+	m_view->fitInView(m_pixItem, Qt::KeepAspectRatio);
 }

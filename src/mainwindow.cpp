@@ -205,6 +205,7 @@ MainWindow::MainWindow(QWidget* parent)
 
 	splitter->addWidget(menuHolder);
 	splitter->addWidget(viewPort);
+	splitter->setOpaqueResize(false);
 	setCentralWidget(splitter);
 
 	//setting up window menu

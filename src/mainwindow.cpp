@@ -136,9 +136,6 @@ MainWindow::MainWindow(QWidget* parent)
 	connect(m_binaryImportPipeline, &BinaryImportPipeline::imageDataChanged, exportWidget, &ExportWidget::registerImage);
 	m_menuWidget->addTab(exportWidget, tr("Export data"));
 
-
-	
-
 	//simulation progress
 	m_progressTimer = new QTimer(this);
 	m_progressTimer->setTimerType(Qt::CoarseTimer);
@@ -205,6 +202,8 @@ MainWindow::MainWindow(QWidget* parent)
 
 	splitter->addWidget(menuHolder);
 	splitter->addWidget(viewPort);
+	splitter->setStretchFactor(0, 1.0);
+	splitter->setStretchFactor(1, 10.0);
 	splitter->setOpaqueResize(false);
 	setCentralWidget(splitter);
 

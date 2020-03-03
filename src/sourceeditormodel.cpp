@@ -455,11 +455,10 @@ void SourceModel::addSource(std::shared_ptr<Source> src)
 
 void SourceModel::setSources(const std::vector<std::shared_ptr<Source>>& sources)
 {
-	auto old_sources = m_sources;
-	for (auto s : old_sources)
-	{
-		removeSource(s);
-	}
+	//removing all sources
+	auto parentItem = invisibleRootItem();
+	removeRows(0, m_sources.size(), parentItem->index());
+
 	for (auto s : sources)
 	{
 		addSource(s);

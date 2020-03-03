@@ -207,18 +207,11 @@ MainWindow::MainWindow(QWidget* parent)
 	splitter->addWidget(viewPort);
 	setCentralWidget(splitter);
 
-
-
-
-
-
-
 	//setting up window menu
 	createMenu();
 
 	//no connections to pipeline after this point
 	m_workerThread.start();
-
 }
 
 MainWindow::~MainWindow()

@@ -1008,6 +1008,17 @@ void SourceModel::setupDXSource(std::shared_ptr<DXSource> src)
 	nodes.append(qMakePair(QString(), tubeNode));
 
 	//DX parameters
+	
+	auto sourceAngleItem = new SourceItem<DXSource, std::array<double, 2>>(src,
+		[=](const auto& val) {src->setSourceAnglesDeg(val); },
+		[=]() {return src->sourceAnglesDeg(); });
+	nodes.append(qMakePair(QString("Source angles according to DiCOM (primary angle, secondary angle) [deg]"), static_cast<QStandardItem*>(sourceAngleItem)));
+
+	auto tubeRotItem = new SourceItem<DXSource, double>(src,
+		[=](const auto& val) {src->setTubeRotationDeg(val); },
+		[=]() {return src->tubeRotationDeg(); });
+	nodes.append(qMakePair(QString("X-ray tube rotation angle [deg]"), static_cast<QStandardItem*>(tubeRotItem)));
+
 	auto l1Item = new SourceItem<DXSource, std::array<double, 2>>(src,
 		[=](const auto& val) {src->setCollimationAnglesDeg(val); },
 		[=]() {return src->collimationAnglesDeg(); });

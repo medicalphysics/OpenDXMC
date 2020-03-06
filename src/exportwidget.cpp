@@ -89,6 +89,8 @@ ExportWidget::ExportWidget(QWidget* parent)
 	rawExportBox->setLayout(exportRawLayout);
 
 	mainLayout->addWidget(rawExportBox);
+	mainLayout->addStretch();
+	setLayout(mainLayout);
 }
 
 void ExportWidget::browseForRawExportFolder()

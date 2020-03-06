@@ -20,6 +20,8 @@ Copyright 2019 Erlend Andersen
 #include "opendxmc/progresswidget.h"
 #include "opendxmc/colormap.h"
 #include <QVBoxLayout>
+#include <QCheckBox>
+#include <QSettings>
 #include <QImage>
 #include <QGraphicsScene>
 #include <QTransform>
@@ -32,8 +34,16 @@ ProgressWidget::ProgressWidget(QWidget* parent)
 	: QWidget(parent)
 {
 	auto mainLayout = new QVBoxLayout(this);
-	//mainLayout->setContentsMargins(0, 0, 0, 0);
-	setLayout(mainLayout);
+
+	auto setVisibleWidget = new QCheckBox(tr("Show simulation progress"), this);
+	mainLayout->addWidget(setVisibleWidget);
+
+	QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
+	m_showProgress = settings.value("simulationprogress/show").value<bool>();
+	setVisibleWidget->setChecked(m_showProgress);
+
+	connect(setVisibleWidget, &QCheckBox::stateChanged, this, &ProgressWidget::setShowProgress);
+
 	m_view = new QGraphicsView(this);
 	auto scene = new QGraphicsScene(m_view);
 	m_view->setScene(scene);
@@ -44,7 +54,7 @@ ProgressWidget::ProgressWidget(QWidget* parent)
 	m_colormap = generateStandardQTColorTable(HOT_IRON);
 	QColor background(m_colormap[0]);
 	m_view->setBackgroundBrush(QBrush(background));
-
+	setLayout(mainLayout);
 	hide(); // we start hiding
 }
 
@@ -70,16 +80,28 @@ void ProgressWidget::setImageData(std::shared_ptr<DoseProgressImageData> data)
 		auto scene = m_view->scene();
 		m_pixItem->setPixmap(QPixmap::fromImage(qim));
 		m_pixItem->setTransform(transform);
-		show(); // we show ourselves
+		m_view->setVisible(m_showProgress);
 		m_view->fitInView(m_pixItem, Qt::KeepAspectRatio);
 	}
-	else {
-		hide();// hide stuff
-	}
+}
+
+void ProgressWidget::setShowProgress(bool status)
+{
+	m_showProgress = status;
+	m_view->setVisible(m_showProgress);
+	QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
+	settings.setValue("simulationprogress/show", m_showProgress);
 }
 
 void ProgressWidget::resizeEvent(QResizeEvent* event)
 {
 	QWidget::resizeEvent(event);
 	m_view->fitInView(m_pixItem, Qt::KeepAspectRatio);
+}
+
+
+void ProgressWidget::showEvent(QShowEvent* event)
+{
+	QWidget::showEvent(event);
+	m_view->setVisible(m_showProgress);
 }

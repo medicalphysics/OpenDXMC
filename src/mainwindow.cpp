@@ -308,14 +308,16 @@ void MainWindow::setProgressBar(ProgressBar* progressBar)
 
 void MainWindow::updateProgressBar()
 {
+	m_progressWidget->show();
 	if (m_progressBar)
 	{
 		const auto msg = m_progressBar->getETA();
-		auto test = m_progressBar->computeDoseProgressImage();
-		m_progressWidget->setImageData(m_progressBar->computeDoseProgressImage());
 		this->statusBar()->showMessage(QString::fromStdString(msg), 6000);
+		if (m_progressWidget->showProgress())
+			m_progressWidget->setImageData(m_progressBar->computeDoseProgressImage());
 	}
 	else {
+		m_progressWidget->hide();
 		m_progressTimer->stop();
 	}
 }

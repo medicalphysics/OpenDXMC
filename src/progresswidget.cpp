@@ -77,11 +77,13 @@ void ProgressWidget::setImageData(std::shared_ptr<DoseProgressImageData> data)
 			rot.rotate(90.0); // flipping image
 			transform = transform * rot;
 		}
-		auto scene = m_view->scene();
+		
 		m_pixItem->setPixmap(QPixmap::fromImage(qim));
 		m_pixItem->setTransform(transform);
+		const auto rect = m_pixItem->sceneBoundingRect();
+		m_view->scene()->setSceneRect(rect);
 		m_view->setVisible(m_showProgress);
-		m_view->fitInView(m_pixItem, Qt::KeepAspectRatio);
+		m_view->fitInView(rect, Qt::KeepAspectRatio);
 	}
 }
 

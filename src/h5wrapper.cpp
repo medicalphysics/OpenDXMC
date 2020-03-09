@@ -619,7 +619,7 @@ void H5Wrapper::loadTube(Tube& tube, const std::string& name, const std::string&
 		voltage_attr.read(H5::PredType::NATIVE_DOUBLE, &voltage);
 		auto er_attr = tubeGroup->openAttribute("energyResolution");
 		er_attr.read(H5::PredType::NATIVE_DOUBLE, &energyResolution);
-		auto angle_attr = tubeGroup->openAttribute("voltage");
+		auto angle_attr = tubeGroup->openAttribute("angle");
 		angle_attr.read(H5::PredType::NATIVE_DOUBLE, &angle);
 	}
 	catch (...)

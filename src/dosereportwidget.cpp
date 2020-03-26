@@ -120,7 +120,7 @@ void DoseReportModel::sort(int column, Qt::SortOrder order)
 		if (order == Qt::AscendingOrder)
 			std::sort(beg, end, [=](auto& left, auto& right) {return left.nEvents < right.nEvents; });
 		else
-			std::sort(beg, end, [=](auto& left, auto& right) {return left.voxels > right.voxels; });
+			std::sort(beg, end, [=](auto& left, auto& right) {return left.nEvents > right.nEvents; });
 	else if (column == 9)
 		if (order == Qt::AscendingOrder)
 			std::sort(beg, end, [=](auto &left, auto &right) {return left.ID < right.ID; });

@@ -586,7 +586,23 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume, std
 		m_scalarColorBar->SetNumberOfLabels(2);
 		m_colorTablePicker->setEnabled(true);
 	}
+	else if (m_image->imageType == ImageContainer::TallyImage)
+	{
+		prop->BackingOff();
+		prop->UseLookupTableScalarRangeOff();
+		//making sane window level ond center values from image data
+		m_windowLevels[m_image->imageType][0] = (m_image->minMax[0] + m_image->minMax[1]) * 0.5;
+		m_windowLevels[m_image->imageType][1] = (m_windowLevels[m_image->imageType][0] - m_image->minMax[0]);
+		prop->SetColorLevel(m_windowLevels[m_image->imageType][0]);
+		prop->SetColorWindow(m_windowLevels[m_image->imageType][1]);
 
+		m_colorTablePicker->setCurrentText("TURBO");
+		setColorTable("TURBO");
+		m_renderer->AddViewProp(m_scalarColorBar);
+		m_renderer->AddViewProp(m_textActorCorners);
+		m_scalarColorBar->SetNumberOfLabels(2);
+		m_colorTablePicker->setEnabled(true);
+	}
 	if (m_imageBackground)
 	{
 		if (m_imageBackground->image)

@@ -41,6 +41,7 @@ public:
 		MaterialImage,
 		DoseImage,
 		OrganImage,
+		TallyImage,
 		CustomType,
 		Empty
 	};
@@ -83,6 +84,9 @@ public:
 			return "DoseImage";
 		else if (type == ImageContainer::OrganImage)
 			return "OrganImage";
+		else if (type == ImageContainer::TallyImage)
+			return "DoseTallyImage";
+
 		return "Unknown";
 	}
 
@@ -107,10 +111,19 @@ public:
 		registerVector(imageData, dimensions, dataSpacing, origin, VTK_UNSIGNED_CHAR);
 		m_image_data_uchar = imageData;
 	}
+	ImageContainer(ImageType imageType, std::shared_ptr<std::vector<std::uint32_t>> imageData, const std::array<std::size_t, 3>& dimensions, const std::array<double, 3>& dataSpacing, const std::array<double, 3>& origin, const std::string& units = "")
+	{
+		this->imageType = imageType;
+		dataUnits = units;
+		registerVector(imageData, dimensions, dataSpacing, origin, VTK_UNSIGNED_INT);
+		m_image_data_uint32 = imageData;
+	}
+
 protected:
 	std::shared_ptr<std::vector<double>> m_image_data_double=nullptr;
 	std::shared_ptr<std::vector<float>> m_image_data_float=nullptr;
 	std::shared_ptr<std::vector<unsigned char>> m_image_data_uchar=nullptr;
+	std::shared_ptr<std::vector<std::uint32_t>> m_image_data_uint32 = nullptr;
 private:
 	template<typename T>
 	void registerVector(std::shared_ptr<std::vector<T>> imageData, const std::array<std::size_t, 3> &dimensions, const std::array<double, 3> &dataSpacing, const std::array<double, 3> &origin, int vtkType)
@@ -213,5 +226,20 @@ public:
 	std::shared_ptr<std::vector<unsigned char>> imageData(void)
 	{
 		return m_image_data_uchar;
+	}
+};
+
+class TallyImageContainer :public ImageContainer
+{
+public:
+	TallyImageContainer() :ImageContainer() { imageType = TallyImage; }
+	TallyImageContainer(std::shared_ptr<std::vector<std::uint32_t>> imageData, const std::array<std::size_t, 3>& dimensions, const std::array<double, 3>& dataSpacing, const std::array<double, 3>& origin)
+		:ImageContainer(TallyImage, imageData, dimensions, dataSpacing, origin)
+	{
+	}
+	virtual ~TallyImageContainer() = default;
+	std::shared_ptr<std::vector<std::uint32_t>> imageData(void)
+	{
+		return m_image_data_uint32;
 	}
 };

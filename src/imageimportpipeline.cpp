@@ -864,7 +864,8 @@ void ImageImportPipeline::importCTDIPhantom(int mm)
 		organMap.push_back(m.name());
 	}
 	//adding measurement holes
-	std::array<CTDIPhantom::HolePosition, 5> CTDIpositions = { CTDIPhantom::West, CTDIPhantom::East , CTDIPhantom::North , CTDIPhantom::South, CTDIPhantom::Center };
+	typedef CTDIPhantom::HolePosition holePosition;
+	std::array<CTDIPhantom::HolePosition, 5> CTDIpositions = { holePosition::West, holePosition::East, holePosition::North , holePosition::South, holePosition::Center };
 	organMap.push_back("CTDI measurement west");
 	organMap.push_back("CTDI measurement east");
 	organMap.push_back("CTDI measurement north");

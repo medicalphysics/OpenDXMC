@@ -294,7 +294,7 @@ QVariant SourceModel::headerData(int section, Qt::Orientation orientation, int r
 void SourceModel::addSource(Source::Type type)
 {
 	using std::placeholders::_1;
-	if (type == Source::CTSpiral)
+	if (type == Source::Type::CTSpiral)
 	{
 		auto src = std::make_shared<CTSpiralSource>();
 		std::array<double, 6> cosines = { -1, 0, 0, 0, 0, 1 };
@@ -331,7 +331,7 @@ void SourceModel::addSource(Source::Type type)
 		emit sourceAdded(std::static_pointer_cast<Source>(src));
 		emit layoutChanged();
 	}
-	else if (type == Source::CTAxial)
+	else if (type == Source::Type::CTAxial)
 	{
 		auto src = std::make_shared<CTAxialSource>();
 		std::array<double, 6> cosines = { -1, 0, 0, 0, 0, 1 };
@@ -366,7 +366,7 @@ void SourceModel::addSource(Source::Type type)
 		emit sourceAdded(std::static_pointer_cast<Source>(src));
 		emit layoutChanged();
 	}
-	else if (type == Source::CTDual)
+	else if (type == Source::Type::CTDual)
 	{
 		auto src = std::make_shared<CTDualSource>();
 		std::array<double, 6> cosines = { -1, 0, 0, 0, 0, 1 };
@@ -401,7 +401,7 @@ void SourceModel::addSource(Source::Type type)
 		emit sourceAdded(std::static_pointer_cast<Source>(src));
 		emit layoutChanged();
 	}
-	else if (type == Source::DX)
+	else if (type == Source::Type::DX)
 	{
 		auto src = std::make_shared<DXSource>();
 		std::array<double, 3> position = { 0, 0, 0 };
@@ -426,19 +426,19 @@ void SourceModel::addSource(std::shared_ptr<Source> src)
 {
 	std::shared_ptr<VolumeActorContainer> actor = nullptr;
 	switch (src->type()) {
-	case Source::DX:
+	case Source::Type::DX:
 		actor = std::make_shared<DXSourceContainer>(std::static_pointer_cast<DXSource>(src));
 		setupDXSource(std::static_pointer_cast<DXSource>(src));
 		break;
-	case Source::CTAxial:
+	case Source::Type::CTAxial:
 		actor = std::make_shared<CTAxialSourceContainer>(std::static_pointer_cast<CTAxialSource>(src));
 		setupCTAxialSource(std::static_pointer_cast<CTAxialSource>(src));
 		break;
-	case Source::CTSpiral:
+	case Source::Type::CTSpiral:
 		actor = std::make_shared<CTSpiralSourceContainer>(std::static_pointer_cast<CTSpiralSource>(src));
 		setupCTSpiralSource(std::static_pointer_cast<CTSpiralSource>(src));
 		break;
-	case Source::CTDual:
+	case Source::Type::CTDual:
 		actor = std::make_shared<CTDualSourceContainer>(std::static_pointer_cast<CTDualSource>(src));
 		setupCTDualSource(std::static_pointer_cast<CTDualSource>(src));
 		break;

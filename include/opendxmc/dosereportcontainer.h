@@ -36,6 +36,7 @@ struct DoseReportElement
 	double doseStd = 0.0;
 	double doseMax = 0.0;
 	std::size_t ID = 0;
+	std::size_t nEvents = 0;
 	std::string name;
 };
 
@@ -47,14 +48,17 @@ public:
 		const std::vector<Material>& materialMap, 
 		std::shared_ptr<MaterialImageContainer> materialImage, 
 		std::shared_ptr<DensityImageContainer> densityImage, 
-		std::shared_ptr<DoseImageContainer> doseImage);
+		std::shared_ptr<DoseImageContainer> doseImage,
+		std::shared_ptr<TallyImageContainer> tallyImage);
+
 	DoseReportContainer(
 		const std::vector<Material>& materialMap,
 		const std::vector<std::string>& organMap,
 		std::shared_ptr<MaterialImageContainer> materialImage,
 		std::shared_ptr<OrganImageContainer> organImage,
 		std::shared_ptr<DensityImageContainer> densityImage,
-		std::shared_ptr<DoseImageContainer> doseImage);
+		std::shared_ptr<DoseImageContainer> doseImage,
+		std::shared_ptr<TallyImageContainer> tallyImage);
 	std::shared_ptr<std::vector<DoseReportElement>> organData() const { return m_organValues; }
 	std::shared_ptr<std::vector<DoseReportElement>> materialData() const { return m_materialValues; }
 	const std::string& doseUnits(void) const { return m_doseUnits; }
@@ -64,12 +68,14 @@ protected:
 	std::vector<DoseReportElement> createData(const std::vector<std::string>& nameMap,
 		RegionImage regionImage,
 		std::shared_ptr<DensityImageContainer> densityImage,
-		std::shared_ptr<DoseImageContainer> doseImage) const;
+		std::shared_ptr<DoseImageContainer> doseImage,
+		std::shared_ptr<TallyImageContainer> tallyImage) const;
 	template<typename RegionImage>
 	std::vector<DoseReportElement> createData(const std::vector<Material>& nameMap,
 		RegionImage regionImage,
 		std::shared_ptr<DensityImageContainer> densityImage,
-		std::shared_ptr<DoseImageContainer> doseImage) const;
+		std::shared_ptr<DoseImageContainer> doseImage,
+		std::shared_ptr<TallyImageContainer> tallyImage) const;
 	void setDoseUnits(const std::string& units) { m_doseUnits = units; }
 
 private:

@@ -83,6 +83,8 @@ private:
 	std::shared_ptr<ImageContainer> m_organImage = nullptr;
 	std::shared_ptr<ImageContainer> m_ctImage = nullptr;
 	std::shared_ptr<ImageContainer> m_doseImage = nullptr;
+	std::shared_ptr<ImageContainer> m_tallyImage = nullptr;
+
 	std::vector<std::string> m_organList;
 	std::vector<Material> m_materialList;
 	std::vector<std::shared_ptr<Source>> m_sources;

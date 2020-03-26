@@ -130,28 +130,28 @@ bool H5Wrapper::saveSources(const std::vector<std::shared_ptr<Source>>& sources)
 	for (auto s : sources)
 	{
 		bool valid = false;
-		if (s->type() == Source::DX)
+		if (s->type() == Source::Type::DX)
 		{
 			auto s_downcast = std::static_pointer_cast<DXSource>(s);
 			auto path = groupPath + "/" + "DX";
 			auto name = std::to_string(tellerDX++);
 			valid = saveSource(s_downcast, name, path);
 		}
-		else if (s->type() == Source::CTAxial)
+		else if (s->type() == Source::Type::CTAxial)
 		{
 			auto s_downcast = std::static_pointer_cast<CTAxialSource>(s);
 			auto path = groupPath + "/" + "CTAxial";
 			auto name = std::to_string(tellerCTAxial++);
 			valid = saveSource(s_downcast, name, path);
 		}
-		else if (s->type() == Source::CTSpiral)
+		else if (s->type() == Source::Type::CTSpiral)
 		{
 			auto s_downcast = std::static_pointer_cast<CTSpiralSource>(s);
 			auto path = groupPath + "/" + "CTSpiral";
 			auto name = std::to_string(tellerCTSpiral++);
 			valid = saveSource(s_downcast, name, path);
 		}
-		else if (s->type() == Source::CTDual)
+		else if (s->type() == Source::Type::CTDual)
 		{
 			auto s_downcast = std::static_pointer_cast<CTDualSource>(s);
 			auto path = groupPath + "/" + "CTDual";
@@ -176,10 +176,10 @@ std::vector<std::shared_ptr<Source>> H5Wrapper::loadSources(void)
 		return sources;
 
 	std::map<std::string, Source::Type> sourceFolders;
-	sourceFolders["CTDual"] = Source::CTDual;
-	sourceFolders["CTAxial"] = Source::CTAxial;
-	sourceFolders["CTSpiral"] = Source::CTSpiral;
-	sourceFolders["DX"] = Source::DX;
+	sourceFolders["CTDual"] = Source::Type::CTDual;
+	sourceFolders["CTAxial"] = Source::Type::CTAxial;
+	sourceFolders["CTSpiral"] = Source::Type::CTSpiral;
+	sourceFolders["DX"] = Source::Type::DX;
 	
 	for (const auto [sourceFolder, type] : sourceFolders)
 	{
@@ -192,25 +192,25 @@ std::vector<std::shared_ptr<Source>> H5Wrapper::loadSources(void)
 			auto sourcepath = folderPath + "/" + name;
 			while (getGroup(sourcepath, false))
 			{
-				if (type == Source::DX)
+				if (type == Source::Type::DX)
 				{
 					auto src = std::make_shared<DXSource>();
 					bool valid = loadSource(src, name, folderPath);
 					if (valid)
 						sources.push_back(src);
-				} else if (type == Source::CTSpiral)
+				} else if (type == Source::Type::CTSpiral)
 				{
 					auto src = std::make_shared<CTSpiralSource>();
 					bool valid = loadSource(src, name, folderPath);
 					if (valid)
 						sources.push_back(src);
-				} else if (type == Source::CTAxial)
+				} else if (type == Source::Type::CTAxial)
 				{
 					auto src = std::make_shared<CTAxialSource>();
 					bool valid = loadSource(src, name, folderPath);
 					if (valid)
 						sources.push_back(src);
-				} else if (type == Source::CTDual)
+				} else if (type == Source::Type::CTDual)
 				{
 					auto src = std::make_shared<CTDualSource>();
 					bool valid = loadSource(src, name, folderPath);
@@ -419,6 +419,12 @@ std::shared_ptr<ImageContainer> H5Wrapper::loadDataSet(ImageContainer::ImageType
 			auto data = std::make_shared<std::vector<unsigned char>>(size);
 			unsigned char* buffer = data->data();
 			dataset->read(buffer, H5::PredType::NATIVE_UCHAR);
+			image = std::make_shared<ImageContainer>(type, data, dim, spacing, origin);
+		} else if (type_size == 4)
+		{
+			auto data = std::make_shared<std::vector<std::uint32_t>>(size);
+			std::uint32_t* buffer = data->data();
+			dataset->read(buffer, H5::PredType::NATIVE_UINT32);
 			image = std::make_shared<ImageContainer>(type, data, dim, spacing, origin);
 		}
 	}

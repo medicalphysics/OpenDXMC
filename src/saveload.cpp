@@ -43,6 +43,7 @@ void SaveLoad::loadFromFile(const QString& path)
 	m_densityImage = wrapper.loadImage(ImageContainer::DensityImage);
 	m_organImage = wrapper.loadImage(ImageContainer::OrganImage);
 	m_doseImage = wrapper.loadImage(ImageContainer::DoseImage);
+	m_tallyImage = wrapper.loadImage(ImageContainer::TallyImage);
 
 	m_materialList = wrapper.loadMaterials();
 	m_organList = wrapper.loadOrganList();
@@ -56,7 +57,8 @@ void SaveLoad::loadFromFile(const QString& path)
 				std::static_pointer_cast<MaterialImageContainer>(m_materialImage),
 				std::static_pointer_cast<OrganImageContainer>(m_organImage),
 				std::static_pointer_cast<DensityImageContainer>(m_densityImage),
-				std::static_pointer_cast<DoseImageContainer>(m_doseImage));
+				std::static_pointer_cast<DoseImageContainer>(m_doseImage),
+				std::static_pointer_cast<TallyImageContainer>(m_tallyImage));
 			emit doseDataChanged(cont);
 		}
 		else {
@@ -64,7 +66,8 @@ void SaveLoad::loadFromFile(const QString& path)
 				m_materialList, 
 				std::static_pointer_cast<MaterialImageContainer>(m_materialImage),
 				std::static_pointer_cast<DensityImageContainer>(m_densityImage),
-				std::static_pointer_cast<DoseImageContainer>(m_doseImage));
+				std::static_pointer_cast<DoseImageContainer>(m_doseImage),
+				std::static_pointer_cast<TallyImageContainer>(m_tallyImage));
 			emit doseDataChanged(cont);
 		}
 	}

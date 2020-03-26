@@ -58,8 +58,13 @@ void SimulationPipeline::runSimulation(const std::vector<std::shared_ptr<Source>
 	auto dummyImage = std::make_shared<DoseImageContainer>();
 	if(m_densityImage)
 		dummyImage->ID = m_densityImage->ID;
-
 	emit imageDataChanged(dummyImage);
+	
+	auto dummyTally = std::make_shared<TallyImageContainer>();
+	if (m_densityImage)
+		dummyTally->ID = m_densityImage->ID;
+	emit imageDataChanged(dummyTally);
+
 	DoseReportContainer dummyContainer;
 	emit doseDataChanged(dummyContainer);
 
@@ -88,7 +93,7 @@ void SimulationPipeline::runSimulation(const std::vector<std::shared_ptr<Source>
 	m_world.setDensityArray(m_densityImage->imageData());
 	
 	auto totalDose = std::make_shared<std::vector<double>>(m_world.size(), 0.0);
-
+	auto totalTally = std::make_shared<std::vector<std::uint32_t>>(m_world.size(), 0);
 	for (std::shared_ptr<Source> s : sources)
 	{
 		
@@ -96,8 +101,9 @@ void SimulationPipeline::runSimulation(const std::vector<std::shared_ptr<Source>
 		m_world.validate();
 		auto progressBar = std::make_unique<ProgressBar>(s->totalExposures());
 		emit progressBarChanged(progressBar.get());
-		auto dose = transport::run(m_world, s.get(), progressBar.get());
-		std::transform(std::execution::par_unseq, totalDose->begin(), totalDose->end(), dose.begin(), totalDose->begin(), std::plus<double>());
+		auto result = transport::run(m_world, s.get(), progressBar.get());
+		std::transform(std::execution::par_unseq, totalDose->begin(), totalDose->end(), result.dose.begin(), totalDose->begin(), std::plus<>());
+		std::transform(std::execution::par_unseq, totalTally->begin(), totalTally->end(), result.nEvents.begin(), totalTally->begin(), std::plus<>());
 		emit progressBarChanged(nullptr);
 	}
 
@@ -138,21 +144,27 @@ void SimulationPipeline::runSimulation(const std::vector<std::shared_ptr<Source>
 	doseContainer->ID = m_densityImage->ID;
 	doseContainer->dataUnits = dataUnits;
 
+	auto tallyContainer = std::make_shared<TallyImageContainer>(totalTally, dimensions, spacing, origin);
+	tallyContainer->directionCosines = m_densityImage->directionCosines;
+	tallyContainer->ID = m_densityImage->ID;
+	tallyContainer->dataUnits = "# Events";
+
 	if (m_organImage && (m_organList.size() > 0)) {
 		if (m_organImage->ID == m_materialImage->ID) {
-			DoseReportContainer cont(m_world.materialMap(), m_organList, m_materialImage, m_organImage, m_densityImage, doseContainer);
+			DoseReportContainer cont(m_world.materialMap(), m_organList, m_materialImage, m_organImage, m_densityImage, doseContainer, tallyContainer);
 			emit doseDataChanged(cont);
 		}
 		else {
-			DoseReportContainer cont(m_world.materialMap(), m_materialImage, m_densityImage, doseContainer);
+			DoseReportContainer cont(m_world.materialMap(), m_materialImage, m_densityImage, doseContainer, tallyContainer);
 			emit doseDataChanged(cont);
 		}
 	}
 	else {
-		DoseReportContainer cont(m_world.materialMap(), m_materialImage, m_densityImage, doseContainer);
+		DoseReportContainer cont(m_world.materialMap(), m_materialImage, m_densityImage, doseContainer, tallyContainer);
 		emit doseDataChanged(cont);
 	}
 	emit imageDataChanged(doseContainer);
+	emit imageDataChanged(tallyContainer);
 
 	emit processingDataEnded();
 }

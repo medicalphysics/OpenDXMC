@@ -84,7 +84,7 @@ class SourceModel :public QStandardItemModel
 public:
 	SourceModel(QObject *parent = nullptr);
 	QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
-	void addSource(Source::Type type = Source::CTSpiral);
+	void addSource(Source::Type type = Source::Type::CTSpiral);
 	void addSource(std::shared_ptr<Source> src);
 	void setSources(const std::vector<std::shared_ptr<Source>>& sources);
 	std::vector<std::shared_ptr<Source>>& sources() { return m_sources; }

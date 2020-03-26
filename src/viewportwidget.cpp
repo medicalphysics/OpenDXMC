@@ -223,5 +223,8 @@ QString ViewPortWidget::imageDescriptionName(int imageDescription)
 	else if (imageDescription == static_cast<int>(ImageContainer::CustomType)) {
 		return QString("Dose overlay");
 	}
+	else if (imageDescription == static_cast<int>(ImageContainer::TallyImage)) {
+		return QString("Dose tally data");
+	}
 	return QString();
 }

@@ -22,7 +22,7 @@ Copyright 2019 Erlend Andersen
 #include "opendxmc/dosereportcontainer.h"
 
 #include "dxmc/material.h"
-#include "dxmc/world.h"
+
 #include "dxmc/tube.h"
 #include "dxmc/source.h"
 #include "dxmc/progressbar.h"
@@ -71,10 +71,10 @@ signals:
 	void doseDataChanged(const DoseReportContainer& doses);
 
 private:
-	World m_world;
 	bool m_ignoreAirDose = true;
 	std::shared_ptr<DensityImageContainer> m_densityImage;
 	std::shared_ptr<MaterialImageContainer> m_materialImage;
 	std::shared_ptr<OrganImageContainer> m_organImage;
 	std::vector<std::string> m_organList;
+	std::vector<Material> m_materialList;
 };

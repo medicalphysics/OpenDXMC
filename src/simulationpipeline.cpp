@@ -20,6 +20,7 @@ Copyright 2019 Erlend Andersen
 
 #include "dxmc/transport.h"
 #include "dxmc/progressbar.h"
+#include "dxmc/world.h"
 
 #include "vtkType.h"
 
@@ -30,7 +31,6 @@ SimulationPipeline::SimulationPipeline(QObject *parent)
 	qRegisterMetaType<DoseReportContainer>();
 	qRegisterMetaType<std::shared_ptr<ProgressBar>>();
 	qRegisterMetaType<std::shared_ptr<ImageContainer>>();
-	m_world = World();	
 }
 
 void SimulationPipeline::setImageData(std::shared_ptr<ImageContainer> image)
@@ -46,9 +46,7 @@ void SimulationPipeline::setImageData(std::shared_ptr<ImageContainer> image)
 
 void SimulationPipeline::setMaterials(const std::vector<Material>& materials)
 {
-	m_world.clearMaterialMap();
-	for (auto const & material : materials)
-		m_world.addMaterialToMap(material);
+	m_materialList = materials;
 }
 
 void SimulationPipeline::runSimulation(const std::vector<std::shared_ptr<Source>> sources)
@@ -86,22 +84,24 @@ void SimulationPipeline::runSimulation(const std::vector<std::shared_ptr<Source>
 		spacing[i] = (m_densityImage->image->GetSpacing())[i];
 		dimensions[i]= static_cast<std::size_t>((m_densityImage->image->GetDimensions())[i]);
 	}
-	m_world.setSpacing(spacing);
-	m_world.setDimensions(dimensions);
-	m_world.setDirectionCosines(m_densityImage->directionCosines);
-	m_world.setMaterialIndexArray(m_materialImage->imageData());
-	m_world.setDensityArray(m_densityImage->imageData());
+	World world;
+	world.setSpacing(spacing);
+	world.setDimensions(dimensions);
+	world.setDirectionCosines(m_densityImage->directionCosines);
+	world.setMaterialIndexArray(m_materialImage->imageData());
+	world.setDensityArray(m_densityImage->imageData());
+
 	
-	auto totalDose = std::make_shared<std::vector<double>>(m_world.size(), 0.0);
-	auto totalTally = std::make_shared<std::vector<std::uint32_t>>(m_world.size(), 0);
+	auto totalDose = std::make_shared<std::vector<double>>(world.size(), 0.0);
+	auto totalTally = std::make_shared<std::vector<std::uint32_t>>(world.size(), 0);
 	for (std::shared_ptr<Source> s : sources)
 	{
 		
-		m_world.setAttenuationLutMaxEnergy(s->maxPhotonEnergyProduced());
-		m_world.validate();
+		world.setAttenuationLutMaxEnergy(s->maxPhotonEnergyProduced());
+		world.validate();
 		auto progressBar = std::make_unique<ProgressBar>(s->totalExposures());
 		emit progressBarChanged(progressBar.get());
-		auto result = transport::run(m_world, s.get(), progressBar.get());
+		auto result = transport::run(world, s.get(), progressBar.get());
 		std::transform(std::execution::par_unseq, totalDose->begin(), totalDose->end(), result.dose.begin(), totalDose->begin(), std::plus<>());
 		std::transform(std::execution::par_unseq, totalTally->begin(), totalTally->end(), result.nEvents.begin(), totalTally->begin(), std::plus<>());
 		emit progressBarChanged(nullptr);
@@ -110,8 +110,8 @@ void SimulationPipeline::runSimulation(const std::vector<std::shared_ptr<Source>
 
 	if (m_ignoreAirDose)
 	{
-		auto mat = m_world.materialIndexArray();
-		auto mat0 = m_world.materialMap().at(0);
+		auto mat = world.materialIndexArray();
+		auto mat0 = world.materialMap().at(0);
 		if (mat0.name().compare("Air, Dry (near sea level)")==0) //ignore air only if present
 		{
 			std::transform(std::execution::par_unseq, totalDose->begin(), totalDose->end(), mat->begin(), totalDose->begin(),
@@ -151,16 +151,16 @@ void SimulationPipeline::runSimulation(const std::vector<std::shared_ptr<Source>
 
 	if (m_organImage && (m_organList.size() > 0)) {
 		if (m_organImage->ID == m_materialImage->ID) {
-			DoseReportContainer cont(m_world.materialMap(), m_organList, m_materialImage, m_organImage, m_densityImage, doseContainer, tallyContainer);
+			DoseReportContainer cont(world.materialMap(), m_organList, m_materialImage, m_organImage, m_densityImage, doseContainer, tallyContainer);
 			emit doseDataChanged(cont);
 		}
 		else {
-			DoseReportContainer cont(m_world.materialMap(), m_materialImage, m_densityImage, doseContainer, tallyContainer);
+			DoseReportContainer cont(world.materialMap(), m_materialImage, m_densityImage, doseContainer, tallyContainer);
 			emit doseDataChanged(cont);
 		}
 	}
 	else {
-		DoseReportContainer cont(m_world.materialMap(), m_materialImage, m_densityImage, doseContainer, tallyContainer);
+		DoseReportContainer cont(world.materialMap(), m_materialImage, m_densityImage, doseContainer, tallyContainer);
 		emit doseDataChanged(cont);
 	}
 	emit imageDataChanged(doseContainer);

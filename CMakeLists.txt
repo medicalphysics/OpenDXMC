@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.14...3.16)
 
-project(OpenDXMC VERSION 0.1.14 DESCRIPTION "OpenDXMC description" LANGUAGES CXX C)
+project(OpenDXMC VERSION 0.1.15 DESCRIPTION "OpenDXMC description" LANGUAGES CXX C)
 
 set(CMAKE_CONFIGURATION_TYPES Debug Release RelWithDebInfo MinSizeRel)
 

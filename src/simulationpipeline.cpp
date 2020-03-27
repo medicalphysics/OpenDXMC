@@ -90,7 +90,8 @@ void SimulationPipeline::runSimulation(const std::vector<std::shared_ptr<Source>
 	world.setDirectionCosines(m_densityImage->directionCosines);
 	world.setMaterialIndexArray(m_materialImage->imageData());
 	world.setDensityArray(m_densityImage->imageData());
-
+	for (const Material& m : m_materialList)
+		world.addMaterialToMap(m);
 	
 	auto totalDose = std::make_shared<std::vector<double>>(world.size(), 0.0);
 	auto totalTally = std::make_shared<std::vector<std::uint32_t>>(world.size(), 0);

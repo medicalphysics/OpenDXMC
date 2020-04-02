@@ -70,12 +70,10 @@ ViewPortWidget::ViewPortWidget(QWidget* parent)
 	lowerHSplitter->addWidget(m_sliceRenderWidgetSagittal);
 	
 	this->setLayout(mainLayout);
-
 }
 
 ViewPortWidget::~ViewPortWidget()
 {
-
 }
 
 void ViewPortWidget::setImageData(std::shared_ptr<ImageContainer> volumeData)
@@ -204,7 +202,6 @@ void ViewPortWidget::updateVolumeSelectorWidget()
 
 QString ViewPortWidget::imageDescriptionName(int imageDescription)
 {
-
 	if (imageDescription == static_cast<int>(ImageContainer::CTImage)) {
 		return QString("CT data");
 	}
@@ -224,7 +221,10 @@ QString ViewPortWidget::imageDescriptionName(int imageDescription)
 		return QString("Dose overlay");
 	}
 	else if (imageDescription == static_cast<int>(ImageContainer::TallyImage)) {
-		return QString("Dose tally data");
+		return QString("Dose tally");
+	}
+	else if (imageDescription == static_cast<int>(ImageContainer::VarianceImage)) {
+		return QString("Dose variance");
 	}
 	return QString();
 }

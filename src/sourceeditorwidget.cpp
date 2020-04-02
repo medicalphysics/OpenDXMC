@@ -156,7 +156,7 @@ SourceDelegate::SourceDelegate(QObject *parent)
 QWidget *SourceDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
 	auto userType = index.data(Qt::DisplayRole).userType();
-	if (userType == qMetaTypeId<std::shared_ptr<BeamFilter>>())
+	if (userType == qMetaTypeId<std::shared_ptr<BowTieFilter>>())
 	{
 		QComboBox *cb = new QComboBox(parent);
 		for (auto &[name, filter] : m_bowtieFilters)
@@ -165,7 +165,7 @@ QWidget *SourceDelegate::createEditor(QWidget *parent, const QStyleOptionViewIte
 		}
 		return cb;
 	}
-	else if (userType == qMetaTypeId<std::shared_ptr<PositionalFilter>>())
+	else if (userType == qMetaTypeId<std::shared_ptr<AECFilter>>())
 	{
 		QComboBox *cb = new QComboBox(parent);
 		for (const auto &[name, filter] : m_aecFilters)
@@ -181,9 +181,9 @@ QWidget *SourceDelegate::createEditor(QWidget *parent, const QStyleOptionViewIte
 void SourceDelegate::setEditorData(QWidget *editor, const QModelIndex &index) const
 {
 	auto userType = index.data(Qt::DisplayRole).userType();
-	if (userType == qMetaTypeId<std::shared_ptr<BeamFilter>>())
+	if (userType == qMetaTypeId<std::shared_ptr<BowTieFilter>>())
 	{
-		auto currentFilter = qvariant_cast<std::shared_ptr<BeamFilter>>(index.data(Qt::EditRole));
+		auto currentFilter = qvariant_cast<std::shared_ptr<BowTieFilter>>(index.data(Qt::EditRole));
 		auto cb = qobject_cast<QComboBox*>(editor);
 		int teller = 0;
 		for (auto &[name, filter] : m_bowtieFilters)
@@ -196,9 +196,9 @@ void SourceDelegate::setEditorData(QWidget *editor, const QModelIndex &index) co
 			teller++;
 		}
 	}
-	else if (userType == qMetaTypeId<std::shared_ptr<PositionalFilter>>())
+	else if (userType == qMetaTypeId<std::shared_ptr<AECFilter>>())
 	{
-		auto currentFilter = qvariant_cast<std::shared_ptr<PositionalFilter>>(index.data(Qt::EditRole));
+		auto currentFilter = qvariant_cast<std::shared_ptr<AECFilter>>(index.data(Qt::EditRole));
 		auto cb = qobject_cast<QComboBox*>(editor);
 		int teller = 0;
 		for (const auto &[name, filter] : m_aecFilters)
@@ -218,7 +218,7 @@ void SourceDelegate::setEditorData(QWidget *editor, const QModelIndex &index) co
 void SourceDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const
 {
 	auto userType = index.data(Qt::DisplayRole).userType();
-	if (userType == qMetaTypeId<std::shared_ptr<BeamFilter>>())
+	if (userType == qMetaTypeId<std::shared_ptr<BowTieFilter>>())
 	{
 		auto cb = qobject_cast<QComboBox *>(editor);
 		auto idx = cb->currentIndex();
@@ -227,7 +227,7 @@ void SourceDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, co
 		auto data = QVariant::fromValue(m_bowtieFilters[idx].second);
 		model->setData(index, data, Qt::EditRole);
 	}
-	else if (userType == qMetaTypeId<std::shared_ptr<PositionalFilter>>())
+	else if (userType == qMetaTypeId<std::shared_ptr<AECFilter>>())
 	{
 		auto cb = qobject_cast<QComboBox *>(editor);
 		auto idx = cb->currentText();
@@ -245,9 +245,9 @@ void SourceDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, co
 QString SourceDelegate::displayText(const QVariant & value, const QLocale & locale) const
 {
 	auto userType = value.userType();
-	if (userType == qMetaTypeId<std::shared_ptr<BeamFilter>>())
+	if (userType == qMetaTypeId<std::shared_ptr<BowTieFilter>>())
 	{
-		auto currentFilter = qvariant_cast<std::shared_ptr<BeamFilter>>(value);
+		auto currentFilter = qvariant_cast<std::shared_ptr<BowTieFilter>>(value);
 		int teller = 0;
 		for (auto &[name, filter] : m_bowtieFilters)
 		{
@@ -258,9 +258,9 @@ QString SourceDelegate::displayText(const QVariant & value, const QLocale & loca
 			teller++;
 		}
 	}
-	else if (userType == qMetaTypeId<std::shared_ptr<PositionalFilter>>())
+	else if (userType == qMetaTypeId<std::shared_ptr<AECFilter>>())
 	{
-		auto currentFilter = qvariant_cast<std::shared_ptr<PositionalFilter>>(value);
+		auto currentFilter = qvariant_cast<std::shared_ptr<AECFilter>>(value);
 		int teller = 0;
 		for (auto &[name, filter] : m_aecFilters)
 		{
@@ -274,10 +274,17 @@ QString SourceDelegate::displayText(const QVariant & value, const QLocale & loca
 	return QStyledItemDelegate::displayText(value, locale);
 }
 
+void SourceDelegate::addBowtieFilter(const QString& name, std::shared_ptr<BowTieFilter> filter) {
+	m_bowtieFilters.push_back(std::make_pair(name, filter));
+	std::sort(m_bowtieFilters.begin(), m_bowtieFilters.end());
+}
+void SourceDelegate::addAecFilter(const QString& name, std::shared_ptr<AECFilter> filter) { 
+	m_aecFilters[name] = filter; 
+}
+
 SourceModelView::SourceModelView(QWidget* parent)
 	:QTreeView(parent)
 {
-
 }
 void SourceModelView::keyPressEvent(QKeyEvent* event)
 {	
@@ -344,10 +351,8 @@ SourceEditWidget::SourceEditWidget(QWidget *parent)
 		m_delegate->addBowtieFilter(name, filter);
 	}
 
-	///////////////////
 	
-	
-	//test//
+	//Perhaps make an interface to start and stop simulations//
 	auto runbutton = new QPushButton(tr("Run simulation"), this);
 	mainLayout->addWidget(runbutton);
 	connect(runbutton, &QPushButton::clicked, this, &SourceEditWidget::requestRunSimulation);

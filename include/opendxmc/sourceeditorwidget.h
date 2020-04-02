@@ -64,12 +64,12 @@ public:
 	void setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const override;
 	QString displayText(const QVariant& value, const QLocale& locale) const override;
 
-	void addBowtieFilter(const QString& name, std::shared_ptr<BeamFilter> filter) { m_bowtieFilters.push_back(std::make_pair(name, filter));  std::sort(m_bowtieFilters.begin(), m_bowtieFilters.end());}
-	void addAecFilter(const QString& name, std::shared_ptr<PositionalFilter> filter) { m_aecFilters[name] = filter; }
+	void addBowtieFilter(const QString& name, std::shared_ptr<BowTieFilter> filter);  
+	void addAecFilter(const QString& name, std::shared_ptr<AECFilter> filter);
 
 private:
-	std::vector<std::pair<QString, std::shared_ptr<BeamFilter>>> m_bowtieFilters;
-	std::map<QString, std::shared_ptr<PositionalFilter>> m_aecFilters;
+	std::vector<std::pair<QString, std::shared_ptr<BowTieFilter>>> m_bowtieFilters;
+	std::map<QString, std::shared_ptr<AECFilter>> m_aecFilters;
 };
 
 class SourceModelView : public QTreeView
@@ -78,10 +78,8 @@ class SourceModelView : public QTreeView
 public:
 	SourceModelView(QWidget* parent = nullptr);
 protected:
-	void keyPressEvent(QKeyEvent *event) override;
-
+	void keyPressEvent(QKeyEvent* event) override;
 };
-
 
 class SourceEditWidget : public QWidget
 {

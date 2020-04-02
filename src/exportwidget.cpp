@@ -137,11 +137,36 @@ std::array<char, EXPORT_HEADER_SIZE> ExportWidget::getHeaderData(std::shared_ptr
 	auto spacing = image->image->GetSpacing();
 	auto cosines = image->directionCosines;
 
+	auto array_name = image->getImageName();
+	auto image_scalar_type = image->image->GetScalarType();
+	std::string image_scalar_name("unknown");
+	int image_scalar_size = 0;
+	if (image_scalar_type == VTK_FLOAT)
+	{
+		image_scalar_name = "float";
+		image_scalar_size = sizeof(float);
+	}
+	if (image_scalar_type == VTK_DOUBLE)
+	{
+		image_scalar_name = "double";
+		image_scalar_size = sizeof(double);
+	}
+	if (image_scalar_type == VTK_UNSIGNED_CHAR)
+	{
+		image_scalar_name = "unsigned char";
+		image_scalar_size = sizeof(unsigned char);
+	}
+	if (image_scalar_type == VTK_UNSIGNED_INT)
+	{
+		image_scalar_name = "unsigned int";
+		image_scalar_size = sizeof(unsigned int);
+	}
+
 	header << "# HEADER_DATA_BEGIN: " << EXPORT_HEADER_SIZE << std::endl;
 	header << "# HEADER_SIZE: " << EXPORT_HEADER_SIZE << std::endl;
-	header << "# SCALAR_ARRAY: " << "ORGANDATA" << std::endl;
-	header << "# SCALAR_TYPE: " << "unsigned char" << std::endl;
-	header << "# SCALAR_SIZE_IN_BYTES: " << sizeof(unsigned char) << std::endl;
+	header << "# SCALAR_ARRAY: " << array_name << std::endl;
+	header << "# SCALAR_TYPE: " << image_scalar_name << std::endl;
+	header << "# SCALAR_SIZE_IN_BYTES: " << image_scalar_size << std::endl;
 	header << "# WIDTH: " << dimensions[0] << std::endl;
 	header << "# HEIGHT: " << dimensions[1] << std::endl;
 	header << "# DEPTH: " << dimensions[2] << std::endl;

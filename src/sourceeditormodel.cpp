@@ -29,7 +29,7 @@ SourceItem<S, T>::SourceItem(std::shared_ptr<S> source, std::function<void(T)> s
 }
 
 template<>
-QVariant SourceItem<CTSource, std::shared_ptr<BeamFilter>>::data(int role) const
+QVariant SourceItem<CTSource, std::shared_ptr<BowTieFilter>>::data(int role) const
 {
 	if (role == Qt::DisplayRole || role == Qt::EditRole)
 	{
@@ -39,17 +39,17 @@ QVariant SourceItem<CTSource, std::shared_ptr<BeamFilter>>::data(int role) const
 }
 
 template<>
-void SourceItem<CTSource, std::shared_ptr<BeamFilter>>::setData(const QVariant& data, int role)
+void SourceItem<CTSource, std::shared_ptr<BowTieFilter>>::setData(const QVariant& data, int role)
 {
 	if (role == Qt::DisplayRole || role == Qt::EditRole) {
-		auto val = qvariant_cast<std::shared_ptr<BeamFilter>>(data);
+		auto val = qvariant_cast<std::shared_ptr<BowTieFilter>>(data);
 		f_setData(val);
 		emitDataChanged();
 	}
 }
 
 template<>
-QVariant SourceItem<CTDualSource, std::shared_ptr<BeamFilter>>::data(int role) const
+QVariant SourceItem<CTDualSource, std::shared_ptr<BowTieFilter>>::data(int role) const
 {
 	if (role == Qt::DisplayRole || role == Qt::EditRole)
 	{
@@ -59,17 +59,17 @@ QVariant SourceItem<CTDualSource, std::shared_ptr<BeamFilter>>::data(int role) c
 }
 
 template<>
-void SourceItem<CTDualSource, std::shared_ptr<BeamFilter>>::setData(const QVariant& data, int role)
+void SourceItem<CTDualSource, std::shared_ptr<BowTieFilter>>::setData(const QVariant& data, int role)
 {
 	if (role == Qt::DisplayRole || role == Qt::EditRole) {
-		auto val = qvariant_cast<std::shared_ptr<BeamFilter>>(data);
+		auto val = qvariant_cast<std::shared_ptr<BowTieFilter>>(data);
 		f_setData(val);
 		emitDataChanged();
 	}
 }
 
 template<>
-QVariant SourceItem<CTSource, std::shared_ptr<PositionalFilter>>::data(int role) const
+QVariant SourceItem<CTSource, std::shared_ptr<AECFilter>>::data(int role) const
 {
 	if (role == Qt::DisplayRole || role == Qt::EditRole)
 	{
@@ -79,10 +79,10 @@ QVariant SourceItem<CTSource, std::shared_ptr<PositionalFilter>>::data(int role)
 }
 
 template<>
-void SourceItem<CTSource, std::shared_ptr<PositionalFilter>>::setData(const QVariant& data, int role)
+void SourceItem<CTSource, std::shared_ptr<AECFilter>>::setData(const QVariant& data, int role)
 {
 	if (role == Qt::DisplayRole || role == Qt::EditRole) {
-		auto val = qvariant_cast<std::shared_ptr<PositionalFilter>>(data);
+		auto val = qvariant_cast<std::shared_ptr<AECFilter>>(data);
 		f_setData(val);
 		emitDataChanged();
 	}
@@ -683,14 +683,14 @@ void SourceModel::setupCTSource(std::shared_ptr<CTSource> src, QStandardItem* pa
 	setupTube(src, tubeNode);
 	nodes.append(qMakePair(QString(), tubeNode));
 
-	auto bowItem = new SourceItem<CTSource, std::shared_ptr<BeamFilter>>(src,
-		[=](std::shared_ptr<BeamFilter> val) {src->setBowTieFilter(val); },
+	auto bowItem = new SourceItem<CTSource, std::shared_ptr<BowTieFilter>>(src,
+		[=](std::shared_ptr<BowTieFilter> val) {src->setBowTieFilter(val); },
 		[=]() {return src->bowTieFilter(); });
 	nodes.append(qMakePair(QString("Select bowtie filter"), static_cast<QStandardItem*>(bowItem)));
 
-	auto aecItem = new SourceItem<CTSource, std::shared_ptr<PositionalFilter>>(src,
-		[=](std::shared_ptr<PositionalFilter> val) {src->setPositionalFilter(val); },
-		[=]() {return src->positionalFilter(); });
+	auto aecItem = new SourceItem<CTSource, std::shared_ptr<AECFilter>>(src,
+		[=](std::shared_ptr<AECFilter> val) {src->setAecFilter(val); },
+		[=]() {return src->aecFilter(); });
 	nodes.append(qMakePair(QString("Select tube current modulation profile"), static_cast<QStandardItem*>(aecItem)));
 
 	auto xcareItem = new QStandardItem("Organ exposure control");
@@ -865,12 +865,12 @@ void SourceModel::setupCTDualSource(std::shared_ptr<CTDualSource> src)
 	setupTube(src, tubeNodeA);
 	setupTubeB(src, tubeNodeB);
 	
-	auto bowItema = new SourceItem<CTDualSource, std::shared_ptr<BeamFilter>>(src,
-		[=](std::shared_ptr<BeamFilter> val) {src->setBowTieFilter(val); },
+	auto bowItema = new SourceItem<CTDualSource, std::shared_ptr<BowTieFilter>>(src,
+		[=](std::shared_ptr<BowTieFilter> val) {src->setBowTieFilter(val); },
 		[=]() {return src->bowTieFilter(); });
 	tubeANodes.append(qMakePair(QString("Select bowtie filter"), static_cast<QStandardItem*>(bowItema)));
-	auto bowItemb = new SourceItem<CTDualSource, std::shared_ptr<BeamFilter>>(src,
-		[=](std::shared_ptr<BeamFilter> val) {src->setBowTieFilterB(val); },
+	auto bowItemb = new SourceItem<CTDualSource, std::shared_ptr<BowTieFilter>>(src,
+		[=](std::shared_ptr<BowTieFilter> val) {src->setBowTieFilterB(val); },
 		[=]() {return src->bowTieFilterB(); });
 	tubeBNodes.append(qMakePair(QString("Select bowtie filter"), static_cast<QStandardItem*>(bowItemb)));
 
@@ -883,9 +883,9 @@ void SourceModel::setupCTDualSource(std::shared_ptr<CTDualSource> src)
 		[=]() {return src->tubeBmas(); });
 	tubeBNodes.append(qMakePair(QString("Relative tube current for tube B [mAs]"), static_cast<QStandardItem*>(masItemb)));
 
-	auto aecItema = new SourceItem<CTSource, std::shared_ptr<PositionalFilter>>(src,
-		[=](std::shared_ptr<PositionalFilter> val) {src->setPositionalFilter(val); },
-		[=]() {return src->positionalFilter(); });
+	auto aecItema = new SourceItem<CTSource, std::shared_ptr<AECFilter>>(src,
+		[=](std::shared_ptr<AECFilter> val) {src->setAecFilter(val); },
+		[=]() {return src->aecFilter(); });
 	commonNodes.append(qMakePair(QString("Select tube current modulation profile"), static_cast<QStandardItem*>(aecItema)));
 	
 	auto xcareItem = new QStandardItem("Organ exposure control");

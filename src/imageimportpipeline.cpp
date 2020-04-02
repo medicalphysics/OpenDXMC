@@ -249,14 +249,23 @@ void ImageImportPipeline::processCTData(std::shared_ptr<ImageContainer> ctImage,
 	const auto& exposurename = exposureData.first;
 	const auto& exposure = exposureData.second;
 
-
+	//interpolating exposure to reduced image data
+	std::vector<double> exposure_interp(dimensionsArray[2], 1.0);
+	if (dimensionsArray[2] > 1)
+	{	
+		const std::size_t exposureSize = exposure.size();
+		for (std::size_t i = 0; i < dimensionsArray[2]; ++i)
+		{
+			const std::size_t ind = static_cast<std::size_t>(static_cast<double>(i) / (dimensionsArray[2] - 1) * (exposureSize - 1));
+			exposure_interp[i] = exposure[ind];
+		}
+	}
 	if (exposure.size() > 0)
 	{
-		auto aecFilter = std::make_shared<AECFilter>(density, spacing, dimensionsArray, exposure);
+		auto aecFilter = std::make_shared<AECFilter>(density, spacing, dimensionsArray, exposure_interp);
 		QString filtername = QString::fromStdString(exposurename);
 		emit aecFilterChanged(filtername, aecFilter);
 	}
-
 }
 
 std::pair<std::string, std::vector<double>> ImageImportPipeline::readExposureData(vtkSmartPointer<vtkDICOMReader>& dicomReader)
@@ -742,7 +751,6 @@ AWSImageData readAWSData(const std::string& path)
 				cosines[5] = std::stod(lv[1]);
 			}
 		}
-
 	}
 	
 	const std::size_t imageSize = dimensions[0] * dimensions[1] * dimensions[2];
@@ -757,7 +765,6 @@ AWSImageData readAWSData(const std::string& path)
 	input.seekg(0, std::ios::beg);
 	input.read(reinterpret_cast<char*>(organArray->data()), imageSize+headerSize);
 	organArray->erase(organArray->begin(), organArray->begin() + headerSize);
-
 
 	AWSImageData data;
 	data.dimensions = dimensions;
@@ -790,10 +797,8 @@ void ImageImportPipeline::importAWSPhantom(const QString& name)
 	for (std::size_t i = 0; i < 3; ++i)
 		origin[i] = -(dimensions[i] * spacing[i] * 0.5);
 
-
 	auto [materialArray, densityArray] = generateICRUPhantomArrays(*organArray, organs, media);
 	
-
 	bool valid = true;
 	std::vector<std::string> organMap(organs.size());
 	std::vector<Material> materialMap(media.size());
@@ -837,8 +842,6 @@ void ImageImportPipeline::importAWSPhantom(const QString& name)
 	emit processingDataEnded();
 }
 
-
-
 void ImageImportPipeline::importCTDIPhantom(int mm)
 {
 	emit processingDataStarted();
@@ -879,7 +882,6 @@ void ImageImportPipeline::importCTDIPhantom(int mm)
 		for (auto ind : idx)
 			organBuffer[ind] = static_cast<unsigned char>(i + nMaterials);
 	}
-
 
 	auto materialImage = std::make_shared<MaterialImageContainer>(materialArray, dimensions, spacing, origin);
 	auto densityImage = std::make_shared<DensityImageContainer>(densityArray, dimensions, spacing, origin);

@@ -293,6 +293,8 @@ std::unique_ptr<H5::DataSet> H5Wrapper::createDataSet(std::shared_ptr<ImageConta
 		type = H5::PredType::NATIVE_FLOAT;
 	else if (image->image->GetScalarType() == VTK_UNSIGNED_CHAR)
 		type = H5::PredType::NATIVE_UCHAR;
+	else if (image->image->GetScalarType() == VTK_UNSIGNED_INT)
+		type = H5::PredType::NATIVE_UINT32;
 	else
 		return nullptr;
 	auto dataset = std::make_unique<H5::DataSet>(group->createDataSet(namePath.c_str(), type, *dataspace, ds_createplist));
@@ -775,6 +777,28 @@ bool H5Wrapper::saveSource(std::shared_ptr<CTSource> src, const std::string& nam
 	if (!tubeGroup)
 		return false;
 
+	//saving AEC profile
+	if (auto filter = src->aecFilter(); filter)
+	{
+		auto aecPath = srcPath + "/" + "AECData";
+		saveDoubleList(filter->mass(), "AECmass", aecPath);
+		saveDoubleList(filter->massIntensity(), "AECintensity", aecPath);
+	}
+	//save bowtiefilter
+	if (auto filter = src->bowTieFilter(); filter)
+	{
+		auto bowtiePath = srcPath + "/" + "BowTieData";
+		auto data = filter->data();
+		std::vector<double> x, y;
+		for (auto [angle, weight] : data)
+		{
+			x.push_back(angle);
+			y.push_back(weight);
+		}
+		saveDoubleList(x, "BowTieAngle", bowtiePath);
+		saveDoubleList(y, "BowTieWeight", bowtiePath);
+	}
+
 	const hsize_t dim1 = 1;
 	H5::DataSpace doubleSpace1(1, &dim1);
 
@@ -864,6 +888,21 @@ bool H5Wrapper::saveSource(std::shared_ptr<CTDualSource> src, const std::string&
 	if (!saveTube(tubeB, "TubeB", srcPath))
 		return false;
 
+	//save bowtiefilter
+	if (auto filter = src->bowTieFilterB(); filter)
+	{
+		auto bowtiePath = srcPath + "/" + "BowTieDataB";
+		auto data = filter->data();
+		std::vector<double> x, y;
+		for (auto [angle, weight] : data)
+		{
+			x.push_back(angle);
+			y.push_back(weight);
+		}
+		saveDoubleList(x, "BowTieAngle", bowtiePath);
+		saveDoubleList(y, "BowTieWeight", bowtiePath);
+	}
+
 	const hsize_t dim1 = 1;
 	H5::DataSpace doubleSpace1(1, &dim1);
 
@@ -946,6 +985,26 @@ bool H5Wrapper::loadSource(std::shared_ptr<CTSource> src, const std::string& nam
 		return false;
 	loadTube(src->tube(), "Tube", path.c_str());
 
+	//loading aec data
+	auto aecPath = path + "/" + "AECData";
+	auto aecGroup = getGroup(aecPath, false);
+	if (aecGroup)
+	{
+		auto aecMass = loadDoubleList("AECmass", aecPath);
+		auto aecIntensity = loadDoubleList("AECintensity", aecPath);
+		auto aec = std::make_shared<AECFilter>(aecMass, aecIntensity);
+		src->setAecFilter(aec);
+	}
+	//loading bowtie data
+	auto bowtiePath = path + "/" + "BowTieData";
+	auto bowtieGroup = getGroup(bowtiePath, false);
+	if (bowtieGroup)
+	{
+		auto angles = loadDoubleList("BowTieAngle", bowtiePath);
+		auto weight = loadDoubleList("BowTieWeight", bowtiePath);
+		auto bowtie = std::make_shared<BowTieFilter>(angles, weight);
+		src->setBowTieFilter(bowtie);
+	}
 	
 	std::map<std::string, double> d1par;
 	d1par["sdd"] = src->sourceDetectorDistance();
@@ -1068,6 +1127,17 @@ bool H5Wrapper::loadSource(std::shared_ptr<CTDualSource> src, const std::string&
 	if (!loadSource(std::static_pointer_cast<CTSource>(src), name.c_str(), groupPath.c_str()))
 		return false;
 	loadTube(src->tubeB(), "TubeB", path.c_str());
+
+	//loading bowtie data
+	auto bowtiePath = path + "/" + "BowTieDataB";
+	auto bowtieGroup = getGroup(bowtiePath, false);
+	if (bowtieGroup)
+	{
+		auto angles = loadDoubleList("BowTieAngle", bowtiePath);
+		auto weight = loadDoubleList("BowTieWeight", bowtiePath);
+		auto bowtie = std::make_shared<BowTieFilter>(angles, weight);
+		src->setBowTieFilterB(bowtie);
+	}
 
 	std::map<std::string, double> d1par;
 	d1par["sddB"] = src->sourceDetectorDistanceB();

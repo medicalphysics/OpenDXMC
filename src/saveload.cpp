@@ -27,6 +27,7 @@ SaveLoad::SaveLoad(QObject* parent)
 	qRegisterMetaType<std::vector<std::string >>();
 	qRegisterMetaType<std::shared_ptr<ImageContainer>>();
 	qRegisterMetaType<DoseReportContainer>();
+	qRegisterMetaType<std::shared_ptr<BowTieFilter>>();
 }
 
 
@@ -38,56 +39,102 @@ void SaveLoad::loadFromFile(const QString& path)
 	m_sources.clear();
 
 	H5Wrapper wrapper(path.toStdString(), H5Wrapper::FileOpenType::ReadOnly);
-	m_ctImage = wrapper.loadImage(ImageContainer::CTImage);
-	m_materialImage= wrapper.loadImage(ImageContainer::MaterialImage);
-	m_densityImage = wrapper.loadImage(ImageContainer::DensityImage);
-	m_organImage = wrapper.loadImage(ImageContainer::OrganImage);
-	m_doseImage = wrapper.loadImage(ImageContainer::DoseImage);
-	m_tallyImage = wrapper.loadImage(ImageContainer::TallyImage);
-
+	std::array<ImageContainer::ImageType, 7> types({ 
+		ImageContainer::CTImage, 
+		ImageContainer::DensityImage, ImageContainer::MaterialImage, 
+		ImageContainer::DoseImage, ImageContainer::OrganImage, 
+		ImageContainer::TallyImage, ImageContainer::VarianceImage });
+	for (auto type : types)
+	{
+		auto im = wrapper.loadImage(type);
+		if (im)
+			m_images.push_back(im);
+	}
+	
 	m_materialList = wrapper.loadMaterials();
 	m_organList = wrapper.loadOrganList();
 
+	std::shared_ptr<ImageContainer> matImage = nullptr;
+	std::shared_ptr<ImageContainer> orgImage = nullptr;
+	std::shared_ptr<ImageContainer> densImage = nullptr;
+	std::shared_ptr<ImageContainer> doseImage = nullptr;
+	std::shared_ptr<ImageContainer> tallyImage = nullptr;
+	for (auto im : m_images)
+	{
+		if (im->imageType == ImageContainer::MaterialImage)
+			matImage = im;;
+		if (im->imageType == ImageContainer::OrganImage)
+			orgImage = im;
+		if (im->imageType == ImageContainer::DensityImage)
+			densImage = im;
+		if (im->imageType == ImageContainer::DoseImage)
+			doseImage = im;
+		if (im->imageType == ImageContainer::TallyImage)
+			tallyImage = im;
+	}
+
 	//creating dose data
-	if (m_materialImage && m_densityImage && m_doseImage) {
-		if (m_organImage) {
+	if (matImage && densImage && doseImage && tallyImage) {
+		if (orgImage) {
 			DoseReportContainer cont(
 				m_materialList, 
 				m_organList, 
-				std::static_pointer_cast<MaterialImageContainer>(m_materialImage),
-				std::static_pointer_cast<OrganImageContainer>(m_organImage),
-				std::static_pointer_cast<DensityImageContainer>(m_densityImage),
-				std::static_pointer_cast<DoseImageContainer>(m_doseImage),
-				std::static_pointer_cast<TallyImageContainer>(m_tallyImage));
+				std::static_pointer_cast<MaterialImageContainer>(matImage),
+				std::static_pointer_cast<OrganImageContainer>(orgImage),
+				std::static_pointer_cast<DensityImageContainer>(densImage),
+				std::static_pointer_cast<DoseImageContainer>(doseImage),
+				std::static_pointer_cast<TallyImageContainer>(tallyImage));
 			emit doseDataChanged(cont);
 		}
 		else {
 			DoseReportContainer cont(
 				m_materialList, 
-				std::static_pointer_cast<MaterialImageContainer>(m_materialImage),
-				std::static_pointer_cast<DensityImageContainer>(m_densityImage),
-				std::static_pointer_cast<DoseImageContainer>(m_doseImage),
-				std::static_pointer_cast<TallyImageContainer>(m_tallyImage));
+				std::static_pointer_cast<MaterialImageContainer>(matImage),
+				std::static_pointer_cast<DensityImageContainer>(densImage),
+				std::static_pointer_cast<DoseImageContainer>(doseImage),
+				std::static_pointer_cast<TallyImageContainer>(tallyImage));
 			emit doseDataChanged(cont);
 		}
 	}
 	m_sources = wrapper.loadSources();
-
-	if (m_ctImage)
-		emit imageDataChanged(m_ctImage);
-	if (m_materialImage)
-		emit imageDataChanged(m_materialImage);
-	if (m_densityImage)
-		emit imageDataChanged(m_densityImage);
-	if (m_organImage)
-		emit imageDataChanged(m_organImage);
-	if (m_doseImage)
-		emit imageDataChanged(m_doseImage);
+	for (auto im: m_images)
+		emit imageDataChanged(im);
 
 	emit materialDataChanged(m_materialList);
 	emit organDataChanged(m_organList);
 	emit sourcesChanged(m_sources);
 
+	std::size_t bowtieCount = 1;
+	std::size_t aecCount = 1;
+	for (auto src : m_sources)
+	{
+		if (src->type() == Source::Type::CTAxial || src->type() == Source::Type::CTSpiral || src->type() == Source::Type::CTDual)
+		{
+			auto ctsrc = std::static_pointer_cast<CTSource>(src);
+			auto aecFilter = ctsrc->aecFilter();
+			if (aecFilter)
+			{
+				auto name = "From saved file " + std::to_string(aecCount++);
+				emit aecFilterChanged(QString::fromStdString(name), aecFilter);
+			}
+			auto bowtie = ctsrc->bowTieFilter();
+			if (bowtie)
+			{
+				auto name = "From saved file " + std::to_string(bowtieCount++);
+				emit bowtieFilterChanged(QString::fromStdString(name), bowtie);
+			}
+			if (src->type() == Source::Type::CTDual)
+			{
+				auto ctdualsrc = std::static_pointer_cast<CTDualSource>(src);
+				auto bowtieB = ctdualsrc->bowTieFilterB();
+				if (bowtieB)
+				{
+					auto name = "From saved file " + std::to_string(bowtieCount++);
+					emit bowtieFilterChanged(QString::fromStdString(name), bowtieB);
+				}
+			}
+		}
+	}
 	emit processingDataEnded();
 }
 
@@ -95,18 +142,9 @@ void SaveLoad::saveToFile(const QString& path)
 {
 	emit processingDataStarted();
 
-
 	H5Wrapper wrapper(path.toStdString());
-	if (m_ctImage)
-		wrapper.saveImage(m_ctImage);
-	if (m_densityImage)
-		wrapper.saveImage(m_densityImage);
-	if (m_organImage)
-		wrapper.saveImage(m_organImage);
-	if (m_materialImage)
-		wrapper.saveImage(m_materialImage);
-	if (m_doseImage)
-		wrapper.saveImage(m_doseImage);
+	for (auto image : m_images)
+		wrapper.saveImage(image);
 
 	wrapper.saveMaterials(m_materialList);
 	wrapper.saveOrganList(m_organList);
@@ -122,24 +160,11 @@ void SaveLoad::setImageData(std::shared_ptr<ImageContainer> image)
 	{
 		if (image->image)
 		{
-			m_ctImage = nullptr;
-			m_densityImage = nullptr;
-			m_organImage = nullptr;
-			m_materialImage = nullptr;
-			m_doseImage = nullptr;
+			m_images.clear();
 		}
 	}
 	m_currentImageID = image->ID;
-	if (image->imageType == ImageContainer::CTImage)
-		m_ctImage = image;
-	else if (image->imageType == ImageContainer::DensityImage)
-		m_densityImage = image;
-	else if (image->imageType == ImageContainer::DoseImage)
-		m_doseImage = image;
-	else if (image->imageType == ImageContainer::MaterialImage)
-		m_materialImage = image;
-	else if (image->imageType == ImageContainer::OrganImage)
-		m_organImage = image;
+	m_images.push_back(image);
 }
 
 void SaveLoad::setMaterials(const std::vector<Material>& materials)
@@ -150,12 +175,7 @@ void SaveLoad::setMaterials(const std::vector<Material>& materials)
 void SaveLoad::clear(void)
 {
 	m_currentImageID = 0;
-	m_densityImage = nullptr;
-	m_materialImage = nullptr;
-	m_organImage = nullptr;
-	m_ctImage = nullptr;
-	m_organList.clear();
-	m_materialList.clear();
+	m_images.clear();
 	// we do not clear m_sources here
 }
 

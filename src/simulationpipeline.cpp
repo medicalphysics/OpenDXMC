@@ -63,6 +63,11 @@ void SimulationPipeline::runSimulation(const std::vector<std::shared_ptr<Source>
 		dummyTally->ID = m_densityImage->ID;
 	emit imageDataChanged(dummyTally);
 
+	auto dummyVariance = std::make_shared<VarianceImageContainer>();
+	if (m_densityImage)
+		dummyVariance->ID = m_densityImage->ID;
+	emit imageDataChanged(dummyVariance);
+
 	DoseReportContainer dummyContainer;
 	emit doseDataChanged(dummyContainer);
 
@@ -95,19 +100,20 @@ void SimulationPipeline::runSimulation(const std::vector<std::shared_ptr<Source>
 	
 	auto totalDose = std::make_shared<std::vector<double>>(world.size(), 0.0);
 	auto totalTally = std::make_shared<std::vector<std::uint32_t>>(world.size(), 0);
+	auto totalVariance = std::make_shared<std::vector<double>>(world.size(), 0.0);
+
 	for (std::shared_ptr<Source> s : sources)
 	{
-		
 		world.setAttenuationLutMaxEnergy(s->maxPhotonEnergyProduced());
 		world.validate();
 		auto progressBar = std::make_unique<ProgressBar>(s->totalExposures());
 		emit progressBarChanged(progressBar.get());
-		auto result = transport::run(world, s.get(), progressBar.get());
-		std::transform(std::execution::par_unseq, totalDose->begin(), totalDose->end(), result.dose.begin(), totalDose->begin(), std::plus<>());
-		std::transform(std::execution::par_unseq, totalTally->begin(), totalTally->end(), result.nEvents.begin(), totalTally->begin(), std::plus<>());
+		const auto result = transport::run(world, s.get(), progressBar.get());
+		std::transform(std::execution::par_unseq, totalDose->cbegin(), totalDose->cend(), result.dose.cbegin(), totalDose->begin(), std::plus<>());
+		std::transform(std::execution::par_unseq, totalTally->cbegin(), totalTally->cend(), result.nEvents.cbegin(), totalTally->begin(), std::plus<>());
+		std::transform(std::execution::par_unseq, totalVariance->cbegin(), totalVariance->cend(), result.variance.cbegin(), totalVariance->begin(), std::plus<>());
 		emit progressBarChanged(nullptr);
 	}
-
 
 	if (m_ignoreAirDose)
 	{
@@ -115,7 +121,7 @@ void SimulationPipeline::runSimulation(const std::vector<std::shared_ptr<Source>
 		auto mat0 = world.materialMap().at(0);
 		if (mat0.name().compare("Air, Dry (near sea level)")==0) //ignore air only if present
 		{
-			std::transform(std::execution::par_unseq, totalDose->begin(), totalDose->end(), mat->begin(), totalDose->begin(),
+			std::transform(std::execution::par_unseq, totalDose->cbegin(), totalDose->cend(), mat->cbegin(), totalDose->begin(),
 				[](double e, unsigned char i)->double {return i == 0 ? 0.0 : e; });
 		}
 	}
@@ -124,21 +130,20 @@ void SimulationPipeline::runSimulation(const std::vector<std::shared_ptr<Source>
 		origin[i] = -(dimensions[i] * spacing[i] * 0.5);
 
 	//scaling dosevalues to sane units
-	const double maxDose = *std::max_element(std::execution::par_unseq, totalDose->begin(), totalDose->end());
+	const double maxDose = *std::max_element(std::execution::par_unseq, totalDose->cbegin(), totalDose->cend());
 	std::string dataUnits = "mGy";
 	if (maxDose < 1.0/1000.0)
 	{
 		dataUnits = "nGy";
-		std::transform(std::execution::par_unseq, totalDose->begin(), totalDose->end(), totalDose->begin(),
+		std::transform(std::execution::par_unseq, totalDose->cbegin(), totalDose->cend(), totalDose->begin(),
 			[](double d) {return d * 1e6; });
 	}
 	else if (maxDose < 1.0)
 	{
 		dataUnits = "uGy";
-		std::transform(std::execution::par_unseq, totalDose->begin(), totalDose->end(), totalDose->begin(),
+		std::transform(std::execution::par_unseq, totalDose->cbegin(), totalDose->cend(), totalDose->begin(),
 			[](double d) {return d * 1e3; });
 	}
-
 
 	auto doseContainer = std::make_shared<DoseImageContainer>(totalDose, dimensions, spacing, origin);
 	doseContainer->directionCosines = m_densityImage->directionCosines;
@@ -149,6 +154,11 @@ void SimulationPipeline::runSimulation(const std::vector<std::shared_ptr<Source>
 	tallyContainer->directionCosines = m_densityImage->directionCosines;
 	tallyContainer->ID = m_densityImage->ID;
 	tallyContainer->dataUnits = "# Events";
+
+	auto varianceContainer = std::make_shared<VarianceImageContainer>(totalVariance, dimensions, spacing, origin);
+	varianceContainer->directionCosines = m_densityImage->directionCosines;
+	varianceContainer->ID = m_densityImage->ID;
+	varianceContainer->dataUnits = "Variance " + dataUnits;
 
 	if (m_organImage && (m_organList.size() > 0)) {
 		if (m_organImage->ID == m_materialImage->ID) {
@@ -166,6 +176,6 @@ void SimulationPipeline::runSimulation(const std::vector<std::shared_ptr<Source>
 	}
 	emit imageDataChanged(doseContainer);
 	emit imageDataChanged(tallyContainer);
-
+	emit imageDataChanged(varianceContainer);
 	emit processingDataEnded();
 }

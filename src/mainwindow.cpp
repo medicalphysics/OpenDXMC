@@ -185,8 +185,9 @@ MainWindow::MainWindow(QWidget* parent)
 
 	connect(sourceModel, &SourceModel::sourceAdded, m_saveLoad, &SaveLoad::addSource);
 	connect(sourceModel, &SourceModel::sourceRemoved, m_saveLoad, &SaveLoad::removeSource);
-	connect(m_saveLoad, & SaveLoad::sourcesChanged, sourceModel, & SourceModel::setSources);
-
+	connect(m_saveLoad, &SaveLoad::sourcesChanged, sourceModel, &SourceModel::setSources);
+	connect(m_saveLoad, &SaveLoad::aecFilterChanged, sourceEditDelegate, &SourceDelegate::addAecFilter);
+	connect(m_saveLoad, &SaveLoad::bowtieFilterChanged, sourceEditDelegate, &SourceDelegate::addBowtieFilter);
 
 	//dose progress image widget
 	m_progressWidget = new ProgressWidget(this);

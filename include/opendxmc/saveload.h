@@ -51,7 +51,14 @@ Q_DECLARE_METATYPE(DoseReportContainer)
 #define Q_DECLARE_METATYPE_SOURCEVECTOR
 Q_DECLARE_METATYPE(std::vector<std::shared_ptr<Source>>)
 #endif 
-
+#ifndef Q_DECLARE_METATYPE_BOWTIEFILTER
+#define Q_DECLARE_METATYPE_BOWTIEFILTER
+Q_DECLARE_METATYPE(std::shared_ptr<BowTieFilter>)
+#endif 
+#ifndef Q_DECLARE_METATYPE_AECFILTER
+#define Q_DECLARE_METATYPE_AECFILTER
+Q_DECLARE_METATYPE(std::shared_ptr<AECFilter>)
+#endif 
 
 class SaveLoad : public QObject
 {
@@ -75,18 +82,12 @@ signals:
 	void organDataChanged(const std::vector<std::string>& organs);
 	void doseDataChanged(const DoseReportContainer& doses);
 	void sourcesChanged(std::vector<std::shared_ptr<Source>> sources);
-	//void aecFilterChanged(QString name, std::shared_ptr<AECFilter> filter);
+	void aecFilterChanged(QString name, std::shared_ptr<AECFilter> filter);
+	void bowtieFilterChanged(QString name, std::shared_ptr<BowTieFilter> filter);
 private:
 	std::uint64_t m_currentImageID = 0;
-	std::shared_ptr<ImageContainer> m_densityImage = nullptr;
-	std::shared_ptr<ImageContainer> m_materialImage = nullptr;
-	std::shared_ptr<ImageContainer> m_organImage = nullptr;
-	std::shared_ptr<ImageContainer> m_ctImage = nullptr;
-	std::shared_ptr<ImageContainer> m_doseImage = nullptr;
-	std::shared_ptr<ImageContainer> m_tallyImage = nullptr;
-
+	std::vector<std::shared_ptr<ImageContainer>> m_images;
 	std::vector<std::string> m_organList;
 	std::vector<Material> m_materialList;
 	std::vector<std::shared_ptr<Source>> m_sources;
-
 };

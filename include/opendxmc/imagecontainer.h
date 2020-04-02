@@ -42,6 +42,7 @@ public:
 		DoseImage,
 		OrganImage,
 		TallyImage,
+		VarianceImage,
 		CustomType,
 		Empty
 	};
@@ -86,6 +87,8 @@ public:
 			return "OrganImage";
 		else if (type == ImageContainer::TallyImage)
 			return "DoseTallyImage";
+		else if (type == ImageContainer::VarianceImage)
+			return "VarianceImage";
 
 		return "Unknown";
 	}
@@ -146,7 +149,6 @@ private:
 			auto* minmax = image->GetScalarRange();
 			minMax[0] = minmax[0];
 			minMax[1] = minmax[1];
-
 		}
 	}
 };
@@ -241,5 +243,20 @@ public:
 	std::shared_ptr<std::vector<std::uint32_t>> imageData(void)
 	{
 		return m_image_data_uint32;
+	}
+};
+
+class VarianceImageContainer :public ImageContainer
+{
+public:
+	VarianceImageContainer() :ImageContainer() { imageType = VarianceImage; }
+	VarianceImageContainer(std::shared_ptr<std::vector<double>> imageData, const std::array<std::size_t, 3>& dimensions, const std::array<double, 3>& dataSpacing, const std::array<double, 3>& origin)
+		:ImageContainer(VarianceImage, imageData, dimensions, dataSpacing, origin)
+	{
+	}
+	virtual ~VarianceImageContainer() = default;
+	std::shared_ptr<std::vector<double>> imageData(void)
+	{
+		return m_image_data_double;
 	}
 };

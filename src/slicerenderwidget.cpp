@@ -195,8 +195,6 @@ private:
 };
 vtkStandardNewMacro(customMouseInteractorStyle);
 
-
-
 SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 	:QWidget(parent), m_orientation(orientation)
 {
@@ -224,7 +222,6 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 
 	m_imageSliceBackground = vtkSmartPointer<vtkImageSlice>::New();
 	m_imageSliceBackground->SetMapper(m_imageMapperBackground);
-
 
 	//renderer
 	// Setup renderers
@@ -292,8 +289,6 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 		cam->SetViewUp(0, 0, 1);
 	}
 	
-	
-
 	//color tables
 	m_colorTables["GRAY"] = GRAY;
 	m_colorTables["JET"] = JET;
@@ -435,13 +430,11 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 		this->saveCine();
 		});
 #endif // WINDOWS
-
 }
 
 void SliceRenderWidget::updateRendering()
 {
 	//might need to call Render
-	
 	auto renderWindow = m_openGLWidget->renderWindow();
 	auto renderCollection = renderWindow->GetRenderers();
 	auto renderer = renderCollection->GetFirstRenderer();
@@ -484,7 +477,6 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume, std
 	m_renderer->RemoveViewProp(m_scalarColorBar);
 	m_renderer->RemoveViewProp(m_textActorCorners);
 	m_colorTablePicker->setDisabled(true);
-
 
 	if (m_windowLevels.find(m_image->imageType) == m_windowLevels.end())
 	{
@@ -587,6 +579,23 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume, std
 		m_colorTablePicker->setEnabled(true);
 	}
 	else if (m_image->imageType == ImageContainer::TallyImage)
+	{
+		prop->BackingOff();
+		prop->UseLookupTableScalarRangeOff();
+		//making sane window level ond center values from image data
+		m_windowLevels[m_image->imageType][0] = (m_image->minMax[0] + m_image->minMax[1]) * 0.5;
+		m_windowLevels[m_image->imageType][1] = (m_windowLevels[m_image->imageType][0] - m_image->minMax[0]);
+		prop->SetColorLevel(m_windowLevels[m_image->imageType][0]);
+		prop->SetColorWindow(m_windowLevels[m_image->imageType][1]);
+
+		m_colorTablePicker->setCurrentText("TURBO");
+		setColorTable("TURBO");
+		m_renderer->AddViewProp(m_scalarColorBar);
+		m_renderer->AddViewProp(m_textActorCorners);
+		m_scalarColorBar->SetNumberOfLabels(2);
+		m_colorTablePicker->setEnabled(true);
+	}
+	else if (m_image->imageType == ImageContainer::VarianceImage)
 	{
 		prop->BackingOff();
 		prop->UseLookupTableScalarRangeOff();

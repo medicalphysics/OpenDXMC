@@ -20,10 +20,8 @@ Copyright 2019 Erlend Andersen
 
 #include "imagecontainer.h"
 
-
 #include <QWidget>
 #include <QLineEdit>
-
 #include <vector>
 #include <memory>
 #include <string>

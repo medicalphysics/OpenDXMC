@@ -20,6 +20,7 @@ Copyright 2019 Erlend Andersen
 #include <QWidget>
 #include <QGraphicsView>
 #include <QGraphicsPixmapItem>
+#include <QPushButton>
 #include <dxmc/progressbar.h>
 #include <array>
 #include <memory>
@@ -31,13 +32,16 @@ public:
 	void setImageData(std::shared_ptr<DoseProgressImageData> data);
 	void setShowProgress(bool show);
 	bool showProgress() const { return m_showProgress; };
-
+	void setCancelRun(bool cancel) { m_cancelProgress = cancel; };
+	bool cancelRun() { return m_cancelProgress; };
 protected:
 	void resizeEvent(QResizeEvent* event);
 	void showEvent(QShowEvent* event);
 private:
+	QPushButton* m_cancelButton = nullptr;
 	QGraphicsView* m_view = nullptr;
 	QGraphicsPixmapItem* m_pixItem = nullptr;
 	QVector<QRgb> m_colormap;
 	bool m_showProgress = true;
+	bool m_cancelProgress = false;
 };

@@ -37,7 +37,7 @@ void SaveLoad::loadFromFile(const QString& path)
 
 	clear();
 	m_sources.clear();
-
+	m_images.clear();
 	H5Wrapper wrapper(path.toStdString(), H5Wrapper::FileOpenType::ReadOnly);
 	std::array<ImageContainer::ImageType, 7> types({ 
 		ImageContainer::CTImage, 
@@ -156,15 +156,28 @@ void SaveLoad::setImageData(std::shared_ptr<ImageContainer> image)
 {
 	if (!image)
 		return;
+	if (!image->image)
+		return;
 	if (m_currentImageID != image->ID)
 	{
-		if (image->image)
-		{
-			m_images.clear();
-		}
+		m_images.clear();
+		m_images.push_back(image);
+		m_currentImageID = image->ID;
 	}
-	m_currentImageID = image->ID;
-	m_images.push_back(image);
+	else
+	{
+		//find if image is present
+		for (std::size_t i = 0; i < m_images.size(); ++i)
+		{
+			if (m_images[i]->imageType == image->imageType)
+			{
+				m_images[i] = image;
+				return;
+			}
+		}
+		//did not find image
+		m_images.push_back(image);
+	}
 }
 
 void SaveLoad::setMaterials(const std::vector<Material>& materials)

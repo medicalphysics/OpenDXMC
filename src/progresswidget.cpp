@@ -30,13 +30,22 @@ Copyright 2019 Erlend Andersen
 #include <QBrush>
 #include <QTransform>
 
+
 ProgressWidget::ProgressWidget(QWidget* parent) 
 	: QWidget(parent)
 {
 	auto mainLayout = new QVBoxLayout(this);
-
+	auto hLayout = new QHBoxLayout(this);
 	auto setVisibleWidget = new QCheckBox(tr("Show simulation progress"), this);
-	mainLayout->addWidget(setVisibleWidget);
+	hLayout->addWidget(setVisibleWidget);
+	hLayout->addStretch();
+
+	m_cancelButton = new QPushButton("Cancel simulation", this);
+	connect(m_cancelButton, &QPushButton::clicked, [=]() {this->setCancelRun(true); });
+	connect(m_cancelButton, &QPushButton::clicked, [=]() {m_cancelButton->setDisabled(m_cancelProgress); });
+	hLayout->addWidget(m_cancelButton);
+
+	mainLayout->addLayout(hLayout);
 
 	QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
 	m_showProgress = settings.value("simulationprogress/show").value<bool>();
@@ -106,4 +115,6 @@ void ProgressWidget::showEvent(QShowEvent* event)
 {
 	QWidget::showEvent(event);
 	m_view->setVisible(m_showProgress);
+	m_cancelButton->setEnabled(true);
+	m_cancelProgress = false;
 }

@@ -167,7 +167,8 @@ bool H5Wrapper::saveSources(const std::vector<std::shared_ptr<Source>>& sources)
 std::vector<std::shared_ptr<Source>> H5Wrapper::loadSources(void)
 {
 	std::vector<std::shared_ptr<Source>> sources;
-
+	if (!m_file)
+		return sources;
 	if (!m_file->nameExists("sources"))
 		return sources;
 

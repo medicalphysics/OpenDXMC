@@ -316,6 +316,8 @@ void MainWindow::updateProgressBar()
 		this->statusBar()->showMessage(QString::fromStdString(msg), 6000);
 		if (m_progressWidget->showProgress())
 			m_progressWidget->setImageData(m_progressBar->computeDoseProgressImage());
+		if (m_progressWidget->cancelRun())
+			m_progressBar->setCancel(true);
 	}
 	else {
 		m_progressWidget->hide();

@@ -730,7 +730,7 @@ void SourceModel::setupCTSource(std::shared_ptr<CTSource> src, QStandardItem* pa
 	auto l5Item = new SourceItem<CTSource, double>(src,
 		[=](double val) {src->setCtdiVol(val); },
 		[=]() {return src->ctdiVol(); });
-	nodes.append(qMakePair(QString("CTDIvol for scan [mGy] "), static_cast<QStandardItem*>(l5Item)));
+	nodes.append(qMakePair(QString("CTDIvol mean value [mGy] "), static_cast<QStandardItem*>(l5Item)));
 
 	auto l6Item = new SourceItem<CTSource, std::uint64_t>(src,
 		[=](auto val) {src->setCtdiPhantomDiameter(val); },

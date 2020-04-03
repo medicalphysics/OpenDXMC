@@ -641,7 +641,7 @@ void SourceModel::setupSource(std::shared_ptr<Source> src, QStandardItem * paren
 	auto posItem = new SourceItem<Source, std::array<double, 3>>(src,
 		[=](const std::array<double, 3>& val) {src->setPosition(val); },
 		[=]() {return src->position(); });
-	nodes.append(qMakePair(QString("Source position [mm]"), static_cast<QStandardItem*>(posItem)));
+	nodes.append(qMakePair(QString("Source isocenter position [mm]"), static_cast<QStandardItem*>(posItem)));
 
 	auto l1Item = new SourceItem<Source, std::array<double, 6>>(src,
 		[=](const std::array<double, 6>& val) {src->setDirectionCosines(val); },
@@ -1012,7 +1012,7 @@ void SourceModel::setupDXSource(std::shared_ptr<DXSource> src)
 	auto sourceAngleItem = new SourceItem<DXSource, std::array<double, 2>>(src,
 		[=](const auto& val) {src->setSourceAnglesDeg(val); },
 		[=]() {return src->sourceAnglesDeg(); });
-	nodes.append(qMakePair(QString("Source angles according to DiCOM (primary angle, secondary angle) [deg]"), static_cast<QStandardItem*>(sourceAngleItem)));
+	nodes.append(qMakePair(QString("Source angles (primary angle, secondary angle) [deg]"), static_cast<QStandardItem*>(sourceAngleItem)));
 
 	auto tubeRotItem = new SourceItem<DXSource, double>(src,
 		[=](const auto& val) {src->setTubeRotationDeg(val); },
@@ -1047,7 +1047,7 @@ void SourceModel::setupDXSource(std::shared_ptr<DXSource> src)
 	auto l5Item = new SourceItem<DXSource, double>(src,
 		[=](double val) {src->setDap(val); },
 		[=]() {return src->dap(); });
-	nodes.append(qMakePair(QString("Dose Area Product for beam [mGycm2]"), static_cast<QStandardItem*>(l5Item)));
+	nodes.append(qMakePair(QString("Dose Area Product for beam [Gycm2]"), static_cast<QStandardItem*>(l5Item)));
 
 	for (int i = 0; i < nodes.count(); ++i)
 	{

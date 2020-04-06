@@ -19,6 +19,7 @@ Copyright 2019 Erlend Andersen
 #include <QApplication>
 #include <QSurfaceFormat>
 #include <QDebug>
+#include <QSplashScreen>
 
 #include <QVTKOpenGLWidget.h>
 #include <vtkOpenGLRenderWindow.h>
@@ -37,6 +38,14 @@ int main (int argc, char *argv[])
 	QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 	QApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
 	QApplication app(argc, argv);
+
+	QPixmap splashMap("resources/icons/icon_fill.png");
+	QSplashScreen splash(splashMap);
+	splash.show();
+	app.processEvents();
+	splash.showMessage("Starting OpenDXMC", Qt::AlignCenter, Qt::white);
+	app.processEvents();
+
 	QCoreApplication::setApplicationName("OpenDXMC");
 	QCoreApplication::setOrganizationName("SSHF");
 	app.setWindowIcon(QIcon("resources/icons/icon.png"));
@@ -45,6 +54,7 @@ int main (int argc, char *argv[])
 	QString title = "OpenDXMC v" + QString(APP_VERSION);
 	win.setWindowTitle(title);
 	win.show();
-	
+
+	splash.finish(&win);	
     return app.exec();
 }

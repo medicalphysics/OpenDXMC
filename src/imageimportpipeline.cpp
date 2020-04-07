@@ -114,6 +114,7 @@ void ImageImportPipeline::setDicomData(QStringList dicomPaths)
 	rescaler->SetReleaseDataFlag(1);
 
 	dicomReader->SetFileNames(fileNameArray);
+	dicomReader->SortingOn();
 	dicomReader->Update();
 
 	auto orientationMatrix = dicomReader->GetPatientMatrix();
@@ -280,7 +281,8 @@ std::pair<std::string, std::vector<double>> ImageImportPipeline::readExposureDat
 		return std::make_pair(std::string(), exposure);
 	}
 	int n = meta->GetNumberOfInstances();
-	exposure.resize(n, 0.0);
+	
+	std::vector<double> exposure(n, 0.0);
 
 	// Get the arrays that map slice to file and frame.
 	vtkIntArray *fileMap = dicomReader->GetFileIndexArray();

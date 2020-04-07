@@ -79,7 +79,6 @@ private:
 	vtkSmartPointer<vtkLine> m_line3;
 	vtkSmartPointer<vtkLine> m_line4;
 	vtkSmartPointer<vtkCellArray> m_lines;
-	vtkSmartPointer<vtkUnsignedCharArray> m_colors;
 	vtkSmartPointer<vtkTubeFilter> m_tubeFilter;
 	vtkSmartPointer<vtkPolyDataMapper> m_mapper;
 };

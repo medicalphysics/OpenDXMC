@@ -21,6 +21,7 @@ Copyright 2019 Erlend Andersen
 #include "dxmc/vectormath.h"
 
 #include <vtkNamedColors.h>
+#include <vtkUnsignedCharArray.h>
 #include <vtkCellData.h>
 #include <vtkProperty.h>
 #include <vtkXMLPolyDataReader.h>
@@ -151,12 +152,12 @@ DXSourceContainer::DXSourceContainer(std::shared_ptr<DXSource> src)
 
 	vtkSmartPointer<vtkNamedColors> namedColors =
 		vtkSmartPointer<vtkNamedColors>::New();
-	m_colors = vtkSmartPointer<vtkUnsignedCharArray>::New();
-	m_colors->SetNumberOfComponents(3);
-	m_colors->InsertNextTypedTuple(namedColors->GetColor3ub("Tomato").GetData());
-	m_colors->InsertNextTypedTuple(namedColors->GetColor3ub("Mint").GetData());
-	m_colors->InsertNextTypedTuple(namedColors->GetColor3ub("Tomato").GetData());
-	m_colors->InsertNextTypedTuple(namedColors->GetColor3ub("Mint").GetData());
+	auto m_colors = vtkSmartPointer<vtkUnsignedCharArray>::New();
+	m_colors->SetNumberOfComponents(4);
+	m_colors->InsertNextTypedTuple(namedColors->GetColor4ub("Tomato").GetData());
+	m_colors->InsertNextTypedTuple(namedColors->GetColor4ub("Mint").GetData());
+	m_colors->InsertNextTypedTuple(namedColors->GetColor4ub("Tomato").GetData());
+	m_colors->InsertNextTypedTuple(namedColors->GetColor4ub("Mint").GetData());
 	
 	m_linesPolyData->GetCellData()->SetScalars(m_colors);
 
@@ -386,7 +387,7 @@ void CTAxialSourceContainer::update()
 
 	vtkSmartPointer<vtkNamedColors> namedColors =
 		vtkSmartPointer<vtkNamedColors>::New();
-	vtkSmartPointer<vtkUnsignedCharArray> m_colors = vtkSmartPointer<vtkUnsignedCharArray>::New();
+	auto m_colors = vtkSmartPointer<vtkUnsignedCharArray>::New();
 	m_colors->SetNumberOfComponents(3);
 	m_colors->InsertNextTypedTuple(namedColors->GetColor3ub("Tomato").GetData());
 	for (int i = 0; i < 4; ++i)

@@ -64,6 +64,7 @@ find_package(VTK COMPONENTS
       RenderingImage
       RenderingOpenGL2
       RenderingQt
+      RenderingUI
       ViewsQt
       glew
       zlib

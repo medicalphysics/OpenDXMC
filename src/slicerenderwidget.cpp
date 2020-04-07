@@ -34,6 +34,7 @@ Copyright 2019 Erlend Andersen
 #include <QProgressDialog>
 #include <QSettings>
 #include <QDir>
+#include <QTimer>
 
 #include <vtkGenericOpenGLRenderWindow.h>
 #include <vtkWindowLevelLookupTable.h>
@@ -195,6 +196,18 @@ private:
 };
 vtkStandardNewMacro(customMouseInteractorStyle);
 
+std::shared_ptr<ImageContainer> makeStartImage(void)
+{
+	std::array<double, 3> sp = { 1,1,1 };
+	std::array<double, 3> o = { 0,0,0 };
+	std::array<std::size_t, 3> dim = { 64,64,64 };
+
+	auto data = std::make_shared<std::vector<float>>(dim[0] * dim[1] * dim[2], 0);
+	auto im = std::make_shared<ImageContainer>(ImageContainer::Empty, data, dim, sp, o);
+	im->ID = 0;
+	return im;
+}
+
 SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 	:QWidget(parent), m_orientation(orientation)
 {
@@ -228,6 +241,7 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 	m_renderer = vtkSmartPointer<vtkRenderer>::New();
 	m_renderer->UseFXAAOn();
 	m_renderer->GetActiveCamera()->ParallelProjectionOn();
+	m_renderer->SetBackground(0, 0, 0);
 
 	//render window
 	//https://lorensen.github.io/VTKExamples/site/Cxx/Images/ImageSliceMapper/
@@ -244,6 +258,7 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 	style->setMapperBackground(m_imageMapperBackground);
 	style->setRenderWindow(renderWindow);
 	renderWindowInteractor->SetInteractorStyle(style);
+	renderWindowInteractor->SetRenderWindow(renderWindow);
 
 	m_textActorCorners = vtkSmartPointer<vtkCornerAnnotation>::New();
 	m_textActorCorners->SetText(1, "");
@@ -255,20 +270,17 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 	m_scalarColorBar->SetMaximumWidthInPixels(200);
 	m_scalarColorBar->AnnotationTextScalingOff();
 
-	//setup collbacks
-	// Render and start interaction
-	renderWindowInteractor->SetRenderWindow(renderWindow);
-	renderWindowInteractor->Initialize();
-
+	//other
+	m_imageMapper->SliceFacesCameraOn();
+	m_imageMapperBackground->SliceFacesCameraOn();
+	
+	// filling pipline with som data
 	vtkSmartPointer<vtkImageData> dummyData = vtkSmartPointer<vtkImageData>::New();
-	dummyData->SetDimensions(30, 30, 30);
+	dummyData->SetDimensions(1, 1, 1);
 	dummyData->AllocateScalars(VTK_FLOAT, 1);
 	m_imageSmoother->SetInputData(dummyData);
 	m_imageMapperBackground->SetInputData(dummyData);
 
-	//other
-	m_imageMapper->SliceFacesCameraOn();
-	m_imageMapperBackground->SliceFacesCameraOn();
 
 	if (auto cam = m_renderer->GetActiveCamera(); m_orientation == Axial)
 	{	
@@ -299,7 +311,6 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 	m_colorTables["SUMMER"] = SUMMER;
 
 	//window settings
-	m_renderer->SetBackground(0,0,0);
 	auto menuIcon = QIcon(QString("resources/icons/settings.svg"));
 	auto menuButton = new QPushButton(menuIcon, QString(), m_openGLWidget);
 	menuButton->setIconSize(QSize(24, 24));
@@ -430,6 +441,10 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 		this->saveCine();
 		});
 #endif // WINDOWS
+
+	//setting start image
+	auto startImage = makeStartImage();
+	QTimer::singleShot(0, [=]() {this->setImageData(startImage); });
 }
 
 void SliceRenderWidget::updateRendering()
@@ -438,7 +453,6 @@ void SliceRenderWidget::updateRendering()
 	auto renderWindow = m_openGLWidget->renderWindow();
 	auto renderCollection = renderWindow->GetRenderers();
 	auto renderer = renderCollection->GetFirstRenderer();
-	renderer->ResetCamera();
 	renderWindow->Render();
 	m_openGLWidget->update();
 	return;
@@ -450,11 +464,13 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume, std
 		return;
 	if (!volume->image)
 		return;
+
+	bool imageIDchanged = true;
+
 	if (m_image)
 	{
 		if ((m_image->ID == volume->ID) && (m_image->imageType == volume->imageType) && (m_imageBackground==background))
-			return;
-		
+			return;	
 		if (std::array<double, 2> wl; m_image->image)
 		{
 			auto props = m_imageSlice->GetProperty();
@@ -462,8 +478,9 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume, std
 			wl[1] = props->GetColorWindow();
 			m_windowLevels[m_image->imageType] = wl;
 		}
+		imageIDchanged = m_image->ID != volume->ID;
 	}
-
+	
 	m_image = volume;
 	m_imageBackground = background;
 
@@ -639,7 +656,8 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume, std
 		}
 	}
 	m_renderer->AddActor(m_imageSlice);
-	m_renderer->ResetCamera();
+	if(imageIDchanged)
+		m_renderer->ResetCamera();
 	updateRendering();
 }
 

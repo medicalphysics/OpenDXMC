@@ -33,7 +33,9 @@ int main (int argc, char *argv[])
 {
 	// needed to ensure appropriate OpenGL context is created for VTK rendering.
 	vtkOpenGLRenderWindow::SetGlobalMaximumNumberOfMultiSamples(0);
-	QSurfaceFormat::setDefaultFormat(QVTKOpenGLWidget::defaultFormat());
+	auto format = QVTKOpenGLWidget::defaultFormat();
+	format.setProfile(QSurfaceFormat::CompatibilityProfile);
+	QSurfaceFormat::setDefaultFormat(format);
 
 	QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 	QApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);

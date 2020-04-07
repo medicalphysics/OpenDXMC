@@ -271,19 +271,14 @@ void ImageImportPipeline::processCTData(std::shared_ptr<ImageContainer> ctImage,
 
 std::pair<std::string, std::vector<double>> ImageImportPipeline::readExposureData(vtkSmartPointer<vtkDICOMReader>& dicomReader)
 {
-	std::vector<double> exposure;
-
 	vtkDICOMMetaData *meta = dicomReader->GetMetaData();
-	
+	int n = meta->GetNumberOfInstances();
+	std::vector<double> exposure(n, 0.0);
 	if (!meta->Has(DC::Exposure))
 	{
-		
 		return std::make_pair(std::string(), exposure);
 	}
-	int n = meta->GetNumberOfInstances();
 	
-	std::vector<double> exposure(n, 0.0);
-
 	// Get the arrays that map slice to file and frame.
 	vtkIntArray *fileMap = dicomReader->GetFileIndexArray();
 

@@ -23,6 +23,7 @@ Copyright 2019 Erlend Andersen
 #include "dxmc/material.h"
 #include "dxmc/world.h"
 #include "dxmc/beamfilters.h"
+#include "dxmc/vectormath.h"
 
 #include <QString>
 
@@ -272,11 +273,21 @@ void ImageImportPipeline::processCTData(std::shared_ptr<ImageContainer> ctImage,
 std::pair<std::string, std::vector<double>> ImageImportPipeline::readExposureData(vtkSmartPointer<vtkDICOMReader>& dicomReader)
 {
 	vtkDICOMMetaData *meta = dicomReader->GetMetaData();
-	int n = meta->GetNumberOfInstances();
-	std::vector<double> exposure(n, 0.0);
+	const int n = meta->GetNumberOfInstances();
+	std::vector<std::pair<double, double>> posExposure(n);
+	
+	vtkDICOMTag directionCosinesTag(32, 555);
+	auto directionCosinesValue = meta->GetAttributeValue(directionCosinesTag);
+	std::array<double, 6> directionCosines;
+	for (std::size_t p = 0; p < 6; ++p)
+		directionCosines[p] = directionCosinesValue.GetDouble(p);
+	std::array<double, 3> imagedirection;
+	vectormath::cross(directionCosines.data(), imagedirection.data());
+	const std::size_t dirIdx = vectormath::argmax3<std::size_t, double>(imagedirection.data());
+
 	if (!meta->Has(DC::Exposure))
 	{
-		return std::make_pair(std::string(), exposure);
+		return std::make_pair(std::string(), std::vector<double>(n, 1.0));
 	}
 	
 	// Get the arrays that map slice to file and frame.
@@ -287,12 +298,28 @@ std::pair<std::string, std::vector<double>> ImageImportPipeline::readExposureDat
 		int fileIndex = fileMap->GetComponent(i, 0);
 		//logger->debug("Reading exposure from file number {}", i);
 
-		// Get the position for that slice.
-		vtkDICOMValue pv = meta->Get(fileIndex, DC::Exposure);
 		
+		const auto pv = meta->Get(fileIndex, DC::Exposure);
+		double exposure = 1.0;
 		if (pv.IsValid())
-			exposure[i] = pv.GetDouble(0);
+			exposure = pv.GetDouble(0);
+
+		// Get the position for that slice.
+		double position = 0.0;
+		const auto pos = meta->Get(fileIndex, DC::ImagePositionPatient);
+		if (pos.IsValid())
+		{
+			position = pos.GetDouble(dirIdx);
+		}
+		posExposure[i] = std::make_pair(position, exposure);
 	}
+
+	//sorting on position 
+	std::sort(posExposure.begin(), posExposure.end());
+
+	std::vector<double> exposure(n);
+	std::transform(posExposure.cbegin(), posExposure.cend(), exposure.begin(), [](auto el)->double {return el.second; });
+
 	vtkDICOMTag seriesDescriptionTag(8, 4158);
 	auto seriesDescriptionValue = meta->GetAttributeValue(seriesDescriptionTag);
 	std::string desc = seriesDescriptionValue.GetString(0);

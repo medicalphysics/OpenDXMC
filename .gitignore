@@ -93,3 +93,4 @@ ipch/
 /data/binaryimporttemplate/materialTemplate.dat
 /data/binaryimporttemplate/materialMapTemplate.dat
 /build
+/apps/out/build/x64-Debug

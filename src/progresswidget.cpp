@@ -80,7 +80,7 @@ void ProgressWidget::setImageData(std::shared_ptr<DoseProgressImageData> data)
 		QImage qim(data->image.data(), width, height, width, QImage::Format_Indexed8);
 		qim.setColorTable(m_colormap);
 		QTransform transform(dw, .0, .0, -dh, .0, .0); //scale and mirror y axis
-		if (height > width)
+		if (height * dh > width * dw)
 		{
 			QTransform rot;
 			rot.rotate(90.0); // flipping image

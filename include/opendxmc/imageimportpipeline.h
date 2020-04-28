@@ -196,7 +196,7 @@ public:
 
 	void importICRUMalePhantom(bool ignoreArms=false);
 	void importICRUFemalePhantom(bool ignoreArms = false);
-	void importCTDIPhantom(int mm);
+	void importCTDIPhantom(int mm, bool force_interaction_measurements=false);
 	void importAWSPhantom(const QString& name);
 
 signals:

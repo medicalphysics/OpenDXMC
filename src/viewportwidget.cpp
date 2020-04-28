@@ -203,19 +203,19 @@ void ViewPortWidget::updateVolumeSelectorWidget()
 QString ViewPortWidget::imageDescriptionName(int imageDescription)
 {
 	if (imageDescription == static_cast<int>(ImageContainer::CTImage)) {
-		return QString("CT data");
+		return QString("CT images");
 	}
 	else if (imageDescription == static_cast<int>(ImageContainer::MaterialImage)) {
 		return QString("Material data");
 	}
 	else if (imageDescription == static_cast<int>(ImageContainer::DensityImage)) {
-		return QString("Density data");
+		return QString("Density map");
 	}
 	else if (imageDescription == static_cast<int>(ImageContainer::OrganImage)) {
-		return QString("Organ data");
+		return QString("Organ volumes");
 	}
 	else if (imageDescription == static_cast<int>(ImageContainer::DoseImage)) {
-		return QString("Dose data");
+		return QString("Dose map");
 	}
 	else if (imageDescription == static_cast<int>(ImageContainer::CustomType)) {
 		return QString("Dose overlay");
@@ -225,6 +225,9 @@ QString ViewPortWidget::imageDescriptionName(int imageDescription)
 	}
 	else if (imageDescription == static_cast<int>(ImageContainer::VarianceImage)) {
 		return QString("Dose variance");
+	}
+	else if (imageDescription == static_cast<int>(ImageContainer::MeasurementImage)) {
+		return QString("Measurement Volumes");
 	}
 	return QString();
 }

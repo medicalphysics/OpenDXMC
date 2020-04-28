@@ -43,6 +43,7 @@ public:
 		OrganImage,
 		TallyImage,
 		VarianceImage,
+		MeasurementImage,
 		CustomType,
 		Empty
 	};
@@ -89,7 +90,8 @@ public:
 			return "DoseTallyImage";
 		else if (type == ImageContainer::VarianceImage)
 			return "VarianceImage";
-
+		else if (type == ImageContainer::MeasurementImage)
+			return "MeasurementImage";
 		return "Unknown";
 	}
 
@@ -258,5 +260,20 @@ public:
 	std::shared_ptr<std::vector<double>> imageData(void)
 	{
 		return m_image_data_double;
+	}
+};
+
+class MeasurementImageContainer :public ImageContainer
+{
+public:
+	MeasurementImageContainer() :ImageContainer() { imageType = MeasurementImage; }
+	MeasurementImageContainer(std::shared_ptr<std::vector<unsigned char>> imageData, const std::array<std::size_t, 3>& dimensions, const std::array<double, 3>& dataSpacing, const std::array<double, 3>& origin)
+		:ImageContainer(MeasurementImage, imageData, dimensions, dataSpacing, origin)
+	{
+	}
+	virtual ~MeasurementImageContainer() = default;
+	std::shared_ptr<std::vector<unsigned char>> imageData(void)
+	{
+		return m_image_data_uchar;
 	}
 };

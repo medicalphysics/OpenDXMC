@@ -35,12 +35,29 @@ SimulationPipeline::SimulationPipeline(QObject *parent)
 
 void SimulationPipeline::setImageData(std::shared_ptr<ImageContainer> image)
 {
+	if (!image)
+		return;
+
+	const auto id = image->ID;
+
+	if (id != m_currentImageID)
+	{
+		m_densityImage = nullptr;
+		m_materialImage = nullptr;
+		m_measurementImage = nullptr;
+		m_organImage = nullptr;
+		m_currentImageID = id;
+	}
+
+
 	if (image->imageType == ImageContainer::DensityImage)
 		m_densityImage = std::static_pointer_cast<DensityImageContainer>(image);
 	else if (image->imageType == ImageContainer::MaterialImage)
 		m_materialImage = std::static_pointer_cast<MaterialImageContainer>(image);
 	else if (image->imageType == ImageContainer::OrganImage)
 		m_organImage = std::static_pointer_cast<OrganImageContainer>(image);
+	else if (image->imageType == ImageContainer::MeasurementImage)
+		m_measurementImage = std::static_pointer_cast<MeasurementImageContainer>(image);
 }
 
 
@@ -97,7 +114,9 @@ void SimulationPipeline::runSimulation(const std::vector<std::shared_ptr<Source>
 	world.setDensityArray(m_densityImage->imageData());
 	for (const Material& m : m_materialList)
 		world.addMaterialToMap(m);
-	
+	if (m_measurementImage)
+		world.setMeasurementMapArray(m_measurementImage->imageData());
+
 	auto totalDose = std::make_shared<std::vector<double>>(world.size(), 0.0);
 	auto totalTally = std::make_shared<std::vector<std::uint32_t>>(world.size(), 0);
 	auto totalVariance = std::make_shared<std::vector<double>>(world.size(), 0.0);

@@ -72,9 +72,11 @@ signals:
 
 private:
 	bool m_ignoreAirDose = true;
-	std::shared_ptr<DensityImageContainer> m_densityImage;
-	std::shared_ptr<MaterialImageContainer> m_materialImage;
-	std::shared_ptr<OrganImageContainer> m_organImage;
+	std::uint64_t m_currentImageID = 0;
+	std::shared_ptr<DensityImageContainer> m_densityImage=nullptr;
+	std::shared_ptr<MaterialImageContainer> m_materialImage=nullptr;
+	std::shared_ptr<OrganImageContainer> m_organImage=nullptr;
+	std::shared_ptr<MeasurementImageContainer> m_measurementImage=nullptr;
 	std::vector<std::string> m_organList;
 	std::vector<Material> m_materialList;
 };

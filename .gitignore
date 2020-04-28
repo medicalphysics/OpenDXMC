@@ -94,3 +94,4 @@ ipch/
 /data/binaryimporttemplate/materialMapTemplate.dat
 /build
 /apps/out/build/x64-Debug
+/.vscode

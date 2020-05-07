@@ -60,5 +60,5 @@ private:
 
 	void updateVolumeSelectorWidget();
 	QString imageDescriptionName(int imageDescription);
-	
+	QString imageDescriptionToolTip(int imageDescription);
 };

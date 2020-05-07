@@ -900,15 +900,12 @@ void ImageImportPipeline::importCTDIPhantom(int mm, bool force_interaction_measu
 	organMap.push_back("CTDI measurement south");
 	organMap.push_back("CTDI measurement center");
 	auto organBuffer = organArray->data();
-	auto forcedBuffer = forceInteractionArray->data();
 	const auto nMaterials = static_cast<unsigned char>(materialMap.size());
 	for (std::size_t i = 0; i < 5; ++i)
 	{
-		auto idx = w.holeIndices(CTDIpositions[i]);
+		const auto idx = w.holeIndices(CTDIpositions[i]);
 		for (auto ind : idx)
 			organBuffer[ind] = static_cast<unsigned char>(i + nMaterials);
-		for (auto ind : idx)
-			forcedBuffer[ind] = 1;
 	}
 
 	auto materialImage = std::make_shared<MaterialImageContainer>(materialArray, dimensions, spacing, origin);

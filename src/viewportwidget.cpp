@@ -177,6 +177,8 @@ void ViewPortWidget::updateVolumeSelectorWidget()
 	{
 		int indexKey = *it;
 		m_volumeSelectorWidget->addItem(imageDescriptionName(indexKey), QVariant(indexKey));
+		// adding tooltip
+		m_volumeSelectorWidget->setItemData(indexKey, imageDescriptionToolTip(indexKey), Qt::ToolTipRole);
 		++it;
 	}
 	//adding dose overlay if possible
@@ -228,6 +230,38 @@ QString ViewPortWidget::imageDescriptionName(int imageDescription)
 	}
 	else if (imageDescription == static_cast<int>(ImageContainer::MeasurementImage)) {
 		return QString("Measurement Volumes");
+	}
+	return QString();
+}
+
+QString ViewPortWidget::imageDescriptionToolTip(int imageDescription)
+{
+	if (imageDescription == static_cast<int>(ImageContainer::CTImage)) {
+		return QString("CT image data displayed with Hounsfield units");
+	}
+	else if (imageDescription == static_cast<int>(ImageContainer::MaterialImage)) {
+		return QString("Map of material decomposition of the volume");
+	}
+	else if (imageDescription == static_cast<int>(ImageContainer::DensityImage)) {
+		return QString("Density map of the volume, displayed as grams per cubic centimeters");
+	}
+	else if (imageDescription == static_cast<int>(ImageContainer::OrganImage)) {
+		return QString("Map of organ volumes, these volumes are not neccesary for the simulation but helps summarize dose to different volumes if available");
+	}
+	else if (imageDescription == static_cast<int>(ImageContainer::DoseImage)) {
+		return QString("Map of dose distribution");
+	}
+	else if (imageDescription == static_cast<int>(ImageContainer::CustomType)) {
+		return QString("Map of dose distribution on top of CT images");
+	}
+	else if (imageDescription == static_cast<int>(ImageContainer::TallyImage)) {
+		return QString("Map of number of interaction events that contributes to dose for each voxel, i.e Rayleight scattering events are not tallied");
+	}
+	else if (imageDescription == static_cast<int>(ImageContainer::VarianceImage)) {
+		return QString("Dose variance map for each voxel given in same units as dose");
+	}
+	else if (imageDescription == static_cast<int>(ImageContainer::MeasurementImage)) {
+		return QString("Map of volumes where the simulation uses variance reduction techniqe to decrease uncertainty by increasing number of events in a weighted manner. Typically used in CTDI measurements for CT dose calibration");
 	}
 	return QString();
 }

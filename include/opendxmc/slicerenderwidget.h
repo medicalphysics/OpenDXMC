@@ -18,9 +18,8 @@ Copyright 2019 Erlend Andersen
 
 #pragma once
 
-
 #include "imagecontainer.h"
-#include "opendxmcconfig.h"
+#include "volumeactorcontainer.h"
 
 #include <QWidget>
 #include <QComboBox>
@@ -51,6 +50,9 @@ public:
 
 	void updateRendering();
 	void setImageData(std::shared_ptr<ImageContainer> foreground, std::shared_ptr<ImageContainer> background=nullptr);
+	void addActorContainer(VolumeActorContainer* actorContainer);
+	void removeActorContainer(VolumeActorContainer* actorContainer);
+	void setActorsVisible(int visible);
 protected:
 	std::array<double, 2> presetLeveling(ImageContainer::ImageType type);
 	void setColorTable(const QString& colorTableName);
@@ -74,6 +76,7 @@ private:
 	QComboBox* m_colorTablePicker = nullptr;
 	std::shared_ptr<ImageContainer> m_image;
 	std::shared_ptr<ImageContainer> m_imageBackground;
+	std::vector<VolumeActorContainer*> m_volumeProps;
 
 }; 
 

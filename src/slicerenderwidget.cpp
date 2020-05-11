@@ -253,17 +253,20 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 	// Setup render window interactor
 	vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
 
-	vtkSmartPointer<customMouseInteractorStyle> style = vtkSmartPointer<customMouseInteractorStyle>::New();
+	/*vtkSmartPointer<customMouseInteractorStyle> style = vtkSmartPointer<customMouseInteractorStyle>::New();
 	style->setMapper(m_imageMapper);
 	style->setMapperBackground(m_imageMapperBackground);
 	style->setRenderWindow(renderWindow);
+	*/
+	vtkSmartPointer<vtkInteractorStyleImage> style = vtkSmartPointer<vtkInteractorStyleImage>::New();
+	style->SetInteractionModeToImage3D();
 	renderWindowInteractor->SetInteractorStyle(style);
 	renderWindowInteractor->SetRenderWindow(renderWindow);
 
 	m_textActorCorners = vtkSmartPointer<vtkCornerAnnotation>::New();
 	m_textActorCorners->SetText(1, "");
 	m_textActorCorners->GetTextProperty()->SetColor(1.0, 1.0, 1.0);
-	style->setCornerAnnotation(m_textActorCorners);
+	//style->setCornerAnnotation(m_textActorCorners);
 	
 	//adding colorbar
 	m_scalarColorBar = vtkSmartPointer<vtkScalarBarActor>::New();
@@ -273,14 +276,18 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 	//other
 	m_imageMapper->SliceFacesCameraOn();
 	m_imageMapperBackground->SliceFacesCameraOn();
-	
+	m_imageMapper->SetJumpToNearestSlice(true);
+	m_imageMapperBackground->SetJumpToNearestSlice(true);
+	m_imageMapper->SetSliceAtFocalPoint(true);
+	m_imageMapperBackground->SetSliceAtFocalPoint(true);
+
+
 	// filling pipline with som data
 	vtkSmartPointer<vtkImageData> dummyData = vtkSmartPointer<vtkImageData>::New();
 	dummyData->SetDimensions(1, 1, 1);
 	dummyData->AllocateScalars(VTK_FLOAT, 1);
 	m_imageSmoother->SetInputData(dummyData);
 	m_imageMapperBackground->SetInputData(dummyData);
-
 
 	if (auto cam = m_renderer->GetActiveCamera(); m_orientation == Axial)
 	{	
@@ -398,7 +405,7 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 			double WL = (min + max) * 0.5;
 			prop->SetColorLevel(WL);
 			prop->SetColorWindow(WW);
-			style->updateWLText();
+			//style->updateWLText();
 		}
 		});
 
@@ -660,6 +667,46 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume, std
 		m_renderer->ResetCamera();
 	updateRendering();
 }
+
+
+void SliceRenderWidget::addActorContainer(VolumeActorContainer* actorContainer)
+{
+	auto actor = actorContainer->getActor();
+	auto present = m_renderer->GetActors()->IsItemPresent(actor);
+	if (present == 0)
+	{
+		if (m_image)
+			actorContainer->setOrientation(m_image->directionCosines);
+		m_renderer->AddActor(actor);
+		m_volumeProps.push_back(actorContainer);
+	}
+	updateRendering();
+}
+
+void SliceRenderWidget::removeActorContainer(VolumeActorContainer* actorContainer)
+{
+	auto actor = actorContainer->getActor();
+	if (m_renderer->GetActors()->IsItemPresent(actor) != 0)
+		m_renderer->RemoveActor(actor);
+	auto pos = std::find(m_volumeProps.begin(), m_volumeProps.end(), actorContainer);
+	if (pos != m_volumeProps.end())
+		m_volumeProps.erase(pos);
+	updateRendering();
+}
+
+void SliceRenderWidget::setActorsVisible(int visible)
+{
+	for (auto m : m_volumeProps)
+	{
+		auto actor = m->getActor();
+		if (visible == 0)
+			actor->VisibilityOff();
+		else
+			actor->VisibilityOn();
+	}
+	updateRendering();
+}
+
 
 std::array<double, 2> SliceRenderWidget::presetLeveling(ImageContainer::ImageType type)
 {

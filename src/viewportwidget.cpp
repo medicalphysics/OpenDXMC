@@ -114,6 +114,14 @@ void ViewPortWidget::addActorContainer(VolumeActorContainer* actorContainer)
 	m_sliceRenderWidgetSagittal->addActorContainer(actorContainer);
 }
 
+void ViewPortWidget::render()
+{
+	m_volumeRenderWidget->updateRendering();
+	m_sliceRenderWidgetAxial->updateRendering();
+	m_sliceRenderWidgetCoronal->updateRendering();
+	m_sliceRenderWidgetSagittal->updateRendering();
+}
+
 void ViewPortWidget::removeActorContainer(VolumeActorContainer * actorContainer)
 {
 	m_volumeRenderWidget->removeActorContainer(actorContainer);

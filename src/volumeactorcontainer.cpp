@@ -38,6 +38,8 @@ VolumeActorContainer::VolumeActorContainer()
 	m_userMatrix = vtkSmartPointer<vtkMatrix4x4>::New();
 	m_userTransform->SetInput(m_userMatrix);
 	m_actor->SetUserTransform(m_userTransform);
+	m_actor->SetDragable(true);
+	m_actor->SetPickable(true);
 }
 
 void VolumeActorContainer::setOrientation(const std::array<double, 6>& directionCosines)

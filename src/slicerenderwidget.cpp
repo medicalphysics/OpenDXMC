@@ -36,17 +36,14 @@ Copyright 2019 Erlend Andersen
 #include <QDir>
 #include <QTimer>
 
-#include <vtkGenericOpenGLRenderWindow.h>
+
 #include <vtkWindowLevelLookupTable.h>
 #include <vtkDiscretizableColorTransferFunction.h>
 #include <vtkLookupTable.h>
-#include <vtkRendererCollection.h>
-#include <vtkInteractorStyleImage.h>
-#include <vtkCamera.h>
-#include <vtkPlane.h>
-#include <vtkObjectFactory.h>
 #include <vtkTextProperty.h>
 #include <vtkImageProperty.h>
+#include <vtkCamera.h>
+#include <vtkRendererCollection.h>
 #include <vtkWindowToImageFilter.h>
 #include <vtkPNGWriter.h>
 #include <vtkRenderWindowInteractor.h>
@@ -56,145 +53,6 @@ Copyright 2019 Erlend Andersen
 #endif
 
 #include <charconv>
-
-// Define interaction style
-class customMouseInteractorStyle : public vtkInteractorStyleImage
-{
-public:
-	static customMouseInteractorStyle* New();
-	vtkTypeMacro(customMouseInteractorStyle, vtkInteractorStyleImage);
-
-	void OnMouseWheelForward() override
-	{
-		m_imageMapper->UpdateInformation();
-		auto plane = m_imageMapper->GetSlicePlane();
-		auto image = m_imageMapper->GetInput();
-		if(image)
-		{
-			auto planeNormal = plane->GetNormal();
-			auto ind = vectormath::argmax3<std::size_t, double>(planeNormal);
-			auto spacing = image->GetSpacing();
-			plane->Push(spacing[ind]);
-		}
-		else
-		{
-			plane->Push(1.0);
-		}
-		double* imbounds = m_imageMapper->GetBounds();
-		double* origin = plane->GetOrigin();
-		for (int i = 0; i < 3; ++i)
-		{
-			if (origin[i] > imbounds[i * 2 + 1])
-				origin[i] = imbounds[i * 2];
-			if (origin[i] < imbounds[i * 2])
-				origin[i] = imbounds[i * 2 + 1];
-		}
-		plane->SetOrigin(origin);
-
-		m_imageMapper->SetSlicePlane(plane);
-		m_imageMapper->UpdateInformation();
-		if (m_imageMapperBackground)
-		{
-			m_imageMapperBackground->SetSlicePlane(plane);
-			m_imageMapperBackground->UpdateInformation();
-		}
-		m_renderWindow->Render();
-	}
-
-	void OnMouseWheelBackward() override
-	{
-
-		m_imageMapper->UpdateInformation();
-		auto plane = m_imageMapper->GetSlicePlane();
-		auto image = m_imageMapper->GetInput();
-		if (image)
-		{
-			auto planeNormal = plane->GetNormal();
-			auto ind = vectormath::argmax3<std::size_t, double>(planeNormal);
-			auto spacing = image->GetSpacing();
-			plane->Push(-spacing[ind]);
-		}
-		else
-		{
-			plane->Push(-1.0);
-		}
-		double* imbounds = m_imageMapper->GetBounds();
-		double* origin = plane->GetOrigin();
-		for (int i = 0; i < 3; ++i)
-		{
-			if (origin[i] > imbounds[i * 2 + 1])
-				origin[i] = imbounds[i * 2];
-			if (origin[i] < imbounds[i * 2])
-				origin[i] = imbounds[i * 2 + 1];
-		}
-		plane->SetOrigin(origin);
-
-		m_imageMapper->SetSlicePlane(plane);
-		m_imageMapper->UpdateInformation();
-		if (m_imageMapperBackground)
-		{
-			m_imageMapperBackground->SetSlicePlane(plane);
-			m_imageMapperBackground->UpdateInformation();
-		}
-		m_renderWindow->Render();
-	}
-
-	void OnMouseMove() override
-	{
-		vtkInteractorStyleImage::OnMouseMove();
-		updateWLText();
-	}
-
-	void setMapper(vtkSmartPointer<vtkImageResliceMapper> m)
-	{
-		m_imageMapper = m;
-	}
-	void setMapperBackground(vtkSmartPointer<vtkImageResliceMapper> m)
-	{
-		m_imageMapperBackground = m;
-	}
-	void setRenderWindow(vtkSmartPointer<vtkRenderWindow> m)
-	{
-		m_renderWindow = m;
-	}
-	
-	void setCornerAnnotation(vtkSmartPointer<vtkCornerAnnotation> actor)
-	{
-		m_textActorCorners = actor;
-	}
-	static std::string prettyNumber(double number)
-	{
-		constexpr std::int32_t k = 2; // number decimals
-		std::int32_t b = number * std::pow(10, k);
-		auto bs = std::to_string(b);
-		int c = static_cast<int>(bs.size() - k);
-		if (c < 0)
-			bs.insert(0, -c, '0');
-		if (bs.size() == k)
-			bs.insert(0, "0.");
-		else
-			bs.insert(bs.size() - k, 1, '.');
-		return bs;
-	}
-	void updateWLText()
-	{
-		auto prop = GetCurrentImageProperty();
-		if (prop)
-		{
-			double l = prop->GetColorLevel();
-			double w = prop->GetColorWindow();
-			auto text = "WC: " + prettyNumber(l) + "\n" + "WW: " + prettyNumber(w);
-			if(m_textActorCorners)
-				m_textActorCorners->SetText(0, text.c_str());
-		}
-	}
-private:
-	vtkSmartPointer<vtkImageResliceMapper> m_imageMapper;
-	vtkSmartPointer<vtkImageResliceMapper> m_imageMapperBackground;
-	vtkSmartPointer<vtkRenderWindow> m_renderWindow;
-	vtkSmartPointer<vtkCornerAnnotation> m_textActorCorners;
-};
-vtkStandardNewMacro(customMouseInteractorStyle);
 
 std::shared_ptr<ImageContainer> makeStartImage(void)
 {
@@ -253,20 +111,20 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 	// Setup render window interactor
 	vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
 
-	/*vtkSmartPointer<customMouseInteractorStyle> style = vtkSmartPointer<customMouseInteractorStyle>::New();
-	style->setMapper(m_imageMapper);
-	style->setMapperBackground(m_imageMapperBackground);
-	style->setRenderWindow(renderWindow);
-	*/
-	vtkSmartPointer<vtkInteractorStyleImage> style = vtkSmartPointer<vtkInteractorStyleImage>::New();
-	style->SetInteractionModeToImage3D();
-	renderWindowInteractor->SetInteractorStyle(style);
+	m_interactionStyle = vtkSmartPointer<customMouseInteractorStyle>::New();
+	m_interactionStyle->setMapper(m_imageMapper);
+	m_interactionStyle->setMapperBackground(m_imageMapperBackground);
+	m_interactionStyle->setRenderWindow(renderWindow);
+	
+	//vtkSmartPointer<vtkInteractorStyleImage> m_interactionStyle = vtkSmartPointer<vtkInteractorStyleImage>::New();
+	//m_interactionStyle->SetInteractionModeToImage3D();
+	renderWindowInteractor->SetInteractorStyle(m_interactionStyle);
 	renderWindowInteractor->SetRenderWindow(renderWindow);
 
 	m_textActorCorners = vtkSmartPointer<vtkCornerAnnotation>::New();
 	m_textActorCorners->SetText(1, "");
 	m_textActorCorners->GetTextProperty()->SetColor(1.0, 1.0, 1.0);
-	//style->setCornerAnnotation(m_textActorCorners);
+	m_interactionStyle->setCornerAnnotation(m_textActorCorners);
 	
 	//adding colorbar
 	m_scalarColorBar = vtkSmartPointer<vtkScalarBarActor>::New();
@@ -280,7 +138,6 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 	m_imageMapperBackground->SetJumpToNearestSlice(true);
 	m_imageMapper->SetSliceAtFocalPoint(true);
 	m_imageMapperBackground->SetSliceAtFocalPoint(true);
-
 
 	// filling pipline with som data
 	vtkSmartPointer<vtkImageData> dummyData = vtkSmartPointer<vtkImageData>::New();
@@ -345,6 +202,11 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 	smoothSliderAction->setDefaultWidget(smoothSliderHolder);
 	menu->addAction(smoothSliderAction);
 	
+	auto showGrapicsAction = menu->addAction(tr("Show graphics"));
+	showGrapicsAction->setCheckable(true);
+	showGrapicsAction->setChecked(true);
+	connect(showGrapicsAction, &QAction::toggled, this, &SliceRenderWidget::setActorsVisible);
+
 	m_colorTablePicker = new QComboBox(menuButton);
 	for (const auto& p : m_colorTables)
 	{
@@ -377,11 +239,11 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 	windowSettingsAction->setDefaultWidget(windowSettingsHolder);
 	menu->addAction(windowSettingsAction);
 	connect(menu, &QMenu::aboutToShow, [=](void) {
-		auto prop = style->GetCurrentImageProperty();
+		auto prop = m_interactionStyle->GetCurrentImageProperty();
 		if (prop)
 		{
-			double WW = style->GetCurrentImageProperty()->GetColorWindow();
-			double WL = style->GetCurrentImageProperty()->GetColorLevel();
+			double WW = m_interactionStyle->GetCurrentImageProperty()->GetColorWindow();
+			double WL = m_interactionStyle->GetCurrentImageProperty()->GetColorLevel();
 			double min = WL - WW * 0.5;
 			double max = WL + WW * 0.5;
 			if (m_image)
@@ -394,7 +256,7 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 		}
 		});
 	connect(menu, &QMenu::aboutToHide, [=](void) {
-		auto prop = style->GetCurrentImageProperty();
+		auto prop = m_interactionStyle->GetCurrentImageProperty();
 		if (prop)
 		{
 			double min = windowSettingMin->value();
@@ -405,7 +267,7 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 			double WL = (min + max) * 0.5;
 			prop->SetColorLevel(WL);
 			prop->SetColorWindow(WW);
-			//style->updateWLText();
+			m_interactionStyle->update();
 		}
 		});
 
@@ -665,33 +527,29 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume, std
 	m_renderer->AddActor(m_imageSlice);
 	if(imageIDchanged)
 		m_renderer->ResetCamera();
+	m_interactionStyle->update();
 	updateRendering();
 }
 
 
 void SliceRenderWidget::addActorContainer(VolumeActorContainer* actorContainer)
 {
-	auto actor = actorContainer->getActor();
-	auto present = m_renderer->GetActors()->IsItemPresent(actor);
-	if (present == 0)
+	auto pos = std::find(m_volumeProps.begin(), m_volumeProps.end(), actorContainer);
+	if (pos == m_volumeProps.end()) // not present
 	{
-		if (m_image)
-			actorContainer->setOrientation(m_image->directionCosines);
-		m_renderer->AddActor(actor);
+		auto actor = actorContainer->getActor();
+		m_interactionStyle->addImagePlaneActor(actor);
 		m_volumeProps.push_back(actorContainer);
 	}
-	updateRendering();
 }
 
 void SliceRenderWidget::removeActorContainer(VolumeActorContainer* actorContainer)
 {
 	auto actor = actorContainer->getActor();
-	if (m_renderer->GetActors()->IsItemPresent(actor) != 0)
-		m_renderer->RemoveActor(actor);
+	m_interactionStyle->removeImagePlaneActor(actor);
 	auto pos = std::find(m_volumeProps.begin(), m_volumeProps.end(), actorContainer);
 	if (pos != m_volumeProps.end())
 		m_volumeProps.erase(pos);
-	updateRendering();
 }
 
 void SliceRenderWidget::setActorsVisible(int visible)

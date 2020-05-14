@@ -43,7 +43,7 @@ public:
 	void setImageData(std::shared_ptr<ImageContainer> imageData);
 	void addActorContainer(VolumeActorContainer* actorContainer);
 	void removeActorContainer(VolumeActorContainer* actorContainer);
-	void render() { m_volumeRenderWidget->updateRendering(); }
+	void render();
 	void showCurrentImageData(void);
 	void showImageData(int imageDescription);
 	QSize minimumSizeHint(void) const { return QSize(200, 200); }

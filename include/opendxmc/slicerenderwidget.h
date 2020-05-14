@@ -20,6 +20,7 @@ Copyright 2019 Erlend Andersen
 
 #include "imagecontainer.h"
 #include "volumeactorcontainer.h"
+#include "slicerenderinteractor.h"
 
 #include <QWidget>
 #include <QComboBox>
@@ -30,14 +31,12 @@ Copyright 2019 Erlend Andersen
 #include <vtkImageResliceMapper.h>
 #include <vtkImageSlice.h>
 #include <vtkRenderer.h>
-#include <vtkCornerAnnotation.h>
 #include <vtkImageGaussianSmooth.h>
 #include <vtkScalarBarActor.h>
 
 #include <memory>
 #include <map>
 #include <array>
-
 
 // https://github.com/Kitware/VTK/blob/master/Rendering/Image/Testing/Cxx/TestImageResliceMapperAlpha.cxx
 
@@ -68,6 +67,7 @@ private:
 	vtkSmartPointer<vtkImageResliceMapper> m_imageMapperBackground;
 	vtkSmartPointer<vtkImageSlice> m_imageSlice;
 	vtkSmartPointer<vtkImageSlice> m_imageSliceBackground;
+	vtkSmartPointer<customMouseInteractorStyle> m_interactionStyle;
 	std::map<ImageContainer::ImageType, std::array<double, 2>> m_windowLevels;
 	vtkSmartPointer<vtkRenderer> m_renderer;
 	vtkSmartPointer<vtkCornerAnnotation> m_textActorCorners;
@@ -77,6 +77,5 @@ private:
 	std::shared_ptr<ImageContainer> m_image;
 	std::shared_ptr<ImageContainer> m_imageBackground;
 	std::vector<VolumeActorContainer*> m_volumeProps;
-
 }; 
 

@@ -537,16 +537,14 @@ void SliceRenderWidget::addActorContainer(VolumeActorContainer* actorContainer)
 	auto pos = std::find(m_volumeProps.begin(), m_volumeProps.end(), actorContainer);
 	if (pos == m_volumeProps.end()) // not present
 	{
-		auto actor = actorContainer->getActor();
-		m_interactionStyle->addImagePlaneActor(actor);
+		m_interactionStyle->addImagePlaneActor(actorContainer);
 		m_volumeProps.push_back(actorContainer);
 	}
 }
 
 void SliceRenderWidget::removeActorContainer(VolumeActorContainer* actorContainer)
 {
-	auto actor = actorContainer->getActor();
-	m_interactionStyle->removeImagePlaneActor(actor);
+	m_interactionStyle->removeImagePlaneActor(actorContainer);
 	auto pos = std::find(m_volumeProps.begin(), m_volumeProps.end(), actorContainer);
 	if (pos != m_volumeProps.end())
 		m_volumeProps.erase(pos);

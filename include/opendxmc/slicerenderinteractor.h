@@ -18,11 +18,14 @@ Copyright 2019 Erlend Andersen
 
 #pragma once
 
+#include "volumeactorcontainer.h"
+
 #include <vtkInteractorStyleImage.h>
 #include <vtkImageResliceMapper.h>
 #include <vtkGenericOpenGLRenderWindow.h>
 #include <vtkCornerAnnotation.h>
 
+subclass jystick actor interactor????
 
 class customMouseInteractorStyle : public vtkInteractorStyleImage
 {
@@ -32,24 +35,28 @@ public:
 	void OnMouseWheelForward() override;
 	void OnMouseWheelBackward() override;
 	void OnMouseMove() override;
+	void OnLeftButtonDown() override;
+	void OnLeftButtonUp() override;
 	void setMapper(vtkSmartPointer<vtkImageResliceMapper> m);
 	void setMapperBackground(vtkSmartPointer<vtkImageResliceMapper> m);
 	void setRenderWindow(vtkSmartPointer<vtkRenderWindow> m);
 	void setCornerAnnotation(vtkSmartPointer<vtkCornerAnnotation> actor);
 	static std::string prettyNumber(double number);
 	void update();
-	void addImagePlaneActor(vtkActor* actor);
-	void removeImagePlaneActor(vtkActor* actor);
+	void addImagePlaneActor(VolumeActorContainer* container);
+	void removeImagePlaneActor(VolumeActorContainer* container);
 protected:
 	void updateWLText();
 	void scrollSlice(bool forward);
 	void updatePlaneActors();
+	vtkActor* findPickedPlaneActor(int x, int y);
 private:
 	vtkSmartPointer<vtkImageResliceMapper> m_imageMapper;
 	vtkSmartPointer<vtkImageResliceMapper> m_imageMapperBackground;
 	vtkSmartPointer<vtkRenderWindow> m_renderWindow;
 	vtkSmartPointer<vtkCornerAnnotation> m_textActorCorners;
-	std::vector<vtkActor*> m_imagePlaneActors;
+	std::vector<VolumeActorContainer*> m_imagePlaneActors;
+	vtkActor* m_pickedPlaneActor = nullptr;
 };
 
 

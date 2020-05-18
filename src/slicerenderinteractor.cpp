@@ -31,6 +31,23 @@ void customMouseInteractorStyle::OnMouseMove()
 	updateWLText();
 }
 
+void customMouseInteractorStyle::OnLeftButtonDown()
+{
+	int x = this->Interactor->GetEventPosition()[0];
+	int y = this->Interactor->GetEventPosition()[1];
+
+	this->FindPokedRenderer(x, y);
+	this->FindPickedActor(x, y);
+
+	vtkInteractorStyleImage::OnLeftButtonDown();
+}
+
+void customMouseInteractorStyle::OnLeftButtonUp()
+{
+	vtkInteractorStyleImage::OnLeftButtonUp();
+}
+
+
 void customMouseInteractorStyle::setMapper(vtkSmartPointer<vtkImageResliceMapper> m)
 {
 	m_imageMapper = m;
@@ -83,17 +100,18 @@ void customMouseInteractorStyle::updateWLText()
 			m_textActorCorners->SetText(0, text.c_str());
 	}
 }
-void customMouseInteractorStyle::addImagePlaneActor(vtkActor* actor)
+void customMouseInteractorStyle::addImagePlaneActor(VolumeActorContainer* container)
 {
-	m_imagePlaneActors.push_back(actor);
+	m_imagePlaneActors.push_back(container);
 	updatePlaneActors();
 	m_renderWindow->Render();
 }
-void customMouseInteractorStyle::removeImagePlaneActor(vtkActor* actor)
+void customMouseInteractorStyle::removeImagePlaneActor(VolumeActorContainer* container)
 {
-	m_imagePlaneActors.erase(std::remove(m_imagePlaneActors.begin(), m_imagePlaneActors.end(), actor), m_imagePlaneActors.end());
+	m_imagePlaneActors.erase(std::remove(m_imagePlaneActors.begin(), m_imagePlaneActors.end(), container), m_imagePlaneActors.end());
 	auto renderCollection = m_renderWindow->GetRenderers();
 	auto renderer = renderCollection->GetFirstRenderer();
+	auto actor = container->getActor();
 	renderer->RemoveActor(actor);
 	m_renderWindow->Render();
 }
@@ -134,31 +152,45 @@ void customMouseInteractorStyle::scrollSlice(bool forward)
 
 	m_renderWindow->Render();
 }
-	void customMouseInteractorStyle::updatePlaneActors()
-	{	
-		auto renderCollection = m_renderWindow->GetRenderers();
-		auto renderer = renderCollection->GetFirstRenderer();
-		auto cam = renderer->GetActiveCamera();
+void customMouseInteractorStyle::updatePlaneActors()
+{	
+	auto renderCollection = m_renderWindow->GetRenderers();
+	auto renderer = renderCollection->GetFirstRenderer();
+	auto cam = renderer->GetActiveCamera();
 
-		std::array<double, 3> origin;
-		cam->GetFocalPoint(origin.data());
+	std::array<double, 3> origin;
+	cam->GetFocalPoint(origin.data());
 
-		std::array<double, 6> bounds;
+	std::array<double, 6> bounds;
 
-
-		for (auto actor : m_imagePlaneActors)
+	for (auto container : m_imagePlaneActors)
+	{
+		auto actor = container->getActor();
+		renderer->RemoveActor(actor);
+		actor->GetBounds(bounds.data());
+		bool visible = true;
+		for (std::size_t i = 0; i < 3; ++i)
 		{
-			renderer->RemoveActor(actor);
-			actor->GetBounds(bounds.data());
-			bool visible = true;
-			for (std::size_t i = 0; i < 3; ++i)
-			{
-				visible = visible && origin[i] >= bounds[2 * i];
-				visible = visible && origin[i] <= bounds[2 * i + 1];
-			}
-			if (visible)
-			{
-				renderer->AddActor(actor);
-			}
+			visible = visible && origin[i] >= bounds[2 * i];
+			visible = visible && origin[i] <= bounds[2 * i + 1];
+		}
+		if (visible)
+		{
+			renderer->AddActor(actor);
 		}
 	}
+}
+
+vtkActor* customMouseInteractorStyle::findPickedPlaneActor(int x, int y)
+{
+	this->InteractionPicker->Pick(x, y, 0.0, this->CurrentRenderer);
+	vtkProp* prop = this->InteractionPicker->GetViewProp();
+	if (prop != nullptr)
+	{
+		this->InteractionProp = vtkProp3D::SafeDownCast(prop);
+	}
+	else
+	{
+		this->InteractionProp = nullptr;
+	}
+}

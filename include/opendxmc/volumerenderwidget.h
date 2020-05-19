@@ -54,8 +54,8 @@ public:
 	void setImageData(std::shared_ptr<ImageContainer> volume);
 	void setRenderMode(int mode);
 	void setCropPlanes(int planes[6]);
-	void addActorContainer(VolumeActorContainer* actorContainer);
-	void removeActorContainer(VolumeActorContainer* actorContainer);
+	void addActorContainer(SourceActorContainer* actorContainer);
+	void removeActorContainer(SourceActorContainer* actorContainer);
 	void setActorsVisible(int visible);
 signals:
 	void imageDataChanged(std::shared_ptr<ImageContainer> image);

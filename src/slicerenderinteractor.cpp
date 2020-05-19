@@ -10,10 +10,18 @@
 #include <vtkImageProperty.h>
 #include <vtkImageData.h>
 #include <vtkObjectFactory.h>
+#include <vtkRenderWindowInteractor.h>
+#include <vtkTransform.h>
 
 #include <array>
 
 vtkStandardNewMacro(customMouseInteractorStyle);
+
+customMouseInteractorStyle::customMouseInteractorStyle()
+{
+	m_interactionPicker = vtkSmartPointer<vtkCellPicker>::New();
+
+}
 
 void customMouseInteractorStyle::OnMouseWheelForward()
 {
@@ -36,17 +44,94 @@ void customMouseInteractorStyle::OnLeftButtonDown()
 	int x = this->Interactor->GetEventPosition()[0];
 	int y = this->Interactor->GetEventPosition()[1];
 
-	this->FindPokedRenderer(x, y);
-	this->FindPickedActor(x, y);
-
-	vtkInteractorStyleImage::OnLeftButtonDown();
+	m_pickedPlaneActor = findPickedPlaneActor(x, y);
+	
+	if (!m_pickedPlaneActor)
+	{
+		vtkInteractorStyleImage::OnLeftButtonDown();
+		
+	}
+	else {
+		//Actor pan
+		this->StartPan();
+	}
 }
 
 void customMouseInteractorStyle::OnLeftButtonUp()
 {
-	vtkInteractorStyleImage::OnLeftButtonUp();
+	if (!m_pickedPlaneActor)
+	{
+		vtkInteractorStyleImage::OnLeftButtonUp();
+	}
+	else {
+
+		m_pickedPlaneActor->applyActorTranslationToSource();
+		
+		//Actor pan
+		this->EndPan();
+		
+	}
 }
 
+void customMouseInteractorStyle::StartPan() 
+{
+	vtkInteractorStyleImage::StartPan();
+}
+void customMouseInteractorStyle::EndPan()
+{
+	vtkInteractorStyleImage::EndPan();
+}
+void customMouseInteractorStyle::Pan()
+{
+	if (m_pickedPlaneActor == nullptr || this->CurrentRenderer == nullptr)
+	{
+		vtkInteractorStyleImage::Pan();
+		return;
+	}
+
+	auto actor = m_pickedPlaneActor->getActor();
+	auto pos = actor->GetCenter();
+	std::array<double, 3> displayPos;
+	this->ComputeWorldToDisplay(pos[0], pos[1], pos[2], displayPos.data());
+
+	auto rwi = this->GetInteractor();
+	std::array<double, 4> newPos, oldPos;
+	this->ComputeDisplayToWorld(
+		rwi->GetEventPosition()[0], rwi->GetEventPosition()[1], displayPos[2], newPos.data());
+	this->ComputeDisplayToWorld(
+		rwi->GetLastEventPosition()[0], rwi->GetLastEventPosition()[1], displayPos[2], oldPos.data());
+
+	std::array<double, 3> motionVector;
+	for (std::size_t i = 0; i < 3; ++i)
+		motionVector[i] = newPos[i] - oldPos[i];
+
+	auto matrix = m_pickedPlaneActor->getMatrix();
+	for (int i = 0; i < 3; ++i)
+	{
+		const double new_pos = motionVector[i] + matrix->GetElement(i, 3);
+		matrix->SetElement(i, 3, new_pos);
+	}
+	
+	/*if (actor->GetUserMatrix() != nullptr)
+	{
+		auto t = vtkSmartPointer<vtkTransform>::New();
+		t->PostMultiply();
+		t->SetMatrix(actor->GetUserMatrix());
+		t->Translate(motionVector[0], motionVector[1], motionVector[2]);
+		actor->GetUserMatrix()->DeepCopy(t->GetMatrix());
+	}
+	else
+	{
+		actor->AddPosition(motionVector[0], motionVector[1], motionVector[2]);
+	}*/
+
+	if (this->AutoAdjustCameraClippingRange)
+	{
+		this->CurrentRenderer->ResetCameraClippingRange();
+	}
+
+	rwi->Render();
+}
 
 void customMouseInteractorStyle::setMapper(vtkSmartPointer<vtkImageResliceMapper> m)
 {
@@ -100,13 +185,13 @@ void customMouseInteractorStyle::updateWLText()
 			m_textActorCorners->SetText(0, text.c_str());
 	}
 }
-void customMouseInteractorStyle::addImagePlaneActor(VolumeActorContainer* container)
+void customMouseInteractorStyle::addImagePlaneActor(SourceActorContainer* container)
 {
 	m_imagePlaneActors.push_back(container);
 	updatePlaneActors();
 	m_renderWindow->Render();
 }
-void customMouseInteractorStyle::removeImagePlaneActor(VolumeActorContainer* container)
+void customMouseInteractorStyle::removeImagePlaneActor(SourceActorContainer* container)
 {
 	m_imagePlaneActors.erase(std::remove(m_imagePlaneActors.begin(), m_imagePlaneActors.end(), container), m_imagePlaneActors.end());
 	auto renderCollection = m_renderWindow->GetRenderers();
@@ -181,16 +266,20 @@ void customMouseInteractorStyle::updatePlaneActors()
 	}
 }
 
-vtkActor* customMouseInteractorStyle::findPickedPlaneActor(int x, int y)
+SourceActorContainer* customMouseInteractorStyle::findPickedPlaneActor(int x, int y)
 {
-	this->InteractionPicker->Pick(x, y, 0.0, this->CurrentRenderer);
-	vtkProp* prop = this->InteractionPicker->GetViewProp();
-	if (prop != nullptr)
+	this->FindPokedRenderer(x, y);
+	auto renWinInteractor = GetInteractor();
+	auto picker = renWinInteractor->GetPicker();
+	m_interactionPicker->Pick(x, y, 0, this->CurrentRenderer);
+	if (auto prop = m_interactionPicker->GetViewProp())
 	{
-		this->InteractionProp = vtkProp3D::SafeDownCast(prop);
+		for (auto cont : m_imagePlaneActors)
+		{
+			auto contActor = cont->getActor();
+			if (contActor == prop)
+				return cont;
+		}
 	}
-	else
-	{
-		this->InteractionProp = nullptr;
-	}
+	return nullptr;
 }

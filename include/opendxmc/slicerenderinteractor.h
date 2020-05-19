@@ -24,8 +24,7 @@ Copyright 2019 Erlend Andersen
 #include <vtkImageResliceMapper.h>
 #include <vtkGenericOpenGLRenderWindow.h>
 #include <vtkCornerAnnotation.h>
-
-subclass jystick actor interactor????
+#include <vtkCellPicker.h>
 
 class customMouseInteractorStyle : public vtkInteractorStyleImage
 {
@@ -37,26 +36,31 @@ public:
 	void OnMouseMove() override;
 	void OnLeftButtonDown() override;
 	void OnLeftButtonUp() override;
+	void StartPan() override;
+	void EndPan() override;
+	void Pan() override;
 	void setMapper(vtkSmartPointer<vtkImageResliceMapper> m);
 	void setMapperBackground(vtkSmartPointer<vtkImageResliceMapper> m);
 	void setRenderWindow(vtkSmartPointer<vtkRenderWindow> m);
 	void setCornerAnnotation(vtkSmartPointer<vtkCornerAnnotation> actor);
 	static std::string prettyNumber(double number);
 	void update();
-	void addImagePlaneActor(VolumeActorContainer* container);
-	void removeImagePlaneActor(VolumeActorContainer* container);
+	void addImagePlaneActor(SourceActorContainer* container);
+	void removeImagePlaneActor(SourceActorContainer* container);
 protected:
+	customMouseInteractorStyle();
 	void updateWLText();
 	void scrollSlice(bool forward);
 	void updatePlaneActors();
-	vtkActor* findPickedPlaneActor(int x, int y);
+	SourceActorContainer* findPickedPlaneActor(int x, int y);
 private:
-	vtkSmartPointer<vtkImageResliceMapper> m_imageMapper;
-	vtkSmartPointer<vtkImageResliceMapper> m_imageMapperBackground;
-	vtkSmartPointer<vtkRenderWindow> m_renderWindow;
-	vtkSmartPointer<vtkCornerAnnotation> m_textActorCorners;
-	std::vector<VolumeActorContainer*> m_imagePlaneActors;
-	vtkActor* m_pickedPlaneActor = nullptr;
+	vtkSmartPointer<vtkImageResliceMapper> m_imageMapper = nullptr;
+	vtkSmartPointer<vtkImageResliceMapper> m_imageMapperBackground = nullptr;
+	vtkSmartPointer<vtkRenderWindow> m_renderWindow = nullptr;
+	vtkSmartPointer<vtkCornerAnnotation> m_textActorCorners = nullptr;
+	std::vector<SourceActorContainer*> m_imagePlaneActors;
+	SourceActorContainer* m_pickedPlaneActor = nullptr;
+	vtkSmartPointer<vtkCellPicker> m_interactionPicker = nullptr;
 };
 
 

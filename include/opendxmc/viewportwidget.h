@@ -41,8 +41,8 @@ public:
 	~ViewPortWidget();
 
 	void setImageData(std::shared_ptr<ImageContainer> imageData);
-	void addActorContainer(VolumeActorContainer* actorContainer);
-	void removeActorContainer(VolumeActorContainer* actorContainer);
+	void addActorContainer(SourceActorContainer* actorContainer);
+	void removeActorContainer(SourceActorContainer* actorContainer);
 	void render();
 	void showCurrentImageData(void);
 	void showImageData(int imageDescription);

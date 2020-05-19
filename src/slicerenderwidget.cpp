@@ -532,7 +532,7 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume, std
 }
 
 
-void SliceRenderWidget::addActorContainer(VolumeActorContainer* actorContainer)
+void SliceRenderWidget::addActorContainer(SourceActorContainer* actorContainer)
 {
 	auto pos = std::find(m_volumeProps.begin(), m_volumeProps.end(), actorContainer);
 	if (pos == m_volumeProps.end()) // not present
@@ -542,7 +542,7 @@ void SliceRenderWidget::addActorContainer(VolumeActorContainer* actorContainer)
 	}
 }
 
-void SliceRenderWidget::removeActorContainer(VolumeActorContainer* actorContainer)
+void SliceRenderWidget::removeActorContainer(SourceActorContainer* actorContainer)
 {
 	m_interactionStyle->removeImagePlaneActor(actorContainer);
 	auto pos = std::find(m_volumeProps.begin(), m_volumeProps.end(), actorContainer);

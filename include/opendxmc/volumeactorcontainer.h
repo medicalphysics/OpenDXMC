@@ -45,8 +45,6 @@ public:
 	virtual void setOrientation(const std::array<double, 6> &directionCosines);
 	virtual void update() = 0;
 protected:
-
-private:
 	vtkSmartPointer<vtkActor> m_actor;
 	vtkSmartPointer<vtkMatrixToLinearTransform> m_userTransform;
 	vtkSmartPointer<vtkMatrix4x4> m_userMatrix;
@@ -64,7 +62,17 @@ private:
 	vtkSmartPointer<vtkPolyDataMapper> m_humanMapper;
 };
 
-class DXSourceContainer :public VolumeActorContainer
+class SourceActorContainer :public VolumeActorContainer
+{
+public:
+	SourceActorContainer(Source* src);
+	virtual void update()=0;
+	void applyActorTranslationToSource();
+private:
+	Source* m_src = nullptr;
+};
+
+class DXSourceContainer final :public SourceActorContainer
 {
 public:
 	DXSourceContainer(std::shared_ptr<DXSource> src);
@@ -83,7 +91,7 @@ private:
 	vtkSmartPointer<vtkPolyDataMapper> m_mapper;
 };
 
-class CTSpiralSourceContainer :public VolumeActorContainer
+class CTSpiralSourceContainer final :public SourceActorContainer
 {
 public:
 	CTSpiralSourceContainer(std::shared_ptr<CTSpiralSource> src);
@@ -101,7 +109,7 @@ private:
 	vtkSmartPointer<vtkTubeFilter> m_tubeFilter;
 	vtkSmartPointer<vtkPolyDataMapper> m_mapper;
 };
-class CTAxialSourceContainer :public VolumeActorContainer
+class CTAxialSourceContainer final:public SourceActorContainer
 {
 public:
 	CTAxialSourceContainer(std::shared_ptr<CTAxialSource> src);
@@ -121,7 +129,7 @@ private:
 };
 
 
-class CTDualSourceContainer :public VolumeActorContainer
+class CTDualSourceContainer final:public SourceActorContainer
 {
 public:
 	CTDualSourceContainer(std::shared_ptr<CTDualSource> src);

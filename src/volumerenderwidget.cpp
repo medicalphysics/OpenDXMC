@@ -283,7 +283,7 @@ void VolumeRenderWidget::setCropPlanes(int planes[6])
 	this->updateRendering();
 }
 
-void VolumeRenderWidget::addActorContainer(VolumeActorContainer* actorContainer)
+void VolumeRenderWidget::addActorContainer(SourceActorContainer* actorContainer)
 {
 	auto actor = actorContainer->getActor();
 	auto present = m_renderer->GetActors()->IsItemPresent(actor);
@@ -297,7 +297,7 @@ void VolumeRenderWidget::addActorContainer(VolumeActorContainer* actorContainer)
 	updateRendering();
 }
 
-void VolumeRenderWidget::removeActorContainer(VolumeActorContainer* actorContainer)
+void VolumeRenderWidget::removeActorContainer(SourceActorContainer* actorContainer)
 {
 	auto actor = actorContainer->getActor();
 	if (m_renderer->GetActors()->IsItemPresent(actor) != 0)

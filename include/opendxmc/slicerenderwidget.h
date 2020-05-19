@@ -49,8 +49,8 @@ public:
 
 	void updateRendering();
 	void setImageData(std::shared_ptr<ImageContainer> foreground, std::shared_ptr<ImageContainer> background=nullptr);
-	void addActorContainer(VolumeActorContainer* actorContainer);
-	void removeActorContainer(VolumeActorContainer* actorContainer);
+	void addActorContainer(SourceActorContainer* actorContainer);
+	void removeActorContainer(SourceActorContainer* actorContainer);
 	void setActorsVisible(int visible);
 protected:
 	std::array<double, 2> presetLeveling(ImageContainer::ImageType type);
@@ -76,6 +76,6 @@ private:
 	QComboBox* m_colorTablePicker = nullptr;
 	std::shared_ptr<ImageContainer> m_image;
 	std::shared_ptr<ImageContainer> m_imageBackground;
-	std::vector<VolumeActorContainer*> m_volumeProps;
+	std::vector<SourceActorContainer*> m_volumeProps;
 }; 
 

@@ -106,7 +106,7 @@ void ViewPortWidget::setImageData(std::shared_ptr<ImageContainer> volumeData)
 	showCurrentImageData();
 }
 
-void ViewPortWidget::addActorContainer(VolumeActorContainer* actorContainer)
+void ViewPortWidget::addActorContainer(SourceActorContainer* actorContainer)
 {
 	m_volumeRenderWidget->addActorContainer(actorContainer);
 	m_sliceRenderWidgetAxial->addActorContainer(actorContainer);
@@ -122,7 +122,7 @@ void ViewPortWidget::render()
 	m_sliceRenderWidgetSagittal->updateRendering();
 }
 
-void ViewPortWidget::removeActorContainer(VolumeActorContainer * actorContainer)
+void ViewPortWidget::removeActorContainer(SourceActorContainer* actorContainer)
 {
 	m_volumeRenderWidget->removeActorContainer(actorContainer);
 	m_sliceRenderWidgetAxial->removeActorContainer(actorContainer);

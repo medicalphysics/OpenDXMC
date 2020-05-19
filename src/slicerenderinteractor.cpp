@@ -20,7 +20,6 @@ vtkStandardNewMacro(customMouseInteractorStyle);
 customMouseInteractorStyle::customMouseInteractorStyle()
 {
 	m_interactionPicker = vtkSmartPointer<vtkCellPicker>::New();
-
 }
 
 void customMouseInteractorStyle::OnMouseWheelForward()
@@ -49,7 +48,6 @@ void customMouseInteractorStyle::OnLeftButtonDown()
 	if (!m_pickedPlaneActor)
 	{
 		vtkInteractorStyleImage::OnLeftButtonDown();
-		
 	}
 	else {
 		//Actor pan
@@ -69,7 +67,6 @@ void customMouseInteractorStyle::OnLeftButtonUp()
 		
 		//Actor pan
 		this->EndPan();
-		
 	}
 }
 
@@ -112,24 +109,10 @@ void customMouseInteractorStyle::Pan()
 		matrix->SetElement(i, 3, new_pos);
 	}
 	
-	/*if (actor->GetUserMatrix() != nullptr)
-	{
-		auto t = vtkSmartPointer<vtkTransform>::New();
-		t->PostMultiply();
-		t->SetMatrix(actor->GetUserMatrix());
-		t->Translate(motionVector[0], motionVector[1], motionVector[2]);
-		actor->GetUserMatrix()->DeepCopy(t->GetMatrix());
-	}
-	else
-	{
-		actor->AddPosition(motionVector[0], motionVector[1], motionVector[2]);
-	}*/
-
 	if (this->AutoAdjustCameraClippingRange)
 	{
 		this->CurrentRenderer->ResetCameraClippingRange();
 	}
-
 	rwi->Render();
 }
 

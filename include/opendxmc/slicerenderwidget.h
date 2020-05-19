@@ -52,6 +52,8 @@ public:
 	void addActorContainer(SourceActorContainer* actorContainer);
 	void removeActorContainer(SourceActorContainer* actorContainer);
 	void setActorsVisible(int visible);
+signals:
+	void sourceActorChanged();
 protected:
 	std::array<double, 2> presetLeveling(ImageContainer::ImageType type);
 	void setColorTable(const QString& colorTableName);

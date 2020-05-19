@@ -47,7 +47,8 @@ public:
 	void showCurrentImageData(void);
 	void showImageData(int imageDescription);
 	QSize minimumSizeHint(void) const { return QSize(200, 200); }
-
+signals:
+	void sourceChanged();
 
 private:
 	VolumeRenderWidget *m_volumeRenderWidget;

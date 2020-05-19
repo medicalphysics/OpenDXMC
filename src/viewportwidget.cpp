@@ -63,6 +63,16 @@ ViewPortWidget::ViewPortWidget(QWidget* parent)
 	m_sliceRenderWidgetCoronal = new SliceRenderWidget(this, SliceRenderWidget::Coronal);
 	m_sliceRenderWidgetSagittal = new SliceRenderWidget(this, SliceRenderWidget::Sagittal);
 
+	std::array<SliceRenderWidget*, 3> sliceWidArray = { m_sliceRenderWidgetAxial, m_sliceRenderWidgetCoronal, m_sliceRenderWidgetSagittal };
+	for (std::size_t i = 0; i < 3; ++i)
+	{
+		connect(sliceWidArray[i], &SliceRenderWidget::sourceActorChanged, m_volumeRenderWidget, &VolumeRenderWidget::updateRendering);
+		connect(sliceWidArray[i], &SliceRenderWidget::sourceActorChanged, [=]() {emit this->sourceChanged(); });
+		for (std::size_t j = 0; j < 3; ++j)
+			if (i != j)
+				connect(sliceWidArray[i], &SliceRenderWidget::sourceActorChanged, sliceWidArray[j], &SliceRenderWidget::updateRendering);
+	}
+
 	upperHSplitter->addWidget(m_sliceRenderWidgetAxial);
 	upperHSplitter->addWidget(m_volumeRenderWidget);
 	

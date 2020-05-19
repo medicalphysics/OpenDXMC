@@ -66,11 +66,11 @@ std::shared_ptr<ImageContainer> makeStartImage(void)
 	return im;
 }
 
-SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
+SliceRenderWidget::SliceRenderWidget(QWidget* parent, Orientation orientation)
 	:QWidget(parent), m_orientation(orientation)
 {
 	m_openGLWidget = new QVTKOpenGLNativeWidget(this);
-	
+
 	auto layout = new QVBoxLayout;
 	layout->setContentsMargins(0, 0, 0, 0);
 	layout->addWidget(m_openGLWidget);
@@ -115,7 +115,9 @@ SliceRenderWidget::SliceRenderWidget(QWidget *parent, Orientation orientation)
 	m_interactionStyle->setMapper(m_imageMapper);
 	m_interactionStyle->setMapperBackground(m_imageMapperBackground);
 	m_interactionStyle->setRenderWindow(renderWindow);
-	
+	m_interactionStyle->setCallback([=]() {emit this->sourceActorChanged(); });
+
+
 	//vtkSmartPointer<vtkInteractorStyleImage> m_interactionStyle = vtkSmartPointer<vtkInteractorStyleImage>::New();
 	//m_interactionStyle->SetInteractionModeToImage3D();
 	renderWindowInteractor->SetInteractorStyle(m_interactionStyle);

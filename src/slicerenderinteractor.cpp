@@ -64,7 +64,7 @@ void customMouseInteractorStyle::OnLeftButtonUp()
 	else {
 
 		m_pickedPlaneActor->applyActorTranslationToSource();
-		
+		m_callback();
 		//Actor pan
 		this->EndPan();
 	}

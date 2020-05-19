@@ -26,6 +26,8 @@ Copyright 2019 Erlend Andersen
 #include <vtkCornerAnnotation.h>
 #include <vtkCellPicker.h>
 
+#include <functional>
+
 class customMouseInteractorStyle : public vtkInteractorStyleImage
 {
 public:
@@ -39,6 +41,7 @@ public:
 	void StartPan() override;
 	void EndPan() override;
 	void Pan() override;
+	void setCallback(std::function<void(void)> f) { m_callback = f; }
 	void setMapper(vtkSmartPointer<vtkImageResliceMapper> m);
 	void setMapperBackground(vtkSmartPointer<vtkImageResliceMapper> m);
 	void setRenderWindow(vtkSmartPointer<vtkRenderWindow> m);
@@ -61,6 +64,7 @@ private:
 	std::vector<SourceActorContainer*> m_imagePlaneActors;
 	SourceActorContainer* m_pickedPlaneActor = nullptr;
 	vtkSmartPointer<vtkCellPicker> m_interactionPicker = nullptr;
+	std::function<void(void)> m_callback;
 };
 
 

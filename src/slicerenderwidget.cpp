@@ -324,6 +324,7 @@ void SliceRenderWidget::updateRendering()
 	auto renderWindow = m_openGLWidget->renderWindow();
 	auto renderCollection = renderWindow->GetRenderers();
 	auto renderer = renderCollection->GetFirstRenderer();
+	m_interactionStyle->update();
 	renderWindow->Render();
 	m_openGLWidget->update();
 	return;
@@ -533,7 +534,6 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume, std
 	updateRendering();
 }
 
-
 void SliceRenderWidget::addActorContainer(SourceActorContainer* actorContainer)
 {
 	auto pos = std::find(m_volumeProps.begin(), m_volumeProps.end(), actorContainer);
@@ -554,17 +554,9 @@ void SliceRenderWidget::removeActorContainer(SourceActorContainer* actorContaine
 
 void SliceRenderWidget::setActorsVisible(int visible)
 {
-	for (auto m : m_volumeProps)
-	{
-		auto actor = m->getActor();
-		if (visible == 0)
-			actor->VisibilityOff();
-		else
-			actor->VisibilityOn();
-	}
+	m_interactionStyle->setImagePlaneActorVisible(visible);
 	updateRendering();
 }
-
 
 std::array<double, 2> SliceRenderWidget::presetLeveling(ImageContainer::ImageType type)
 {

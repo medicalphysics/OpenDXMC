@@ -220,29 +220,28 @@ void customMouseInteractorStyle::scrollSlice(bool forward)
 
 	m_renderWindow->Render();
 }
+
 void customMouseInteractorStyle::updatePlaneActors()
 {	
 	auto renderCollection = m_renderWindow->GetRenderers();
 	auto renderer = renderCollection->GetFirstRenderer();
 	auto cam = renderer->GetActiveCamera();
 
-	std::array<double, 3> origin;
-	cam->GetFocalPoint(origin.data());
-
-	std::array<double, 6> bounds;
-
+	auto plane = m_imageMapper->GetSlicePlane();
+	std::array<double, 3> plane_normal;
+	plane->GetNormal(plane_normal.data());
+	std::array<double, 3> plane_origin;
+	plane->GetOrigin(plane_origin.data());
+	const auto nIdx = vectormath::argmax3<std::size_t, double>(plane_normal.data());
 	for (auto container : m_imagePlaneActors)
 	{
 		auto actor = container->getActor();
 		renderer->RemoveActor(actor);
+		std::array<double, 6> bounds;
 		actor->GetBounds(bounds.data());
-		bool visible = true;
-		for (std::size_t i = 0; i < 3; ++i)
-		{
-			visible = visible && origin[i] >= bounds[2 * i];
-			visible = visible && origin[i] <= bounds[2 * i + 1];
-		}
-		if (visible)
+		const bool visible = plane_origin[nIdx] >= bounds[2 * nIdx] && plane_origin[nIdx] <= bounds[2 * nIdx + 1];
+		
+		if (visible && m_imagePlaneActorVisibility)
 		{
 			renderer->AddActor(actor);
 		}

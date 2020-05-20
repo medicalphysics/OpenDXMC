@@ -49,6 +49,8 @@ public:
 	static std::string prettyNumber(double number);
 	void update();
 	void addImagePlaneActor(SourceActorContainer* container);
+	void setImagePlaneActorVisible(bool visible) { m_imagePlaneActorVisibility = visible; updatePlaneActors(); };
+	bool imagePlaneActorVisible() { return m_imagePlaneActorVisibility; };
 	void removeImagePlaneActor(SourceActorContainer* container);
 protected:
 	customMouseInteractorStyle();
@@ -65,6 +67,7 @@ private:
 	SourceActorContainer* m_pickedPlaneActor = nullptr;
 	vtkSmartPointer<vtkCellPicker> m_interactionPicker = nullptr;
 	std::function<void(void)> m_callback;
+	bool m_imagePlaneActorVisibility = true;
 };
 
 

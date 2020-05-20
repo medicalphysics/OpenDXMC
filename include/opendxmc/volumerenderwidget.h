@@ -75,4 +75,5 @@ private:
 
 	std::vector<VolumeActorContainer*> m_volumeProps;
 	std::shared_ptr<OrientationActorContainer> m_orientationProp;
+	bool m_actorsVisible = true;
 };

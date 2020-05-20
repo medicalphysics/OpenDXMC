@@ -126,7 +126,7 @@ DXSourceContainer::DXSourceContainer(std::shared_ptr<DXSource> src)
 	const auto &cosines = m_src->directionCosines();
 	vectormath::cross(cosines.data(), direction.data());
 
-	double lenght = src->sourceDetectorDistance();
+	const double lenght = src->sourceDetectorDistance();
 	std::array<double, 3> p0, p1, p2, p3;
 	const auto &angles = m_src->collimationAngles();
 	for (int i = 0; i < 3; ++i)
@@ -257,11 +257,11 @@ void CTSpiralSourceContainer::update()
 
 	std::array<double, 3> p0, p1, p2, p3;
 	m_src->getExposure(exp, 0);
-	auto start = exp.position();
-	auto cosines = exp.directionCosines();
-	auto direction = exp.beamDirection();
+	const auto start = exp.position();
+	const auto cosines = exp.directionCosines();
+	const auto direction = exp.beamDirection();
 
-	double sdd = m_src->sourceDetectorDistance();
+	const double sdd = m_src->sourceDetectorDistance();
 	
 	auto angles = exp.collimationAngles();
 	double lenght = std::sqrt(sdd * sdd * 0.25 + m_src->fieldOfView() * m_src->fieldOfView() * 0.25);

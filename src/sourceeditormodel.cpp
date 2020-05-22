@@ -550,6 +550,12 @@ void setupTube(std::shared_ptr<S> src, QStandardItem * parent)
 		[=]() {return src->tube().SnFiltration(); });
 	nodes.append(qMakePair(QString("Tube Sn (Tin) filtration [mm]"), static_cast<QStandardItem*>(l6Item)));
 
+	auto l7Item = new SourceItem<S, double>(src,
+		[=](double val) {},
+		[=]() {return src->tube().mmAlHalfValueLayer(); });
+	nodes.append(qMakePair(QString("Halv value layer in aluminum [mm]"), static_cast<QStandardItem*>(l7Item)));
+
+
 	for (int i = 0; i < nodes.count(); ++i)
 	{
 		auto descItem = new QStandardItem(nodes[i].first);

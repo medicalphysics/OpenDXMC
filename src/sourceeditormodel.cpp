@@ -553,7 +553,7 @@ void setupTube(std::shared_ptr<S> src, QStandardItem * parent)
 	auto l7Item = new SourceItem<S, double>(src,
 		[=](double val) {},
 		[=]() {return src->tube().mmAlHalfValueLayer(); });
-	nodes.append(qMakePair(QString("Halv value layer in aluminum [mm]"), static_cast<QStandardItem*>(l7Item)));
+	nodes.append(qMakePair(QString("Half value layer in aluminum [mm]"), static_cast<QStandardItem*>(l7Item)));
 
 
 	for (int i = 0; i < nodes.count(); ++i)

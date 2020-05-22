@@ -24,12 +24,12 @@ customMouseInteractorStyle::customMouseInteractorStyle()
 
 void customMouseInteractorStyle::OnMouseWheelForward()
 {
-	scrollSlice(true);
+	scrollSlice(false);
 }
 
 void customMouseInteractorStyle::OnMouseWheelBackward()
 {
-	scrollSlice(false);
+	scrollSlice(true);
 }
 
 void customMouseInteractorStyle::OnMouseMove()

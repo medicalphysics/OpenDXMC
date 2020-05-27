@@ -40,9 +40,7 @@ Copyright 2019 Erlend Andersen
 #include <vtkWindowToImageFilter.h>
 #include <vtkPNGWriter.h>
 
-
 #include  <cmath>
-
 
 
 VolumeRenderWidget::VolumeRenderWidget(QWidget *parent)

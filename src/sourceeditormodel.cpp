@@ -533,7 +533,7 @@ void setupTube(std::shared_ptr<S> src, QStandardItem * parent)
 	auto l3Item = new SourceItem<S, double>(src,
 		[=](double val) {src->tube().setAnodeAngleDeg(val); },
 		[=]() {return src->tube().anodeAngleDeg(); });
-	nodes.append(qMakePair(QString("Tube angle [deg]"), static_cast<QStandardItem*>(l3Item)));
+	nodes.append(qMakePair(QString("Tube anode angle [deg]"), static_cast<QStandardItem*>(l3Item)));
 
 	auto l4Item = new SourceItem<S, double>(src,
 		[=](double val) {src->tube().setAlFiltration(val); },
@@ -553,7 +553,7 @@ void setupTube(std::shared_ptr<S> src, QStandardItem * parent)
 	auto l7Item = new SourceItem<S, double>(src,
 		[=](double val) {},
 		[=]() {return src->tube().mmAlHalfValueLayer(); });
-	nodes.append(qMakePair(QString("Half value layer in aluminum [mm]"), static_cast<QStandardItem*>(l7Item)));
+	nodes.append(qMakePair(QString("Half value layer in Al [mm]"), static_cast<QStandardItem*>(l7Item)));
 
 
 	for (int i = 0; i < nodes.count(); ++i)
@@ -578,7 +578,7 @@ void setupTubeB(std::shared_ptr<CTDualSource> src, QStandardItem * parent)
 	auto l3Item = new SourceItem<CTDualSource, double>(src,
 		[=](double val) {src->tubeB().setAnodeAngleDeg(val); },
 		[=]() {return src->tubeB().anodeAngleDeg(); });
-	nodes.append(qMakePair(QString("Tube angle [deg]"), static_cast<QStandardItem*>(l3Item)));
+	nodes.append(qMakePair(QString("Tube anode angle [deg]"), static_cast<QStandardItem*>(l3Item)));
 
 	auto l4Item = new SourceItem<CTDualSource, double>(src,
 		[=](double val) {src->tubeB().setAlFiltration(val); },
@@ -589,6 +589,16 @@ void setupTubeB(std::shared_ptr<CTDualSource> src, QStandardItem * parent)
 		[=](double val) {src->tubeB().setCuFiltration(val); },
 		[=]() {return src->tubeB().CuFiltration(); });
 	nodes.append(qMakePair(QString("Tube Cu filtration [mm]"), static_cast<QStandardItem*>(l5Item)));
+	
+	auto l6Item = new SourceItem<CTDualSource, double>(src,
+		[=](double val) {src->tubeB().setSnFiltration(val); },
+		[=]() {return src->tubeB().SnFiltration(); });
+	nodes.append(qMakePair(QString("Tube Sn (Tin) filtration [mm]"), static_cast<QStandardItem*>(l6Item)));
+
+	auto l7Item = new SourceItem<CTDualSource, double>(src,
+		[=](double val) {},
+		[=]() {return src->tubeB().mmAlHalfValueLayer(); });
+	nodes.append(qMakePair(QString("Half value layer in Al [mm]"), static_cast<QStandardItem*>(l7Item)));
 
 	for (int i = 0; i < nodes.count(); ++i)
 	{

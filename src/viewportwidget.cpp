@@ -63,6 +63,16 @@ ViewPortWidget::ViewPortWidget(QWidget* parent)
 	m_sliceRenderWidgetCoronal = new SliceRenderWidget(this, SliceRenderWidget::Coronal);
 	m_sliceRenderWidgetSagittal = new SliceRenderWidget(this, SliceRenderWidget::Sagittal);
 
+	std::array<SliceRenderWidget*, 3> sliceWidArray = { m_sliceRenderWidgetAxial, m_sliceRenderWidgetCoronal, m_sliceRenderWidgetSagittal };
+	for (std::size_t i = 0; i < 3; ++i)
+	{
+		connect(sliceWidArray[i], &SliceRenderWidget::sourceActorChanged, m_volumeRenderWidget, &VolumeRenderWidget::updateRendering);
+		connect(sliceWidArray[i], &SliceRenderWidget::sourceActorChanged, [=]() {emit this->sourceChanged(); });
+		for (std::size_t j = 0; j < 3; ++j)
+			if (i != j)
+				connect(sliceWidArray[i], &SliceRenderWidget::sourceActorChanged, sliceWidArray[j], &SliceRenderWidget::updateRendering);
+	}
+
 	upperHSplitter->addWidget(m_sliceRenderWidgetAxial);
 	upperHSplitter->addWidget(m_volumeRenderWidget);
 	
@@ -106,14 +116,28 @@ void ViewPortWidget::setImageData(std::shared_ptr<ImageContainer> volumeData)
 	showCurrentImageData();
 }
 
-void ViewPortWidget::addActorContainer(VolumeActorContainer* actorContainer)
+void ViewPortWidget::addActorContainer(SourceActorContainer* actorContainer)
 {
 	m_volumeRenderWidget->addActorContainer(actorContainer);
+	m_sliceRenderWidgetAxial->addActorContainer(actorContainer);
+	m_sliceRenderWidgetCoronal->addActorContainer(actorContainer);
+	m_sliceRenderWidgetSagittal->addActorContainer(actorContainer);
 }
 
-void ViewPortWidget::removeActorContainer(VolumeActorContainer * actorContainer)
+void ViewPortWidget::render()
+{
+	m_volumeRenderWidget->updateRendering();
+	m_sliceRenderWidgetAxial->updateRendering();
+	m_sliceRenderWidgetCoronal->updateRendering();
+	m_sliceRenderWidgetSagittal->updateRendering();
+}
+
+void ViewPortWidget::removeActorContainer(SourceActorContainer* actorContainer)
 {
 	m_volumeRenderWidget->removeActorContainer(actorContainer);
+	m_sliceRenderWidgetAxial->removeActorContainer(actorContainer);
+	m_sliceRenderWidgetCoronal->removeActorContainer(actorContainer);
+	m_sliceRenderWidgetSagittal->removeActorContainer(actorContainer);
 }
 
 void ViewPortWidget::showCurrentImageData()
@@ -177,6 +201,8 @@ void ViewPortWidget::updateVolumeSelectorWidget()
 	{
 		int indexKey = *it;
 		m_volumeSelectorWidget->addItem(imageDescriptionName(indexKey), QVariant(indexKey));
+		// adding tooltip
+		m_volumeSelectorWidget->setItemData(indexKey, imageDescriptionToolTip(indexKey), Qt::ToolTipRole);
 		++it;
 	}
 	//adding dose overlay if possible
@@ -203,19 +229,19 @@ void ViewPortWidget::updateVolumeSelectorWidget()
 QString ViewPortWidget::imageDescriptionName(int imageDescription)
 {
 	if (imageDescription == static_cast<int>(ImageContainer::CTImage)) {
-		return QString("CT data");
+		return QString("CT images");
 	}
 	else if (imageDescription == static_cast<int>(ImageContainer::MaterialImage)) {
 		return QString("Material data");
 	}
 	else if (imageDescription == static_cast<int>(ImageContainer::DensityImage)) {
-		return QString("Density data");
+		return QString("Density map");
 	}
 	else if (imageDescription == static_cast<int>(ImageContainer::OrganImage)) {
-		return QString("Organ data");
+		return QString("Organ volumes");
 	}
 	else if (imageDescription == static_cast<int>(ImageContainer::DoseImage)) {
-		return QString("Dose data");
+		return QString("Dose map");
 	}
 	else if (imageDescription == static_cast<int>(ImageContainer::CustomType)) {
 		return QString("Dose overlay");
@@ -225,6 +251,41 @@ QString ViewPortWidget::imageDescriptionName(int imageDescription)
 	}
 	else if (imageDescription == static_cast<int>(ImageContainer::VarianceImage)) {
 		return QString("Dose variance");
+	}
+	else if (imageDescription == static_cast<int>(ImageContainer::MeasurementImage)) {
+		return QString("Measurement Volumes");
+	}
+	return QString();
+}
+
+QString ViewPortWidget::imageDescriptionToolTip(int imageDescription)
+{
+	if (imageDescription == static_cast<int>(ImageContainer::CTImage)) {
+		return QString("CT image data displayed with Hounsfield units");
+	}
+	else if (imageDescription == static_cast<int>(ImageContainer::MaterialImage)) {
+		return QString("Map of material decomposition of the volume");
+	}
+	else if (imageDescription == static_cast<int>(ImageContainer::DensityImage)) {
+		return QString("Density map of the volume, displayed as grams per cubic centimeters");
+	}
+	else if (imageDescription == static_cast<int>(ImageContainer::OrganImage)) {
+		return QString("Map of organ volumes, these volumes are not neccesary for the simulation but helps summarize dose to different volumes if available");
+	}
+	else if (imageDescription == static_cast<int>(ImageContainer::DoseImage)) {
+		return QString("Map of dose distribution");
+	}
+	else if (imageDescription == static_cast<int>(ImageContainer::CustomType)) {
+		return QString("Map of dose distribution on top of CT images");
+	}
+	else if (imageDescription == static_cast<int>(ImageContainer::TallyImage)) {
+		return QString("Map of number of interaction events that contributes to dose for each voxel, i.e Rayleight scattering events are not tallied");
+	}
+	else if (imageDescription == static_cast<int>(ImageContainer::VarianceImage)) {
+		return QString("Dose variance map for each voxel given in same units as dose");
+	}
+	else if (imageDescription == static_cast<int>(ImageContainer::MeasurementImage)) {
+		return QString("Map of volumes where the simulation uses variance reduction techniqe to decrease uncertainty by increasing number of events in a weighted manner. Typically used in CTDI measurements for CT dose calibration");
 	}
 	return QString();
 }

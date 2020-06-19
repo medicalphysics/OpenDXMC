@@ -16,6 +16,7 @@ add_library(libopendxmc STATIC
 	progressindicator.cpp
 	volumerenderwidget.cpp
 	volumerenderwidgetsettings.cpp
+	slicerenderinteractor.cpp
 	slicerenderwidget.cpp
 	simulationpipeline.cpp
 	colormap.cpp

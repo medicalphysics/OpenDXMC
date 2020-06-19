@@ -325,8 +325,8 @@ void SourceModel::addSource(Source::Type type)
 		
 		auto actor = std::make_shared<CTSpiralSourceContainer>(src);
 
-		m_actors.push_back(std::static_pointer_cast<VolumeActorContainer>(actor));
-		auto actor_raw = std::static_pointer_cast<VolumeActorContainer>(actor).get();
+		m_actors.push_back(std::static_pointer_cast<SourceActorContainer>(actor));
+		auto actor_raw = std::static_pointer_cast<SourceActorContainer>(actor).get();
 		emit sourceActorAdded(actor_raw);
 		emit sourceAdded(std::static_pointer_cast<Source>(src));
 		emit layoutChanged();
@@ -360,8 +360,8 @@ void SourceModel::addSource(Source::Type type)
 
 		auto actor = std::make_shared<CTAxialSourceContainer>(src);
 
-		m_actors.push_back(std::static_pointer_cast<VolumeActorContainer>(actor));
-		auto actor_raw = std::static_pointer_cast<VolumeActorContainer>(actor).get();
+		m_actors.push_back(std::static_pointer_cast<SourceActorContainer>(actor));
+		auto actor_raw = std::static_pointer_cast<SourceActorContainer>(actor).get();
 		emit sourceActorAdded(actor_raw);
 		emit sourceAdded(std::static_pointer_cast<Source>(src));
 		emit layoutChanged();
@@ -395,8 +395,8 @@ void SourceModel::addSource(Source::Type type)
 
 		auto actor = std::make_shared<CTDualSourceContainer>(src);
 
-		m_actors.push_back(std::static_pointer_cast<VolumeActorContainer>(actor));
-		auto actor_raw = std::static_pointer_cast<VolumeActorContainer>(actor).get();
+		m_actors.push_back(std::static_pointer_cast<SourceActorContainer>(actor));
+		auto actor_raw = std::static_pointer_cast<SourceActorContainer>(actor).get();
 		emit sourceActorAdded(actor_raw);
 		emit sourceAdded(std::static_pointer_cast<Source>(src));
 		emit layoutChanged();
@@ -414,8 +414,8 @@ void SourceModel::addSource(Source::Type type)
 		
 		auto actor = std::make_shared<DXSourceContainer>(src);
 
-		m_actors.push_back(std::static_pointer_cast<VolumeActorContainer>(actor));
-		auto actor_raw = std::static_pointer_cast<VolumeActorContainer>(actor).get();
+		m_actors.push_back(std::static_pointer_cast<SourceActorContainer>(actor));
+		auto actor_raw = std::static_pointer_cast<SourceActorContainer>(actor).get();
 		emit sourceActorAdded(actor_raw);
 		emit sourceAdded(std::static_pointer_cast<Source>(src));
 		emit layoutChanged();
@@ -424,7 +424,7 @@ void SourceModel::addSource(Source::Type type)
 
 void SourceModel::addSource(std::shared_ptr<Source> src)
 {
-	std::shared_ptr<VolumeActorContainer> actor = nullptr;
+	std::shared_ptr<SourceActorContainer> actor = nullptr;
 	switch (src->type()) {
 	case Source::Type::DX:
 		actor = std::make_shared<DXSourceContainer>(std::static_pointer_cast<DXSource>(src));
@@ -474,7 +474,7 @@ bool SourceModel::removeSource(std::shared_ptr<Source> src)
 		auto apos = m_actors.begin();
 		std::advance(apos, dist);
 
-		auto actor_raw = std::static_pointer_cast<VolumeActorContainer>(*apos).get();
+		auto actor_raw = std::static_pointer_cast<SourceActorContainer>(*apos).get();
 		emit sourceActorRemoved(actor_raw);
 		emit sourceRemoved(src);
 		m_sources.erase(pos);
@@ -549,6 +549,12 @@ void setupTube(std::shared_ptr<S> src, QStandardItem * parent)
 		[=](double val) {src->tube().setSnFiltration(val); },
 		[=]() {return src->tube().SnFiltration(); });
 	nodes.append(qMakePair(QString("Tube Sn (Tin) filtration [mm]"), static_cast<QStandardItem*>(l6Item)));
+
+	auto l7Item = new SourceItem<S, double>(src,
+		[=](double val) {},
+		[=]() {return src->tube().mmAlHalfValueLayer(); });
+	nodes.append(qMakePair(QString("Half value layer in aluminum [mm]"), static_cast<QStandardItem*>(l7Item)));
+
 
 	for (int i = 0; i < nodes.count(); ++i)
 	{

@@ -152,8 +152,6 @@ VolumeRenderWidget::VolumeRenderWidget(QWidget *parent)
 			writer->Write();
 		}
 	});
-
-
 }
 
 VolumeRenderWidget::~VolumeRenderWidget()
@@ -170,8 +168,8 @@ void VolumeRenderWidget::updateRendering(void)
 {
 	if (m_volume)
 		m_volume->Update();
+	m_openGLWidget->renderWindow()->Render();
 	m_openGLWidget->update();
-	m_openGLWidget->renderWindow()->Render();	
 }
 void VolumeRenderWidget::setImageData(std::shared_ptr<ImageContainer> image)
 {
@@ -283,7 +281,7 @@ void VolumeRenderWidget::setCropPlanes(int planes[6])
 	this->updateRendering();
 }
 
-void VolumeRenderWidget::addActorContainer(VolumeActorContainer* actorContainer)
+void VolumeRenderWidget::addActorContainer(SourceActorContainer* actorContainer)
 {
 	auto actor = actorContainer->getActor();
 	auto present = m_renderer->GetActors()->IsItemPresent(actor);
@@ -291,13 +289,14 @@ void VolumeRenderWidget::addActorContainer(VolumeActorContainer* actorContainer)
 	{
 		if (m_imageData)
 			actorContainer->setOrientation(m_imageData->directionCosines);
-		m_renderer->AddActor(actor);
+		if (m_actorsVisible)
+			m_renderer->AddActor(actor);
 		m_volumeProps.push_back(actorContainer);
 	}
 	updateRendering();
 }
 
-void VolumeRenderWidget::removeActorContainer(VolumeActorContainer* actorContainer)
+void VolumeRenderWidget::removeActorContainer(SourceActorContainer* actorContainer)
 {
 	auto actor = actorContainer->getActor();
 	if (m_renderer->GetActors()->IsItemPresent(actor) != 0)
@@ -310,13 +309,14 @@ void VolumeRenderWidget::removeActorContainer(VolumeActorContainer* actorContain
 
 void VolumeRenderWidget::setActorsVisible(int visible)
 {
+	m_actorsVisible = visible;
 	for (auto m : m_volumeProps)
 	{
 		auto actor = m->getActor();
-		if (visible == 0)
-			actor->VisibilityOff();
+		if (m_actorsVisible)
+			m_renderer->AddActor(actor);
 		else
-			actor->VisibilityOn();
+			m_renderer->RemoveActor(actor);
 	}
 	updateRendering();
 }

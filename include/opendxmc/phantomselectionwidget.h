@@ -35,7 +35,7 @@ public:
 signals:
 	void readIRCUMalePhantom(bool removeArms=false);
 	void readIRCUFemalePhantom(bool removeArms = false);
-	void readCTDIPhantom(int diameter_mm);
+	void readCTDIPhantom(int diameter_mm, bool force_measurements);
 	void readAWSPhantom(const QString& name);
 protected:
 	void addInstalledPhantoms(void);

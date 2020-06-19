@@ -866,7 +866,7 @@ void ImageImportPipeline::importAWSPhantom(const QString& name)
 	emit processingDataEnded();
 }
 
-void ImageImportPipeline::importCTDIPhantom(int mm)
+void ImageImportPipeline::importCTDIPhantom(int mm, bool force_interaction_measurements)
 {
 	emit processingDataStarted();
 	auto w = CTDIPhantom(static_cast<std::size_t>(mm));
@@ -875,6 +875,7 @@ void ImageImportPipeline::importCTDIPhantom(int mm)
 
 	auto densityArray = w.densityArray();
 	auto materialArray = w.materialIndexArray();
+	auto forceInteractionArray = w.measurementMapArray();
 
 	auto dimensions = w.dimensions();
 	auto spacing = w.spacing();
@@ -902,7 +903,7 @@ void ImageImportPipeline::importCTDIPhantom(int mm)
 	const auto nMaterials = static_cast<unsigned char>(materialMap.size());
 	for (std::size_t i = 0; i < 5; ++i)
 	{
-		auto idx = w.holeIndices(CTDIpositions[i]);
+		const auto idx = w.holeIndices(CTDIpositions[i]);
 		for (auto ind : idx)
 			organBuffer[ind] = static_cast<unsigned char>(i + nMaterials);
 	}
@@ -910,17 +911,22 @@ void ImageImportPipeline::importCTDIPhantom(int mm)
 	auto materialImage = std::make_shared<MaterialImageContainer>(materialArray, dimensions, spacing, origin);
 	auto densityImage = std::make_shared<DensityImageContainer>(densityArray, dimensions, spacing, origin);
 	auto organImage = std::make_shared<OrganImageContainer>(organArray, dimensions, spacing, origin);
+	auto measureImage = std::make_shared<MeasurementImageContainer>(forceInteractionArray, dimensions, spacing, origin);
 	materialImage->ID = ImageContainer::generateID();
 	densityImage->ID = materialImage->ID;
 	organImage->ID = materialImage->ID;
+	measureImage->ID = materialImage->ID;
 	materialImage->directionCosines = w.directionCosines();
 	densityImage->directionCosines = w.directionCosines();
 	organImage->directionCosines = w.directionCosines();
-
+	measureImage->directionCosines = w.directionCosines();
 	emit processingDataEnded();
 	emit materialDataChanged(materialMap);
 	emit organDataChanged(organMap);
 	emit imageDataChanged(densityImage);
 	emit imageDataChanged(materialImage);
 	emit imageDataChanged(organImage);
+	
+	if(force_interaction_measurements)
+		emit imageDataChanged(measureImage);
 }

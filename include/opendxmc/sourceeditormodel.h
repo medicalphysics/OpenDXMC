@@ -87,8 +87,8 @@ public:
 	bool removeRows(int rows, int count, const QModelIndex &parent = QModelIndex()) override;
 	void setImageData(std::shared_ptr<ImageContainer> image);
 signals:
-	void sourceActorAdded(VolumeActorContainer* actorContainer);
-	void sourceActorRemoved(VolumeActorContainer* actorContainer);
+	void sourceActorAdded(SourceActorContainer* actorContainer);
+	void sourceActorRemoved(SourceActorContainer* actorContainer);
 	void sourceAdded(std::shared_ptr<Source> source);
 	void sourceRemoved(std::shared_ptr<Source> source);
 	void actorsChanged();
@@ -104,7 +104,7 @@ protected:
 	bool removeSource(std::shared_ptr<Source> src);
 
 private:
-	std::vector<std::shared_ptr<VolumeActorContainer>> m_actors;
+	std::vector<std::shared_ptr<SourceActorContainer>> m_actors;
 	std::vector<std::shared_ptr<Source>> m_sources;
 	std::uint64_t m_currentImageID = 0;
 	std::array<double, 6> m_currentImageExtent;

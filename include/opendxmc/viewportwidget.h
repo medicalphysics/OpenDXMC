@@ -41,13 +41,14 @@ public:
 	~ViewPortWidget();
 
 	void setImageData(std::shared_ptr<ImageContainer> imageData);
-	void addActorContainer(VolumeActorContainer* actorContainer);
-	void removeActorContainer(VolumeActorContainer* actorContainer);
-	void render() { m_volumeRenderWidget->updateRendering(); }
+	void addActorContainer(SourceActorContainer* actorContainer);
+	void removeActorContainer(SourceActorContainer* actorContainer);
+	void render();
 	void showCurrentImageData(void);
 	void showImageData(int imageDescription);
 	QSize minimumSizeHint(void) const { return QSize(200, 200); }
-
+signals:
+	void sourceChanged();
 
 private:
 	VolumeRenderWidget *m_volumeRenderWidget;
@@ -60,5 +61,5 @@ private:
 
 	void updateVolumeSelectorWidget();
 	QString imageDescriptionName(int imageDescription);
-	
+	QString imageDescriptionToolTip(int imageDescription);
 };

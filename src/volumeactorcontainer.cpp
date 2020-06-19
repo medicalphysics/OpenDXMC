@@ -38,6 +38,8 @@ VolumeActorContainer::VolumeActorContainer()
 	m_userMatrix = vtkSmartPointer<vtkMatrix4x4>::New();
 	m_userTransform->SetInput(m_userMatrix);
 	m_actor->SetUserTransform(m_userTransform);
+	m_actor->SetDragable(true);
+	m_actor->SetPickable(true);
 }
 
 void VolumeActorContainer::setOrientation(const std::array<double, 6>& directionCosines)
@@ -91,11 +93,30 @@ void OrientationActorContainer::setOrientation(const std::array<double, 6>& dire
 		matrix->SetElement(i, 1, -val);
 	}
 }
+
+SourceActorContainer::SourceActorContainer(Source* src)
+	:VolumeActorContainer(), m_src(src)
+{
+}
+
+void SourceActorContainer::applyActorTranslationToSource()
+{
+	auto pos = m_src->position();
+	for (int i = 0; i < 3; ++i)
+	{
+		pos[i] += m_userMatrix->GetElement(i, 3);
+		m_userMatrix->SetElement(i, 3, 0.0); // setting zeroes since the source position changes
+	}
+	m_src->setPosition(pos);
+	update();
+}
+
+
+
 //https://vtk.org/Wiki/VTK/Examples/Cxx/VisualizationAlgorithms/TubesWithVaryingRadiusAndColors
 
-
 DXSourceContainer::DXSourceContainer(std::shared_ptr<DXSource> src)
-	:VolumeActorContainer(), m_src(src)
+	:SourceActorContainer(src.get()), m_src(src)
 {
 	m_linesPolyData = vtkSmartPointer<vtkPolyData>::New();
 
@@ -105,7 +126,7 @@ DXSourceContainer::DXSourceContainer(std::shared_ptr<DXSource> src)
 	const auto &cosines = m_src->directionCosines();
 	vectormath::cross(cosines.data(), direction.data());
 
-	double lenght = src->sourceDetectorDistance();
+	const double lenght = src->sourceDetectorDistance();
 	std::array<double, 3> p0, p1, p2, p3;
 	const auto &angles = m_src->collimationAngles();
 	for (int i = 0; i < 3; ++i)
@@ -203,7 +224,7 @@ void DXSourceContainer::update()
 }
 
 CTSpiralSourceContainer::CTSpiralSourceContainer(std::shared_ptr<CTSpiralSource> src)
-	:VolumeActorContainer(), m_src(src)
+	:SourceActorContainer(src.get()), m_src(src)
 {
 	m_points = vtkSmartPointer<vtkPoints>::New();
 	m_mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
@@ -236,11 +257,11 @@ void CTSpiralSourceContainer::update()
 
 	std::array<double, 3> p0, p1, p2, p3;
 	m_src->getExposure(exp, 0);
-	auto start = exp.position();
-	auto cosines = exp.directionCosines();
-	auto direction = exp.beamDirection();
+	const auto start = exp.position();
+	const auto cosines = exp.directionCosines();
+	const auto direction = exp.beamDirection();
 
-	double sdd = m_src->sourceDetectorDistance();
+	const double sdd = m_src->sourceDetectorDistance();
 	
 	auto angles = exp.collimationAngles();
 	double lenght = std::sqrt(sdd * sdd * 0.25 + m_src->fieldOfView() * m_src->fieldOfView() * 0.25);
@@ -303,7 +324,7 @@ void CTSpiralSourceContainer::update()
 
 
 CTAxialSourceContainer::CTAxialSourceContainer(std::shared_ptr<CTAxialSource> src)
-	:VolumeActorContainer(), m_src(src)
+	:SourceActorContainer(src.get()), m_src(src)
 {
 	m_points = vtkSmartPointer<vtkPoints>::New();
 	m_mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
@@ -319,7 +340,6 @@ CTAxialSourceContainer::CTAxialSourceContainer(std::shared_ptr<CTAxialSource> sr
 
 void CTAxialSourceContainer::update()
 {
-
 	//generate points
 	m_points->Reset();
 	m_linesPolyData->Reset();
@@ -403,7 +423,7 @@ void CTAxialSourceContainer::update()
 }
 
 CTDualSourceContainer::CTDualSourceContainer(std::shared_ptr<CTDualSource> src)
-	:VolumeActorContainer(), m_src(src)
+	:SourceActorContainer(src.get()), m_src(src)
 {
 	m_pointsA = vtkSmartPointer<vtkPoints>::New();
 	m_pointsB = vtkSmartPointer<vtkPoints>::New();
@@ -587,5 +607,4 @@ void CTDualSourceContainer::updateTubeB()
 		m_colors->InsertNextTypedTuple(namedColors->GetColor3ub("Gold").GetData());
 
 	m_linesPolyDataB->GetCellData()->SetScalars(m_colors);
-
 }

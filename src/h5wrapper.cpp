@@ -831,7 +831,7 @@ bool H5Wrapper::saveSource(std::shared_ptr<CTSource> src, const std::string& nam
 
 	auto xc = src->useXCareFilter();
 	auto xc_att = srcGroup->createAttribute("useXCareFilter", H5::PredType::NATIVE_HBOOL, doubleSpace1);
-	xc_att.write(H5::PredType::NATIVE_HBOOL, &pd);
+	xc_att.write(H5::PredType::NATIVE_HBOOL, &xc);
 	return true;
 }
 

@@ -17,205 +17,191 @@ Copyright 2019 Erlend Andersen
 */
 
 #pragma once
+
+#include "dxmc/attenuationlut.h"
+#include "dxmc/beamfilters.h"
 #include "dxmc/material.h"
 #include "dxmc/tube.h"
-#include "dxmc/beamfilters.h"
-#include "dxmc/attenuationlut.h"
 
 #include "opendxmc/imagecontainer.h"
 
 #include <QObject>
-#include <QStringList>
 #include <QString>
-#include <vtkSmartPointer.h>
+#include <QStringList>
+#include <vtkDICOMReader.h>
 #include <vtkImageData.h>
 #include <vtkImageImport.h>
+#include <vtkSmartPointer.h>
 #include <vtkType.h>
-#include <vtkDICOMReader.h>
 
-#include <memory>
-#include <vector>
-#include <string>
-#include <numeric>
 #include <execution>
 #include <future>
-#include <thread>
 #include <limits>
-
+#include <memory>
+#include <numeric>
+#include <string>
+#include <thread>
+#include <vector>
 
 #ifndef Q_DECLARE_METATYPE_IMAGECONTAINER
 #define Q_DECLARE_METATYPE_IMAGECONTAINER
 Q_DECLARE_METATYPE(std::shared_ptr<ImageContainer>)
-#endif 
+#endif
 #ifndef Q_DECLARE_METATYPE_MATERIALVECTOR
 #define Q_DECLARE_METATYPE_MATERIALVECTOR
 Q_DECLARE_METATYPE(std::vector<Material>)
-#endif 
+#endif
 #ifndef Q_DECLARE_METATYPE_STRINGVECTOR
 #define Q_DECLARE_METATYPE_STRINGVECTOR
 Q_DECLARE_METATYPE(std::vector<std::string>)
-#endif 
+#endif
 #ifndef Q_DECLARE_METATYPE_AECFILTER
 #define Q_DECLARE_METATYPE_AECFILTER
 Q_DECLARE_METATYPE(std::shared_ptr<AECFilter>)
-#endif 
+#endif
 
-class CalculateCTNumberFromMaterials
-{
+class CalculateCTNumberFromMaterials {
 public:
-	CalculateCTNumberFromMaterials(std::vector<Material>& materialMap, const Tube& tube)
-	{
-		materialCTNumbers(materialMap, tube);
-	}
+    CalculateCTNumberFromMaterials(std::vector<Material>& materialMap, const Tube& tube)
+    {
+        materialCTNumbers(materialMap, tube);
+    }
 
-	
-	template<class iterT, class iterU>
-	void generateMaterialMap(iterT CTArrayFirst, iterT CTArrayLast, iterU destination)
-	{
-		if (m_materialCTNumbers.size() <= 1)
-		{
-			std::fill(destination, destination + std::distance(CTArrayFirst, CTArrayLast), 0);
-			return;
-		}
-		
-		typedef typename std::iterator_traits<iterT>::value_type T;
-		typedef typename std::iterator_traits<iterU>::value_type U;
+    template <class iterT, class iterU>
+    void generateMaterialMap(iterT CTArrayFirst, iterT CTArrayLast, iterU destination)
+    {
+        if (m_materialCTNumbers.size() <= 1) {
+            std::fill(destination, destination + std::distance(CTArrayFirst, CTArrayLast), 0);
+            return;
+        }
 
-		const std::size_t nThres = m_materialCTNumbers.size();
-		std::vector<T> CTThres(nThres);
-		for (std::size_t i = 0; i < nThres - 1; ++i)
-		{
-			CTThres[i] = (m_materialCTNumbers[i].second + m_materialCTNumbers[i + 1].second) * 0.5;
-		}
+        typedef typename std::iterator_traits<iterT>::value_type T;
+        typedef typename std::iterator_traits<iterU>::value_type U;
 
-		CTThres[nThres - 1] = std::numeric_limits<T>::infinity();
+        const std::size_t nThres = m_materialCTNumbers.size();
+        std::vector<T> CTThres(nThres);
+        for (std::size_t i = 0; i < nThres - 1; ++i) {
+            CTThres[i] = (m_materialCTNumbers[i].second + m_materialCTNumbers[i + 1].second) * 0.5;
+        }
 
-		std::transform(std::execution::par_unseq, CTArrayFirst, CTArrayLast, destination,
-			[&](const T ctNumber) -> U
-		{
-			for (std::size_t i = 0; i < nThres; ++i)
-			{
-				if (CTThres[i] >= ctNumber)
-					return static_cast<U>(i);
-			}
-			return static_cast<U>(0);
-		});
-	}
-	template<class iterT, class iterU, class iterD>
-	void generateDensityMap(iterT CTArrayFirst, iterT CTArrayLast, iterU materialIndex, iterD destination)
-	{
-		//calculate density based on voxel_i CT number and estimated CT number from material M in voxel_i 
-		
-		typedef typename std::iterator_traits<iterD>::value_type D;
+        CTThres[nThres - 1] = std::numeric_limits<T>::infinity();
 
-		if (m_materialCTNumbers.size() > 0)
-		{
-			std::vector<double> ctNumbers(m_materialCTNumbers.size());
-			for (auto[index, hu] : m_materialCTNumbers)
-				ctNumbers[index] = hu;
-			const auto constant = (m_calibrationEnergy[0] * m_calibrationDensity[0] - m_calibrationEnergy[1] * m_calibrationDensity[1]) / 1000.0;
+        std::transform(std::execution::par_unseq, CTArrayFirst, CTArrayLast, destination,
+            [&](const T ctNumber) -> U {
+                for (std::size_t i = 0; i < nThres; ++i) {
+                    if (CTThres[i] >= ctNumber)
+                        return static_cast<U>(i);
+                }
+                return static_cast<U>(0);
+            });
+    }
+    template <class iterT, class iterU, class iterD>
+    void generateDensityMap(iterT CTArrayFirst, iterT CTArrayLast, iterU materialIndex, iterD destination)
+    {
+        //calculate density based on voxel_i CT number and estimated CT number from material M in voxel_i
 
-			std::transform(std::execution::par_unseq, CTArrayFirst, CTArrayLast, materialIndex, destination,
-				[constant, &ctNumbers, this](auto val, auto index) -> D {
-				const D dens = (val - ctNumbers[index]) * constant / m_materialEnergy[index] + m_materialDensity[index];
-				return dens > 0.0 ? dens : D{0};
-			});
-		}
-		else
-		{
-			auto destination_stop = destination;
-			std::advance(destination_stop, std::distance(CTArrayFirst, CTArrayLast));
-			std::fill(destination, destination_stop, D{0});
-		}
-	}
+        typedef typename std::iterator_traits<iterD>::value_type D;
+
+        if (m_materialCTNumbers.size() > 0) {
+            std::vector<double> ctNumbers(m_materialCTNumbers.size());
+            for (auto [index, hu] : m_materialCTNumbers)
+                ctNumbers[index] = hu;
+            const auto constant = (m_calibrationEnergy[0] * m_calibrationDensity[0] - m_calibrationEnergy[1] * m_calibrationDensity[1]) / 1000.0;
+
+            std::transform(std::execution::par_unseq, CTArrayFirst, CTArrayLast, materialIndex, destination,
+                [constant, &ctNumbers, this](auto val, auto index) -> D {
+                    const D dens = (val - ctNumbers[index]) * constant / m_materialEnergy[index] + m_materialDensity[index];
+                    return dens > 0.0 ? dens : D { 0 };
+                });
+        } else {
+            auto destination_stop = destination;
+            std::advance(destination_stop, std::distance(CTArrayFirst, CTArrayLast));
+            std::fill(destination, destination_stop, D { 0 });
+        }
+    }
 
 private:
-	void materialCTNumbers(std::vector<Material>& materialMap, const Tube& tube)
-	{
-		
-		std::vector<Material> calibrationMaterials;
-		calibrationMaterials.push_back(Material("Water, Liquid"));
-		calibrationMaterials.push_back(Material("Air, Dry (near sea level)"));
-		AttenuationLut calibrationLut;
-		calibrationLut.generate(calibrationMaterials, 1.0, tube.voltage());
+    void materialCTNumbers(std::vector<Material>& materialMap, const Tube& tube)
+    {
 
+        std::vector<Material> calibrationMaterials;
+        calibrationMaterials.push_back(Material("Water, Liquid"));
+        calibrationMaterials.push_back(Material("Air, Dry (near sea level)"));
+        AttenuationLut calibrationLut;
+        calibrationLut.generate(calibrationMaterials, 1.0, tube.voltage());
 
-		m_calibrationEnergy.clear();
-		auto specterEnergy = std::vector<double>(calibrationLut.energyBegin(), calibrationLut.energyEnd());
-		auto specterIntensity = tube.getSpecter(specterEnergy);
-		m_calibrationDensity.clear();
-		for (std::size_t i = 0; i < calibrationMaterials.size(); ++i)
-		{
-			m_calibrationDensity.push_back(calibrationMaterials[i].standardDensity());
-			m_calibrationEnergy.push_back(std::transform_reduce(std::execution::par, calibrationLut.attenuationTotalBegin(i), calibrationLut.attenuationTotalEnd(i), specterIntensity.cbegin(), 0.0));
-		}
-		
+        m_calibrationEnergy.clear();
+        auto specterEnergy = std::vector<double>(calibrationLut.energyBegin(), calibrationLut.energyEnd());
+        auto specterIntensity = tube.getSpecter(specterEnergy);
+        m_calibrationDensity.clear();
+        for (std::size_t i = 0; i < calibrationMaterials.size(); ++i) {
+            m_calibrationDensity.push_back(calibrationMaterials[i].standardDensity());
+            m_calibrationEnergy.push_back(std::transform_reduce(std::execution::par, calibrationLut.attenuationTotalBegin(i), calibrationLut.attenuationTotalEnd(i), specterIntensity.cbegin(), 0.0));
+        }
 
-		AttenuationLut attLut;
-		attLut.generate(materialMap, 1.0, tube.voltage());
+        AttenuationLut attLut;
+        attLut.generate(materialMap, 1.0, tube.voltage());
 
-		//calculating CT number for each matrial based on the materials detector response 
-		m_materialCTNumbers.clear();
-		m_materialCTNumbers.reserve(materialMap.size());
-		m_materialEnergy.clear();
-		m_materialEnergy.reserve(materialMap.size());
-		m_materialDensity.clear();
-		m_materialDensity.reserve(materialMap.size());
-		for (std::size_t index = 0; index < materialMap.size(); ++index)
-		{
-			m_materialEnergy.push_back(std::transform_reduce(std::execution::par, attLut.attenuationTotalBegin(index), attLut.attenuationTotalEnd(index), specterIntensity.cbegin(), 0.0));
-			m_materialDensity.push_back((materialMap[index]).standardDensity());
-			double ctNumber = (m_materialEnergy[index] * m_materialDensity[index] - m_calibrationEnergy[0] * m_calibrationDensity[0]) / (m_calibrationEnergy[0] * m_calibrationDensity[0] - m_calibrationEnergy[1] * m_calibrationDensity[1]) * 1000.0; //Houndsfield units
-			m_materialCTNumbers.push_back(std::make_pair(index, ctNumber));
-		}
-		std::sort(m_materialCTNumbers.begin(), m_materialCTNumbers.end(), [](const std::pair<std::size_t, double> &a, const std::pair<std::size_t, double> &b) {return a.second < b.second; });
-	}
+        //calculating CT number for each matrial based on the materials detector response
+        m_materialCTNumbers.clear();
+        m_materialCTNumbers.reserve(materialMap.size());
+        m_materialEnergy.clear();
+        m_materialEnergy.reserve(materialMap.size());
+        m_materialDensity.clear();
+        m_materialDensity.reserve(materialMap.size());
+        for (std::size_t index = 0; index < materialMap.size(); ++index) {
+            m_materialEnergy.push_back(std::transform_reduce(std::execution::par, attLut.attenuationTotalBegin(index), attLut.attenuationTotalEnd(index), specterIntensity.cbegin(), 0.0));
+            m_materialDensity.push_back((materialMap[index]).standardDensity());
+            double ctNumber = (m_materialEnergy[index] * m_materialDensity[index] - m_calibrationEnergy[0] * m_calibrationDensity[0]) / (m_calibrationEnergy[0] * m_calibrationDensity[0] - m_calibrationEnergy[1] * m_calibrationDensity[1]) * 1000.0; //Houndsfield units
+            m_materialCTNumbers.push_back(std::make_pair(index, ctNumber));
+        }
+        std::sort(m_materialCTNumbers.begin(), m_materialCTNumbers.end(), [](const std::pair<std::size_t, double>& a, const std::pair<std::size_t, double>& b) { return a.second < b.second; });
+    }
 
-	std::vector<std::pair<std::size_t, double>> m_materialCTNumbers;
-	std::vector<double> m_calibrationEnergy;
-	std::vector<double> m_calibrationDensity;
-	std::vector<double> m_materialEnergy;
-	std::vector<double> m_materialDensity;
+    std::vector<std::pair<std::size_t, double>> m_materialCTNumbers;
+    std::vector<double> m_calibrationEnergy;
+    std::vector<double> m_calibrationDensity;
+    std::vector<double> m_materialEnergy;
+    std::vector<double> m_materialDensity;
 };
 
-
-class ImageImportPipeline : public QObject
-{
-	Q_OBJECT
+class ImageImportPipeline : public QObject {
+    Q_OBJECT
 public:
-	ImageImportPipeline(QObject *parent = nullptr);
-	void setDicomData(QStringList dicomPaths);
-	void setOutputSpacing(const double* spacing);
-	void setUseOutputSpacing(bool value) { m_useOutputSpacing = value; };
-	void setBlurRadius(const double* radius);
+    ImageImportPipeline(QObject* parent = nullptr);
+    void setDicomData(QStringList dicomPaths);
+    void setOutputSpacing(const double* spacing);
+    void setUseOutputSpacing(bool value) { m_useOutputSpacing = value; };
+    void setBlurRadius(const double* radius);
 
-	void setCTImportMaterialMap(const std::vector<Material>& map) { m_ctImportMaterialMap = map; }
-	void setCTImportAqusitionVoltage(double voltage) { m_tube.setVoltage(voltage); }
-	void setCTImportAqusitionAlFiltration(double mm) { m_tube.setAlFiltration(mm); }
-	void setCTImportAqusitionCuFiltration(double mm) { m_tube.setCuFiltration(mm); }
+    void setCTImportMaterialMap(const std::vector<Material>& map) { m_ctImportMaterialMap = map; }
+    void setCTImportAqusitionVoltage(double voltage) { m_tube.setVoltage(voltage); }
+    void setCTImportAqusitionAlFiltration(double mm) { m_tube.setAlFiltration(mm); }
+    void setCTImportAqusitionCuFiltration(double mm) { m_tube.setCuFiltration(mm); }
 
-	void importICRUMalePhantom(bool ignoreArms=false);
-	void importICRUFemalePhantom(bool ignoreArms = false);
-	void importCTDIPhantom(int mm, bool force_interaction_measurements=false);
-	void importAWSPhantom(const QString& name);
+    void importICRUMalePhantom(bool ignoreArms = false);
+    void importICRUFemalePhantom(bool ignoreArms = false);
+    void importCTDIPhantom(int mm, bool force_interaction_measurements = false);
+    void importAWSPhantom(const QString& name);
 
 signals:
-	void processingDataStarted();
-	void processingDataEnded();
-	void imageDataChanged(std::shared_ptr<ImageContainer> imageData);
-	void materialDataChanged(const std::vector<Material>& materials);
-	void organDataChanged(const std::vector<std::string>& organs);
-	void aecFilterChanged(const QString& name, std::shared_ptr<AECFilter> filter);
+    void processingDataStarted();
+    void processingDataEnded();
+    void imageDataChanged(std::shared_ptr<ImageContainer> imageData);
+    void materialDataChanged(const std::vector<Material>& materials);
+    void organDataChanged(const std::vector<std::string>& organs);
+    void aecFilterChanged(const QString& name, std::shared_ptr<AECFilter> filter);
+
 protected:
-	template<class Iter>
-	std::pair<std::shared_ptr<std::vector<unsigned char>>, std::shared_ptr<std::vector<double>>> calculateMaterialAndDensityFromCTData(Iter first, Iter last);
-	void processCTData(std::shared_ptr<ImageContainer> ctImage, const std::pair<std::string,std::vector<double>>& exposureData);
-	std::pair<std::string, std::vector<double>> readExposureData(vtkSmartPointer<vtkDICOMReader>& dicomReader);
-	
+    template <class Iter>
+    std::pair<std::shared_ptr<std::vector<unsigned char>>, std::shared_ptr<std::vector<double>>> calculateMaterialAndDensityFromCTData(Iter first, Iter last);
+    void processCTData(std::shared_ptr<ImageContainer> ctImage, const std::pair<std::string, std::vector<double>>& exposureData);
+    std::pair<std::string, std::vector<double>> readExposureData(vtkSmartPointer<vtkDICOMReader>& dicomReader);
+
 private:
-	std::array<double, 3> m_outputSpacing = { 2, 2, 2 };
-	std::array<double, 3> m_blurRadius = { 1, 1, 1 };
-	bool m_useOutputSpacing = false;
-	Tube m_tube;
-	std::vector<Material> m_ctImportMaterialMap;
+    std::array<double, 3> m_outputSpacing = { 2, 2, 2 };
+    std::array<double, 3> m_blurRadius = { 1, 1, 1 };
+    bool m_useOutputSpacing = false;
+    Tube m_tube;
+    std::vector<Material> m_ctImportMaterialMap;
 };

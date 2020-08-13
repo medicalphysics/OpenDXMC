@@ -20,54 +20,53 @@ Copyright 2019 Erlend Andersen
 
 #include "dosereportcontainer.h"
 
-#include <QWidget>
-#include <QString>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
 #include <QAbstractTableModel>
+#include <QHBoxLayout>
 #include <QModelIndex>
-#include <QVariant>
+#include <QString>
 #include <QTableView>
+#include <QVBoxLayout>
+#include <QVariant>
+#include <QWidget>
 
 #include <string>
 
-class DoseReportModel : public QAbstractTableModel
-{
-	Q_OBJECT
+class DoseReportModel : public QAbstractTableModel {
+    Q_OBJECT
 public:
-	DoseReportModel(const QString& name, QObject *parent = nullptr);
-	void setDoseData(std::shared_ptr<std::vector<DoseReportElement>> data);
-	QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
-	void sort(int column, Qt::SortOrder order = Qt::AscendingOrder) override;
-	int rowCount(const QModelIndex &parent = QModelIndex()) const override;
-	int columnCount(const QModelIndex &parent = QModelIndex()) const override;
-	QVariant data(const QModelIndex &index, int role) const override;
-	void setDataUnits(const QString& units) { m_dataUnits = units; }
-	void setDataUnits(const std::string& units) { m_dataUnits = QString::fromStdString(units); }
+    DoseReportModel(const QString& name, QObject* parent = nullptr);
+    void setDoseData(std::shared_ptr<std::vector<DoseReportElement>> data);
+    QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
+    void sort(int column, Qt::SortOrder order = Qt::AscendingOrder) override;
+    int rowCount(const QModelIndex& parent = QModelIndex()) const override;
+    int columnCount(const QModelIndex& parent = QModelIndex()) const override;
+    QVariant data(const QModelIndex& index, int role) const override;
+    void setDataUnits(const QString& units) { m_dataUnits = units; }
+    void setDataUnits(const std::string& units) { m_dataUnits = QString::fromStdString(units); }
+
 private:
-	std::shared_ptr<std::vector<DoseReportElement>> m_data;
-	QString m_name ="";
-	QString m_dataUnits = "mGy";
+    std::shared_ptr<std::vector<DoseReportElement>> m_data;
+    QString m_name = "";
+    QString m_dataUnits = "mGy";
 };
 
-class DoseReportView :public QTableView
-{
-	Q_OBJECT
+class DoseReportView : public QTableView {
+    Q_OBJECT
 public:
-	DoseReportView(QWidget* parent = nullptr);
+    DoseReportView(QWidget* parent = nullptr);
+
 protected:
-	void keyPressEvent(QKeyEvent *event) override;
+    void keyPressEvent(QKeyEvent* event) override;
 };
 
-class DoseReportWidget :public QWidget
-{
-	Q_OBJECT
+class DoseReportWidget : public QWidget {
+    Q_OBJECT
 public:
-	DoseReportWidget(QWidget* parent = nullptr);
-	void setDoseData(const DoseReportContainer& doseData);
+    DoseReportWidget(QWidget* parent = nullptr);
+    void setDoseData(const DoseReportContainer& doseData);
 
 private:
-	std::uint64_t m_ID = 0;
-	DoseReportModel* m_organModel;
-	DoseReportModel* m_materialModel;
+    std::uint64_t m_ID = 0;
+    DoseReportModel* m_organModel;
+    DoseReportModel* m_materialModel;
 };

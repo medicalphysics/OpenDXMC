@@ -23,50 +23,52 @@ Copyright 2019 Erlend Andersen
 #include "dxmc/source.h"
 
 #include "H5Cpp.h"
-#include <vector>
-#include <string>
+
 #include <memory>
+#include <string>
+#include <vector>
 
-class H5Wrapper
-{
+class H5Wrapper {
 public:
-	enum class FileOpenType {WriteOver, ReadOnly};
-	H5Wrapper(const std::string& filePath, FileOpenType type = FileOpenType::WriteOver);
-	~H5Wrapper();
-	bool saveImage(std::shared_ptr<ImageContainer> image);
-	std::shared_ptr<ImageContainer> loadImage(ImageContainer::ImageType type);
-	bool saveOrganList(const std::vector<std::string>& organList);
-	std::vector<std::string> loadOrganList(void);
-	bool saveMaterials(const std::vector<Material>& materials);
-	std::vector<Material> loadMaterials(void);
-	bool saveSources(const std::vector<std::shared_ptr<Source>>& sources);
-	std::vector<std::shared_ptr<Source>> loadSources(void);
+    enum class FileOpenType { WriteOver,
+        ReadOnly };
+    H5Wrapper(const std::string& filePath, FileOpenType type = FileOpenType::WriteOver);
+    ~H5Wrapper();
+    bool saveImage(std::shared_ptr<ImageContainer> image);
+    std::shared_ptr<ImageContainer> loadImage(ImageContainer::ImageType type);
+    bool saveOrganList(const std::vector<std::string>& organList);
+    std::vector<std::string> loadOrganList(void);
+    bool saveMaterials(const std::vector<Material>& materials);
+    std::vector<Material> loadMaterials(void);
+    bool saveSources(const std::vector<std::shared_ptr<Source>>& sources);
+    std::vector<std::shared_ptr<Source>> loadSources(void);
+
 protected:
-	std::unique_ptr<H5::Group> getGroup(const std::string& path, bool create = true);
-	std::unique_ptr<H5::DataSet> createDataSet(std::shared_ptr<ImageContainer> image, const std::string& groupPath);
-	std::shared_ptr<ImageContainer> loadDataSet(ImageContainer::ImageType type, const std::string& groupPath);
-	bool saveStringList(const std::vector<std::string>& list, const std::string& name, const std::string& groupPath = "");
-	std::vector<std::string> loadStringList(const std::string& name, const std::string& groupPath = "");
-	bool saveDoubleList(const std::vector<double>& values, const std::string& name, const std::string& groupPath = "");
-	std::vector<double> loadDoubleList(const std::string& name, const std::string& groupPath = "");
+    std::unique_ptr<H5::Group> getGroup(const std::string& path, bool create = true);
+    std::unique_ptr<H5::DataSet> createDataSet(std::shared_ptr<ImageContainer> image, const std::string& groupPath);
+    std::shared_ptr<ImageContainer> loadDataSet(ImageContainer::ImageType type, const std::string& groupPath);
+    bool saveStringList(const std::vector<std::string>& list, const std::string& name, const std::string& groupPath = "");
+    std::vector<std::string> loadStringList(const std::string& name, const std::string& groupPath = "");
+    bool saveDoubleList(const std::vector<double>& values, const std::string& name, const std::string& groupPath = "");
+    std::vector<double> loadDoubleList(const std::string& name, const std::string& groupPath = "");
 
-	std::unique_ptr<H5::Group> saveTube(const Tube& tube, const std::string& name, const std::string& groupPath);
-	void loadTube(Tube& tube, const std::string& name, const std::string& groupPath);
-	bool saveSource(std::shared_ptr<Source> src, const std::string& name, const std::string& groupPath);
-	bool loadSource(std::shared_ptr<Source> src, const std::string& name, const std::string& groupPath);
-	bool saveSource(std::shared_ptr<CTSource> src, const std::string& name, const std::string& groupPath);
-	bool loadSource(std::shared_ptr<CTSource> src, const std::string& name, const std::string& groupPath);
+    std::unique_ptr<H5::Group> saveTube(const Tube& tube, const std::string& name, const std::string& groupPath);
+    void loadTube(Tube& tube, const std::string& name, const std::string& groupPath);
+    bool saveSource(std::shared_ptr<Source> src, const std::string& name, const std::string& groupPath);
+    bool loadSource(std::shared_ptr<Source> src, const std::string& name, const std::string& groupPath);
+    bool saveSource(std::shared_ptr<CTSource> src, const std::string& name, const std::string& groupPath);
+    bool loadSource(std::shared_ptr<CTSource> src, const std::string& name, const std::string& groupPath);
 
-	bool saveSource(std::shared_ptr<DXSource> src, const std::string& name, const std::string& groupPath);
-	bool saveSource(std::shared_ptr<CTAxialSource> src, const std::string& name, const std::string& groupPath);
-	bool saveSource(std::shared_ptr<CTSpiralSource> src, const std::string& name, const std::string& groupPath);
-	bool saveSource(std::shared_ptr<CTDualSource> src, const std::string& name, const std::string& groupPath);
+    bool saveSource(std::shared_ptr<DXSource> src, const std::string& name, const std::string& groupPath);
+    bool saveSource(std::shared_ptr<CTAxialSource> src, const std::string& name, const std::string& groupPath);
+    bool saveSource(std::shared_ptr<CTSpiralSource> src, const std::string& name, const std::string& groupPath);
+    bool saveSource(std::shared_ptr<CTDualSource> src, const std::string& name, const std::string& groupPath);
 
-	bool loadSource(std::shared_ptr<DXSource> src, const std::string& name, const std::string& groupPath);
-	bool loadSource(std::shared_ptr<CTAxialSource> src, const std::string& name, const std::string& groupPath);
-	bool loadSource(std::shared_ptr<CTSpiralSource> src, const std::string& name, const std::string& groupPath);
-	bool loadSource(std::shared_ptr<CTDualSource> src, const std::string& name, const std::string& groupPath);
+    bool loadSource(std::shared_ptr<DXSource> src, const std::string& name, const std::string& groupPath);
+    bool loadSource(std::shared_ptr<CTAxialSource> src, const std::string& name, const std::string& groupPath);
+    bool loadSource(std::shared_ptr<CTSpiralSource> src, const std::string& name, const std::string& groupPath);
+    bool loadSource(std::shared_ptr<CTDualSource> src, const std::string& name, const std::string& groupPath);
+
 private:
-	std::unique_ptr<H5::H5File> m_file = nullptr;
-
+    std::unique_ptr<H5::H5File> m_file = nullptr;
 };

@@ -17,20 +17,19 @@ Copyright 2019 Erlend Andersen
 */
 #pragma once
 
-#include "opendxmc/imageimportpipeline.h"
-#include "opendxmc/imagecontainer.h"
 #include "opendxmc/dosereportcontainer.h"
+#include "opendxmc/imagecontainer.h"
+#include "opendxmc/imageimportpipeline.h"
 
 #include "dxmc/material.h"
-
-#include "dxmc/tube.h"
-#include "dxmc/source.h"
 #include "dxmc/progressbar.h"
+#include "dxmc/source.h"
+#include "dxmc/tube.h"
 
 #include <QObject>
 
-#include <vtkSmartPointer.h>
 #include <vtkImageData.h>
+#include <vtkSmartPointer.h>
 
 #include <map>
 #include <memory>
@@ -39,44 +38,42 @@ Copyright 2019 Erlend Andersen
 #ifndef Q_DECLARE_METATYPE_IMAGECONTAINER
 #define Q_DECLARE_METATYPE_IMAGECONTAINER
 Q_DECLARE_METATYPE(std::shared_ptr<ImageContainer>)
-#endif 
+#endif
 #ifndef Q_DECLARE_METATYPE_PROGRESSBAR
 #define Q_DECLARE_METATYPE_PROGRESSBAR
 Q_DECLARE_METATYPE(std::shared_ptr<ProgressBar>)
-#endif 
+#endif
 #ifndef Q_DECLARE_METATYPE_DOSEREPORTCONTAINER
 #define Q_DECLARE_METATYPE_DOSEREPORTCONTAINER
 Q_DECLARE_METATYPE(DoseReportContainer)
-#endif 
+#endif
 
-
-class SimulationPipeline : public QObject
-{
-	Q_OBJECT
+class SimulationPipeline : public QObject {
+    Q_OBJECT
 public:
-	SimulationPipeline(QObject *parent = nullptr);
-	void setImageData(std::shared_ptr<ImageContainer> image);
-	void setMaterials(const std::vector<Material>& materials);
-	void setOrganList(const std::vector<std::string>& organList) { m_organList = organList; }
-	void runSimulation(const std::vector<std::shared_ptr<Source>> sources);
+    SimulationPipeline(QObject* parent = nullptr);
+    void setImageData(std::shared_ptr<ImageContainer> image);
+    void setMaterials(const std::vector<Material>& materials);
+    void setOrganList(const std::vector<std::string>& organList) { m_organList = organList; }
+    void runSimulation(const std::vector<std::shared_ptr<Source>> sources);
 
-	bool ignoreAirDose() const { return m_ignoreAirDose; }
-	void setIgnoreAirDose(bool on) { m_ignoreAirDose = on; }
+    bool ignoreAirDose() const { return m_ignoreAirDose; }
+    void setIgnoreAirDose(bool on) { m_ignoreAirDose = on; }
 
 signals:
-	void processingDataStarted();
-	void processingDataEnded();
-	void progressBarChanged(ProgressBar* progressBar);
-	void imageDataChanged(std::shared_ptr<ImageContainer> image);
-	void doseDataChanged(const DoseReportContainer& doses);
+    void processingDataStarted();
+    void processingDataEnded();
+    void progressBarChanged(ProgressBar* progressBar);
+    void imageDataChanged(std::shared_ptr<ImageContainer> image);
+    void doseDataChanged(const DoseReportContainer& doses);
 
 private:
-	bool m_ignoreAirDose = true;
-	std::uint64_t m_currentImageID = 0;
-	std::shared_ptr<DensityImageContainer> m_densityImage=nullptr;
-	std::shared_ptr<MaterialImageContainer> m_materialImage=nullptr;
-	std::shared_ptr<OrganImageContainer> m_organImage=nullptr;
-	std::shared_ptr<MeasurementImageContainer> m_measurementImage=nullptr;
-	std::vector<std::string> m_organList;
-	std::vector<Material> m_materialList;
+    bool m_ignoreAirDose = true;
+    std::uint64_t m_currentImageID = 0;
+    std::shared_ptr<DensityImageContainer> m_densityImage = nullptr;
+    std::shared_ptr<MaterialImageContainer> m_materialImage = nullptr;
+    std::shared_ptr<OrganImageContainer> m_organImage = nullptr;
+    std::shared_ptr<MeasurementImageContainer> m_measurementImage = nullptr;
+    std::vector<std::string> m_organList;
+    std::vector<Material> m_materialList;
 };

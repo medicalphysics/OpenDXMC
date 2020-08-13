@@ -16,64 +16,61 @@ along with OpenDXMC. If not, see < https://www.gnu.org/licenses/>.
 Copyright 2019 Erlend Andersen
 */
 
-#pragma once 
+#pragma once
 
-
-#include "volumerenderwidgetsettings.h"
-#include "volumeactorcontainer.h"
-#include "imagecontainer.h"
+#include "opendxmc/imagecontainer.h"
+#include "opendxmc/volumeactorcontainer.h"
+#include "opendxmc/volumerenderwidgetsettings.h"
 
 #include <QWidget>
 
 #include <QVTKOpenGLNativeWidget.h>
-#include <vtkSmartPointer.h>
-#include <vtkVolumeProperty.h>
-#include <vtkSmartPointer.h>
 #include <vtkImageData.h>
-#include <vtkSmartVolumeMapper.h>
-#include <vtkOpenGLRenderer.h>
 #include <vtkImageGaussianSmooth.h>
+#include <vtkOpenGLRenderer.h>
+#include <vtkSmartPointer.h>
+#include <vtkSmartVolumeMapper.h>
+#include <vtkVolumeProperty.h>
 
 #include <memory>
-
 
 #ifndef Q_DECLARE_METATYPE_IMAGECONTAINER
 #define Q_DECLARE_METATYPE_IMAGECONTAINER
 Q_DECLARE_METATYPE(std::shared_ptr<ImageContainer>)
-#endif 
+#endif
 
-class VolumeRenderWidget : public QWidget
-{
-	Q_OBJECT
+class VolumeRenderWidget : public QWidget {
+    Q_OBJECT
 public:
-	VolumeRenderWidget(QWidget *parent = nullptr);
-	~VolumeRenderWidget();
-	
-	VolumeRenderSettingsWidget *getSettingsWidget(void) { return m_settingsWidget; }
-	void updateRendering(void);
-	void setImageData(std::shared_ptr<ImageContainer> volume);
-	void setRenderMode(int mode);
-	void setCropPlanes(int planes[6]);
-	void addActorContainer(SourceActorContainer* actorContainer);
-	void removeActorContainer(SourceActorContainer* actorContainer);
-	void setActorsVisible(int visible);
+    VolumeRenderWidget(QWidget* parent = nullptr);
+    ~VolumeRenderWidget();
+
+    VolumeRenderSettingsWidget* getSettingsWidget(void) { return m_settingsWidget; }
+    void updateRendering(void);
+    void setImageData(std::shared_ptr<ImageContainer> volume);
+    void setRenderMode(int mode);
+    void setCropPlanes(int planes[6]);
+    void addActorContainer(SourceActorContainer* actorContainer);
+    void removeActorContainer(SourceActorContainer* actorContainer);
+    void setActorsVisible(int visible);
 signals:
-	void imageDataChanged(std::shared_ptr<ImageContainer> image);
+    void imageDataChanged(std::shared_ptr<ImageContainer> image);
+
 private:
-	void updateVolumeRendering();
-	void updateVolumeProps();
+    void updateVolumeRendering();
+    void updateVolumeProps();
 
-	QVTKOpenGLNativeWidget *m_openGLWidget;
-	VolumeRenderSettingsWidget *m_settingsWidget;
-	vtkSmartPointer<vtkSmartVolumeMapper> m_volumeMapper;
-	vtkSmartPointer<vtkImageGaussianSmooth> m_imageSmoother;
-	vtkSmartPointer<vtkOpenGLRenderer> m_renderer;
-	vtkSmartPointer<vtkVolume> m_volume;
+    QVTKOpenGLNativeWidget* m_openGLWidget;
+    VolumeRenderSettingsWidget* m_settingsWidget;
+    vtkSmartPointer<vtkSmartVolumeMapper> m_volumeMapper;
+    vtkSmartPointer<vtkImageGaussianSmooth> m_imageSmoother;
+    vtkSmartPointer<vtkOpenGLRenderer> m_renderer;
+    vtkSmartPointer<vtkVolume> m_volume;
 
-	std::shared_ptr<ImageContainer> m_imageData;
-	int m_renderMode = 0;
+    std::shared_ptr<ImageContainer> m_imageData;
+    int m_renderMode = 0;
 
-	std::vector<VolumeActorContainer*> m_volumeProps;
-	std::shared_ptr<OrientationActorContainer> m_orientationProp;
-	bool m_actorsVisible = true;
+    std::vector<VolumeActorContainer*> m_volumeProps;
+    std::shared_ptr<OrientationActorContainer> m_orientationProp;
+    bool m_actorsVisible = true;
 };

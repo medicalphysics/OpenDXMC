@@ -22,58 +22,57 @@ Copyright 2019 Erlend Andersen
 
 #include "opendxmc/imagecontainer.h"
 
-#include "dxmc/material.h"
 #include "dxmc/beamfilters.h"
+#include "dxmc/material.h"
 
+#include <array>
 #include <memory>
 #include <vector>
-#include <array>
 
 #ifndef Q_DECLARE_METATYPE_IMAGECONTAINER
 #define Q_DECLARE_METATYPE_IMAGECONTAINER
 Q_DECLARE_METATYPE(std::shared_ptr<ImageContainer>)
-#endif 
+#endif
 #ifndef Q_DECLARE_METATYPE_MATERIALVECTOR
 #define Q_DECLARE_METATYPE_MATERIALVECTOR
 Q_DECLARE_METATYPE(std::vector<Material>)
-#endif 
+#endif
 #ifndef Q_DECLARE_METATYPE_STRINGVECTOR
 #define Q_DECLARE_METATYPE_STRINGVECTOR
 Q_DECLARE_METATYPE(std::vector<std::string>)
-#endif 
+#endif
 
-
-
-class BinaryImportPipeline : public QObject
-{
-	Q_OBJECT
+class BinaryImportPipeline : public QObject {
+    Q_OBJECT
 public:
-	BinaryImportPipeline(QObject* parent = nullptr);
-	void setDimension(const std::array<std::size_t, 3>& dimensions);
-	void setDimension(int position, int value);
-	void setSpacing(const std::array<double, 3>& spacing);
-	void setSpacing(int position, double value);
-	void setMaterialArrayPath(const QString& path);
-	void setDensityArrayPath(const QString& path);
-	void setMaterialMapPath(const QString& path);
+    BinaryImportPipeline(QObject* parent = nullptr);
+    void setDimension(const std::array<std::size_t, 3>& dimensions);
+    void setDimension(int position, int value);
+    void setSpacing(const std::array<double, 3>& spacing);
+    void setSpacing(int position, double value);
+    void setMaterialArrayPath(const QString& path);
+    void setDensityArrayPath(const QString& path);
+    void setMaterialMapPath(const QString& path);
 
 signals:
-	void processingDataStarted();
-	void processingDataEnded();
-	void imageDataChanged(std::shared_ptr<ImageContainer> imageData);
-	void materialDataChanged(const std::vector<Material>& materials);
-	void organDataChanged(const std::vector<std::string>& organs);
-	void aecFilterChanged(const QString& name, std::shared_ptr<AECFilter> filter);
-	void errorMessage(const QString& errorMsg) const;
-	void resultsReady(bool ready);
+    void processingDataStarted();
+    void processingDataEnded();
+    void imageDataChanged(std::shared_ptr<ImageContainer> imageData);
+    void materialDataChanged(const std::vector<Material>& materials);
+    void organDataChanged(const std::vector<std::string>& organs);
+    void aecFilterChanged(const QString& name, std::shared_ptr<AECFilter> filter);
+    void errorMessage(const QString& errorMsg) const;
+    void resultsReady(bool ready);
+
 protected:
-	template<typename T>
-	std::shared_ptr<std::vector<T>> readBinaryArray(const QString& path) const;
-	void validate();
+    template <typename T>
+    std::shared_ptr<std::vector<T>> readBinaryArray(const QString& path) const;
+    void validate();
+
 private:
-	std::array<std::size_t, 3> m_dimensions = {64,64,64};
-	std::array<double, 3> m_spacing = { 1, 1, 1 };
-	std::shared_ptr<std::vector<double>> m_densityArray = nullptr;
-	std::shared_ptr<std::vector<unsigned char>> m_materialArray = nullptr;
-	std::vector<std::pair<std::uint8_t, Material>> m_materialMap;
+    std::array<std::size_t, 3> m_dimensions = { 64, 64, 64 };
+    std::array<double, 3> m_spacing = { 1, 1, 1 };
+    std::shared_ptr<std::vector<double>> m_densityArray = nullptr;
+    std::shared_ptr<std::vector<unsigned char>> m_materialArray = nullptr;
+    std::vector<std::pair<std::uint8_t, Material>> m_materialMap;
 };

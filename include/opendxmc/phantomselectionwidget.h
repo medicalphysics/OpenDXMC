@@ -17,30 +17,28 @@ Copyright 2019 Erlend Andersen
 */
 #pragma once
 
-
 #include "imagecontainer.h"
-#include <QWidget>
-#include <QString>
 #include <QComboBox>
+#include <QString>
+#include <QWidget>
 
 #include <vector>
 
-class PhantomSelectionWidget : public QWidget
-{
-	Q_OBJECT
+class PhantomSelectionWidget : public QWidget {
+    Q_OBJECT
 public:
-	PhantomSelectionWidget(QWidget *parent = nullptr);
-	void importHelmholtzPhantoms();
+    PhantomSelectionWidget(QWidget* parent = nullptr);
+    void importHelmholtzPhantoms();
 
 signals:
-	void readIRCUMalePhantom(bool removeArms=false);
-	void readIRCUFemalePhantom(bool removeArms = false);
-	void readCTDIPhantom(int diameter_mm, bool force_measurements);
-	void readAWSPhantom(const QString& name);
+    void readIRCUMalePhantom(bool removeArms = false);
+    void readIRCUFemalePhantom(bool removeArms = false);
+    void readCTDIPhantom(int diameter_mm, bool force_measurements);
+    void readAWSPhantom(const QString& name);
+
 protected:
-	void addInstalledPhantoms(void);
+    void addInstalledPhantoms(void);
+
 private:
-	QComboBox* m_phantomSelector = nullptr;
-	
-	
+    QComboBox* m_phantomSelector = nullptr;
 };

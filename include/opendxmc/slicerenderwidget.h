@@ -18,66 +18,67 @@ Copyright 2019 Erlend Andersen
 
 #pragma once
 
-#include "imagecontainer.h"
-#include "volumeactorcontainer.h"
-#include "slicerenderinteractor.h"
+#include "opendxmc/imagecontainer.h"
+#include "opendxmc/slicerenderinteractor.h"
+#include "opendxmc/volumeactorcontainer.h"
 
-#include <QWidget>
 #include <QComboBox>
+#include <QWidget>
 
 #include <QVTKOpenGLNativeWidget.h>
-#include <vtkSmartPointer.h>
 #include <vtkImageData.h>
+#include <vtkImageGaussianSmooth.h>
 #include <vtkImageResliceMapper.h>
 #include <vtkImageSlice.h>
 #include <vtkRenderer.h>
-#include <vtkImageGaussianSmooth.h>
 #include <vtkScalarBarActor.h>
+#include <vtkSmartPointer.h>
 
-#include <memory>
-#include <map>
 #include <array>
+#include <map>
+#include <memory>
 
 // https://github.com/Kitware/VTK/blob/master/Rendering/Image/Testing/Cxx/TestImageResliceMapperAlpha.cxx
 
-class SliceRenderWidget : public QWidget
-{
-	Q_OBJECT
+class SliceRenderWidget : public QWidget {
+    Q_OBJECT
 public:
-	enum Orientation { Axial, Sagittal, Coronal };
-	SliceRenderWidget(QWidget *parent = nullptr, Orientation orientation = Axial);
+    enum Orientation { Axial,
+        Sagittal,
+        Coronal };
+    SliceRenderWidget(QWidget* parent = nullptr, Orientation orientation = Axial);
 
-	void updateRendering();
-	void setImageData(std::shared_ptr<ImageContainer> foreground, std::shared_ptr<ImageContainer> background=nullptr);
-	void addActorContainer(SourceActorContainer* actorContainer);
-	void removeActorContainer(SourceActorContainer* actorContainer);
-	void setActorsVisible(int visible);
+    void updateRendering();
+    void setImageData(std::shared_ptr<ImageContainer> foreground, std::shared_ptr<ImageContainer> background = nullptr);
+    void addActorContainer(SourceActorContainer* actorContainer);
+    void removeActorContainer(SourceActorContainer* actorContainer);
+    void setActorsVisible(int visible);
 signals:
-	void sourceActorChanged();
-protected:
-	std::array<double, 2> presetLeveling(ImageContainer::ImageType type);
-	void setColorTable(const QString& colorTableName);
-#ifdef WINDOWS
-	void saveCine();
-#endif
-	
-private:
-	Orientation m_orientation;
-	QVTKOpenGLNativeWidget *m_openGLWidget;
-	vtkSmartPointer<vtkImageResliceMapper> m_imageMapper;
-	vtkSmartPointer<vtkImageGaussianSmooth> m_imageSmoother;
-	vtkSmartPointer<vtkImageResliceMapper> m_imageMapperBackground;
-	vtkSmartPointer<vtkImageSlice> m_imageSlice;
-	vtkSmartPointer<vtkImageSlice> m_imageSliceBackground;
-	vtkSmartPointer<customMouseInteractorStyle> m_interactionStyle;
-	std::map<ImageContainer::ImageType, std::array<double, 2>> m_windowLevels;
-	vtkSmartPointer<vtkRenderer> m_renderer;
-	vtkSmartPointer<vtkCornerAnnotation> m_textActorCorners;
-	vtkSmartPointer<vtkScalarBarActor> m_scalarColorBar;
-	std::map<const QString, QVector<double>> m_colorTables;
-	QComboBox* m_colorTablePicker = nullptr;
-	std::shared_ptr<ImageContainer> m_image;
-	std::shared_ptr<ImageContainer> m_imageBackground;
-	std::vector<SourceActorContainer*> m_volumeProps;
-}; 
+    void sourceActorChanged();
 
+protected:
+    std::array<double, 2> presetLeveling(ImageContainer::ImageType type);
+    void setColorTable(const QString& colorTableName);
+#ifdef WINDOWS
+    void saveCine();
+#endif
+
+private:
+    Orientation m_orientation;
+    QVTKOpenGLNativeWidget* m_openGLWidget;
+    vtkSmartPointer<vtkImageResliceMapper> m_imageMapper;
+    vtkSmartPointer<vtkImageGaussianSmooth> m_imageSmoother;
+    vtkSmartPointer<vtkImageResliceMapper> m_imageMapperBackground;
+    vtkSmartPointer<vtkImageSlice> m_imageSlice;
+    vtkSmartPointer<vtkImageSlice> m_imageSliceBackground;
+    vtkSmartPointer<customMouseInteractorStyle> m_interactionStyle;
+    std::map<ImageContainer::ImageType, std::array<double, 2>> m_windowLevels;
+    vtkSmartPointer<vtkRenderer> m_renderer;
+    vtkSmartPointer<vtkCornerAnnotation> m_textActorCorners;
+    vtkSmartPointer<vtkScalarBarActor> m_scalarColorBar;
+    std::map<const QString, QVector<double>> m_colorTables;
+    QComboBox* m_colorTablePicker = nullptr;
+    std::shared_ptr<ImageContainer> m_image;
+    std::shared_ptr<ImageContainer> m_imageBackground;
+    std::vector<SourceActorContainer*> m_volumeProps;
+};

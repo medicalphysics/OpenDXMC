@@ -18,56 +18,59 @@ Copyright 2019 Erlend Andersen
 
 #pragma once
 
-#include "volumeactorcontainer.h"
+#include "opendxmc/volumeactorcontainer.h"
 
-#include <vtkInteractorStyleImage.h>
-#include <vtkImageResliceMapper.h>
-#include <vtkGenericOpenGLRenderWindow.h>
-#include <vtkCornerAnnotation.h>
 #include <vtkCellPicker.h>
+#include <vtkCornerAnnotation.h>
+#include <vtkGenericOpenGLRenderWindow.h>
+#include <vtkImageResliceMapper.h>
+#include <vtkInteractorStyleImage.h>
 
 #include <functional>
 
-class customMouseInteractorStyle : public vtkInteractorStyleImage
-{
+class customMouseInteractorStyle : public vtkInteractorStyleImage {
 public:
-	static customMouseInteractorStyle* New();
-	vtkTypeMacro(customMouseInteractorStyle, vtkInteractorStyleImage);
-	void OnMouseWheelForward() override;
-	void OnMouseWheelBackward() override;
-	void OnMouseMove() override;
-	void OnLeftButtonDown() override;
-	void OnLeftButtonUp() override;
-	void StartPan() override;
-	void EndPan() override;
-	void Pan() override;
-	void setCallback(std::function<void(void)> f) { m_callback = f; }
-	void setMapper(vtkSmartPointer<vtkImageResliceMapper> m);
-	void setMapperBackground(vtkSmartPointer<vtkImageResliceMapper> m);
-	void setRenderWindow(vtkSmartPointer<vtkRenderWindow> m);
-	void setCornerAnnotation(vtkSmartPointer<vtkCornerAnnotation> actor);
-	static std::string prettyNumber(double number);
-	void update();
-	void addImagePlaneActor(SourceActorContainer* container);
-	void setImagePlaneActorVisible(bool visible) { m_imagePlaneActorVisibility = visible; updatePlaneActors(); };
-	bool imagePlaneActorVisible() { return m_imagePlaneActorVisibility; };
-	void removeImagePlaneActor(SourceActorContainer* container);
+    static customMouseInteractorStyle* New();
+    vtkTypeMacro(customMouseInteractorStyle, vtkInteractorStyleImage);
+    void OnMouseWheelForward() override;
+    void OnMouseWheelBackward() override;
+    void OnMouseMove() override;
+    void OnLeftButtonDown() override;
+    void OnLeftButtonUp() override;
+    void StartPan() override;
+    void EndPan() override;
+    void Pan() override;
+    void setCallback(std::function<void(void)> f) { m_callback = f; }
+    void setMapper(vtkSmartPointer<vtkImageResliceMapper> m);
+    void setMapperBackground(vtkSmartPointer<vtkImageResliceMapper> m);
+    void setRenderWindow(vtkSmartPointer<vtkRenderWindow> m);
+    void setCornerAnnotation(vtkSmartPointer<vtkCornerAnnotation> actor);
+    static std::string prettyNumber(double number);
+    void update();
+    void addImagePlaneActor(SourceActorContainer* container);
+    void setImagePlaneActorVisible(bool visible)
+    {
+        m_imagePlaneActorVisibility = visible;
+        updatePlaneActors();
+    };
+    bool imagePlaneActorVisible() { return m_imagePlaneActorVisibility; };
+    void removeImagePlaneActor(SourceActorContainer* container);
+
 protected:
-	customMouseInteractorStyle();
-	void updateWLText();
-	void scrollSlice(bool forward);
-	void updatePlaneActors();
-	SourceActorContainer* findPickedPlaneActor(int x, int y);
+    customMouseInteractorStyle();
+    void updateWLText();
+    void scrollSlice(bool forward);
+    void updatePlaneActors();
+    SourceActorContainer* findPickedPlaneActor(int x, int y);
+
 private:
-	vtkSmartPointer<vtkImageResliceMapper> m_imageMapper = nullptr;
-	vtkSmartPointer<vtkImageResliceMapper> m_imageMapperBackground = nullptr;
-	vtkSmartPointer<vtkRenderWindow> m_renderWindow = nullptr;
-	vtkSmartPointer<vtkCornerAnnotation> m_textActorCorners = nullptr;
-	std::vector<SourceActorContainer*> m_imagePlaneActors;
-	SourceActorContainer* m_pickedPlaneActor = nullptr;
-	vtkSmartPointer<vtkCellPicker> m_interactionPicker = nullptr;
-	std::function<void(void)> m_callback;
-	bool m_imagePlaneActorVisibility = true;
+    vtkSmartPointer<vtkImageResliceMapper> m_imageMapper = nullptr;
+    vtkSmartPointer<vtkImageResliceMapper> m_imageMapperBackground = nullptr;
+    vtkSmartPointer<vtkRenderWindow> m_renderWindow = nullptr;
+    vtkSmartPointer<vtkCornerAnnotation> m_textActorCorners = nullptr;
+    std::vector<SourceActorContainer*> m_imagePlaneActors;
+    SourceActorContainer* m_pickedPlaneActor = nullptr;
+    vtkSmartPointer<vtkCellPicker> m_interactionPicker = nullptr;
+    std::function<void(void)> m_callback;
+    bool m_imagePlaneActorVisibility = true;
 };
-
-

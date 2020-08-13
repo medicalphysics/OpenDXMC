@@ -153,7 +153,7 @@ QWidget* SourceDelegate::createEditor(QWidget* parent, const QStyleOptionViewIte
     auto userType = index.data(Qt::DisplayRole).userType();
     if (userType == qMetaTypeId<std::shared_ptr<BowTieFilter>>()) {
         QComboBox* cb = new QComboBox(parent);
-        for (auto& [name, filter] : m_bowtieFilters) {
+        for (const auto& [name, filter] : m_bowtieFilters) {
             cb->addItem(name);
         }
         return cb;
@@ -173,24 +173,22 @@ void SourceDelegate::setEditorData(QWidget* editor, const QModelIndex& index) co
     if (userType == qMetaTypeId<std::shared_ptr<BowTieFilter>>()) {
         auto currentFilter = qvariant_cast<std::shared_ptr<BowTieFilter>>(index.data(Qt::EditRole));
         auto cb = qobject_cast<QComboBox*>(editor);
-        int teller = 0;
-        for (auto& [name, filter] : m_bowtieFilters) {
-            if (filter == currentFilter) {
-                cb->setCurrentIndex(teller);
-                return;
-            }
-            teller++;
+
+        auto it = std::find_if(m_bowtieFilters.cbegin(), m_bowtieFilters.cend(), [=](const auto& e) { return e.second == currentFilter; });
+        if (it != m_bowtieFilters.cend()) {
+            int idx = std::distance(m_bowtieFilters.cbegin(), it);
+            cb->setCurrentIndex(idx);
+            return;
         }
     } else if (userType == qMetaTypeId<std::shared_ptr<AECFilter>>()) {
         auto currentFilter = qvariant_cast<std::shared_ptr<AECFilter>>(index.data(Qt::EditRole));
         auto cb = qobject_cast<QComboBox*>(editor);
-        int teller = 0;
-        for (const auto& [name, filter] : m_aecFilters) {
-            if (filter == currentFilter) {
-                cb->setCurrentIndex(teller);
-                return;
-            }
-            teller++;
+
+        auto it = std::find_if(m_aecFilters.cbegin(), m_aecFilters.cend(), [=](const auto& e) { return e.second == currentFilter; });
+        if (it != m_aecFilters.cend()) {
+            int idx = std::distance(m_aecFilters.cbegin(), it);
+            cb->setCurrentIndex(idx);
+            return;
         }
     }
     QStyledItemDelegate::setEditorData(editor, index);
@@ -202,17 +200,23 @@ void SourceDelegate::setModelData(QWidget* editor, QAbstractItemModel* model, co
     if (userType == qMetaTypeId<std::shared_ptr<BowTieFilter>>()) {
         auto cb = qobject_cast<QComboBox*>(editor);
         auto idx = cb->currentIndex();
-        if (idx < 0)
-            idx = 0;
-        auto data = QVariant::fromValue(m_bowtieFilters[idx].second);
-        model->setData(index, data, Qt::EditRole);
+        if (idx >= 0) {
+            auto data = QVariant::fromValue(m_bowtieFilters[idx].second);
+            model->setData(index, data, Qt::EditRole);
+        } else {
+            std::shared_ptr<BowTieFilter> empty = nullptr;
+            model->setData(index, QVariant::fromValue(empty), Qt::EditRole);
+        }
     } else if (userType == qMetaTypeId<std::shared_ptr<AECFilter>>()) {
         auto cb = qobject_cast<QComboBox*>(editor);
-        auto idx = cb->currentText();
-        if (idx.size() == 0)
-            idx = "None";
-        auto data = QVariant::fromValue(m_aecFilters.at(idx));
-        model->setData(index, data, Qt::EditRole);
+        auto idx = cb->currentIndex();
+        if (idx >= 0) {
+            auto data = QVariant::fromValue(m_aecFilters[idx].second);
+            model->setData(index, data, Qt::EditRole);
+        } else {
+            std::shared_ptr<AECFilter> empty = nullptr;
+            model->setData(index, QVariant::fromValue(empty), Qt::EditRole);
+        }
     } else {
         QStyledItemDelegate::setModelData(editor, model, index);
     }
@@ -223,21 +227,15 @@ QString SourceDelegate::displayText(const QVariant& value, const QLocale& locale
     auto userType = value.userType();
     if (userType == qMetaTypeId<std::shared_ptr<BowTieFilter>>()) {
         auto currentFilter = qvariant_cast<std::shared_ptr<BowTieFilter>>(value);
-        int teller = 0;
-        for (auto& [name, filter] : m_bowtieFilters) {
-            if (filter == currentFilter) {
-                return m_bowtieFilters[teller].first;
-            }
-            teller++;
+        auto it = std::find_if(m_bowtieFilters.cbegin(), m_bowtieFilters.cend(), [=](const auto& pair) { return pair.second == currentFilter; });
+        if (it != m_bowtieFilters.cend()) {
+            return it->first;
         }
     } else if (userType == qMetaTypeId<std::shared_ptr<AECFilter>>()) {
         auto currentFilter = qvariant_cast<std::shared_ptr<AECFilter>>(value);
-        int teller = 0;
-        for (auto& [name, filter] : m_aecFilters) {
-            if (filter == currentFilter) {
-                return name;
-            }
-            teller++;
+        auto it = std::find_if(m_aecFilters.cbegin(), m_aecFilters.cend(), [=](const auto& pair) { return pair.second == currentFilter; });
+        if (it != m_aecFilters.cend()) {
+            return it->first;
         }
     }
     return QStyledItemDelegate::displayText(value, locale);
@@ -250,7 +248,8 @@ void SourceDelegate::addBowtieFilter(const QString& name, std::shared_ptr<BowTie
 }
 void SourceDelegate::addAecFilter(const QString& name, std::shared_ptr<AECFilter> filter)
 {
-    m_aecFilters[name] = filter;
+    m_aecFilters.push_back(std::make_pair(name, filter));
+    std::sort(m_aecFilters.begin(), m_aecFilters.end());
 }
 
 SourceModelView::SourceModelView(QWidget* parent)
@@ -264,7 +263,6 @@ void SourceModelView::keyPressEvent(QKeyEvent* event)
         if (index.isValid()) {
             auto parent = index.parent(); // if top level item parent is not valid
             if (!parent.isValid()) {
-
                 model()->removeRow(index.row());
                 return;
             }
@@ -310,10 +308,10 @@ SourceEditWidget::SourceEditWidget(QWidget* parent)
     modelView->setItemDelegate(m_delegate);
 
     ///////////// adding bowtie filters
-    auto test = new BowtieFilterReader(this);
-    test->loadFilters();
+    auto filters = new BowtieFilterReader(this);
+    filters->loadFilters();
 
-    for (auto [name, filter] : test->filters()) {
+    for (auto [name, filter] : filters->filters()) {
         m_delegate->addBowtieFilter(name, filter);
     }
 

@@ -67,7 +67,7 @@ public:
 
 private:
     std::vector<std::pair<QString, std::shared_ptr<BowTieFilter>>> m_bowtieFilters;
-    std::map<QString, std::shared_ptr<AECFilter>> m_aecFilters;
+    std::vector<std::pair<QString, std::shared_ptr<AECFilter>>> m_aecFilters;
 };
 
 class SourceModelView : public QTreeView {

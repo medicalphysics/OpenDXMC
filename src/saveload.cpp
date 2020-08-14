@@ -33,7 +33,6 @@ SaveLoad::SaveLoad(QObject* parent)
 void SaveLoad::loadFromFile(const QString& path)
 {
     emit processingDataStarted();
-
     clear();
     m_sources.clear();
     m_images.clear();
@@ -100,27 +99,22 @@ void SaveLoad::loadFromFile(const QString& path)
     emit organDataChanged(m_organList);
     emit sourcesChanged(m_sources);
 
-    std::size_t bowtieCount = 1;
-    std::size_t aecCount = 1;
     for (auto src : m_sources) {
         if (src->type() == Source::Type::CTAxial || src->type() == Source::Type::CTSpiral || src->type() == Source::Type::CTDual) {
             auto ctsrc = std::static_pointer_cast<CTSource>(src);
             auto aecFilter = ctsrc->aecFilter();
             if (aecFilter) {
-                auto name = "From saved file " + std::to_string(aecCount++);
-                emit aecFilterChanged(QString::fromStdString(name), aecFilter);
+                emit aecFilterChanged(aecFilter);
             }
             auto bowtie = ctsrc->bowTieFilter();
             if (bowtie) {
-                auto name = "From saved file " + std::to_string(bowtieCount++);
-                emit bowtieFilterChanged(QString::fromStdString(name), bowtie);
+                emit bowtieFilterChanged(bowtie);
             }
             if (src->type() == Source::Type::CTDual) {
                 auto ctdualsrc = std::static_pointer_cast<CTDualSource>(src);
                 auto bowtieB = ctdualsrc->bowTieFilterB();
                 if (bowtieB) {
-                    auto name = "From saved file " + std::to_string(bowtieCount++);
-                    emit bowtieFilterChanged(QString::fromStdString(name), bowtieB);
+                    emit bowtieFilterChanged(bowtieB);
                 }
             }
         }

@@ -190,7 +190,7 @@ signals:
     void imageDataChanged(std::shared_ptr<ImageContainer> imageData);
     void materialDataChanged(const std::vector<Material>& materials);
     void organDataChanged(const std::vector<std::string>& organs);
-    void aecFilterChanged(const QString& name, std::shared_ptr<AECFilter> filter);
+    void aecFilterChanged(std::shared_ptr<AECFilter> filter);
 
 protected:
     template <class Iter>

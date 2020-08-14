@@ -81,8 +81,8 @@ signals:
     void organDataChanged(const std::vector<std::string>& organs);
     void doseDataChanged(const DoseReportContainer& doses);
     void sourcesChanged(std::vector<std::shared_ptr<Source>> sources);
-    void aecFilterChanged(QString name, std::shared_ptr<AECFilter> filter);
-    void bowtieFilterChanged(QString name, std::shared_ptr<BowTieFilter> filter);
+    void aecFilterChanged(std::shared_ptr<AECFilter> filter);
+    void bowtieFilterChanged(std::shared_ptr<BowTieFilter> filter);
 
 private:
     std::uint64_t m_currentImageID = 0;

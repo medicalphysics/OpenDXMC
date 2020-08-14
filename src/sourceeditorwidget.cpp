@@ -38,24 +38,20 @@ BowtieFilterReader::BowtieFilterReader(QWidget* parent)
 {
 }
 
-void BowtieFilterReader::addFilter(const QString& name, std::shared_ptr<BowTieFilter>& filter)
+void BowtieFilterReader::addFilter(std::shared_ptr<BowTieFilter> filter)
 {
-    m_bowtieFilters.push_back(std::make_pair(name, filter));
+    m_bowtieFilters.push_back(filter);
 }
 
 bool BowtieFilterReader::loadFilters()
 {
     QFile loadFile(QStringLiteral("resources/bowtiefilters.json"));
-
     if (!loadFile.open(QIODevice::ReadOnly)) {
         qWarning("Couldn't open save file.");
         return false;
     }
-
     QByteArray saveData = loadFile.readAll();
-
     QJsonDocument loadDoc(QJsonDocument::fromJson(saveData));
-
     readJson(loadDoc.object());
     return true;
 }
@@ -76,12 +72,12 @@ bool BowtieFilterReader::saveFilters()
     return true;
 }
 
-std::pair<QString, std::shared_ptr<BowTieFilter>> BowtieFilterReader::readFilter(QJsonObject& json) const
+std::shared_ptr<BowTieFilter> BowtieFilterReader::readFilter(QJsonObject& json) const
 {
-    QString name;
+    std::string name {};
     std::vector<std::pair<double, double>> filterData;
     if (json.contains("name") && json["name"].isString())
-        name = json["name"].toString();
+        name = json["name"].toString().toStdString();
 
     if (json.contains("filterdata") && json["filterdata"].isArray()) {
         QJsonArray filtersArray = json["filterdata"].toArray();
@@ -97,16 +93,17 @@ std::pair<QString, std::shared_ptr<BowTieFilter>> BowtieFilterReader::readFilter
         }
     }
     if ((name.size() == 0) || (filterData.size() == 0))
-        return std::pair<QString, std::shared_ptr<BowTieFilter>>();
+        return nullptr;
     auto filter = std::make_shared<BowTieFilter>(filterData);
-    return std::make_pair(name, filter);
+    filter->setFilterName(name);
+    return filter;
 }
 
-void BowtieFilterReader::writeFilter(QJsonObject& json, const std::pair<QString, std::shared_ptr<BowTieFilter>>& filter) const
+void BowtieFilterReader::writeFilter(QJsonObject& json, std::shared_ptr<BowTieFilter> filter) const
 {
-    json["name"] = filter.first;
+    json["name"] = QString::fromStdString(filter->filterName());
     QJsonArray filtersArray;
-    auto values = filter.second->data();
+    auto values = filter->data();
     for (auto [angle, weight] : values) {
         QJsonObject filterObject;
         filterObject["angle"] = angle;
@@ -124,7 +121,8 @@ void BowtieFilterReader::readJson(const QJsonObject& json)
         m_bowtieFilters.reserve(filtersArray.size());
         for (int filtersIndex = 0; filtersIndex < filtersArray.size(); ++filtersIndex) {
             QJsonObject filterObject = filtersArray[filtersIndex].toObject();
-            m_bowtieFilters.push_back(readFilter(filterObject));
+            auto filter = readFilter(filterObject);
+            m_bowtieFilters.push_back(filter);
         }
     }
 }
@@ -144,8 +142,8 @@ void BowtieFilterReader::writeJson(QJsonObject& json) const
 SourceDelegate::SourceDelegate(QObject* parent)
     : QStyledItemDelegate(parent)
 {
-    addBowtieFilter("None", nullptr);
-    addAecFilter("None", nullptr);
+    addBowtieFilter(nullptr);
+    addAecFilter(nullptr);
 }
 
 QWidget* SourceDelegate::createEditor(QWidget* parent, const QStyleOptionViewItem& option, const QModelIndex& index) const
@@ -241,15 +239,41 @@ QString SourceDelegate::displayText(const QVariant& value, const QLocale& locale
     return QStyledItemDelegate::displayText(value, locale);
 }
 
-void SourceDelegate::addBowtieFilter(const QString& name, std::shared_ptr<BowTieFilter> filter)
+void SourceDelegate::addBowtieFilter(std::shared_ptr<BowTieFilter> filter)
 {
-    m_bowtieFilters.push_back(std::make_pair(name, filter));
-    std::sort(m_bowtieFilters.begin(), m_bowtieFilters.end());
+    QString name;
+    if (filter) {
+        name = QString::fromStdString(filter->filterName());
+    } else {
+        name = "None";
+    }
+
+    //Check for filter name already in buffer
+    auto idx = std::find_if(m_bowtieFilters.begin(), m_bowtieFilters.end(), [=](const auto& el) { return el.first == name; });
+    if (idx == m_bowtieFilters.cend()) {
+        m_bowtieFilters.emplace_back(std::make_pair(name, filter));
+        std::sort(m_bowtieFilters.begin(), m_bowtieFilters.end());
+    } else {
+        *idx = std::make_pair(name, filter);
+    }
 }
-void SourceDelegate::addAecFilter(const QString& name, std::shared_ptr<AECFilter> filter)
+void SourceDelegate::addAecFilter(std::shared_ptr<AECFilter> filter)
 {
-    m_aecFilters.push_back(std::make_pair(name, filter));
-    std::sort(m_aecFilters.begin(), m_aecFilters.end());
+    QString name;
+    if (filter) {
+        name = QString::fromStdString(filter->filterName());
+    } else {
+        name = "None";
+    }
+
+    //Check for filter name already in buffer
+    auto idx = std::find_if(m_aecFilters.begin(), m_aecFilters.end(), [=](const auto& el) { return el.first == name; });
+    if (idx == m_aecFilters.cend()) {
+        m_aecFilters.emplace_back(std::make_pair(name, filter));
+        std::sort(m_aecFilters.begin(), m_aecFilters.end());
+    } else {
+        *idx = std::make_pair(name, filter);
+    }
 }
 
 SourceModelView::SourceModelView(QWidget* parent)
@@ -311,8 +335,8 @@ SourceEditWidget::SourceEditWidget(QWidget* parent)
     auto filters = new BowtieFilterReader(this);
     filters->loadFilters();
 
-    for (auto [name, filter] : filters->filters()) {
-        m_delegate->addBowtieFilter(name, filter);
+    for (auto filter : filters->filters()) {
+        m_delegate->addBowtieFilter(filter);
     }
 
     //Perhaps make an interface to start and stop simulations//

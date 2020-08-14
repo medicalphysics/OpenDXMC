@@ -730,6 +730,18 @@ bool H5Wrapper::saveSource(std::shared_ptr<CTSource> src, const std::string& nam
         auto aecPath = srcPath + "/" + "AECData";
         saveDoubleList(filter->mass(), "AECmass", aecPath);
         saveDoubleList(filter->massIntensity(), "AECintensity", aecPath);
+        auto aecGroup = getGroup(aecPath, false);
+        if (aecGroup) {
+            auto aecName = filter->filterName();
+            if (aecName.length() == 0) {
+                aecName = "Unknown";
+            }
+            hsize_t strLen = static_cast<hsize_t>(aecName.length());
+            H5::StrType stringType(0, strLen);
+            H5::DataSpace stringSpace(H5S_SCALAR);
+            auto dataUnits = aecGroup->createAttribute("filterName", stringType, stringSpace);
+            dataUnits.write(stringType, aecName.c_str());
+        }
     }
     //save bowtiefilter
     if (auto filter = src->bowTieFilter(); filter) {
@@ -742,6 +754,18 @@ bool H5Wrapper::saveSource(std::shared_ptr<CTSource> src, const std::string& nam
         }
         saveDoubleList(x, "BowTieAngle", bowtiePath);
         saveDoubleList(y, "BowTieWeight", bowtiePath);
+        auto bowGroup = getGroup(bowtiePath, false);
+        if (bowGroup) {
+            auto bowName = filter->filterName();
+            if (bowName.length() == 0) {
+                bowName = "Unknown";
+            }
+            hsize_t strLen = static_cast<hsize_t>(bowName.length());
+            H5::StrType stringType(0, strLen);
+            H5::DataSpace stringSpace(H5S_SCALAR);
+            auto dataUnits = bowGroup->createAttribute("filterName", stringType, stringSpace);
+            dataUnits.write(stringType, bowName.c_str());
+        }
     }
 
     const hsize_t dim1 = 1;
@@ -843,6 +867,19 @@ bool H5Wrapper::saveSource(std::shared_ptr<CTDualSource> src, const std::string&
         }
         saveDoubleList(x, "BowTieAngle", bowtiePath);
         saveDoubleList(y, "BowTieWeight", bowtiePath);
+
+        auto bowGroup = getGroup(bowtiePath, false);
+        if (bowGroup) {
+            auto bowName = filter->filterName();
+            if (bowName.length() == 0) {
+                bowName = "Unknown";
+            }
+            hsize_t strLen = static_cast<hsize_t>(bowName.length());
+            H5::StrType stringType(0, strLen);
+            H5::DataSpace stringSpace(H5S_SCALAR);
+            auto dataUnits = bowGroup->createAttribute("filterName", stringType, stringSpace);
+            dataUnits.write(stringType, bowName.c_str());
+        }
     }
 
     const hsize_t dim1 = 1;
@@ -928,6 +965,15 @@ bool H5Wrapper::loadSource(std::shared_ptr<CTSource> src, const std::string& nam
         auto aecMass = loadDoubleList("AECmass", aecPath);
         auto aecIntensity = loadDoubleList("AECintensity", aecPath);
         auto aec = std::make_shared<AECFilter>(aecMass, aecIntensity);
+        std::string name;
+        if (aecGroup->attrExists("filterName")) {
+            auto units_attr = aecGroup->openAttribute("filterName");
+            std::size_t units_size = units_attr.getInMemDataSize();
+            name.resize(units_size);
+            H5::StrType stringType(0, units_size);
+            units_attr.read(stringType, name.data());
+        }
+        aec->setFilterName(name);
         src->setAecFilter(aec);
     }
     //loading bowtie data
@@ -937,6 +983,17 @@ bool H5Wrapper::loadSource(std::shared_ptr<CTSource> src, const std::string& nam
         auto angles = loadDoubleList("BowTieAngle", bowtiePath);
         auto weight = loadDoubleList("BowTieWeight", bowtiePath);
         auto bowtie = std::make_shared<BowTieFilter>(angles, weight);
+        std::string name;
+        if (bowtieGroup->attrExists("filterName")) {
+            auto units_attr = bowtieGroup->openAttribute("filterName");
+            std::size_t units_size = units_attr.getInMemDataSize();
+            name.resize(units_size);
+            H5::StrType stringType(0, units_size);
+            units_attr.read(stringType, name.data());
+        } else {
+            name = "Unknown";
+        }
+        bowtie->setFilterName(name);
         src->setBowTieFilter(bowtie);
     }
 
@@ -1060,6 +1117,17 @@ bool H5Wrapper::loadSource(std::shared_ptr<CTDualSource> src, const std::string&
         auto angles = loadDoubleList("BowTieAngle", bowtiePath);
         auto weight = loadDoubleList("BowTieWeight", bowtiePath);
         auto bowtie = std::make_shared<BowTieFilter>(angles, weight);
+        std::string name;
+        if (bowtieGroup->attrExists("filterName")) {
+            auto units_attr = bowtieGroup->openAttribute("filterName");
+            std::size_t units_size = units_attr.getInMemDataSize();
+            name.resize(units_size);
+            H5::StrType stringType(0, units_size);
+            units_attr.read(stringType, name.data());
+        } else {
+            name = "Unknown";
+        }
+        bowtie->setFilterName(name);
         src->setBowTieFilterB(bowtie);
     }
 

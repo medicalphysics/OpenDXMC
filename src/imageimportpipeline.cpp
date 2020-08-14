@@ -245,8 +245,8 @@ void ImageImportPipeline::processCTData(std::shared_ptr<ImageContainer> ctImage,
     }
     if (exposure.size() > 0) {
         auto aecFilter = std::make_shared<AECFilter>(density, spacing, dimensionsArray, exposure_interp);
-        QString filtername = QString::fromStdString(exposurename);
-        emit aecFilterChanged(filtername, aecFilter);
+        aecFilter->setFilterName(exposurename);
+        emit aecFilterChanged(aecFilter);
     }
 }
 

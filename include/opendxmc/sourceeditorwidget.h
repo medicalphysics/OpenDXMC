@@ -38,19 +38,19 @@ class BowtieFilterReader : public QWidget {
     Q_OBJECT
 public:
     BowtieFilterReader(QWidget* parent = nullptr);
-    void addFilter(const QString& name, std::shared_ptr<BowTieFilter>& filter);
+    void addFilter(std::shared_ptr<BowTieFilter> filter);
     bool loadFilters();
     bool saveFilters();
-    std::vector<std::pair<QString, std::shared_ptr<BowTieFilter>>>& filters() { return m_bowtieFilters; }
+    std::vector<std::shared_ptr<BowTieFilter>>& filters() { return m_bowtieFilters; }
 
 protected:
     void readJson(const QJsonObject& json);
     void writeJson(QJsonObject& json) const;
-    std::pair<QString, std::shared_ptr<BowTieFilter>> readFilter(QJsonObject& json) const;
-    void writeFilter(QJsonObject& json, const std::pair<QString, std::shared_ptr<BowTieFilter>>& filter) const;
+    std::shared_ptr<BowTieFilter> readFilter(QJsonObject& json) const;
+    void writeFilter(QJsonObject& json, std::shared_ptr<BowTieFilter> filter) const;
 
 private:
-    std::vector<std::pair<QString, std::shared_ptr<BowTieFilter>>> m_bowtieFilters;
+    std::vector<std::shared_ptr<BowTieFilter>> m_bowtieFilters;
 };
 
 class SourceDelegate : public QStyledItemDelegate {
@@ -62,8 +62,8 @@ public:
     void setModelData(QWidget* editor, QAbstractItemModel* model, const QModelIndex& index) const override;
     QString displayText(const QVariant& value, const QLocale& locale) const override;
 
-    void addBowtieFilter(const QString& name, std::shared_ptr<BowTieFilter> filter);
-    void addAecFilter(const QString& name, std::shared_ptr<AECFilter> filter);
+    void addBowtieFilter(std::shared_ptr<BowTieFilter> filter);
+    void addAecFilter(std::shared_ptr<AECFilter> filter);
 
 private:
     std::vector<std::pair<QString, std::shared_ptr<BowTieFilter>>> m_bowtieFilters;

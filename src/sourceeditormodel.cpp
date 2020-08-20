@@ -278,6 +278,7 @@ QVariant SourceModel::headerData(int section, Qt::Orientation orientation, int r
 void SourceModel::addSource(Source::Type type)
 {
     using std::placeholders::_1;
+    auto parent = this->invisibleRootItem();
     if (type == Source::Type::CTSpiral) {
         auto src = std::make_shared<CTSpiralSource>();
         std::array<double, 6> cosines = { -1, 0, 0, 0, 0, 1 };
@@ -298,10 +299,8 @@ void SourceModel::addSource(Source::Type type)
             src->setPosition(position);
             src->setScanLenght(srcCoverage[1] - srcCoverage[0]);
         }
-
         m_sources.emplace_back(std::static_pointer_cast<Source>(src));
-        setupCTSpiralSource(src);
-
+        setupCTSpiralSource(src, parent);
         auto actor = std::make_shared<CTSpiralSourceContainer>(src);
         m_actors.push_back(std::static_pointer_cast<SourceActorContainer>(actor));
         emit sourceActorAdded(actor.get());
@@ -327,8 +326,7 @@ void SourceModel::addSource(Source::Type type)
             src->setScanLenght(srcCoverage[1] - srcCoverage[0]);
         }
         m_sources.emplace_back(std::static_pointer_cast<Source>(src));
-        setupCTAxialSource(src);
-
+        setupCTAxialSource(src, parent);
         auto actor = std::make_shared<CTAxialSourceContainer>(src);
         m_actors.push_back(std::static_pointer_cast<SourceActorContainer>(actor));
         emit sourceActorAdded(actor.get());
@@ -354,8 +352,7 @@ void SourceModel::addSource(Source::Type type)
             src->setScanLenght(srcCoverage[1] - srcCoverage[0]);
         }
         m_sources.emplace_back(std::static_pointer_cast<Source>(src));
-        setupCTDualSource(src);
-
+        setupCTDualSource(src, parent);
         auto actor = std::make_shared<CTDualSourceContainer>(src);
         m_actors.push_back(std::static_pointer_cast<SourceActorContainer>(actor));
         emit sourceActorAdded(actor.get());
@@ -367,13 +364,10 @@ void SourceModel::addSource(Source::Type type)
         std::array<double, 6> cosines = { -1, 0, 0, 0, 0, 1 };
         src->setDirectionCosines(cosines);
         src->setPosition(position);
-
         m_sources.emplace_back(std::static_pointer_cast<Source>(src));
-        setupDXSource(src);
-
+        setupDXSource(src, parent);
         auto actor = std::make_shared<DXSourceContainer>(src);
         m_actors.push_back(std::static_pointer_cast<SourceActorContainer>(actor));
-
         emit sourceActorAdded(actor.get());
         emit sourceAdded(std::static_pointer_cast<Source>(src));
         emit layoutChanged();
@@ -383,22 +377,23 @@ void SourceModel::addSource(Source::Type type)
 void SourceModel::addSource(std::shared_ptr<Source> src)
 {
     std::shared_ptr<SourceActorContainer> actor = nullptr;
+    auto parent = this->invisibleRootItem();
     switch (src->type()) {
     case Source::Type::DX:
         actor = std::make_shared<DXSourceContainer>(std::static_pointer_cast<DXSource>(src));
-        setupDXSource(std::static_pointer_cast<DXSource>(src));
+        setupDXSource(std::static_pointer_cast<DXSource>(src), parent);
         break;
     case Source::Type::CTAxial:
         actor = std::make_shared<CTAxialSourceContainer>(std::static_pointer_cast<CTAxialSource>(src));
-        setupCTAxialSource(std::static_pointer_cast<CTAxialSource>(src));
+        setupCTAxialSource(std::static_pointer_cast<CTAxialSource>(src), parent);
         break;
     case Source::Type::CTSpiral:
         actor = std::make_shared<CTSpiralSourceContainer>(std::static_pointer_cast<CTSpiralSource>(src));
-        setupCTSpiralSource(std::static_pointer_cast<CTSpiralSource>(src));
+        setupCTSpiralSource(std::static_pointer_cast<CTSpiralSource>(src), parent);
         break;
     case Source::Type::CTDual:
         actor = std::make_shared<CTDualSourceContainer>(std::static_pointer_cast<CTDualSource>(src));
-        setupCTDualSource(std::static_pointer_cast<CTDualSource>(src));
+        setupCTDualSource(std::static_pointer_cast<CTDualSource>(src), parent);
         break;
     default:
         return;
@@ -425,7 +420,6 @@ void SourceModel::setSources(const std::vector<std::shared_ptr<Source>>& sources
         emit sourceRemoved(src);
     }
     m_sources.clear();
-
     for (auto s : sources) {
         addSource(s);
     }
@@ -482,6 +476,26 @@ void SourceModel::setImageData(std::shared_ptr<ImageContainer> image)
     }
 }
 
+void addModelItems(const QVector<QPair<QString, QStandardItem*>>& nodes, QStandardItem* parent)
+{
+    if (!parent)
+        return;
+    for (int i = 0; i < nodes.count(); ++i) {
+        if (nodes[i].first.isEmpty()) {
+            parent->appendRow(nodes[i].second);
+            nodes[i].second->setEditable(false);
+        } else {
+            auto descItem = new QStandardItem(nodes[i].first);
+            descItem->setEditable(false);
+            QList<QStandardItem*> row;
+            row.append(descItem);
+            row.append(nodes[i].second);
+            parent->appendRow(row);
+        }
+    }
+    parent->setEditable(false);
+}
+
 template <class S>
 void setupTube(std::shared_ptr<S> src, QStandardItem* parent)
 {
@@ -520,16 +534,10 @@ void setupTube(std::shared_ptr<S> src, QStandardItem* parent)
         src,
         [=](double val) {},
         [=]() { return src->tube().mmAlHalfValueLayer(); });
+    l7Item->setEditable(false);
     nodes.append(qMakePair(QString("Half value layer in Al [mm]"), static_cast<QStandardItem*>(l7Item)));
 
-    for (int i = 0; i < nodes.count(); ++i) {
-        auto descItem = new QStandardItem(nodes[i].first);
-        QList<QStandardItem*> row;
-        row.append(descItem);
-        if (nodes[i].second)
-            row.append(nodes[i].second);
-        parent->appendRow(row);
-    }
+    addModelItems(nodes, parent);
 }
 
 void setupTubeB(std::shared_ptr<CTDualSource> src, QStandardItem* parent)
@@ -569,16 +577,10 @@ void setupTubeB(std::shared_ptr<CTDualSource> src, QStandardItem* parent)
         src,
         [=](double val) {},
         [=]() { return src->tubeB().mmAlHalfValueLayer(); });
+    l7Item->setEditable(false);
     nodes.append(qMakePair(QString("Half value layer in Al [mm]"), static_cast<QStandardItem*>(l7Item)));
 
-    for (int i = 0; i < nodes.count(); ++i) {
-        auto descItem = new QStandardItem(nodes[i].first);
-        QList<QStandardItem*> row;
-        row.append(descItem);
-        if (nodes[i].second)
-            row.append(nodes[i].second);
-        parent->appendRow(row);
-    }
+    addModelItems(nodes, parent);
 }
 
 template <class S>
@@ -614,15 +616,10 @@ void setupXCare(std::shared_ptr<S> src, QStandardItem* parent)
         src,
         [=](double val) {},
         [=]() { return src->xcareFilter().highWeight(); });
+    highXCare->setEditable(false);
     xcareNodes.append(qMakePair(QString("Highest beam intensity (calculated value)"), static_cast<QStandardItem*>(highXCare)));
 
-    for (int i = 0; i < xcareNodes.count(); ++i) {
-        auto descItem = new QStandardItem(xcareNodes[i].first);
-        QList<QStandardItem*> row;
-        row.append(descItem);
-        row.append(xcareNodes[i].second);
-        parent->appendRow(row);
-    }
+    addModelItems(xcareNodes, parent);
 }
 
 void SourceModel::setupSource(std::shared_ptr<Source> src, QStandardItem* parent)
@@ -641,18 +638,13 @@ void SourceModel::setupSource(std::shared_ptr<Source> src, QStandardItem* parent
         [=]() { return src->directionCosines(); });
     nodes.append(qMakePair(QString("Source direction cosines"), static_cast<QStandardItem*>(l1Item)));
 
-    for (int i = 0; i < nodes.count(); ++i) {
-        auto descItem = new QStandardItem(nodes[i].first);
-        QList<QStandardItem*> row;
-        row.append(descItem);
-        if (nodes[i].second)
-            row.append(nodes[i].second);
-        parent->appendRow(row);
-    }
+    addModelItems(nodes, parent);
 }
 
 void SourceModel::setupCTSource(std::shared_ptr<CTSource> src, QStandardItem* parent)
 {
+    setupSource(std::static_pointer_cast<Source>(src), parent);
+
     //CT parameters
     QVector<QPair<QString, QStandardItem*>> nodes;
 
@@ -723,6 +715,7 @@ void SourceModel::setupCTSource(std::shared_ptr<CTSource> src, QStandardItem* pa
         [=](auto val) {},
         std::bind(&CTSource::totalExposures, src));
     nodes.append(qMakePair(QString("Total number of exposures"), static_cast<QStandardItem*>(l4Item)));
+    l4Item->setEditable(false);
 
     auto l14Item = new SourceItem<CTSource, std::uint64_t>(
         src,
@@ -742,26 +735,15 @@ void SourceModel::setupCTSource(std::shared_ptr<CTSource> src, QStandardItem* pa
         [=]() { return src->ctdiPhantomDiameter(); });
     nodes.append(qMakePair(QString("CTDI phantom diameter [mm] "), static_cast<QStandardItem*>(l6Item)));
 
-    for (int i = 0; i < nodes.count(); ++i) {
-        if (nodes[i].first.isEmpty()) {
-            parent->appendRow(nodes[i].second);
-        } else {
-            auto descItem = new QStandardItem(nodes[i].first);
-            QList<QStandardItem*> row;
-            row.append(descItem);
-            row.append(nodes[i].second);
-            parent->appendRow(row);
-        }
-    }
+    addModelItems(nodes, parent);
 }
 
-void SourceModel::setupCTAxialSource(std::shared_ptr<CTAxialSource> src)
+void SourceModel::setupCTAxialSource(std::shared_ptr<CTAxialSource> src, QStandardItem* parent)
 {
     //sourve root node
     auto sourceItem = new QStandardItem("CT Axial Source");
 
     //standard parameters
-    setupSource(std::static_pointer_cast<Source>(src), sourceItem);
     setupCTSource(std::static_pointer_cast<CTSource>(src), sourceItem);
 
     QVector<QPair<QString, QStandardItem*>> nodes;
@@ -772,29 +754,18 @@ void SourceModel::setupCTAxialSource(std::shared_ptr<CTAxialSource> src)
         [=]() { return src->step(); });
     nodes.append(qMakePair(QString("Rotation step [mm]"), static_cast<QStandardItem*>(l2Item)));
 
-    for (int i = 0; i < nodes.count(); ++i) {
-        if (nodes[i].first.isEmpty()) {
-            sourceItem->appendRow(nodes[i].second);
-        } else {
-            auto descItem = new QStandardItem(nodes[i].first);
-            QList<QStandardItem*> row;
-            row.append(descItem);
-            row.append(nodes[i].second);
-            sourceItem->appendRow(row);
-        }
-    }
+    addModelItems(nodes, sourceItem);
 
     //adding source
-    this->invisibleRootItem()->appendRow(sourceItem);
+    parent->appendRow(sourceItem);
 }
 
-void SourceModel::setupCTSpiralSource(std::shared_ptr<CTSpiralSource> src)
+void SourceModel::setupCTSpiralSource(std::shared_ptr<CTSpiralSource> src, QStandardItem* parent)
 {
     //sourve root node
     auto sourceItem = new QStandardItem("CT Spiral Source");
 
     //standard parameters
-    setupSource(std::static_pointer_cast<Source>(src), sourceItem);
     setupCTSource(std::static_pointer_cast<CTSource>(src), sourceItem);
 
     QVector<QPair<QString, QStandardItem*>> nodes;
@@ -805,23 +776,13 @@ void SourceModel::setupCTSpiralSource(std::shared_ptr<CTSpiralSource> src)
         [=]() { return src->pitch(); });
     nodes.append(qMakePair(QString("Pitch"), static_cast<QStandardItem*>(l2Item)));
 
-    for (int i = 0; i < nodes.count(); ++i) {
-        if (nodes[i].first.isEmpty()) {
-            sourceItem->appendRow(nodes[i].second);
-        } else {
-            auto descItem = new QStandardItem(nodes[i].first);
-            QList<QStandardItem*> row;
-            row.append(descItem);
-            row.append(nodes[i].second);
-            sourceItem->appendRow(row);
-        }
-    }
+    addModelItems(nodes, sourceItem);
 
     //adding source
-    this->invisibleRootItem()->appendRow(sourceItem);
+    parent->appendRow(sourceItem);
 }
 
-void SourceModel::setupCTDualSource(std::shared_ptr<CTDualSource> src)
+void SourceModel::setupCTDualSource(std::shared_ptr<CTDualSource> src, QStandardItem* parent)
 {
     auto sourceItem = new QStandardItem("CT Dual Source");
 
@@ -937,6 +898,7 @@ void SourceModel::setupCTDualSource(std::shared_ptr<CTDualSource> src)
         [=](auto val) {},
         std::bind(&CTSource::totalExposures, src));
     commonNodes.append(qMakePair(QString("Total number of exposures"), static_cast<QStandardItem*>(l4Item)));
+    l4Item->setEditable(false);
 
     auto l14Item = new SourceItem<CTDualSource, std::uint64_t>(
         src,
@@ -956,48 +918,19 @@ void SourceModel::setupCTDualSource(std::shared_ptr<CTDualSource> src)
         [=]() { return src->ctdiPhantomDiameter(); });
     commonNodes.append(qMakePair(QString("CTDI phantom diameter [mm] "), static_cast<QStandardItem*>(l6Item)));
 
-    for (int i = 0; i < commonNodes.count(); ++i) {
-        if (commonNodes[i].first.isEmpty()) {
-            sourceItem->appendRow(commonNodes[i].second);
-        } else {
-            auto descItem = new QStandardItem(commonNodes[i].first);
-            QList<QStandardItem*> row;
-            row.append(descItem);
-            row.append(commonNodes[i].second);
-            sourceItem->appendRow(row);
-        }
-    }
+    addModelItems(commonNodes, sourceItem);
 
-    for (int i = 0; i < tubeANodes.count(); ++i) {
-        if (tubeANodes[i].first.isEmpty()) {
-            tubeNodeA->appendRow(tubeANodes[i].second);
-        } else {
-            auto descItem = new QStandardItem(tubeANodes[i].first);
-            QList<QStandardItem*> row;
-            row.append(descItem);
-            row.append(tubeANodes[i].second);
-            tubeNodeA->appendRow(row);
-        }
-    }
+    addModelItems(tubeANodes, tubeNodeA);
 
-    for (int i = 0; i < tubeBNodes.count(); ++i) {
-        if (tubeBNodes[i].first.isEmpty()) {
-            tubeNodeB->appendRow(tubeBNodes[i].second);
-        } else {
-            auto descItem = new QStandardItem(tubeBNodes[i].first);
-            QList<QStandardItem*> row;
-            row.append(descItem);
-            row.append(tubeBNodes[i].second);
-            tubeNodeB->appendRow(row);
-        }
-    }
+    addModelItems(tubeBNodes, tubeNodeB);
+
     sourceItem->appendRow(tubeNodeA);
     sourceItem->appendRow(tubeNodeB);
 
     //adding source
-    this->invisibleRootItem()->appendRow(sourceItem);
+    parent->appendRow(sourceItem);
 }
-void SourceModel::setupDXSource(std::shared_ptr<DXSource> src)
+void SourceModel::setupDXSource(std::shared_ptr<DXSource> src, QStandardItem* parent)
 {
     //sourve root node
     auto sourceItem = new QStandardItem("DX Source");
@@ -1060,17 +993,8 @@ void SourceModel::setupDXSource(std::shared_ptr<DXSource> src)
         [=]() { return src->dap(); });
     nodes.append(qMakePair(QString("Dose Area Product for beam [Gycm2]"), static_cast<QStandardItem*>(l5Item)));
 
-    for (int i = 0; i < nodes.count(); ++i) {
-        if (nodes[i].first.isEmpty()) {
-            sourceItem->appendRow(nodes[i].second);
-        } else {
-            auto descItem = new QStandardItem(nodes[i].first);
-            QList<QStandardItem*> row;
-            row.append(descItem);
-            row.append(nodes[i].second);
-            sourceItem->appendRow(row);
-        }
-    }
+    addModelItems(nodes, sourceItem);
+    
     //adding source
     this->invisibleRootItem()->appendRow(sourceItem);
 }

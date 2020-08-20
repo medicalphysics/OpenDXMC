@@ -62,14 +62,14 @@ public:
     SourceItem(std::shared_ptr<S> source, std::function<void(T)> setter, std::function<T(void)> getter);
     QVariant data(int role) const override
     {
-        if (role == Qt::DisplayRole || role == Qt::EditRole)
+        if (role == Qt::DisplayRole)
             return f_data();
         else
             return QVariant();
     }
     void setData(const QVariant& data, int role) override
     {
-        if (role == Qt::DisplayRole || role == Qt::EditRole) {
+        if (role == Qt::EditRole) {
             T val = data.value<T>();
             f_setData(val);
             emitDataChanged();
@@ -107,10 +107,10 @@ signals:
 protected:
     void setupSource(std::shared_ptr<Source> src, QStandardItem* parent);
     void setupCTSource(std::shared_ptr<CTSource> src, QStandardItem* parent);
-    void setupCTAxialSource(std::shared_ptr<CTAxialSource> src);
-    void setupCTSpiralSource(std::shared_ptr<CTSpiralSource> src);
-    void setupCTDualSource(std::shared_ptr<CTDualSource> src);
-    void setupDXSource(std::shared_ptr<DXSource> src);
+    void setupCTAxialSource(std::shared_ptr<CTAxialSource> src, QStandardItem* parent);
+    void setupCTSpiralSource(std::shared_ptr<CTSpiralSource> src, QStandardItem* parent);
+    void setupCTDualSource(std::shared_ptr<CTDualSource> src, QStandardItem* parent);
+    void setupDXSource(std::shared_ptr<DXSource> src, QStandardItem* parent);
     void sourceDataChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>& roles);
     bool removeSource(std::shared_ptr<Source> src);
 

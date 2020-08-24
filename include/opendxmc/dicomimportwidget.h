@@ -20,52 +20,49 @@ Copyright 2019 Erlend Andersen
 
 #include "dxmc/material.h"
 
-#include <QWidget>
-#include <QString>
-#include <QStringList>
 #include <QComboBox>
 #include <QLineEdit>
-#include <vtkSmartPointer.h>
+#include <QString>
+#include <QStringList>
+#include <QWidget>
 #include <vtkDICOMDirectory.h>
+#include <vtkSmartPointer.h>
 
-#include <vector>
 #include <array>
+#include <vector>
 
 #ifndef Q_DECLARE_METATYPE_MATERIALVECTOR
 #define Q_DECLARE_METATYPE_MATERIALVECTOR
 Q_DECLARE_METATYPE(std::vector<Material>)
-#endif 
+#endif
 
-
-class DicomImportWidget : public QWidget
-{
-	Q_OBJECT
+class DicomImportWidget : public QWidget {
+    Q_OBJECT
 public:
-	DicomImportWidget(QWidget *parent = nullptr);
+    DicomImportWidget(QWidget* parent = nullptr);
 
 signals:
-	void dicomFolderSelectedForBrowsing(QString folderPath);
-	void dicomSeriesActivated(QStringList filePaths);
-	void blurRadiusChanged(const double*);
-	void outputSpacingChanged(const double*);
-	void useOutputSpacingChanged(bool value);
-	void aqusitionVoltageChanged(double voltage);
-	void aqusitionAlFiltrationChanged(double mm);
-	void aqusitionCuFiltrationChanged(double mm);
-	void segmentationMaterialsChanged(const std::vector<Material>& materials);
+    void dicomFolderSelectedForBrowsing(QString folderPath);
+    void dicomSeriesActivated(QStringList filePaths);
+    void blurRadiusChanged(const double*);
+    void outputSpacingChanged(const double*);
+    void useOutputSpacingChanged(bool value);
+    void aqusitionVoltageChanged(double voltage);
+    void aqusitionAlFiltrationChanged(double mm);
+    void aqusitionCuFiltrationChanged(double mm);
+    void segmentationMaterialsChanged(const std::vector<Material>& materials);
 
 private:
-	void browseForFolder(void);
-	void lookInFolder(void);
-	void lookInFolder(QString folderPath);
-	void seriesActivated(int index);
+    void browseForFolder(void);
+    void lookInFolder(void);
+    void lookInFolder(QString folderPath);
+    void seriesActivated(int index);
 
+    QLineEdit* m_browseLineEdit;
+    vtkSmartPointer<vtkDICOMDirectory> m_imageDirectorySnooper;
+    QComboBox* m_seriesSelector;
 
-	QLineEdit *m_browseLineEdit;
-	vtkSmartPointer<vtkDICOMDirectory> m_imageDirectorySnooper;
-	QComboBox *m_seriesSelector;
-
-	std::array<double, 3> m_outputSpacing = { 1, 1, 4 };
-	std::array<double, 3> m_blurRadius = { 1, 1, 0 };
-	bool m_useOutputSpacing = false;
+    std::array<double, 3> m_outputSpacing = { 1, 1, 4 };
+    std::array<double, 3> m_blurRadius = { 1, 1, 0 };
+    bool m_useOutputSpacing = false;
 };

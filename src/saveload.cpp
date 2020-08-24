@@ -20,188 +20,173 @@ Copyright 2019 Erlend Andersen
 #include "opendxmc/h5wrapper.h"
 
 SaveLoad::SaveLoad(QObject* parent)
-	:QObject(parent)
+    : QObject(parent)
 {
-	qRegisterMetaType<std::shared_ptr<ImageContainer>>();
-	qRegisterMetaType<std::vector<Material>>();
-	qRegisterMetaType<std::vector<std::string >>();
-	qRegisterMetaType<std::shared_ptr<ImageContainer>>();
-	qRegisterMetaType<DoseReportContainer>();
-	qRegisterMetaType<std::shared_ptr<BowTieFilter>>();
+    qRegisterMetaType<std::shared_ptr<ImageContainer>>();
+    qRegisterMetaType<std::vector<Material>>();
+    qRegisterMetaType<std::vector<std::string>>();
+    qRegisterMetaType<std::shared_ptr<ImageContainer>>();
+    qRegisterMetaType<DoseReportContainer>();
+    qRegisterMetaType<std::shared_ptr<BowTieFilter>>();
 }
-
 
 void SaveLoad::loadFromFile(const QString& path)
 {
-	emit processingDataStarted();
+    emit processingDataStarted();
 
-	clear();
-	m_sources.clear();
-	m_images.clear();
-	H5Wrapper wrapper(path.toStdString(), H5Wrapper::FileOpenType::ReadOnly);
-	std::array<ImageContainer::ImageType, 7> types({ 
-		ImageContainer::CTImage, 
-		ImageContainer::DensityImage, ImageContainer::MaterialImage, 
-		ImageContainer::DoseImage, ImageContainer::OrganImage, 
-		ImageContainer::TallyImage, ImageContainer::VarianceImage });
-	for (auto type : types)
-	{
-		auto im = wrapper.loadImage(type);
-		if (im)
-			m_images.push_back(im);
-	}
-	
-	m_materialList = wrapper.loadMaterials();
-	m_organList = wrapper.loadOrganList();
+    clear();
+    m_sources.clear();
+    m_images.clear();
+    H5Wrapper wrapper(path.toStdString(), H5Wrapper::FileOpenType::ReadOnly);
+    std::array<ImageContainer::ImageType, 7> types({ ImageContainer::CTImage,
+        ImageContainer::DensityImage, ImageContainer::MaterialImage,
+        ImageContainer::DoseImage, ImageContainer::OrganImage,
+        ImageContainer::TallyImage, ImageContainer::VarianceImage });
+    for (auto type : types) {
+        auto im = wrapper.loadImage(type);
+        if (im)
+            m_images.push_back(im);
+    }
 
-	std::shared_ptr<ImageContainer> matImage = nullptr;
-	std::shared_ptr<ImageContainer> orgImage = nullptr;
-	std::shared_ptr<ImageContainer> densImage = nullptr;
-	std::shared_ptr<ImageContainer> doseImage = nullptr;
-	std::shared_ptr<ImageContainer> tallyImage = nullptr;
-	for (auto im : m_images)
-	{
-		if (im->imageType == ImageContainer::MaterialImage)
-			matImage = im;;
-		if (im->imageType == ImageContainer::OrganImage)
-			orgImage = im;
-		if (im->imageType == ImageContainer::DensityImage)
-			densImage = im;
-		if (im->imageType == ImageContainer::DoseImage)
-			doseImage = im;
-		if (im->imageType == ImageContainer::TallyImage)
-			tallyImage = im;
-	}
+    m_materialList = wrapper.loadMaterials();
+    m_organList = wrapper.loadOrganList();
 
-	//creating dose data
-	if (matImage && densImage && doseImage && tallyImage) {
-		if (orgImage) {
-			DoseReportContainer cont(
-				m_materialList, 
-				m_organList, 
-				std::static_pointer_cast<MaterialImageContainer>(matImage),
-				std::static_pointer_cast<OrganImageContainer>(orgImage),
-				std::static_pointer_cast<DensityImageContainer>(densImage),
-				std::static_pointer_cast<DoseImageContainer>(doseImage),
-				std::static_pointer_cast<TallyImageContainer>(tallyImage));
-			emit doseDataChanged(cont);
-		}
-		else {
-			DoseReportContainer cont(
-				m_materialList, 
-				std::static_pointer_cast<MaterialImageContainer>(matImage),
-				std::static_pointer_cast<DensityImageContainer>(densImage),
-				std::static_pointer_cast<DoseImageContainer>(doseImage),
-				std::static_pointer_cast<TallyImageContainer>(tallyImage));
-			emit doseDataChanged(cont);
-		}
-	}
-	m_sources = wrapper.loadSources();
-	for (auto im: m_images)
-		emit imageDataChanged(im);
+    std::shared_ptr<ImageContainer> matImage = nullptr;
+    std::shared_ptr<ImageContainer> orgImage = nullptr;
+    std::shared_ptr<ImageContainer> densImage = nullptr;
+    std::shared_ptr<ImageContainer> doseImage = nullptr;
+    std::shared_ptr<ImageContainer> tallyImage = nullptr;
+    for (auto im : m_images) {
+        if (im->imageType == ImageContainer::MaterialImage)
+            matImage = im;
+        ;
+        if (im->imageType == ImageContainer::OrganImage)
+            orgImage = im;
+        if (im->imageType == ImageContainer::DensityImage)
+            densImage = im;
+        if (im->imageType == ImageContainer::DoseImage)
+            doseImage = im;
+        if (im->imageType == ImageContainer::TallyImage)
+            tallyImage = im;
+    }
 
-	emit materialDataChanged(m_materialList);
-	emit organDataChanged(m_organList);
-	emit sourcesChanged(m_sources);
+    //creating dose data
+    if (matImage && densImage && doseImage && tallyImage) {
+        if (orgImage) {
+            DoseReportContainer cont(
+                m_materialList,
+                m_organList,
+                std::static_pointer_cast<MaterialImageContainer>(matImage),
+                std::static_pointer_cast<OrganImageContainer>(orgImage),
+                std::static_pointer_cast<DensityImageContainer>(densImage),
+                std::static_pointer_cast<DoseImageContainer>(doseImage),
+                std::static_pointer_cast<TallyImageContainer>(tallyImage));
+            emit doseDataChanged(cont);
+        } else {
+            DoseReportContainer cont(
+                m_materialList,
+                std::static_pointer_cast<MaterialImageContainer>(matImage),
+                std::static_pointer_cast<DensityImageContainer>(densImage),
+                std::static_pointer_cast<DoseImageContainer>(doseImage),
+                std::static_pointer_cast<TallyImageContainer>(tallyImage));
+            emit doseDataChanged(cont);
+        }
+    }
+    m_sources = wrapper.loadSources();
+    for (auto im : m_images)
+        emit imageDataChanged(im);
 
-	std::size_t bowtieCount = 1;
-	std::size_t aecCount = 1;
-	for (auto src : m_sources)
-	{
-		if (src->type() == Source::Type::CTAxial || src->type() == Source::Type::CTSpiral || src->type() == Source::Type::CTDual)
-		{
-			auto ctsrc = std::static_pointer_cast<CTSource>(src);
-			auto aecFilter = ctsrc->aecFilter();
-			if (aecFilter)
-			{
-				auto name = "From saved file " + std::to_string(aecCount++);
-				emit aecFilterChanged(QString::fromStdString(name), aecFilter);
-			}
-			auto bowtie = ctsrc->bowTieFilter();
-			if (bowtie)
-			{
-				auto name = "From saved file " + std::to_string(bowtieCount++);
-				emit bowtieFilterChanged(QString::fromStdString(name), bowtie);
-			}
-			if (src->type() == Source::Type::CTDual)
-			{
-				auto ctdualsrc = std::static_pointer_cast<CTDualSource>(src);
-				auto bowtieB = ctdualsrc->bowTieFilterB();
-				if (bowtieB)
-				{
-					auto name = "From saved file " + std::to_string(bowtieCount++);
-					emit bowtieFilterChanged(QString::fromStdString(name), bowtieB);
-				}
-			}
-		}
-	}
-	emit processingDataEnded();
+    emit materialDataChanged(m_materialList);
+    emit organDataChanged(m_organList);
+    emit sourcesChanged(m_sources);
+
+    std::size_t bowtieCount = 1;
+    std::size_t aecCount = 1;
+    for (auto src : m_sources) {
+        if (src->type() == Source::Type::CTAxial || src->type() == Source::Type::CTSpiral || src->type() == Source::Type::CTDual) {
+            auto ctsrc = std::static_pointer_cast<CTSource>(src);
+            auto aecFilter = ctsrc->aecFilter();
+            if (aecFilter) {
+                auto name = "From saved file " + std::to_string(aecCount++);
+                emit aecFilterChanged(QString::fromStdString(name), aecFilter);
+            }
+            auto bowtie = ctsrc->bowTieFilter();
+            if (bowtie) {
+                auto name = "From saved file " + std::to_string(bowtieCount++);
+                emit bowtieFilterChanged(QString::fromStdString(name), bowtie);
+            }
+            if (src->type() == Source::Type::CTDual) {
+                auto ctdualsrc = std::static_pointer_cast<CTDualSource>(src);
+                auto bowtieB = ctdualsrc->bowTieFilterB();
+                if (bowtieB) {
+                    auto name = "From saved file " + std::to_string(bowtieCount++);
+                    emit bowtieFilterChanged(QString::fromStdString(name), bowtieB);
+                }
+            }
+        }
+    }
+    emit processingDataEnded();
 }
 
 void SaveLoad::saveToFile(const QString& path)
 {
-	emit processingDataStarted();
+    emit processingDataStarted();
 
-	H5Wrapper wrapper(path.toStdString());
-	for (auto image : m_images)
-		wrapper.saveImage(image);
+    H5Wrapper wrapper(path.toStdString());
+    for (auto image : m_images)
+        wrapper.saveImage(image);
 
-	wrapper.saveMaterials(m_materialList);
-	wrapper.saveOrganList(m_organList);
-	wrapper.saveSources(m_sources);
-	emit processingDataEnded();
+    wrapper.saveMaterials(m_materialList);
+    wrapper.saveOrganList(m_organList);
+    wrapper.saveSources(m_sources);
+    emit processingDataEnded();
 }
 
 void SaveLoad::setImageData(std::shared_ptr<ImageContainer> image)
 {
-	if (!image)
-		return;
-	if (!image->image)
-		return;
-	if (m_currentImageID != image->ID)
-	{
-		m_images.clear();
-		m_images.push_back(image);
-		m_currentImageID = image->ID;
-	}
-	else
-	{
-		//find if image is present
-		for (std::size_t i = 0; i < m_images.size(); ++i)
-		{
-			if (m_images[i]->imageType == image->imageType)
-			{
-				m_images[i] = image;
-				return;
-			}
-		}
-		//did not find image
-		m_images.push_back(image);
-	}
+    if (!image)
+        return;
+    if (!image->image)
+        return;
+    if (m_currentImageID != image->ID) {
+        m_images.clear();
+        m_images.push_back(image);
+        m_currentImageID = image->ID;
+    } else {
+        //find if image is present
+        for (std::size_t i = 0; i < m_images.size(); ++i) {
+            if (m_images[i]->imageType == image->imageType) {
+                m_images[i] = image;
+                return;
+            }
+        }
+        //did not find image
+        m_images.push_back(image);
+    }
 }
 
 void SaveLoad::setMaterials(const std::vector<Material>& materials)
 {
-	m_materialList = materials;
+    m_materialList = materials;
 }
 
 void SaveLoad::clear(void)
 {
-	m_currentImageID = 0;
-	m_images.clear();
-	// we do not clear m_sources here
+    m_currentImageID = 0;
+    m_images.clear();
+    // we do not clear m_sources here
 }
 
 void SaveLoad::addSource(std::shared_ptr<Source> source)
 {
-	auto pos = std::find(m_sources.begin(), m_sources.end(), source);
-	if (pos == m_sources.end())
-		m_sources.push_back(source);
+    auto pos = std::find(m_sources.begin(), m_sources.end(), source);
+    if (pos == m_sources.end())
+        m_sources.push_back(source);
 }
 
 void SaveLoad::removeSource(std::shared_ptr<Source> source)
 {
-	auto pos = std::find(m_sources.begin(), m_sources.end(), source);
-	if (pos != m_sources.end()) // we found it
-		m_sources.erase(pos);
+    auto pos = std::find(m_sources.begin(), m_sources.end(), source);
+    if (pos != m_sources.end()) // we found it
+        m_sources.erase(pos);
 }

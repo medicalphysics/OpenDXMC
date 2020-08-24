@@ -17,9 +17,8 @@ Copyright 2019 Erlend Andersen
 */
 
 #include <QApplication>
-#include <QSurfaceFormat>
-#include <QDebug>
 #include <QSplashScreen>
+#include <QSurfaceFormat>
 
 #include <QVTKOpenGLWidget.h>
 #include <vtkOpenGLRenderWindow.h>
@@ -28,35 +27,34 @@ Copyright 2019 Erlend Andersen
 
 #include <thread>
 
-
-int main (int argc, char *argv[])
+int main(int argc, char* argv[])
 {
-	// needed to ensure appropriate OpenGL context is created for VTK rendering.
-	vtkOpenGLRenderWindow::SetGlobalMaximumNumberOfMultiSamples(0);
-	auto format = QVTKOpenGLWidget::defaultFormat();
-	format.setProfile(QSurfaceFormat::CompatibilityProfile);
-	QSurfaceFormat::setDefaultFormat(format);
+    // needed to ensure appropriate OpenGL context is created for VTK rendering.
+    vtkOpenGLRenderWindow::SetGlobalMaximumNumberOfMultiSamples(0);
+    auto format = QVTKOpenGLWidget::defaultFormat();
+    format.setProfile(QSurfaceFormat::CompatibilityProfile);
+    QSurfaceFormat::setDefaultFormat(format);
 
-	QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-	QApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
-	QApplication app(argc, argv);
+    QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+    QApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
+    QApplication app(argc, argv);
 
-	QPixmap splashMap("resources/icons/icon_fill.png");
-	QSplashScreen splash(splashMap);
-	splash.show();
-	app.processEvents();
-	splash.showMessage("Starting OpenDXMC", Qt::AlignCenter, Qt::white);
-	app.processEvents();
+    QPixmap splashMap("resources/icons/icon_fill.png");
+    QSplashScreen splash(splashMap);
+    splash.show();
+    app.processEvents();
+    splash.showMessage("Starting OpenDXMC", Qt::AlignCenter, Qt::white);
+    app.processEvents();
 
-	QCoreApplication::setApplicationName("OpenDXMC");
-	QCoreApplication::setOrganizationName("SSHF");
-	app.setWindowIcon(QIcon("resources/icons/icon.png"));
+    QCoreApplication::setApplicationName("OpenDXMC");
+    QCoreApplication::setOrganizationName("SSHF");
+    app.setWindowIcon(QIcon("resources/icons/icon.png"));
 
-	MainWindow win;
-	QString title = "OpenDXMC v" + QString(APP_VERSION);
-	win.setWindowTitle(title);
-	win.show();
+    MainWindow win;
+    QString title = "OpenDXMC v" + QString(APP_VERSION);
+    win.setWindowTitle(title);
+    win.show();
 
-	splash.finish(&win);	
+    splash.finish(&win);
     return app.exec();
 }

@@ -17,6 +17,7 @@ along with OpenDXMC.If not, see < https://www.gnu.org/licenses/>.
 Copyright 2019 Erlend Andersen
 */
 #pragma once
+
 #include <string>
 #include <vector>
 

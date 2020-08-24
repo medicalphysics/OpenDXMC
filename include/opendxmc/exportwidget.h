@@ -20,30 +20,31 @@ Copyright 2019 Erlend Andersen
 
 #include "imagecontainer.h"
 
-#include <QWidget>
 #include <QLineEdit>
-#include <vector>
+#include <QWidget>
+
 #include <memory>
 #include <string>
+#include <vector>
 
 constexpr std::size_t EXPORT_HEADER_SIZE = 4096;
 
-class ExportWidget : public QWidget
-{
-	Q_OBJECT
+class ExportWidget : public QWidget {
+    Q_OBJECT
 public:
-	ExportWidget(QWidget* parent = nullptr);
-	void registerImage(std::shared_ptr<ImageContainer> image);
+    ExportWidget(QWidget* parent = nullptr);
+    void registerImage(std::shared_ptr<ImageContainer> image);
 signals:
-	void rawExportFolderSelected(QString folderPath);
+    void rawExportFolderSelected(QString folderPath);
 
 protected:
-	void browseForRawExportFolder();
-	void exportAllRawData();
-	static std::array<char, EXPORT_HEADER_SIZE> getHeaderData(std::shared_ptr<ImageContainer> image);
-	static void writeArrayBin(std::shared_ptr<ImageContainer> image, const std::string& path, bool includeHeader);
+    void browseForRawExportFolder();
+    void exportAllRawData();
+    static std::array<char, EXPORT_HEADER_SIZE> getHeaderData(std::shared_ptr<ImageContainer> image);
+    static void writeArrayBin(std::shared_ptr<ImageContainer> image, const std::string& path, bool includeHeader);
+
 private:
-	bool m_rawExportIncludeHeader = true;
-	QLineEdit* m_exportRawLineEdit;
-	std::vector<std::shared_ptr<ImageContainer>> m_images;
+    bool m_rawExportIncludeHeader = true;
+    QLineEdit* m_exportRawLineEdit;
+    std::vector<std::shared_ptr<ImageContainer>> m_images;
 };

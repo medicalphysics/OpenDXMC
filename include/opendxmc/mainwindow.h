@@ -18,46 +18,46 @@ Copyright 2019 Erlend Andersen
 #pragma once
 
 #include <QMainWindow>
-#include <QThread>
 #include <QTabWidget>
+#include <QThread>
 #include <QTimer>
 
-#include "opendxmc/imageimportpipeline.h"
-#include "opendxmc/simulationpipeline.h"
-#include "opendxmc/binaryimportpipeline.h"
-#include "opendxmc/saveload.h"
-#include "opendxmc/progresswidget.h"
 #include "dxmc/progressbar.h"
 
+#include "opendxmc/binaryimportpipeline.h"
+#include "opendxmc/imageimportpipeline.h"
+#include "opendxmc/progresswidget.h"
+#include "opendxmc/saveload.h"
+#include "opendxmc/simulationpipeline.h"
 
-class MainWindow : public QMainWindow
-{
-	Q_OBJECT
+class MainWindow : public QMainWindow {
+    Q_OBJECT
 public:
-	MainWindow(QWidget* parent = nullptr);
-	~MainWindow();
-	void setEnableEditing(void);
-	void setDisableEditing(void);
-	void setProgressBar(ProgressBar* progressBar);
-	void updateProgressBar();
+    MainWindow(QWidget* parent = nullptr);
+    ~MainWindow();
+    void setEnableEditing(void);
+    void setDisableEditing(void);
+    void setProgressBar(ProgressBar* progressBar);
+    void updateProgressBar();
 
 protected:
-	void createMenu();
-	void saveFileAction();
-	void loadFileAction();
+    void createMenu();
+    void saveFileAction();
+    void loadFileAction();
 signals:
-	void requestOpenSaveFile(const QString& path);
-	void requestSaveToFile(const QString& path);
+    void requestOpenSaveFile(const QString& path);
+    void requestSaveToFile(const QString& path);
+
 private:
-	QThread m_workerThread;
-	ImageImportPipeline *m_importPipeline = nullptr;
-	SimulationPipeline* m_simulationPipeline = nullptr;
-	BinaryImportPipeline* m_binaryImportPipeline = nullptr;
-	QTabWidget *m_menuWidget = nullptr;
+    QThread m_workerThread;
+    ImageImportPipeline* m_importPipeline = nullptr;
+    SimulationPipeline* m_simulationPipeline = nullptr;
+    BinaryImportPipeline* m_binaryImportPipeline = nullptr;
+    QTabWidget* m_menuWidget = nullptr;
 
-	SaveLoad* m_saveLoad = nullptr;
+    SaveLoad* m_saveLoad = nullptr;
 
-	ProgressBar* m_progressBar = nullptr;
-	ProgressWidget* m_progressWidget = nullptr;
-	QTimer* m_progressTimer = nullptr;
+    ProgressBar* m_progressBar = nullptr;
+    ProgressWidget* m_progressWidget = nullptr;
+    QTimer* m_progressTimer = nullptr;
 };

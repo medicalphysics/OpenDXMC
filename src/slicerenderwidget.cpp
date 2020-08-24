@@ -127,7 +127,7 @@ SliceRenderWidget::SliceRenderWidget(QWidget* parent, Orientation orientation)
 	m_textActorCorners->SetText(1, "");
 	m_textActorCorners->GetTextProperty()->SetColor(1.0, 1.0, 1.0);
 	m_interactionStyle->setCornerAnnotation(m_textActorCorners);
-	
+
 	//adding colorbar
 	m_scalarColorBar = vtkSmartPointer<vtkScalarBarActor>::New();
 	m_scalarColorBar->SetMaximumWidthInPixels(200);
@@ -149,7 +149,7 @@ SliceRenderWidget::SliceRenderWidget(QWidget* parent, Orientation orientation)
 	m_imageMapperBackground->SetInputData(dummyData);
 
 	if (auto cam = m_renderer->GetActiveCamera(); m_orientation == Axial)
-	{	
+	{
 		cam->SetFocalPoint(0, 0, 0);
 		cam->SetPosition(0, 0, -1);
 		cam->SetViewUp(0, -1, 0);
@@ -161,12 +161,12 @@ SliceRenderWidget::SliceRenderWidget(QWidget* parent, Orientation orientation)
 		cam->SetViewUp(0, 0, 1);
 	}
 	else
-	{	
+	{
 		cam->SetFocalPoint(0, 0, 0);
 		cam->SetPosition(1, 0, 0);
 		cam->SetViewUp(0, 0, 1);
 	}
-	
+
 	//color tables
 	m_colorTables["GRAY"] = GRAY;
 	m_colorTables["JET"] = JET;
@@ -203,7 +203,7 @@ SliceRenderWidget::SliceRenderWidget(QWidget* parent, Orientation orientation)
 	smoothSliderLayout->addWidget(smoothSlider);
 	smoothSliderAction->setDefaultWidget(smoothSliderHolder);
 	menu->addAction(smoothSliderAction);
-	
+
 	auto showGrapicsAction = menu->addAction(tr("Show graphics"));
 	showGrapicsAction->setCheckable(true);
 	showGrapicsAction->setChecked(true);
@@ -283,7 +283,7 @@ SliceRenderWidget::SliceRenderWidget(QWidget* parent, Orientation orientation)
 	menu->addAction(QString(tr("Save to file")), [=]() {
 		QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
 		auto filename = settings.value("mediaexport/image", "untitled.png").value<QString>();
-		filename = QFileDialog::getSaveFileName(this, tr("Save File"), filename,	tr("Images (*.png)"));
+		filename = QFileDialog::getSaveFileName(this, tr("Save File"), filename, tr("Images (*.png)"));
 
 		if (!filename.isEmpty())
 		{
@@ -306,7 +306,7 @@ SliceRenderWidget::SliceRenderWidget(QWidget* parent, Orientation orientation)
 			writer->Write();
 			this->updateRendering();
 		}
-	});
+		});
 #ifdef WINDOWS
 	menu->addAction(QString(tr("Save cine")), [=]() {
 		this->saveCine();
@@ -341,8 +341,8 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume, std
 
 	if (m_image)
 	{
-		if ((m_image->ID == volume->ID) && (m_image->imageType == volume->imageType) && (m_imageBackground==background))
-			return;	
+		if ((m_image->ID == volume->ID) && (m_image->imageType == volume->imageType) && (m_imageBackground == background))
+			return;
 		if (std::array<double, 2> wl; m_image->image)
 		{
 			auto props = m_imageSlice->GetProperty();
@@ -352,7 +352,7 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume, std
 		}
 		imageIDchanged = m_image->ID != volume->ID;
 	}
-	
+
 	m_image = volume;
 	m_imageBackground = background;
 
@@ -370,7 +370,7 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume, std
 	if (m_windowLevels.find(m_image->imageType) == m_windowLevels.end())
 	{
 		std::array<double, 2> wl = presetLeveling(m_image->imageType);
-		if (wl[1] < 0.0) 
+		if (wl[1] < 0.0)
 		{
 			const auto& mm = m_image->minMax;
 			wl[0] = (mm[0] + mm[1]) * 0.5;
@@ -380,7 +380,7 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume, std
 	}
 	m_imageSmoother->SetInputData(m_image->image);
 	m_imageSmoother->Update();
-	
+
 	//update LUT based on image type
 	if (auto prop = m_imageSlice->GetProperty(); m_image->imageType == ImageContainer::CTImage)
 	{
@@ -388,7 +388,7 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume, std
 		prop->UseLookupTableScalarRangeOff();
 		prop->SetColorLevel(m_windowLevels[m_image->imageType][0]);
 		prop->SetColorWindow(m_windowLevels[m_image->imageType][1]);
-		
+
 		m_colorTablePicker->setCurrentText("GRAY");
 		setColorTable("GRAY");
 		m_renderer->AddViewProp(m_textActorCorners);
@@ -411,7 +411,7 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume, std
 		prop->BackingOff();
 		prop->UseLookupTableScalarRangeOn();
 		auto lut = vtkSmartPointer<vtkLookupTable>::New();
-		
+
 		int nColors = static_cast<int>(m_image->minMax[1]) + 1;
 		lut->SetNumberOfTableValues(nColors);
 		for (int i = 0; i < nColors; ++i)
@@ -459,7 +459,7 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume, std
 		m_windowLevels[m_image->imageType][1] = (m_windowLevels[m_image->imageType][0] - m_image->minMax[0]);
 		prop->SetColorLevel(m_windowLevels[m_image->imageType][0]);
 		prop->SetColorWindow(m_windowLevels[m_image->imageType][1]);
-		
+
 		m_colorTablePicker->setCurrentText("TURBO");
 		setColorTable("TURBO");
 		m_renderer->AddViewProp(m_scalarColorBar);
@@ -506,7 +506,7 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume, std
 		if (m_imageBackground->image)
 		{
 			m_imageMapperBackground->SetInputData(m_imageBackground->image);
-			
+
 			m_renderer->AddActor(m_imageSliceBackground);
 
 			auto prop = m_imageSliceBackground->GetProperty();
@@ -528,7 +528,7 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume, std
 		}
 	}
 	m_renderer->AddActor(m_imageSlice);
-	if(imageIDchanged)
+	if (imageIDchanged)
 		m_renderer->ResetCamera();
 	m_interactionStyle->update();
 	updateRendering();
@@ -560,7 +560,7 @@ void SliceRenderWidget::setActorsVisible(int visible)
 
 std::array<double, 2> SliceRenderWidget::presetLeveling(ImageContainer::ImageType type)
 {
-	std::array<double, 2> wl = {1.0, -1.0};
+	std::array<double, 2> wl = { 1.0, -1.0 };
 	if (type == ImageContainer::CTImage)
 	{
 		wl[0] = 10.0;
@@ -629,13 +629,13 @@ void SliceRenderWidget::saveCine() {
 		origin[stepAxis] = imbounds[stepAxis * 2];
 		plane->SetOrigin(origin);
 		m_imageMapper->SetSlicePlane(plane);
-		if(m_imageMapperBackground)
+		if (m_imageMapperBackground)
 			m_imageMapperBackground->SetSlicePlane(plane);
-		
+
 		auto dimensions = m_image->image->GetDimensions();
 		const int nFrames = dimensions[stepAxis] * 2;
 		const int nSec = 20;
-		int frameRate = std::max( nFrames / nSec, 2);
+		int frameRate = std::max(nFrames / nSec, 2);
 		writer->SetRate(frameRate);
 
 		QProgressDialog progress("Generating movie", "Cancel", 0, nFrames, this);

@@ -57,7 +57,7 @@ ViewPortWidget::ViewPortWidget(QWidget* parent)
 	vSplitter->addWidget(lowerHSplitter);
 	vSplitter->setContentsMargins(0, 0, 0, 0);
 	mainLayout->addWidget(vSplitter);
-	
+
 	m_volumeRenderWidget = new VolumeRenderWidget(this);
 	m_sliceRenderWidgetAxial = new SliceRenderWidget(this, SliceRenderWidget::Axial);
 	m_sliceRenderWidgetCoronal = new SliceRenderWidget(this, SliceRenderWidget::Coronal);
@@ -75,10 +75,10 @@ ViewPortWidget::ViewPortWidget(QWidget* parent)
 
 	upperHSplitter->addWidget(m_sliceRenderWidgetAxial);
 	upperHSplitter->addWidget(m_volumeRenderWidget);
-	
+
 	lowerHSplitter->addWidget(m_sliceRenderWidgetCoronal);
 	lowerHSplitter->addWidget(m_sliceRenderWidgetSagittal);
-	
+
 	this->setLayout(mainLayout);
 }
 
@@ -101,10 +101,10 @@ void ViewPortWidget::setImageData(std::shared_ptr<ImageContainer> volumeData)
 				it++;
 			else
 				it = m_availableVolumes.erase(it); // deleting values where ID do not match current ID
-		}		
+		}
 		m_availableVolumes[indexKey] = volumeData;
 	}
-	else 
+	else
 	{
 		//test if key is in m_availableVolumes
 		//if its there erase at index key since pointer is not valid
@@ -149,10 +149,10 @@ void ViewPortWidget::showCurrentImageData()
 void ViewPortWidget::showImageData(int index)
 {
 	int imageDescription = -1;
-	if ((index >= 0) & (index < m_volumeSelectorWidget->count())) 
+	if ((index >= 0) & (index < m_volumeSelectorWidget->count()))
 		imageDescription = m_volumeSelectorWidget->itemData(index).toInt();
-	
-	if (m_availableVolumes.contains(imageDescription) || imageDescription==ImageContainer::CustomType)
+
+	if (m_availableVolumes.contains(imageDescription) || imageDescription == ImageContainer::CustomType)
 	{
 		std::shared_ptr<ImageContainer> volume, background;
 		if (imageDescription == ImageContainer::CustomType)
@@ -165,13 +165,13 @@ void ViewPortWidget::showImageData(int index)
 			volume = m_availableVolumes[imageDescription];
 			background = nullptr;
 		}
-		
+
 		m_sliceRenderWidgetAxial->setImageData(volume, background);
 		m_sliceRenderWidgetCoronal->setImageData(volume, background);
 		m_sliceRenderWidgetSagittal->setImageData(volume, background);
 
 		m_volumeRenderWidget->setImageData(volume);
-		
+
 		if ((imageDescription == static_cast<int>(ImageContainer::MaterialImage)) ||
 			(imageDescription == static_cast<int>(ImageContainer::OrganImage)))
 		{

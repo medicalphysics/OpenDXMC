@@ -18,48 +18,47 @@ Copyright 2019 Erlend Andersen
 
 #pragma once
 
-#include "volumerenderwidget.h"
-#include "slicerenderwidget.h"
-#include "imageimportpipeline.h"
-#include "imagecontainer.h"
-#include "volumeactorcontainer.h"
+#include "opendxmc/imagecontainer.h"
+#include "opendxmc/imageimportpipeline.h"
+#include "opendxmc/slicerenderwidget.h"
+#include "opendxmc/volumeactorcontainer.h"
+#include "opendxmc/volumerenderwidget.h"
 
-#include <QWidget>
 #include <QComboBox>
-#include <QSize>
 #include <QMap>
+#include <QSize>
 #include <QString>
+#include <QWidget>
+
 #include <memory>
 
-
 //lage viewport og viewport object factory (til å generere grafikk items)
-class ViewPortWidget : public QWidget
-{
-	Q_OBJECT
+class ViewPortWidget : public QWidget {
+    Q_OBJECT
 public:
     ViewPortWidget(QWidget* parent = nullptr);
-	~ViewPortWidget();
+    ~ViewPortWidget();
 
-	void setImageData(std::shared_ptr<ImageContainer> imageData);
-	void addActorContainer(SourceActorContainer* actorContainer);
-	void removeActorContainer(SourceActorContainer* actorContainer);
-	void render();
-	void showCurrentImageData(void);
-	void showImageData(int imageDescription);
-	QSize minimumSizeHint(void) const { return QSize(200, 200); }
+    void setImageData(std::shared_ptr<ImageContainer> imageData);
+    void addActorContainer(SourceActorContainer* actorContainer);
+    void removeActorContainer(SourceActorContainer* actorContainer);
+    void render();
+    void showCurrentImageData(void);
+    void showImageData(int imageDescription);
+    QSize minimumSizeHint(void) const { return QSize(200, 200); }
 signals:
-	void sourceChanged();
+    void sourceChanged();
 
 private:
-	VolumeRenderWidget *m_volumeRenderWidget;
-	SliceRenderWidget *m_sliceRenderWidgetAxial;
-	SliceRenderWidget *m_sliceRenderWidgetCoronal;
-	SliceRenderWidget *m_sliceRenderWidgetSagittal;
-	
-	QComboBox* m_volumeSelectorWidget;
-	QMap<int, std::shared_ptr<ImageContainer>> m_availableVolumes;
+    VolumeRenderWidget* m_volumeRenderWidget;
+    SliceRenderWidget* m_sliceRenderWidgetAxial;
+    SliceRenderWidget* m_sliceRenderWidgetCoronal;
+    SliceRenderWidget* m_sliceRenderWidgetSagittal;
 
-	void updateVolumeSelectorWidget();
-	QString imageDescriptionName(int imageDescription);
-	QString imageDescriptionToolTip(int imageDescription);
+    QComboBox* m_volumeSelectorWidget;
+    QMap<int, std::shared_ptr<ImageContainer>> m_availableVolumes;
+
+    void updateVolumeSelectorWidget();
+    QString imageDescriptionName(int imageDescription);
+    QString imageDescriptionToolTip(int imageDescription);
 };

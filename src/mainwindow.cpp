@@ -16,28 +16,26 @@ along with OpenDXMC. If not, see < https://www.gnu.org/licenses/>.
 Copyright 2019 Erlend Andersen
 */
 
-#include <QSplitter>
-#include <QStatusBar>
 #include <QAction>
-#include <QMenuBar>
-#include <QAction>
-#include <QSettings>
 #include <QFileDialog>
 #include <QHBoxLayout>
+#include <QMenuBar>
+#include <QSettings>
+#include <QSplitter>
+#include <QStatusBar>
 
-#include "opendxmc/mainwindow.h"
-#include "opendxmc/viewportwidget.h"
-#include "opendxmc/dicomimportwidget.h"
-#include "opendxmc/imageimportpipeline.h"
-#include "opendxmc/progressindicator.h"
-#include "opendxmc/exportwidget.h"
-#include "opendxmc/sourceeditorwidget.h"
-#include "opendxmc/phantomselectionwidget.h"
-#include "opendxmc/dosereportwidget.h"
 #include "opendxmc/binaryimportwidget.h"
+#include "opendxmc/dicomimportwidget.h"
+#include "opendxmc/dosereportwidget.h"
+#include "opendxmc/exportwidget.h"
+#include "opendxmc/imageimportpipeline.h"
+#include "opendxmc/mainwindow.h"
+#include "opendxmc/phantomselectionwidget.h"
+#include "opendxmc/progressindicator.h"
+#include "opendxmc/sourceeditorwidget.h"
+#include "opendxmc/viewportwidget.h"
 
-
-MainWindow::MainWindow(QWidget* parent) 
+MainWindow::MainWindow(QWidget* parent)
 	: QMainWindow(parent)
 {
 
@@ -75,18 +73,15 @@ MainWindow::MainWindow(QWidget* parent)
 	connect(m_simulationPipeline, &SimulationPipeline::processingDataEnded, progressIndicator, &ProgressIndicator::stopAnimation);
 	statusBar->addPermanentWidget(progressIndicator);
 
-
 	m_menuWidget = new QTabWidget(this);
 	m_menuWidget->setTabPosition(QTabWidget::West);
-	
-
 
 	//import widgets share a tabbed widget
 	auto importWidget = new QTabWidget(this);
 	importWidget->setTabPosition(QTabWidget::North);
 
 	//dicom import widget
-	DicomImportWidget *dicomImportWidget = new DicomImportWidget(this);
+	DicomImportWidget* dicomImportWidget = new DicomImportWidget(this);
 	importWidget->addTab(dicomImportWidget, tr("DiCOM CT images"));
 	connect(dicomImportWidget, &DicomImportWidget::dicomSeriesActivated, m_importPipeline, &ImageImportPipeline::setDicomData);
 	connect(dicomImportWidget, &DicomImportWidget::outputSpacingChanged, m_importPipeline, &ImageImportPipeline::setOutputSpacing);
@@ -96,7 +91,7 @@ MainWindow::MainWindow(QWidget* parent)
 	connect(dicomImportWidget, &DicomImportWidget::aqusitionAlFiltrationChanged, m_importPipeline, &ImageImportPipeline::setCTImportAqusitionAlFiltration);
 	connect(dicomImportWidget, &DicomImportWidget::aqusitionCuFiltrationChanged, m_importPipeline, &ImageImportPipeline::setCTImportAqusitionCuFiltration);
 	connect(dicomImportWidget, &DicomImportWidget::segmentationMaterialsChanged, m_importPipeline, &ImageImportPipeline::setCTImportMaterialMap);
-	
+
 	//phantom import widget
 	PhantomSelectionWidget* phantomWidget = new PhantomSelectionWidget(this);
 	importWidget->addTab(phantomWidget, tr("Digital phantoms"));
@@ -128,7 +123,7 @@ MainWindow::MainWindow(QWidget* parent)
 	auto doseReportWidget = new DoseReportWidget(this);
 	connect(m_simulationPipeline, &SimulationPipeline::doseDataChanged, doseReportWidget, &DoseReportWidget::setDoseData);
 	m_menuWidget->addTab(doseReportWidget, tr("Dose summary"));
-	
+
 	//export Widget
 	auto exportWidget = new ExportWidget(this);
 	connect(m_simulationPipeline, &SimulationPipeline::imageDataChanged, exportWidget, &ExportWidget::registerImage);
@@ -147,17 +142,15 @@ MainWindow::MainWindow(QWidget* parent)
 	connect(m_importPipeline, &ImageImportPipeline::imageDataChanged, viewPort, &ViewPortWidget::setImageData);
 	connect(m_simulationPipeline, &SimulationPipeline::imageDataChanged, viewPort, &ViewPortWidget::setImageData);
 	connect(m_binaryImportPipeline, &BinaryImportPipeline::imageDataChanged, viewPort, &ViewPortWidget::setImageData);
-	
 
 	//setting up source 3d actor connection to viewpoert from sourceeditwidget
 	auto sourceModel = sourceEditWidget->model();
 	connect(sourceModel, &SourceModel::sourceActorAdded, viewPort, &ViewPortWidget::addActorContainer);
 	connect(sourceModel, &SourceModel::actorsChanged, viewPort, &ViewPortWidget::render);
 	connect(sourceModel, &SourceModel::sourceActorRemoved, viewPort, &ViewPortWidget::removeActorContainer);
-	
+
 	//request to run simulation connection
 	connect(sourceEditWidget, &SourceEditWidget::runSimulation, m_simulationPipeline, &SimulationPipeline::runSimulation);
-
 
 	//setting up saveload
 	m_saveLoad = new SaveLoad();
@@ -217,8 +210,7 @@ MainWindow::MainWindow(QWidget* parent)
 
 MainWindow::~MainWindow()
 {
-	if (m_progressBar)
-	{
+	if (m_progressBar) {
 		m_progressBar->setCancel(true);
 	}
 
@@ -237,11 +229,11 @@ MainWindow::~MainWindow()
 void MainWindow::createMenu()
 {
 	auto fileMenu = menuBar()->addMenu(tr("&File"));
-	
+
 	auto saveAction = new QAction(tr("Save as"), this);
 	saveAction->setShortcut(QKeySequence::SaveAs);
 	saveAction->setStatusTip(tr("Save current simulation as"));
-	connect(saveAction, &QAction::triggered, this,  &MainWindow::saveFileAction);
+	connect(saveAction, &QAction::triggered, this, &MainWindow::saveFileAction);
 	fileMenu->addAction(saveAction);
 	connect(this, &MainWindow::requestSaveToFile, m_saveLoad, &SaveLoad::saveToFile);
 
@@ -285,8 +277,7 @@ void MainWindow::loadFileAction()
 
 void MainWindow::setEnableEditing(void)
 {
-	for (int i = 0; i < m_menuWidget->count(); ++i)
-	{
+	for (int i = 0; i < m_menuWidget->count(); ++i) {
 		auto wid = m_menuWidget->widget(i);
 		wid->setEnabled(true);
 	}
@@ -294,8 +285,7 @@ void MainWindow::setEnableEditing(void)
 
 void MainWindow::setDisableEditing(void)
 {
-	for (int i = 0; i < m_menuWidget->count(); ++i)
-	{
+	for (int i = 0; i < m_menuWidget->count(); ++i) {
 		auto wid = m_menuWidget->widget(i);
 		wid->setDisabled(true);
 	}
@@ -310,8 +300,7 @@ void MainWindow::setProgressBar(ProgressBar* progressBar)
 void MainWindow::updateProgressBar()
 {
 	m_progressWidget->show();
-	if (m_progressBar)
-	{
+	if (m_progressBar) {
 		const auto msg = m_progressBar->getETA();
 		this->statusBar()->showMessage(QString::fromStdString(msg), 6000);
 		if (m_progressWidget->showProgress())

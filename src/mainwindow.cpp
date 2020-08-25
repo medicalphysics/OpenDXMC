@@ -129,6 +129,11 @@ MainWindow::MainWindow(QWidget* parent)
     connect(m_simulationPipeline, &SimulationPipeline::imageDataChanged, exportWidget, &ExportWidget::registerImage);
     connect(m_importPipeline, &ImageImportPipeline::imageDataChanged, exportWidget, &ExportWidget::registerImage);
     connect(m_binaryImportPipeline, &BinaryImportPipeline::imageDataChanged, exportWidget, &ExportWidget::registerImage);
+    connect(exportWidget, &ExportWidget::processingDataStarted, this, &MainWindow::setDisableEditing);
+    connect(exportWidget, &ExportWidget::processingDataEnded, this, &MainWindow::setEnableEditing);
+    connect(exportWidget, &ExportWidget::processingDataStarted, progressIndicator, &ProgressIndicator::startAnimation);
+    connect(exportWidget, &ExportWidget::processingDataEnded, progressIndicator, &ProgressIndicator::stopAnimation);
+
     m_menuWidget->addTab(exportWidget, tr("Export data"));
 
     //simulation progress

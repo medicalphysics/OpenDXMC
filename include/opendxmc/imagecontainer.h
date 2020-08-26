@@ -32,7 +32,7 @@ Copyright 2019 Erlend Andersen
 //used onlu for viz
 class ImageContainer {
 public:
-    enum ImageType {
+    enum class ImageType {
         CTImage,
         DensityImage,
         MaterialImage,
@@ -73,21 +73,21 @@ public:
     }
     static std::string getImageName(ImageContainer::ImageType type)
     {
-        if (type == ImageContainer::CTImage)
+        if (type == ImageContainer::ImageType::CTImage)
             return "CTImage";
-        else if (type == ImageContainer::DensityImage)
+        else if (type == ImageContainer::ImageType::DensityImage)
             return "DensityImage";
-        else if (type == ImageContainer::MaterialImage)
+        else if (type == ImageContainer::ImageType::MaterialImage)
             return "MaterialImage";
-        else if (type == ImageContainer::DoseImage)
+        else if (type == ImageContainer::ImageType::DoseImage)
             return "DoseImage";
-        else if (type == ImageContainer::OrganImage)
+        else if (type == ImageContainer::ImageType::OrganImage)
             return "OrganImage";
-        else if (type == ImageContainer::TallyImage)
+        else if (type == ImageContainer::ImageType::TallyImage)
             return "DoseTallyImage";
-        else if (type == ImageContainer::VarianceImage)
+        else if (type == ImageContainer::ImageType::VarianceImage)
             return "VarianceImage";
-        else if (type == ImageContainer::MeasurementImage)
+        else if (type == ImageContainer::ImageType::MeasurementImage)
             return "MeasurementImage";
         return "Unknown";
     }
@@ -157,11 +157,11 @@ public:
     CTImageContainer()
         : ImageContainer()
     {
-        imageType = CTImage;
+        imageType = ImageType::CTImage;
         dataUnits = "HU";
     }
     CTImageContainer(std::shared_ptr<std::vector<float>> imageData, const std::array<std::size_t, 3>& dimensions, const std::array<double, 3>& dataSpacing, const std::array<double, 3>& origin)
-        : ImageContainer(CTImage, imageData, dimensions, dataSpacing, origin, "HU")
+        : ImageContainer(ImageType::CTImage, imageData, dimensions, dataSpacing, origin, "HU")
     {
     }
     virtual ~CTImageContainer() = default;
@@ -176,11 +176,11 @@ public:
     DensityImageContainer()
         : ImageContainer()
     {
-        imageType = DensityImage;
+        imageType = ImageType::DensityImage;
         dataUnits = "g/cm3";
     }
     DensityImageContainer(std::shared_ptr<std::vector<double>> imageData, const std::array<std::size_t, 3>& dimensions, const std::array<double, 3>& dataSpacing, const std::array<double, 3>& origin)
-        : ImageContainer(DensityImage, imageData, dimensions, dataSpacing, origin, "g/cm3")
+        : ImageContainer(ImageType::DensityImage, imageData, dimensions, dataSpacing, origin, "g/cm3")
     {
     }
     virtual ~DensityImageContainer() = default;
@@ -195,10 +195,10 @@ public:
     DoseImageContainer()
         : ImageContainer()
     {
-        imageType = DoseImage;
+        imageType = ImageType::DoseImage;
     }
     DoseImageContainer(std::shared_ptr<std::vector<double>> imageData, const std::array<std::size_t, 3>& dimensions, const std::array<double, 3>& dataSpacing, const std::array<double, 3>& origin)
-        : ImageContainer(DoseImage, imageData, dimensions, dataSpacing, origin)
+        : ImageContainer(ImageType::DoseImage, imageData, dimensions, dataSpacing, origin)
     {
     }
     virtual ~DoseImageContainer() = default;
@@ -213,10 +213,10 @@ public:
     OrganImageContainer()
         : ImageContainer()
     {
-        imageType = OrganImage;
+        imageType = ImageType::OrganImage;
     }
     OrganImageContainer(std::shared_ptr<std::vector<unsigned char>> imageData, const std::array<std::size_t, 3>& dimensions, const std::array<double, 3>& dataSpacing, const std::array<double, 3>& origin)
-        : ImageContainer(OrganImage, imageData, dimensions, dataSpacing, origin)
+        : ImageContainer(ImageType::OrganImage, imageData, dimensions, dataSpacing, origin)
     {
     }
     virtual ~OrganImageContainer() = default;
@@ -231,10 +231,10 @@ public:
     MaterialImageContainer()
         : ImageContainer()
     {
-        imageType = MaterialImage;
+        imageType = ImageType::MaterialImage;
     }
     MaterialImageContainer(std::shared_ptr<std::vector<unsigned char>> imageData, const std::array<std::size_t, 3>& dimensions, const std::array<double, 3>& dataSpacing, const std::array<double, 3>& origin)
-        : ImageContainer(MaterialImage, imageData, dimensions, dataSpacing, origin)
+        : ImageContainer(ImageType::MaterialImage, imageData, dimensions, dataSpacing, origin)
     {
     }
     virtual ~MaterialImageContainer() = default;
@@ -249,10 +249,10 @@ public:
     TallyImageContainer()
         : ImageContainer()
     {
-        imageType = TallyImage;
+        imageType = ImageType::TallyImage;
     }
     TallyImageContainer(std::shared_ptr<std::vector<std::uint32_t>> imageData, const std::array<std::size_t, 3>& dimensions, const std::array<double, 3>& dataSpacing, const std::array<double, 3>& origin)
-        : ImageContainer(TallyImage, imageData, dimensions, dataSpacing, origin)
+        : ImageContainer(ImageType::TallyImage, imageData, dimensions, dataSpacing, origin)
     {
     }
     virtual ~TallyImageContainer() = default;
@@ -267,10 +267,10 @@ public:
     VarianceImageContainer()
         : ImageContainer()
     {
-        imageType = VarianceImage;
+        imageType = ImageType::VarianceImage;
     }
     VarianceImageContainer(std::shared_ptr<std::vector<double>> imageData, const std::array<std::size_t, 3>& dimensions, const std::array<double, 3>& dataSpacing, const std::array<double, 3>& origin)
-        : ImageContainer(VarianceImage, imageData, dimensions, dataSpacing, origin)
+        : ImageContainer(ImageType::VarianceImage, imageData, dimensions, dataSpacing, origin)
     {
     }
     virtual ~VarianceImageContainer() = default;
@@ -285,10 +285,10 @@ public:
     MeasurementImageContainer()
         : ImageContainer()
     {
-        imageType = MeasurementImage;
+        imageType = ImageType::MeasurementImage;
     }
     MeasurementImageContainer(std::shared_ptr<std::vector<unsigned char>> imageData, const std::array<std::size_t, 3>& dimensions, const std::array<double, 3>& dataSpacing, const std::array<double, 3>& origin)
-        : ImageContainer(MeasurementImage, imageData, dimensions, dataSpacing, origin)
+        : ImageContainer(ImageType::MeasurementImage, imageData, dimensions, dataSpacing, origin)
     {
     }
     virtual ~MeasurementImageContainer() = default;

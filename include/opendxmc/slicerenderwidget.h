@@ -43,10 +43,10 @@ Copyright 2019 Erlend Andersen
 class SliceRenderWidget : public QWidget {
     Q_OBJECT
 public:
-    enum Orientation { Axial,
+    enum class Orientation { Axial,
         Sagittal,
         Coronal };
-    SliceRenderWidget(QWidget* parent = nullptr, Orientation orientation = Axial);
+    SliceRenderWidget(QWidget* parent = nullptr, Orientation orientation = Orientation::Axial);
 
     void updateRendering();
     void setImageData(std::shared_ptr<ImageContainer> foreground, std::shared_ptr<ImageContainer> background = nullptr);

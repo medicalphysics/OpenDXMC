@@ -41,9 +41,9 @@ void add3array(std::stringstream& stream, U* arr)
 std::array<char, EXPORT_HEADER_SIZE> getHeaderData(std::shared_ptr<ImageContainer> image)
 {
     std::stringstream header;
-    auto dimensions = image->image->GetDimensions();
-    auto spacing = image->image->GetSpacing();
-    auto cosines = image->directionCosines;
+    const auto& dimensions = image->image->GetDimensions();
+    const auto& spacing = image->image->GetSpacing();
+    const auto& cosines = image->directionCosines;
 
     auto array_name = image->getImageName();
     auto image_scalar_type = image->image->GetScalarType();
@@ -83,6 +83,7 @@ std::array<char, EXPORT_HEADER_SIZE> getHeaderData(std::shared_ptr<ImageContaine
     header << "# COSINES_Y1: " << cosines[3] << std::endl;
     header << "# COSINES_Y2: " << cosines[4] << std::endl;
     header << "# COSINES_Y3: " << cosines[5] << std::endl;
+    header << "# DATA_UNITS: " << image->dataUnits << std::endl;
     auto str = header.str();
 
     std::array<char, EXPORT_HEADER_SIZE> arr;

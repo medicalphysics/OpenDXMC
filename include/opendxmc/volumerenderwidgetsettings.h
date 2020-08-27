@@ -72,12 +72,12 @@ private:
 class OpacityChartView : public QChartView {
     Q_OBJECT
 public:
-    enum Color { Red,
+    enum class Color { Red,
         Green,
         Blue,
         None,
         Gradient };
-    OpacityChartView(QWidget* parent = nullptr, vtkPiecewiseFunction* opacityFunction = nullptr, OpacityChartView::Color color = OpacityChartView::None);
+    OpacityChartView(QWidget* parent = nullptr, vtkPiecewiseFunction* opacityFunction = nullptr, OpacityChartView::Color color = OpacityChartView::Color::None);
     void setPoints(const QVector<QPointF>& points);
     void setImageDataRange(double min, double max);
     OpacityChart* getOpacityChart() { return m_chart; }
@@ -100,7 +100,7 @@ private:
     int m_opacityPointIndexIsMoving = -1;
     vtkPiecewiseFunction* m_opacityFunction;
     double m_xrange[2] = { 0, 1 };
-    Color m_color = None;
+    Color m_color = Color::None;
 };
 
 class ColorChartView : public QWidget {

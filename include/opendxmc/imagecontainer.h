@@ -32,7 +32,7 @@ Copyright 2019 Erlend Andersen
 //used onlu for viz
 class ImageContainer {
 public:
-    enum class ImageType {
+    enum class ImageType :int {
         CTImage,
         DensityImage,
         MaterialImage,
@@ -67,6 +67,13 @@ public:
         auto interval = timepoint.time_since_epoch();
         return std::chrono::duration_cast<std::chrono::nanoseconds>(interval).count();
     }
+
+    
+    constexpr static std::underlying_type<ImageType>::type imageTypeToIndex(ImageType e)
+    {
+        return static_cast<typename std::underlying_type<ImageType>::type>(e);
+    }
+
     std::string getImageName(void)
     {
         return getImageName(imageType);

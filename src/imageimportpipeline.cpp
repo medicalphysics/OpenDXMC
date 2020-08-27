@@ -145,7 +145,7 @@ void ImageImportPipeline::setDicomData(QStringList dicomPaths)
         origin[i] = -0.5 * spacing[i] * dimensions[i];
     data->SetOrigin(origin);
 
-    auto imageContainer = std::make_shared<ImageContainer>(ImageContainer::CTImage, data, "HU");
+    auto imageContainer = std::make_shared<ImageContainer>(ImageContainer::ImageType::CTImage, data, "HU");
     imageContainer->directionCosines = directionCosines;
     imageContainer->ID = ImageContainer::generateID();
 
@@ -182,7 +182,7 @@ std::pair<std::shared_ptr<std::vector<unsigned char>>, std::shared_ptr<std::vect
 
 void ImageImportPipeline::processCTData(std::shared_ptr<ImageContainer> ctImage, const std::pair<std::string, std::vector<double>>& exposureData)
 {
-    if (ctImage->imageType != ImageContainer::CTImage) {
+    if (ctImage->imageType != ImageContainer::ImageType::CTImage) {
         return;
     }
     if (!ctImage->image) {

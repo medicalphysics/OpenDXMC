@@ -60,12 +60,12 @@ std::shared_ptr<ImageContainer> makeStartImage(void)
     std::array<std::size_t, 3> dim = { 64, 64, 64 };
 
     auto data = std::make_shared<std::vector<float>>(dim[0] * dim[1] * dim[2], 0);
-    auto im = std::make_shared<ImageContainer>(ImageContainer::Empty, data, dim, sp, o);
+    auto im = std::make_shared<ImageContainer>(ImageContainer::ImageType::Empty, data, dim, sp, o);
     im->ID = 0;
     return im;
 }
 
-SliceRenderWidget::SliceRenderWidget(QWidget* parent, Orientation orientation)
+SliceRenderWidget::SliceRenderWidget(QWidget* parent, SliceRenderWidget::Orientation orientation)
     : QWidget(parent)
     , m_orientation(orientation)
 {
@@ -147,11 +147,11 @@ SliceRenderWidget::SliceRenderWidget(QWidget* parent, Orientation orientation)
     m_imageSmoother->SetInputData(dummyData);
     m_imageMapperBackground->SetInputData(dummyData);
 
-    if (auto cam = m_renderer->GetActiveCamera(); m_orientation == Axial) {
+    if (auto cam = m_renderer->GetActiveCamera(); m_orientation == Orientation::Axial) {
         cam->SetFocalPoint(0, 0, 0);
         cam->SetPosition(0, 0, -1);
         cam->SetViewUp(0, -1, 0);
-    } else if (m_orientation == Coronal) {
+    } else if (m_orientation == Orientation::Coronal) {
         cam->SetFocalPoint(0, 0, 0);
         cam->SetPosition(0, -1, 0);
         cam->SetViewUp(0, 0, 1);
@@ -182,9 +182,9 @@ SliceRenderWidget::SliceRenderWidget(QWidget* parent, Orientation orientation)
     smoothSlider->setMaximum(10);
     smoothSlider->setTickInterval(1);
     smoothSlider->setTracking(true);
-    if (m_orientation == Axial)
+    if (m_orientation == Orientation::Axial)
         connect(smoothSlider, &QSlider::valueChanged, [=](int value) { m_imageSmoother->SetStandardDeviations(static_cast<double>(value), static_cast<double>(value), 0.0); });
-    else if (m_orientation == Coronal)
+    else if (m_orientation == Orientation::Coronal)
         connect(smoothSlider, &QSlider::valueChanged, [=](int value) { m_imageSmoother->SetStandardDeviations(0.0, static_cast<double>(value), static_cast<double>(value)); });
     else
         connect(smoothSlider, &QSlider::valueChanged, [=](int value) { m_imageSmoother->SetStandardDeviations(static_cast<double>(value), 0.0, static_cast<double>(value)); });
@@ -365,7 +365,7 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume, std
     m_imageSmoother->Update();
 
     //update LUT based on image type
-    if (auto prop = m_imageSlice->GetProperty(); m_image->imageType == ImageContainer::CTImage) {
+    if (auto prop = m_imageSlice->GetProperty(); m_image->imageType == ImageContainer::ImageType::CTImage) {
         prop->BackingOff();
         prop->UseLookupTableScalarRangeOff();
         prop->SetColorLevel(m_windowLevels[m_image->imageType][0]);
@@ -374,7 +374,7 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume, std
         m_colorTablePicker->setCurrentText("GRAY");
         setColorTable("GRAY");
         m_renderer->AddViewProp(m_textActorCorners);
-    } else if (m_image->imageType == ImageContainer::DensityImage) {
+    } else if (m_image->imageType == ImageContainer::ImageType::DensityImage) {
         prop->BackingOff();
         prop->UseLookupTableScalarRangeOff();
         prop->SetColorLevel(m_windowLevels[m_image->imageType][0]);
@@ -385,7 +385,7 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume, std
         m_colorTablePicker->setCurrentText("TURBO");
         setColorTable("TURBO");
         m_colorTablePicker->setEnabled(true);
-    } else if (m_image->imageType == ImageContainer::MaterialImage) {
+    } else if (m_image->imageType == ImageContainer::ImageType::MaterialImage) {
         prop->BackingOff();
         prop->UseLookupTableScalarRangeOn();
         auto lut = vtkSmartPointer<vtkLookupTable>::New();
@@ -404,7 +404,7 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume, std
         m_scalarColorBar->SetLookupTable(lut);
         m_scalarColorBar->SetNumberOfLabels(nColors);
         prop->SetLookupTable(lut);
-    } else if (m_image->imageType == ImageContainer::OrganImage) {
+    } else if (m_image->imageType == ImageContainer::ImageType::OrganImage) {
         prop->BackingOff();
         prop->UseLookupTableScalarRangeOn();
         auto lut = vtkSmartPointer<vtkLookupTable>::New();
@@ -423,7 +423,7 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume, std
         m_scalarColorBar->SetLookupTable(lut);
         m_scalarColorBar->SetNumberOfLabels(nColors);
         prop->SetLookupTable(lut);
-    } else if (m_image->imageType == ImageContainer::DoseImage) {
+    } else if (m_image->imageType == ImageContainer::ImageType::DoseImage) {
         prop->BackingOff();
         prop->UseLookupTableScalarRangeOff();
         //making sane window level ond center values from image data
@@ -438,7 +438,7 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume, std
         m_renderer->AddViewProp(m_textActorCorners);
         m_scalarColorBar->SetNumberOfLabels(2);
         m_colorTablePicker->setEnabled(true);
-    } else if (m_image->imageType == ImageContainer::TallyImage) {
+    } else if (m_image->imageType == ImageContainer::ImageType::TallyImage) {
         prop->BackingOff();
         prop->UseLookupTableScalarRangeOff();
         //making sane window level ond center values from image data
@@ -453,7 +453,7 @@ void SliceRenderWidget::setImageData(std::shared_ptr<ImageContainer> volume, std
         m_renderer->AddViewProp(m_textActorCorners);
         m_scalarColorBar->SetNumberOfLabels(2);
         m_colorTablePicker->setEnabled(true);
-    } else if (m_image->imageType == ImageContainer::VarianceImage) {
+    } else if (m_image->imageType == ImageContainer::ImageType::VarianceImage) {
         prop->BackingOff();
         prop->UseLookupTableScalarRangeOff();
         //making sane window level ond center values from image data
@@ -527,13 +527,13 @@ void SliceRenderWidget::setActorsVisible(int visible)
 std::array<double, 2> SliceRenderWidget::presetLeveling(ImageContainer::ImageType type)
 {
     std::array<double, 2> wl = { 1.0, -1.0 };
-    if (type == ImageContainer::CTImage) {
+    if (type == ImageContainer::ImageType::CTImage) {
         wl[0] = 10.0;
         wl[1] = 500.0;
-    } else if (type == ImageContainer::DensityImage) {
+    } else if (type == ImageContainer::ImageType::DensityImage) {
         wl[0] = 1.0;
         wl[1] = 0.5;
-    } else if (type == ImageContainer::DoseImage) {
+    } else if (type == ImageContainer::ImageType::DoseImage) {
         wl[0] = 0.1;
         wl[1] = 0.1;
     }

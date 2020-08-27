@@ -56,7 +56,7 @@ private:
     SliceRenderWidget* m_sliceRenderWidgetSagittal;
 
     QComboBox* m_volumeSelectorWidget;
-    QMap<int, std::shared_ptr<ImageContainer>> m_availableVolumes;
+    QMap<int, std::shared_ptr<ImageContainer> > m_availableVolumes;
 
     void updateVolumeSelectorWidget();
     QString imageDescriptionName(int imageDescription);

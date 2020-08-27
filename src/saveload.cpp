@@ -37,10 +37,10 @@ void SaveLoad::loadFromFile(const QString& path)
     m_sources.clear();
     m_images.clear();
     H5Wrapper wrapper(path.toStdString(), H5Wrapper::FileOpenType::ReadOnly);
-    std::array<ImageContainer::ImageType, 7> types({ ImageContainer::CTImage,
-        ImageContainer::DensityImage, ImageContainer::MaterialImage,
-        ImageContainer::DoseImage, ImageContainer::OrganImage,
-        ImageContainer::TallyImage, ImageContainer::VarianceImage });
+    constexpr std::array<ImageContainer::ImageType, 7> types({ ImageContainer::ImageType::CTImage,
+        ImageContainer::ImageType::DensityImage, ImageContainer::ImageType::MaterialImage,
+        ImageContainer::ImageType::DoseImage, ImageContainer::ImageType::OrganImage,
+        ImageContainer::ImageType::TallyImage, ImageContainer::ImageType::VarianceImage });
     for (auto type : types) {
         auto im = wrapper.loadImage(type);
         if (im)
@@ -56,16 +56,16 @@ void SaveLoad::loadFromFile(const QString& path)
     std::shared_ptr<ImageContainer> doseImage = nullptr;
     std::shared_ptr<ImageContainer> tallyImage = nullptr;
     for (auto im : m_images) {
-        if (im->imageType == ImageContainer::MaterialImage)
+        if (im->imageType == ImageContainer::ImageType::MaterialImage)
             matImage = im;
         ;
-        if (im->imageType == ImageContainer::OrganImage)
+        if (im->imageType == ImageContainer::ImageType::OrganImage)
             orgImage = im;
-        if (im->imageType == ImageContainer::DensityImage)
+        if (im->imageType == ImageContainer::ImageType::DensityImage)
             densImage = im;
-        if (im->imageType == ImageContainer::DoseImage)
+        if (im->imageType == ImageContainer::ImageType::DoseImage)
             doseImage = im;
-        if (im->imageType == ImageContainer::TallyImage)
+        if (im->imageType == ImageContainer::ImageType::TallyImage)
             tallyImage = im;
     }
 

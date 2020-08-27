@@ -104,7 +104,7 @@ void OpacityChartView::setImageDataRange(double min, double max)
     // testing if min > max
     double cmin = min < max ? min : max;
     double cmax = min < max ? max : min;
-    if (m_color == Gradient) {
+    if (m_color == Color::Gradient) {
         cmax = (cmax - cmin) * 0.1;
         cmin = 0;
     }
@@ -139,7 +139,7 @@ void OpacityChartView::updateOpacityFunction()
         m_opacityFunction->RemoveAllPoints();
         for (const QPointF& point : points) {
             double yValue = point.y();
-            if ((m_color != None) & (m_color != Gradient)) // for opacity and gradient we want to make the editing easier by squaring the lookup value
+            if ((m_color != Color::None) & (m_color != Color::Gradient)) // for opacity and gradient we want to make the editing easier by squaring the lookup value
                 yValue = yValue * yValue;
             m_opacityFunction->AddPoint(point.x(), yValue);
         }
@@ -149,12 +149,12 @@ void OpacityChartView::updateOpacityFunction()
 
 void OpacityChartView::setColorTable(const QVector<double>& colorTable)
 {
-    if (m_color != None) {
+    if (m_color != Color::None) {
         int idx = 0; // red color
         double step = (m_xrange[1] - m_xrange[0]) / (static_cast<double>(colorTable.count()) - 3.0);
-        if (m_color == Green)
+        if (m_color == Color::Green)
             idx = 1;
-        else if (m_color == Blue)
+        else if (m_color == Color::Blue)
             idx = 2;
         auto series = m_chart->getOpacitySeries();
         series->clear();
@@ -251,9 +251,9 @@ ColorChartView::ColorChartView(QWidget* parent, vtkColorTransferFunction* colorF
     m_scalarColorRed = vtkSmartPointer<vtkPiecewiseFunction>::New();
     m_scalarColorGreen = vtkSmartPointer<vtkPiecewiseFunction>::New();
     m_scalarColorBlue = vtkSmartPointer<vtkPiecewiseFunction>::New();
-    m_chartViewRed = new OpacityChartView(this, m_scalarColorRed, OpacityChartView::Red);
-    m_chartViewGreen = new OpacityChartView(this, m_scalarColorGreen, OpacityChartView::Green);
-    m_chartViewBlue = new OpacityChartView(this, m_scalarColorBlue, OpacityChartView::Blue);
+    m_chartViewRed = new OpacityChartView(this, m_scalarColorRed, OpacityChartView::Color::Red);
+    m_chartViewGreen = new OpacityChartView(this, m_scalarColorGreen, OpacityChartView::Color::Green);
+    m_chartViewBlue = new OpacityChartView(this, m_scalarColorBlue, OpacityChartView::Color::Blue);
     connect(this, &ColorChartView::colorTableRangeChanged, m_chartViewRed, &OpacityChartView::setImageDataRange);
     connect(this, &ColorChartView::colorTableRangeChanged, m_chartViewGreen, &OpacityChartView::setImageDataRange);
     connect(this, &ColorChartView::colorTableRangeChanged, m_chartViewBlue, &OpacityChartView::setImageDataRange);
@@ -420,7 +420,7 @@ VolumeRenderSettingsWidget::VolumeRenderSettingsWidget(vtkSmartPointer<vtkVolume
     , m_property(prop)
 {
 
-    m_currentImageType = ImageContainer::Empty;
+    m_currentImageType = ImageContainer::ImageType::Empty;
 
     auto layout = new QVBoxLayout;
     layout->setContentsMargins(0, 0, 0, 0);
@@ -497,7 +497,7 @@ VolumeRenderSettingsWidget::VolumeRenderSettingsWidget(vtkSmartPointer<vtkVolume
     gradientOpacityGroupBox->setChecked(false);
     m_property->SetDisableGradientOpacity(true);
     connect(gradientOpacityGroupBox, &QGroupBox::toggled, [=](bool enabled) {this->getVolumeProperty()->SetDisableGradientOpacity(!enabled); emit propertyChanged(); });
-    m_gradientOpacityChart = new OpacityChartView(this, m_property->GetStoredGradientOpacity(), OpacityChartView::Gradient);
+    m_gradientOpacityChart = new OpacityChartView(this, m_property->GetStoredGradientOpacity(), OpacityChartView::Color::Gradient);
     m_gradientOpacityChart->setVisible(false);
     gradientOpacityLayout->addWidget(m_gradientOpacityChart);
     connect(m_gradientOpacityChart, &OpacityChartView::opacityFunctionChanged, [=]() { emit propertyChanged(); });
@@ -543,14 +543,14 @@ void VolumeRenderSettingsWidget::setImage(std::shared_ptr<ImageContainer> image)
     if (m_currentImageType != image->imageType) {
         QVector<QPointF> opacityPoints;
         QVector<QPointF> gradientPoints;
-        if (image->imageType == ImageContainer::CTImage) {
+        if (image->imageType == ImageContainer::ImageType::CTImage) {
             opacityPoints.append(QPointF(-500.0, 0.0));
             opacityPoints.append(QPointF(000.0, 0.5));
             opacityPoints.append(QPointF(500.0, 0.0));
             gradientPoints.append(QPointF(0.0, 0.75));
             m_scalarOpacityChart->setPoints(opacityPoints);
             m_gradientOpacityChart->setPoints(gradientPoints);
-        } else if (image->imageType == ImageContainer::MaterialImage) {
+        } else if (image->imageType == ImageContainer::ImageType::MaterialImage) {
 
             opacityPoints.append(QPointF(0.0, 0.0));
             double i = (image->minMax[1] - image->minMax[0]) > 1 ? 1 : 0;
@@ -562,14 +562,14 @@ void VolumeRenderSettingsWidget::setImage(std::shared_ptr<ImageContainer> image)
             gradientPoints.append(QPointF(0.0, 1.0));
             m_scalarOpacityChart->setPoints(opacityPoints);
             m_gradientOpacityChart->setPoints(gradientPoints);
-        } else if (image->imageType == ImageContainer::DensityImage) {
+        } else if (image->imageType == ImageContainer::ImageType::DensityImage) {
             opacityPoints.append(QPointF(0.5, 0.0));
             opacityPoints.append(QPointF(1.0, 0.5));
             opacityPoints.append(QPointF(1.5, 0.0));
             gradientPoints.append(QPointF(0.0, 1.0));
             m_scalarOpacityChart->setPoints(opacityPoints);
             m_gradientOpacityChart->setPoints(gradientPoints);
-        } else if (image->imageType == ImageContainer::DoseImage) {
+        } else if (image->imageType == ImageContainer::ImageType::DoseImage) {
             const double minPosPoint = std::min(0.1, (image->minMax[1] - image->minMax[0]) / 1000.0);
             opacityPoints.append(QPointF(image->minMax[0], 0.0));
             opacityPoints.append(QPointF(minPosPoint, 0.1));

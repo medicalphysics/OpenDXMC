@@ -58,9 +58,9 @@ ViewPortWidget::ViewPortWidget(QWidget* parent)
     mainLayout->addWidget(vSplitter);
 
     m_volumeRenderWidget = new VolumeRenderWidget(this);
-    m_sliceRenderWidgetAxial = new SliceRenderWidget(this, SliceRenderWidget::Axial);
-    m_sliceRenderWidgetCoronal = new SliceRenderWidget(this, SliceRenderWidget::Coronal);
-    m_sliceRenderWidgetSagittal = new SliceRenderWidget(this, SliceRenderWidget::Sagittal);
+    m_sliceRenderWidgetAxial = new SliceRenderWidget(this, SliceRenderWidget::Orientation::Axial);
+    m_sliceRenderWidgetCoronal = new SliceRenderWidget(this, SliceRenderWidget::Orientation::Coronal);
+    m_sliceRenderWidgetSagittal = new SliceRenderWidget(this, SliceRenderWidget::Orientation::Sagittal);
 
     std::array<SliceRenderWidget*, 3> sliceWidArray = { m_sliceRenderWidgetAxial, m_sliceRenderWidgetCoronal, m_sliceRenderWidgetSagittal };
     for (std::size_t i = 0; i < 3; ++i) {
@@ -88,7 +88,7 @@ void ViewPortWidget::setImageData(std::shared_ptr<ImageContainer> volumeData)
 {
     if (!volumeData)
         return;
-    int indexKey = volumeData->imageType;
+    int indexKey = ImageContainer::imageTypeToIndex(volumeData->imageType);
     if (volumeData->image) // valid pointer
     {
         //test for valid ID
@@ -147,11 +147,13 @@ void ViewPortWidget::showImageData(int index)
     if ((index >= 0) & (index < m_volumeSelectorWidget->count()))
         imageDescription = m_volumeSelectorWidget->itemData(index).toInt();
 
-    if (m_availableVolumes.contains(imageDescription) || imageDescription == ImageContainer::CustomType) {
+    constexpr auto customIndex = ImageContainer::imageTypeToIndex(ImageContainer::ImageType::CustomType);
+
+    if (m_availableVolumes.contains(imageDescription) || imageDescription == customIndex) {
         std::shared_ptr<ImageContainer> volume, background;
-        if (imageDescription == ImageContainer::CustomType) {
-            volume = m_availableVolumes[static_cast<int>(ImageContainer::DoseImage)];
-            background = m_availableVolumes[static_cast<int>(ImageContainer::CTImage)];
+        if (imageDescription == customIndex) {
+            volume = m_availableVolumes[static_cast<int>(ImageContainer::ImageType::DoseImage)];
+            background = m_availableVolumes[static_cast<int>(ImageContainer::ImageType::CTImage)];
         } else {
             volume = m_availableVolumes[imageDescription];
             background = nullptr;
@@ -163,7 +165,7 @@ void ViewPortWidget::showImageData(int index)
 
         m_volumeRenderWidget->setImageData(volume);
 
-        if ((imageDescription == static_cast<int>(ImageContainer::MaterialImage)) || (imageDescription == static_cast<int>(ImageContainer::OrganImage))) {
+        if ((imageDescription == static_cast<int>(ImageContainer::ImageType::MaterialImage)) || (imageDescription == static_cast<int>(ImageContainer::ImageType::OrganImage))) {
             //generate color table if there is not to many different colors (7)
             if (volume->minMax[1] < 7.0) {
                 QVector<double> colortable;
@@ -192,8 +194,13 @@ void ViewPortWidget::updateVolumeSelectorWidget()
         ++it;
     }
     //adding dose overlay if possible
-    if (m_availableVolumes.contains(ImageContainer::CTImage) && m_availableVolumes.contains(ImageContainer::DoseImage)) {
-        int indexKey = ImageContainer::CustomType;
+
+    constexpr auto ctImageIndex = ImageContainer::imageTypeToIndex(ImageContainer::ImageType::CTImage);
+    constexpr auto doseImageIndex = ImageContainer::imageTypeToIndex(ImageContainer::ImageType::DoseImage);
+
+    if (m_availableVolumes.contains(ctImageIndex) && m_availableVolumes.contains(doseImageIndex)) {
+        //int indexKey = ImageContainer::ImageType::CustomType;
+        constexpr auto indexKey = ImageContainer::imageTypeToIndex(ImageContainer::ImageType::CustomType);
         m_volumeSelectorWidget->addItem(imageDescriptionName(indexKey), QVariant(indexKey));
     }
 
@@ -212,23 +219,23 @@ void ViewPortWidget::updateVolumeSelectorWidget()
 
 QString ViewPortWidget::imageDescriptionName(int imageDescription)
 {
-    if (imageDescription == static_cast<int>(ImageContainer::CTImage)) {
+    if (imageDescription == static_cast<int>(ImageContainer::ImageType::CTImage)) {
         return QString("CT images");
-    } else if (imageDescription == static_cast<int>(ImageContainer::MaterialImage)) {
+    } else if (imageDescription == static_cast<int>(ImageContainer::ImageType::MaterialImage)) {
         return QString("Material data");
-    } else if (imageDescription == static_cast<int>(ImageContainer::DensityImage)) {
+    } else if (imageDescription == static_cast<int>(ImageContainer::ImageType::DensityImage)) {
         return QString("Density map");
-    } else if (imageDescription == static_cast<int>(ImageContainer::OrganImage)) {
+    } else if (imageDescription == static_cast<int>(ImageContainer::ImageType::OrganImage)) {
         return QString("Organ volumes");
-    } else if (imageDescription == static_cast<int>(ImageContainer::DoseImage)) {
+    } else if (imageDescription == static_cast<int>(ImageContainer::ImageType::DoseImage)) {
         return QString("Dose map");
-    } else if (imageDescription == static_cast<int>(ImageContainer::CustomType)) {
+    } else if (imageDescription == static_cast<int>(ImageContainer::ImageType::CustomType)) {
         return QString("Dose overlay");
-    } else if (imageDescription == static_cast<int>(ImageContainer::TallyImage)) {
+    } else if (imageDescription == static_cast<int>(ImageContainer::ImageType::TallyImage)) {
         return QString("Dose tally");
-    } else if (imageDescription == static_cast<int>(ImageContainer::VarianceImage)) {
+    } else if (imageDescription == static_cast<int>(ImageContainer::ImageType::VarianceImage)) {
         return QString("Dose variance");
-    } else if (imageDescription == static_cast<int>(ImageContainer::MeasurementImage)) {
+    } else if (imageDescription == static_cast<int>(ImageContainer::ImageType::MeasurementImage)) {
         return QString("Measurement Volumes");
     }
     return QString();
@@ -236,24 +243,24 @@ QString ViewPortWidget::imageDescriptionName(int imageDescription)
 
 QString ViewPortWidget::imageDescriptionToolTip(int imageDescription)
 {
-    if (imageDescription == static_cast<int>(ImageContainer::CTImage)) {
+    if (imageDescription == static_cast<int>(ImageContainer::ImageType::CTImage)) {
         return QString("CT image data displayed with Hounsfield units");
-    } else if (imageDescription == static_cast<int>(ImageContainer::MaterialImage)) {
+    } else if (imageDescription == static_cast<int>(ImageContainer::ImageType::MaterialImage)) {
         return QString("Map of material decomposition of the volume");
-    } else if (imageDescription == static_cast<int>(ImageContainer::DensityImage)) {
+    } else if (imageDescription == static_cast<int>(ImageContainer::ImageType::DensityImage)) {
         return QString("Density map of the volume, displayed as grams per cubic centimeters");
-    } else if (imageDescription == static_cast<int>(ImageContainer::OrganImage)) {
+    } else if (imageDescription == static_cast<int>(ImageContainer::ImageType::OrganImage)) {
         return QString("Map of organ volumes, these volumes are not neccesary for the simulation but helps summarize dose to different volumes if available");
-    } else if (imageDescription == static_cast<int>(ImageContainer::DoseImage)) {
+    } else if (imageDescription == static_cast<int>(ImageContainer::ImageType::DoseImage)) {
         return QString("Map of dose distribution");
-    } else if (imageDescription == static_cast<int>(ImageContainer::CustomType)) {
+    } else if (imageDescription == static_cast<int>(ImageContainer::ImageType::CustomType)) {
         return QString("Map of dose distribution on top of CT images");
-    } else if (imageDescription == static_cast<int>(ImageContainer::TallyImage)) {
+    } else if (imageDescription == static_cast<int>(ImageContainer::ImageType::TallyImage)) {
         return QString("Map of number of interaction events that contributes to dose for each voxel, i.e Rayleight scattering events are not tallied");
-    } else if (imageDescription == static_cast<int>(ImageContainer::VarianceImage)) {
+    } else if (imageDescription == static_cast<int>(ImageContainer::ImageType::VarianceImage)) {
         return QString("Dose variance map for each voxel given in same units as dose");
-    } else if (imageDescription == static_cast<int>(ImageContainer::MeasurementImage)) {
-        return QString("Map of volumes where the simulation uses variance reduction techniqe to decrease uncertainty by increasing number of events in a weighted manner. Typically used in CTDI measurements for CT dose calibration");
+    } else if (imageDescription == static_cast<int>(ImageContainer::ImageType::MeasurementImage)) {
+        return QString("Map of volumes where the simulation uses variance reduction technique to decrease uncertainty by increasing number of events in a weighted manner. Typically used in CTDI measurements for CT dose calibration");
     }
     return QString();
 }

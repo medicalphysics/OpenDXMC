@@ -47,13 +47,13 @@ void SimulationPipeline::setImageData(std::shared_ptr<ImageContainer> image)
         m_currentImageID = id;
     }
 
-    if (image->imageType == ImageContainer::DensityImage)
+    if (image->imageType == ImageContainer::ImageType::DensityImage)
         m_densityImage = std::static_pointer_cast<DensityImageContainer>(image);
-    else if (image->imageType == ImageContainer::MaterialImage)
+    else if (image->imageType == ImageContainer::ImageType::MaterialImage)
         m_materialImage = std::static_pointer_cast<MaterialImageContainer>(image);
-    else if (image->imageType == ImageContainer::OrganImage)
+    else if (image->imageType == ImageContainer::ImageType::OrganImage)
         m_organImage = std::static_pointer_cast<OrganImageContainer>(image);
-    else if (image->imageType == ImageContainer::MeasurementImage)
+    else if (image->imageType == ImageContainer::ImageType::MeasurementImage)
         m_measurementImage = std::static_pointer_cast<MeasurementImageContainer>(image);
 }
 

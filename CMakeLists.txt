@@ -135,7 +135,7 @@ include(FetchContent)
 FetchContent_Declare(
     libdxmc
     GIT_REPOSITORY https://github.com/medicalphysics/DXMClib.git
-    GIT_TAG documentation
+    GIT_TAG develop
     )
 FetchContent_MakeAvailable(libdxmc)
 

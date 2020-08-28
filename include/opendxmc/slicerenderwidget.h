@@ -59,7 +59,7 @@ signals:
 protected:
     std::array<double, 2> presetLeveling(ImageContainer::ImageType type);
     void setColorTable(const QString& colorTableName);
-#ifdef WINDOWS
+#ifdef WIN32
     void saveCine();
 #endif
 

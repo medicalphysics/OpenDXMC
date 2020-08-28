@@ -47,8 +47,9 @@ Copyright 2019 Erlend Andersen
 #include <vtkWindowLevelLookupTable.h>
 #include <vtkWindowToImageFilter.h>
 
-#ifdef WINDOWS
+#ifdef WIN32
 #include <vtkAVIWriter.h>
+#include <vtkPlane.h>
 #endif
 
 #include <charconv>
@@ -294,7 +295,7 @@ SliceRenderWidget::SliceRenderWidget(QWidget* parent, SliceRenderWidget::Orienta
             this->updateRendering();
         }
     });
-#ifdef WINDOWS
+#ifdef WIN32
     menu->addAction(QString(tr("Save cine")), [=]() {
         this->saveCine();
     });
@@ -554,7 +555,7 @@ void SliceRenderWidget::setColorTable(const QString& colorTableName)
     prop->SetLookupTable(lut);
     m_scalarColorBar->SetLookupTable(lut);
 }
-#ifdef WINDOWS
+#ifdef WIN32
 void SliceRenderWidget::saveCine()
 {
 

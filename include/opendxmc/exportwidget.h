@@ -60,8 +60,6 @@ signals:
 protected:
     void browseForRawExportFolder();
     void exportAllRawData();
-    //static std::array<char, EXPORT_HEADER_SIZE> getHeaderData(std::shared_ptr<ImageContainer> image);
-    //static void writeArrayBin(std::shared_ptr<ImageContainer> image, const std::string& path, bool includeHeader);
 signals:
     void processData(std::vector<std::shared_ptr<ImageContainer>> images, QString dir, bool includeHeader);
 

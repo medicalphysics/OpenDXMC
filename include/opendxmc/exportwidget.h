@@ -20,6 +20,7 @@ Copyright 2019 Erlend Andersen
 
 #include "imagecontainer.h"
 
+#include <QGroupBox>
 #include <QLineEdit>
 #include <QString>
 #include <QThread>
@@ -41,7 +42,8 @@ class ExportWorker : public QObject {
 public:
     ExportWorker(QObject* parent = nullptr);
 public slots:
-    void exportData(std::vector<std::shared_ptr<ImageContainer>> images, QString path, bool includeHeader);
+    void exportRawData(std::vector<std::shared_ptr<ImageContainer>> images, QString path, bool includeHeader);
+    void exportVTKData(std::vector<std::shared_ptr<ImageContainer>> images, QString path);
 signals:
     void exportFinished();
 };
@@ -56,16 +58,23 @@ signals:
     void processingDataStarted();
     void processingDataEnded();
     void rawExportFolderSelected(QString folderPath);
+    void vtkExportFolderSelected(QString folderPath);
 
 protected:
     void browseForRawExportFolder();
+    void browseForVTKExportFolder();
+    void setupRawExportWidgets();
+    void setupVTKExportWidgets();
     void exportAllRawData();
+    void exportAllVTKData();
 signals:
-    void processData(std::vector<std::shared_ptr<ImageContainer>> images, QString dir, bool includeHeader);
+    void exportRawData(std::vector<std::shared_ptr<ImageContainer>> images, QString dir, bool includeHeader);
+    void exportVTKData(std::vector<std::shared_ptr<ImageContainer>> images, QString dir);
 
 private:
     bool m_rawExportIncludeHeader = true;
     QLineEdit* m_exportRawLineEdit = nullptr;
+    QLineEdit* m_exportVTKLineEdit = nullptr;
     ExportWorker* m_worker = nullptr;
     QThread m_workerThread;
     std::vector<std::shared_ptr<ImageContainer>> m_images;

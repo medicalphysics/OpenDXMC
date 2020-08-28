@@ -114,12 +114,19 @@ ExportWorker::ExportWorker(QObject* parent)
 {
 }
 
-void ExportWorker::exportData(std::vector<std::shared_ptr<ImageContainer>> images, QString dir, bool includeHeader)
+void ExportWorker::exportRawData(std::vector<std::shared_ptr<ImageContainer>> images, QString dir, bool includeHeader)
 {
     for (const auto& im : images) {
         std::string filenameBin(im->getImageName() + ".bin");
         auto filepathBin = std::filesystem::path(dir.toStdString()) / filenameBin;
         writeArrayBin(im, filepathBin.string(), includeHeader);
+    }
+    emit exportFinished();
+}
+
+void ExportWorker::exportVTKData(std::vector<std::shared_ptr<ImageContainer>> images, QString dir)
+{
+    for (const auto& im : images) {
         std::string filenameVtk(im->getImageName() + ".vti");
         auto filepathVtk = std::filesystem::path(dir.toStdString()) / filenameVtk;
         writeArrayVtk(im, filepathVtk.string());
@@ -132,21 +139,40 @@ ExportWidget::ExportWidget(QWidget* parent)
 {
     qRegisterMetaType<std::vector<std::shared_ptr<ImageContainer>>>();
 
-    QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
     auto* mainLayout = new QVBoxLayout;
+    setLayout(mainLayout);
+    setupRawExportWidgets();
+    setupVTKExportWidgets();
 
-    //export raw binary files
-    auto* exportRawBrowseLayout = new QHBoxLayout;
+    mainLayout->addStretch();
+    setLayout(mainLayout);
 
-    m_exportRawLineEdit = new QLineEdit(this);
-    m_exportRawLineEdit->setClearButtonEnabled(true);
-    exportRawBrowseLayout->addWidget(m_exportRawLineEdit);
+    m_worker = new ExportWorker();
+    m_worker->moveToThread(&m_workerThread);
+    connect(m_worker, &ExportWorker::exportFinished, [=](void) { emit this->processingDataEnded(); });
+    connect(this, &ExportWidget::exportRawData, m_worker, &ExportWorker::exportRawData);
+    connect(this, &ExportWidget::exportVTKData, m_worker, &ExportWorker::exportVTKData);
+    m_workerThread.start();
+}
+
+void ExportWidget::setupRawExportWidgets()
+{
+    //exposing settings
+    QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
+    //Setting up path completers
     auto* exportRawBrowseCompleter = new QCompleter(this);
     auto* exportRawBrowseCompleterModel = new QFileSystemModel(this);
     exportRawBrowseCompleterModel->setRootPath("");
     exportRawBrowseCompleterModel->setFilter(QDir::Dirs | QDir::NoDotAndDotDot);
     exportRawBrowseCompleter->setModel(exportRawBrowseCompleterModel);
     exportRawBrowseCompleter->setCompletionMode(QCompleter::InlineCompletion);
+
+    //export raw binary files
+    // setting up line edit
+    m_exportRawLineEdit = new QLineEdit(this);
+    m_exportRawLineEdit->setClearButtonEnabled(true);
+    m_exportRawLineEdit->setCompleter(exportRawBrowseCompleter);
+    m_exportRawLineEdit->setText(settings.value("dataexport/rawexportfolder").value<QString>());
     connect(this, &ExportWidget::rawExportFolderSelected, [=](const QString& folderPath) {
         exportRawBrowseCompleter->setCompletionPrefix(folderPath);
         m_exportRawLineEdit->setText(folderPath);
@@ -154,28 +180,26 @@ ExportWidget::ExportWidget(QWidget* parent)
         settings.setValue("dataexport/rawexportfolder", folderPath);
         settings.sync();
     });
-    m_exportRawLineEdit->setCompleter(exportRawBrowseCompleter);
-    m_exportRawLineEdit->setText(settings.value("dataexport/rawexportfolder").value<QString>());
 
+    // setting up browse button
     auto* exportRawBrowseButton = new QPushButton(tr("Browse"), this);
-    connect(exportRawBrowseButton, &QPushButton::clicked, this, &ExportWidget::browseForRawExportFolder);
-    exportRawBrowseLayout->addWidget(exportRawBrowseButton);
     exportRawBrowseButton->setFixedHeight(m_exportRawLineEdit->sizeHint().height());
+    connect(exportRawBrowseButton, &QPushButton::clicked, this, &ExportWidget::browseForRawExportFolder);
 
-    auto* exportRawLayout = new QVBoxLayout;
-    exportRawLayout->addLayout(exportRawBrowseLayout);
+    // adding line edit and button on line
+    auto* exportRawBrowseLayout = new QHBoxLayout;
+    exportRawBrowseLayout->addWidget(m_exportRawLineEdit);
+    exportRawBrowseLayout->addWidget(exportRawBrowseButton);
 
+    // setting up inluce header option
     auto* exportRawHeaderLayout = new QHBoxLayout;
-
     auto* exportRawHeaderCheckBox = new QCheckBox(tr("Include header in exported files?"), this);
     exportRawHeaderLayout->addWidget(exportRawHeaderCheckBox);
-
     if (settings.contains("dataexport/rawexportincludeheader")) {
         m_rawExportIncludeHeader = settings.value("dataexport/rawexportincludeheader").value<bool>();
     } else {
         m_rawExportIncludeHeader = true;
     }
-
     exportRawHeaderCheckBox->setChecked(m_rawExportIncludeHeader ? Qt::Checked : Qt::Unchecked);
     connect(exportRawHeaderCheckBox, &QCheckBox::stateChanged, [=](int state) {
         if (state == Qt::Unchecked)
@@ -186,26 +210,82 @@ ExportWidget::ExportWidget(QWidget* parent)
         settings.setValue("dataexport/rawexportincludeheader", this->m_rawExportIncludeHeader);
         settings.sync();
     });
-    exportRawLayout->addLayout(exportRawHeaderLayout);
 
+    // large export button
     auto* exportRawButton = new QPushButton(tr("Export all"), this);
-    exportRawLayout->addWidget(exportRawButton);
     connect(exportRawButton, &QPushButton::clicked, this, &ExportWidget::exportAllRawData);
 
+    // Adding a nice description
+    auto rawDescription = new QLabel(tr("Export all image volumes as binary files to a selected folder. If the check box for include headers is checked the binary file will start with a header of 4096 bytes containing some metadata for the volume. These files are intended to easily read by applications or programming languages that support reading of plain bytes from a file."));
+    rawDescription->setWordWrap(true);
+
+    // setting up vertical layout
+    auto* exportRawLayout = new QVBoxLayout;
+    exportRawLayout->addWidget(rawDescription);
+    exportRawLayout->addLayout(exportRawBrowseLayout);
+    exportRawLayout->addLayout(exportRawHeaderLayout);
+    exportRawLayout->addWidget(exportRawButton);
+
+    // Putting binary export functionality in a neat box
     auto* rawExportBox = new QGroupBox(tr("Select folder for raw export of binary data"), this);
     rawExportBox->setLayout(exportRawLayout);
-
-    mainLayout->addWidget(rawExportBox);
-    mainLayout->addStretch();
-    setLayout(mainLayout);
-
-    m_worker = new ExportWorker();
-    m_worker->moveToThread(&m_workerThread);
-    connect(m_worker, &ExportWorker::exportFinished, [=](void) { emit this->processingDataEnded(); });
-    connect(this, &ExportWidget::processData, m_worker, &ExportWorker::exportData);
-    m_workerThread.start();
+    this->layout()->addWidget(rawExportBox);
 }
+void ExportWidget::setupVTKExportWidgets()
+{
+    //exposing settings
+    QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
+    //Setting up path completers
+    auto* exportVTKBrowseCompleter = new QCompleter(this);
+    auto* exportVTKBrowseCompleterModel = new QFileSystemModel(this);
+    exportVTKBrowseCompleterModel->setRootPath("");
+    exportVTKBrowseCompleterModel->setFilter(QDir::Dirs | QDir::NoDotAndDotDot);
+    exportVTKBrowseCompleter->setModel(exportVTKBrowseCompleterModel);
+    exportVTKBrowseCompleter->setCompletionMode(QCompleter::InlineCompletion);
 
+    //export raw binary files
+    // setting up line edit
+    m_exportVTKLineEdit = new QLineEdit(this);
+    m_exportVTKLineEdit->setClearButtonEnabled(true);
+    m_exportVTKLineEdit->setCompleter(exportVTKBrowseCompleter);
+    m_exportVTKLineEdit->setText(settings.value("dataexport/vtkexportfolder").value<QString>());
+    connect(this, &ExportWidget::vtkExportFolderSelected, [=](const QString& folderPath) {
+        exportVTKBrowseCompleter->setCompletionPrefix(folderPath);
+        m_exportVTKLineEdit->setText(folderPath);
+        QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
+        settings.setValue("dataexport/vtkexportfolder", folderPath);
+        settings.sync();
+    });
+
+    // setting up browse button
+    auto* exportBrowseButton = new QPushButton(tr("Browse"), this);
+    exportBrowseButton->setFixedHeight(m_exportVTKLineEdit->sizeHint().height());
+    connect(exportBrowseButton, &QPushButton::clicked, this, &ExportWidget::browseForVTKExportFolder);
+
+    // adding line edit and button on line
+    auto* exportBrowseLayout = new QHBoxLayout;
+    exportBrowseLayout->addWidget(m_exportVTKLineEdit);
+    exportBrowseLayout->addWidget(exportBrowseButton);
+
+    // large export button
+    auto* exportButton = new QPushButton(tr("Export all"), this);
+    connect(exportButton, &QPushButton::clicked, this, &ExportWidget::exportAllVTKData);
+
+    // Adding a nice description
+    auto description = new QLabel(tr("Export all volumes as .vtk files. This is a file format used by the Visualization Toolkit and can be opened by applications such as Paraview."));
+    description->setWordWrap(true);
+
+    // setting up vertical layout
+    auto* exportLayout = new QVBoxLayout;
+    exportLayout->addWidget(description);
+    exportLayout->addLayout(exportBrowseLayout);
+    exportLayout->addWidget(exportButton);
+
+    // Putting binary export functionality in a neat box
+    auto* exportBox = new QGroupBox(tr("Select folder for export of vtk files"), this);
+    exportBox->setLayout(exportLayout);
+    this->layout()->addWidget(exportBox);
+}
 void ExportWidget::browseForRawExportFolder()
 {
     //find folder and emit signal
@@ -223,6 +303,23 @@ void ExportWidget::browseForRawExportFolder()
         emit rawExportFolderSelected(dir);
 }
 
+void ExportWidget::browseForVTKExportFolder()
+{
+    //find folder and emit signal
+    QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
+    QString initPath;
+    if (settings.contains("dataexport/vtkexportfolder"))
+        initPath = settings.value("dataexport/vtkexportfolder").value<QString>();
+    else {
+        initPath = ".";
+    }
+    QString dir = QFileDialog::getExistingDirectory(this, tr("Select folder for export"),
+        initPath,
+        QFileDialog::ShowDirsOnly);
+    if (!dir.isEmpty())
+        emit vtkExportFolderSelected(dir);
+}
+
 void ExportWidget::exportAllRawData()
 {
     emit processingDataStarted();
@@ -233,8 +330,20 @@ void ExportWidget::exportAllRawData()
     else {
         dir = ".";
     }
+    emit exportRawData(m_images, dir, m_rawExportIncludeHeader);
+}
 
-    emit processData(m_images, dir, m_rawExportIncludeHeader);
+void ExportWidget::exportAllVTKData()
+{
+    emit processingDataStarted();
+    QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
+    QString dir;
+    if (settings.contains("dataexport/vtkexportfolder"))
+        dir = settings.value("dataexport/vtkexportfolder").value<QString>();
+    else {
+        dir = ".";
+    }
+    emit exportVTKData(m_images, dir);
 }
 
 void ExportWidget::registerImage(std::shared_ptr<ImageContainer> image)

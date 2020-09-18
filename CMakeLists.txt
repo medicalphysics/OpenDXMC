@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.14...3.16)
 
-project(OpenDXMC VERSION 0.1.17 DESCRIPTION "OpenDXMC description" LANGUAGES CXX C)
+project(OpenDXMC VERSION 0.1.18 DESCRIPTION "OpenDXMC description" LANGUAGES CXX C)
 
 set(CMAKE_CONFIGURATION_TYPES Debug Release RelWithDebInfo MinSizeRel)
 
@@ -135,7 +135,7 @@ include(FetchContent)
 FetchContent_Declare(
     libdxmc
     GIT_REPOSITORY https://github.com/medicalphysics/DXMClib.git
-    GIT_TAG develop
+    GIT_TAG master
     )
 FetchContent_MakeAvailable(libdxmc)
 

@@ -26,6 +26,7 @@ Copyright 2019 Erlend Andersen
 #include <QIcon>
 #include <QMenu>
 #include <QPushButton>
+#include <QSettings>
 #include <QVBoxLayout>
 #include <QWidgetAction>
 
@@ -123,8 +124,11 @@ VolumeRenderWidget::VolumeRenderWidget(QWidget* parent)
         updateRendering();
     });
     menu->addAction(QString(tr("Save image to file")), [=]() {
-        auto filename = QFileDialog::getSaveFileName(this, tr("Save File"), "untitled.png", tr("Images (*.png)"));
+        QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
+        auto filename = settings.value("mediaexport/image", "untitled.png").value<QString>();
+        filename = QFileDialog::getSaveFileName(this, tr("Save File"), filename, tr("Images (*.png)"));
         if (!filename.isEmpty()) {
+            settings.setValue("mediaexport/image", filename);
             auto renderWindow = m_openGLWidget->renderWindow();
             vtkSmartPointer<vtkWindowToImageFilter> windowToImageFilter = vtkSmartPointer<vtkWindowToImageFilter>::New();
             windowToImageFilter->SetInput(renderWindow);

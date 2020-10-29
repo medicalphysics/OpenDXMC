@@ -34,6 +34,8 @@ public:
     vtkTypeMacro(customMouseInteractorStyle, vtkInteractorStyleImage);
     void OnMouseWheelForward() override;
     void OnMouseWheelBackward() override;
+    void scrollToStart();
+    void scrollToPoint(double point[3]);
     void OnMouseMove() override;
     void OnLeftButtonDown() override;
     void OnLeftButtonUp() override;

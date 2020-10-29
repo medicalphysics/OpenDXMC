@@ -558,7 +558,6 @@ void SliceRenderWidget::setColorTable(const QString& colorTableName)
 #ifdef WIN32
 void SliceRenderWidget::saveCine()
 {
-
     if (!(m_imageMapper && m_image))
         return;
 
@@ -577,44 +576,33 @@ void SliceRenderWidget::saveCine()
     if (!filename.isEmpty()) {
         settings.setValue("mediaexport/video", filename);
         writer->SetFileName(filename.toLatin1().data());
+
+        auto cam = m_renderer->GetActiveCamera();
+        std::array<double, 3> savedCamPos;
+        cam->GetFocalPoint(savedCamPos.data());
+
         m_imageMapper->UpdateInformation();
         auto plane = m_imageMapper->GetSlicePlane();
         auto normal = plane->GetNormal();
         auto stepAxis = vectormath::argmax3<int, double>(normal);
 
-        double* imbounds = m_imageMapper->GetBounds();
-        double* origin = plane->GetOrigin();
-        double originHold[3];
-        for (int i = 0; i < 3; ++i)
-            originHold[i] = origin[i];
-        origin[stepAxis] = imbounds[stepAxis * 2];
-        plane->SetOrigin(origin);
-        m_imageMapper->SetSlicePlane(plane);
-        if (m_imageMapperBackground)
-            m_imageMapperBackground->SetSlicePlane(plane);
-
         auto dimensions = m_image->image->GetDimensions();
-        const int nFrames = dimensions[stepAxis] * 2;
-        const int nSec = 20;
-        int frameRate = std::max(nFrames / nSec, 2);
+        const int nFrames = dimensions[stepAxis];
+        const int nSec = 10;
+        int frameRate = std::max(nFrames / nSec, 1);
         writer->SetRate(frameRate);
 
         QProgressDialog progress("Generating movie", "Cancel", 0, nFrames, this);
         progress.setWindowModality(Qt::WindowModal);
 
         writer->Start();
+        m_interactionStyle->scrollToStart();
         windowFilter->Modified();
         writer->Write();
 
-        const double step = (imbounds[stepAxis * 2 + 1] - imbounds[stepAxis * 2]) / static_cast<double>(nFrames);
-        int currentFrame = 0;
-        while (origin[stepAxis] <= imbounds[stepAxis * 2 + 1]) {
-            origin[stepAxis] += step;
-            currentFrame += 1;
-            plane->SetOrigin(origin);
-            m_imageMapper->SetSlicePlane(plane);
-            if (m_imageMapperBackground)
-                m_imageMapperBackground->SetSlicePlane(plane);
+        for (int currentFrame = 1; currentFrame < nFrames; ++currentFrame) {
+
+            m_interactionStyle->OnMouseWheelForward();
             windowFilter->Modified();
             writer->Write();
             progress.setValue(currentFrame);
@@ -624,10 +612,7 @@ void SliceRenderWidget::saveCine()
             }
         }
         writer->End();
-        plane->SetOrigin(originHold);
-        m_imageMapper->SetSlicePlane(plane);
-        m_imageMapper->UpdateInformation();
-        renderWindow->Render();
+        m_interactionStyle->scrollToPoint(savedCamPos.data());
     }
 }
 #endif // WINDOWS

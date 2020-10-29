@@ -174,6 +174,29 @@ void customMouseInteractorStyle::removeImagePlaneActor(SourceActorContainer* con
     m_renderWindow->Render();
 }
 
+void customMouseInteractorStyle::scrollToStart()
+{
+    m_imageMapper->UpdateInformation();
+    auto plane = m_imageMapper->GetSlicePlane();
+    auto planeNormal = plane->GetNormal();
+    auto ind = vectormath::argmax3<std::size_t, double>(planeNormal);
+
+    double* imbounds = m_imageMapper->GetBounds();
+    double* origin = plane->GetOrigin();
+    origin[ind] = imbounds[ind * 2];
+
+    scrollToPoint(origin);
+}
+void customMouseInteractorStyle::scrollToPoint(double point[3])
+{
+    auto renderCollection = m_renderWindow->GetRenderers();
+    auto nRenderers = renderCollection->GetNumberOfItems();
+    auto renderer = renderCollection->GetFirstRenderer();
+    auto cam = renderer->GetActiveCamera();
+    cam->SetFocalPoint(point);
+    updatePlaneActors();
+    m_renderWindow->Render();
+}
 void customMouseInteractorStyle::scrollSlice(bool forward)
 {
     m_imageMapper->UpdateInformation();
@@ -196,7 +219,8 @@ void customMouseInteractorStyle::scrollSlice(bool forward)
         if (origin[i] < imbounds[i * 2])
             origin[i] = imbounds[i * 2 + 1];
     }
-
+    scrollToPoint(origin);
+    /*
     auto renderCollection = m_renderWindow->GetRenderers();
     auto nRenderers = renderCollection->GetNumberOfItems();
     auto renderer = renderCollection->GetFirstRenderer();
@@ -204,7 +228,7 @@ void customMouseInteractorStyle::scrollSlice(bool forward)
     cam->SetFocalPoint(origin);
     updatePlaneActors();
 
-    m_renderWindow->Render();
+    m_renderWindow->Render();*/
 }
 
 void customMouseInteractorStyle::updatePlaneActors()
@@ -217,7 +241,7 @@ void customMouseInteractorStyle::updatePlaneActors()
     std::array<double, 3> plane_normal;
     plane->GetNormal(plane_normal.data());
     std::array<double, 3> plane_origin;
-    plane->GetOrigin(plane_origin.data());
+    cam->GetFocalPoint(plane_origin.data());
     const auto nIdx = vectormath::argmax3<std::size_t, double>(plane_normal.data());
     for (auto container : m_imagePlaneActors) {
         auto actor = container->getActor();

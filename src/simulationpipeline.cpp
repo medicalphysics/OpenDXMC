@@ -107,17 +107,33 @@ void SimulationPipeline::runSimulation(const std::vector<std::shared_ptr<Source>
     if (m_measurementImage)
         world.setMeasurementMapArray(m_measurementImage->imageData());
 
+    world.makeValid();
+    if (!world.isValid()) {
+        emit processingDataEnded();
+        return;
+    }
+
     auto totalDose = std::make_shared<std::vector<double>>(world.size(), 0.0);
     auto totalTally = std::make_shared<std::vector<std::uint32_t>>(world.size(), 0);
     auto totalVariance = std::make_shared<std::vector<double>>(world.size(), 0.0);
 
     for (std::shared_ptr<Source> s : sources) {
-        
-        world.makeValid();
         auto progressBar = std::make_unique<ProgressBar>(s->totalExposures());
+        const auto& cosines = s->directionCosines();
+        std::array<double, 3> dir;
+        dxmc::vectormath::cross(cosines.data(), dir.data());
+        const auto ind = dxmc::vectormath::argmax3<std::size_t>(dir.data());
+        if (ind == 0)
+            progressBar->setPlaneNormal(ProgressBar::Axis::X);
+        else if (ind==1)
+            progressBar->setPlaneNormal(ProgressBar::Axis::Y);
+        else 
+            progressBar->setPlaneNormal(ProgressBar::Axis::Z);
+
+
         emit progressBarChanged(progressBar.get());
         Transport transport;
-        const auto result = transport(world, s.get(), progressBar.get());
+        const auto result = transport(world, s.get(), progressBar.get(), true);
         std::transform(std::execution::par_unseq, totalDose->cbegin(), totalDose->cend(), result.dose.cbegin(), totalDose->begin(), std::plus<>());
         std::transform(std::execution::par_unseq, totalTally->cbegin(), totalTally->cend(), result.nEvents.cbegin(), totalTally->begin(), std::plus<>());
         std::transform(std::execution::par_unseq, totalVariance->cbegin(), totalVariance->cend(), result.variance.cbegin(), totalVariance->begin(), std::plus<>());

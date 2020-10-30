@@ -18,7 +18,7 @@ Copyright 2019 Erlend Andersen
 
 #pragma once
 
-#include "dxmc/material.h"
+#include "opendxmc/dxmc_specialization.h"
 
 #include <QComboBox>
 #include <QLineEdit>

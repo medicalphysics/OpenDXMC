@@ -1,6 +1,6 @@
 
 #include "opendxmc/slicerenderinteractor.h"
-#include "dxmc/vectormath.h"
+#include "opendxmc/dxmc_specialization.h"
 
 #include <vtkCamera.h>
 #include <vtkImageData.h>
@@ -179,7 +179,7 @@ void customMouseInteractorStyle::scrollToStart()
     m_imageMapper->UpdateInformation();
     auto plane = m_imageMapper->GetSlicePlane();
     auto planeNormal = plane->GetNormal();
-    auto ind = vectormath::argmax3<std::size_t, double>(planeNormal);
+    auto ind = dxmc::vectormath::argmax3<std::size_t, double>(planeNormal);
 
     double* imbounds = m_imageMapper->GetBounds();
     double* origin = plane->GetOrigin();
@@ -205,7 +205,7 @@ void customMouseInteractorStyle::scrollSlice(bool forward)
     const double direction = forward ? 1.0 : -1.0;
     if (image) {
         auto planeNormal = plane->GetNormal();
-        auto ind = vectormath::argmax3<std::size_t, double>(planeNormal);
+        auto ind = dxmc::vectormath::argmax3<std::size_t, double>(planeNormal);
         auto spacing = image->GetSpacing();
         plane->Push(direction * spacing[ind]);
     } else {
@@ -242,7 +242,7 @@ void customMouseInteractorStyle::updatePlaneActors()
     plane->GetNormal(plane_normal.data());
     std::array<double, 3> plane_origin;
     cam->GetFocalPoint(plane_origin.data());
-    const auto nIdx = vectormath::argmax3<std::size_t, double>(plane_normal.data());
+    const auto nIdx = dxmc::vectormath::argmax3<std::size_t, double>(plane_normal.data());
     for (auto container : m_imagePlaneActors) {
         auto actor = container->getActor();
         renderer->RemoveActor(actor);

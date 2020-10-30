@@ -17,8 +17,7 @@ Copyright 2019 Erlend Andersen
 */
 #include "opendxmc/slicerenderwidget.h"
 #include "opendxmc/colormap.h"
-
-#include "dxmc/vectormath.h"
+#include "opendxmc/dxmc_specialization.h"
 
 #include <QColor>
 #include <QColorDialog>
@@ -584,7 +583,7 @@ void SliceRenderWidget::saveCine()
         m_imageMapper->UpdateInformation();
         auto plane = m_imageMapper->GetSlicePlane();
         auto normal = plane->GetNormal();
-        auto stepAxis = vectormath::argmax3<int, double>(normal);
+        auto stepAxis = dxmc::vectormath::argmax3<int, double>(normal);
 
         auto dimensions = m_image->image->GetDimensions();
         const int nFrames = dimensions[stepAxis];

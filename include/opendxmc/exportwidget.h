@@ -18,7 +18,7 @@ Copyright 2019 Erlend Andersen
 
 #pragma once
 
-#include "imagecontainer.h"
+#include "opendxmc/imagecontainer.h"
 
 #include <QGroupBox>
 #include <QLineEdit>

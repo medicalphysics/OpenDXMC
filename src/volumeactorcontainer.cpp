@@ -17,8 +17,7 @@ Copyright 2019 Erlend Andersen
 */
 
 #include "opendxmc/volumeactorcontainer.h"
-
-#include "dxmc/vectormath.h"
+#include "opendxmc/dxmc_specialization.h"
 
 #include <vtkCellData.h>
 #include <vtkMatrix4x4.h>
@@ -46,7 +45,7 @@ void VolumeActorContainer::setOrientation(const std::array<double, 6>& direction
 {
     m_userMatrix->Identity();
     double z[3];
-    vectormath::cross(directionCosines.data(), z);
+    dxmc::vectormath::cross(directionCosines.data(), z);
     for (int i = 0; i < 3; ++i) {
         m_userMatrix->SetElement(i, 0, directionCosines[i]);
         m_userMatrix->SetElement(i, 1, directionCosines[i + 3]);
@@ -118,7 +117,7 @@ DXSourceContainer::DXSourceContainer(std::shared_ptr<DXSource> src)
     const auto origin = m_src->tubePosition();
     std::array<double, 3> direction;
     const auto& cosines = m_src->directionCosines();
-    vectormath::cross(cosines.data(), direction.data());
+    dxmc::vectormath::cross(cosines.data(), direction.data());
 
     const double lenght = src->sourceDetectorDistance();
     std::array<double, 3> p0, p1, p2, p3;
@@ -190,7 +189,7 @@ void DXSourceContainer::update()
     const auto& origin = m_src->tubePosition();
     std::array<double, 3> direction;
     const auto& cosines = m_src->directionCosines();
-    vectormath::cross(cosines.data(), direction.data());
+    dxmc::vectormath::cross(cosines.data(), direction.data());
 
     double lenght = m_src->sourceDetectorDistance();
     std::array<double, 3> p0, p1, p2, p3;
@@ -238,15 +237,15 @@ void CTSpiralSourceContainer::update()
     const int nPoints = static_cast<int>(m_src->totalExposures());
     m_points->SetNumberOfPoints(nPoints + 4);
 
-    Exposure exp;
+    
     for (int i = 0; i < nPoints; ++i) {
-        m_src->getExposure(exp, i);
+        auto exp = m_src->getExposure(i);
         auto pos = exp.position();
         m_points->SetPoint(i, pos[0], pos[1], pos[2]);
     }
 
     std::array<double, 3> p0, p1, p2, p3;
-    m_src->getExposure(exp, 0);
+    auto exp =m_src->getExposure(0);
     const auto start = exp.position();
     const auto cosines = exp.directionCosines();
     const auto direction = exp.beamDirection();
@@ -331,14 +330,14 @@ void CTAxialSourceContainer::update()
     m_linesPolyData->Reset();
     const int nPoints = static_cast<int>(m_src->totalExposures());
     m_points->SetNumberOfPoints(nPoints + 4);
-    Exposure exp;
+    
     for (int i = 0; i < nPoints; ++i) {
-        m_src->getExposure(exp, i);
+        auto exp = m_src->getExposure(i);
         auto pos = exp.position();
         m_points->SetPoint(i, pos[0], pos[1], pos[2]);
     }
 
-    m_src->getExposure(exp, 0);
+    auto exp = m_src->getExposure(0);
     std::array<double, 3> p0, p1, p2, p3;
     auto start = exp.position();
     auto cosines = exp.directionCosines();
@@ -402,7 +401,7 @@ void CTAxialSourceContainer::update()
     getActor()->SetMapper(m_mapper);
 }
 
-CTDualSourceContainer::CTDualSourceContainer(std::shared_ptr<CTDualSource> src)
+CTDualSourceContainer::CTDualSourceContainer(std::shared_ptr<CTSpiralDualSource> src)
     : SourceActorContainer(src.get())
     , m_src(src)
 {
@@ -442,14 +441,13 @@ void CTDualSourceContainer::updateTubeA()
     m_linesPolyDataA->Reset();
     const int nPoints = static_cast<int>(m_src->totalExposures()) / 2;
     m_pointsA->SetNumberOfPoints(nPoints + 4);
-    Exposure exp;
     for (int i = 0; i < nPoints; ++i) {
-        m_src->getExposure(exp, i * 2);
+        auto exp =m_src->getExposure( i * 2);
         auto pos = exp.position();
         m_pointsA->SetPoint(i, pos[0], pos[1], pos[2]);
     }
 
-    m_src->getExposure(exp, 0);
+    auto exp = m_src->getExposure(0);
     std::array<double, 3> p0, p1, p2, p3;
     auto start = exp.position();
     auto cosines = exp.directionCosines();
@@ -516,14 +514,14 @@ void CTDualSourceContainer::updateTubeB()
     m_linesPolyDataB->Reset();
     const int nPoints = static_cast<int>(m_src->totalExposures()) / 2;
     m_pointsB->SetNumberOfPoints(nPoints + 4);
-    Exposure exp;
-    for (int i = 0; i < nPoints; ++i) {
-        m_src->getExposure(exp, 2 * i + 1);
+    
+    for (int i = 0; i < nPoints; ++i) {        
+        auto exp = m_src->getExposure(2 * i + 1);
         auto pos = exp.position();
         m_pointsB->SetPoint(i, pos[0], pos[1], pos[2]);
     }
 
-    m_src->getExposure(exp, 1);
+    auto exp = m_src->getExposure(1);
     std::array<double, 3> p0, p1, p2, p3;
     auto start = exp.position();
     auto direction = exp.beamDirection();

@@ -18,8 +18,7 @@ Copyright 2019 Erlend Andersen
 
 #pragma once
 
-#include "dxmc/material.h"
-
+#include "opendxmc/dxmc_specialization.h"
 #include "opendxmc/imagecontainer.h"
 
 #include <memory>

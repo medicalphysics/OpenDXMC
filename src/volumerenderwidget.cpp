@@ -17,8 +17,7 @@ Copyright 2019 Erlend Andersen
 */
 
 #include "opendxmc/volumerenderwidget.h"
-
-#include "dxmc/vectormath.h"
+#include "opendxmc/dxmc_specialization.h"
 
 #include <QColorDialog>
 #include <QFileDialog>

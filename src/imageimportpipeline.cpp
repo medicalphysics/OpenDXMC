@@ -17,12 +17,8 @@ Copyright 2019 Erlend Andersen
 */
 
 #include "opendxmc/imageimportpipeline.h"
+#include "opendxmc/dxmc_specialization.h"
 #include "opendxmc/stringmanipulation.h"
-
-#include "dxmc/beamfilters.h"
-#include "dxmc/material.h"
-#include "dxmc/vectormath.h"
-#include "dxmc/world.h"
 
 #include <QString>
 
@@ -262,8 +258,8 @@ std::pair<std::string, std::vector<double>> ImageImportPipeline::readExposureDat
     for (std::size_t p = 0; p < 6; ++p)
         directionCosines[p] = directionCosinesValue.GetDouble(p);
     std::array<double, 3> imagedirection;
-    vectormath::cross(directionCosines.data(), imagedirection.data());
-    const std::size_t dirIdx = vectormath::argmax3<std::size_t, double>(imagedirection.data());
+    dxmc::vectormath::cross(directionCosines.data(), imagedirection.data());
+    const std::size_t dirIdx = dxmc::vectormath::argmax3<std::size_t, double>(imagedirection.data());
 
     if (!meta->Has(DC::Exposure)) {
         return std::make_pair(std::string(), std::vector<double>(n, 1.0));

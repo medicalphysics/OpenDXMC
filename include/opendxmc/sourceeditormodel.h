@@ -17,10 +17,7 @@ Copyright 2019 Erlend Andersen
 */
 
 #pragma once
-
-#include "dxmc/beamfilters.h"
-#include "dxmc/source.h"
-
+#include "opendxmc/dxmc_specialization.h"
 #include "opendxmc/imagecontainer.h"
 #include "opendxmc/imageimportpipeline.h" // for qt meta aecfilter
 #include "opendxmc/volumeactorcontainer.h"
@@ -109,7 +106,7 @@ protected:
     void setupCTSource(std::shared_ptr<CTSource> src, QStandardItem* parent);
     void setupCTAxialSource(std::shared_ptr<CTAxialSource> src, QStandardItem* parent);
     void setupCTSpiralSource(std::shared_ptr<CTSpiralSource> src, QStandardItem* parent);
-    void setupCTDualSource(std::shared_ptr<CTDualSource> src, QStandardItem* parent);
+    void setupCTDualSource(std::shared_ptr<CTSpiralDualSource> src, QStandardItem* parent);
     void setupDXSource(std::shared_ptr<DXSource> src, QStandardItem* parent);
     void sourceDataChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>& roles);
     bool removeSource(std::shared_ptr<Source> src);

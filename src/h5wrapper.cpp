@@ -138,7 +138,7 @@ bool H5Wrapper::saveSources(const std::vector<std::shared_ptr<Source>>& sources)
             auto name = std::to_string(tellerCTSpiral++);
             valid = saveSource(s_downcast, name, path);
         } else if (s->type() == Source::Type::CTDual) {
-            auto s_downcast = std::static_pointer_cast<CTDualSource>(s);
+            auto s_downcast = std::static_pointer_cast<CTSpiralDualSource>(s);
             auto path = groupPath + "/" + "CTDual";
             auto name = std::to_string(tellerCTDual++);
             valid = saveSource(s_downcast, name, path);
@@ -191,7 +191,7 @@ std::vector<std::shared_ptr<Source>> H5Wrapper::loadSources(void)
                     if (valid)
                         sources.push_back(src);
                 } else if (type == Source::Type::CTDual) {
-                    auto src = std::make_shared<CTDualSource>();
+                    auto src = std::make_shared<CTSpiralDualSource>();
                     bool valid = loadSource(src, name, folderPath);
                     if (valid)
                         sources.push_back(src);
@@ -841,7 +841,7 @@ bool H5Wrapper::saveSource(std::shared_ptr<CTAxialSource> src, const std::string
     return true;
 }
 
-bool H5Wrapper::saveSource(std::shared_ptr<CTDualSource> src, const std::string& name, const std::string& groupPath)
+bool H5Wrapper::saveSource(std::shared_ptr<CTSpiralDualSource> src, const std::string& name, const std::string& groupPath)
 {
     if (!m_file)
         return false;
@@ -1097,7 +1097,7 @@ bool H5Wrapper::loadSource(std::shared_ptr<CTAxialSource> src, const std::string
     return true;
 }
 
-bool H5Wrapper::loadSource(std::shared_ptr<CTDualSource> src, const std::string& name, const std::string& groupPath)
+bool H5Wrapper::loadSource(std::shared_ptr<CTSpiralDualSource> src, const std::string& name, const std::string& groupPath)
 {
     if (!m_file)
         return false;

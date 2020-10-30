@@ -18,7 +18,7 @@ Copyright 2019 Erlend Andersen
 
 #pragma once
 
-#include "dosereportcontainer.h"
+#include "opendxmc/dosereportcontainer.h"
 
 #include <QAbstractTableModel>
 #include <QHBoxLayout>

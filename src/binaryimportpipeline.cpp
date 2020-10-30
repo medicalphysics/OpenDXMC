@@ -17,9 +17,8 @@ Copyright 2019 Erlend Andersen
 */
 
 #include "opendxmc/binaryimportpipeline.h"
+#include "opendxmc/dxmc_specialization.h"
 #include "opendxmc/stringmanipulation.h"
-
-#include "dxmc/material.h"
 
 #include <fstream>
 #include <numeric>

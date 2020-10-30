@@ -19,10 +19,8 @@ Copyright 2019 Erlend Andersen
 #pragma once
 
 #include "opendxmc/dosereportcontainer.h"
+#include "opendxmc/dxmc_specialization.h"
 #include "opendxmc/imagecontainer.h"
-
-#include "dxmc/material.h"
-#include "dxmc/source.h"
 
 #include <QObject>
 #include <QString>

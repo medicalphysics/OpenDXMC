@@ -111,7 +111,7 @@ void SaveLoad::loadFromFile(const QString& path)
                 emit bowtieFilterChanged(bowtie);
             }
             if (src->type() == Source::Type::CTDual) {
-                auto ctdualsrc = std::static_pointer_cast<CTDualSource>(src);
+                auto ctdualsrc = std::static_pointer_cast<CTSpiralDualSource>(src);
                 auto bowtieB = ctdualsrc->bowTieFilterB();
                 if (bowtieB) {
                     emit bowtieFilterChanged(bowtieB);

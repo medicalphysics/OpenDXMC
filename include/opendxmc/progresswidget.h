@@ -23,7 +23,7 @@ Copyright 2019 Erlend Andersen
 #include <QPushButton>
 #include <QWidget>
 
-#include <dxmc/progressbar.h>
+#include "opendxmc/dxmc_specialization.h"
 
 #include <array>
 #include <memory>

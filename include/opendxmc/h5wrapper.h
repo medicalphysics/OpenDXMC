@@ -17,10 +17,8 @@ Copyright 2019 Erlend Andersen
 */
 #pragma once
 
+#include "opendxmc/dxmc_specialization.h"
 #include "opendxmc/imagecontainer.h"
-
-#include "dxmc/material.h"
-#include "dxmc/source.h"
 
 #include "H5Cpp.h"
 
@@ -62,12 +60,12 @@ protected:
     bool saveSource(std::shared_ptr<DXSource> src, const std::string& name, const std::string& groupPath);
     bool saveSource(std::shared_ptr<CTAxialSource> src, const std::string& name, const std::string& groupPath);
     bool saveSource(std::shared_ptr<CTSpiralSource> src, const std::string& name, const std::string& groupPath);
-    bool saveSource(std::shared_ptr<CTDualSource> src, const std::string& name, const std::string& groupPath);
+    bool saveSource(std::shared_ptr<CTSpiralDualSource> src, const std::string& name, const std::string& groupPath);
 
     bool loadSource(std::shared_ptr<DXSource> src, const std::string& name, const std::string& groupPath);
     bool loadSource(std::shared_ptr<CTAxialSource> src, const std::string& name, const std::string& groupPath);
     bool loadSource(std::shared_ptr<CTSpiralSource> src, const std::string& name, const std::string& groupPath);
-    bool loadSource(std::shared_ptr<CTDualSource> src, const std::string& name, const std::string& groupPath);
+    bool loadSource(std::shared_ptr<CTSpiralDualSource> src, const std::string& name, const std::string& groupPath);
 
 private:
     std::unique_ptr<H5::H5File> m_file = nullptr;

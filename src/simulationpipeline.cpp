@@ -17,10 +17,7 @@ Copyright 2019 Erlend Andersen
 */
 
 #include "opendxmc/simulationpipeline.h"
-
-#include "dxmc/progressbar.h"
-#include "dxmc/transport.h"
-#include "dxmc/world.h"
+#include "opendxmc/dxmc_specialization.h"
 
 #include "vtkType.h"
 
@@ -115,11 +112,12 @@ void SimulationPipeline::runSimulation(const std::vector<std::shared_ptr<Source>
     auto totalVariance = std::make_shared<std::vector<double>>(world.size(), 0.0);
 
     for (std::shared_ptr<Source> s : sources) {
-        world.setAttenuationLutMaxEnergy(s->maxPhotonEnergyProduced());
-        world.validate();
+        
+        world.makeValid();
         auto progressBar = std::make_unique<ProgressBar>(s->totalExposures());
         emit progressBarChanged(progressBar.get());
-        const auto result = transport::run(world, s.get(), progressBar.get());
+        Transport transport;
+        const auto result = transport(world, s.get(), progressBar.get());
         std::transform(std::execution::par_unseq, totalDose->cbegin(), totalDose->cend(), result.dose.cbegin(), totalDose->begin(), std::plus<>());
         std::transform(std::execution::par_unseq, totalTally->cbegin(), totalTally->cend(), result.nEvents.cbegin(), totalTally->begin(), std::plus<>());
         std::transform(std::execution::par_unseq, totalVariance->cbegin(), totalVariance->cend(), result.variance.cbegin(), totalVariance->begin(), std::plus<>());

@@ -20,10 +20,8 @@ Copyright 2019 Erlend Andersen
 
 #include <QObject>
 
+#include "opendxmc/dxmc_specialization.h"
 #include "opendxmc/imagecontainer.h"
-
-#include "dxmc/beamfilters.h"
-#include "dxmc/material.h"
 
 #include <array>
 #include <memory>

@@ -17,8 +17,7 @@ Copyright 2019 Erlend Andersen
 */
 
 #pragma once
-#include "dxmc/source.h"
-#include "dxmc/vectormath.h"
+#include "opendxmc/dxmc_specialization.h"
 
 #include <vtkActor.h>
 #include <vtkAppendPolyData.h>
@@ -130,14 +129,14 @@ private:
 
 class CTDualSourceContainer final : public SourceActorContainer {
 public:
-    CTDualSourceContainer(std::shared_ptr<CTDualSource> src);
+    CTDualSourceContainer(std::shared_ptr<CTSpiralDualSource> src);
     virtual ~CTDualSourceContainer() = default;
     void update() override;
 
 private:
     void updateTubeA();
     void updateTubeB();
-    std::shared_ptr<CTDualSource> m_src;
+    std::shared_ptr<CTSpiralDualSource> m_src;
     vtkSmartPointer<vtkPolyData> m_linesPolyDataA;
     vtkSmartPointer<vtkPoints> m_pointsA;
     vtkSmartPointer<vtkPolyLine> m_polyLineA;

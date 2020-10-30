@@ -22,9 +22,8 @@ Copyright 2019 Erlend Andersen
 #include <QThread>
 #include <QTimer>
 
-#include "dxmc/progressbar.h"
-
 #include "opendxmc/binaryimportpipeline.h"
+#include "opendxmc/dxmc_specialization.h"
 #include "opendxmc/imageimportpipeline.h"
 #include "opendxmc/progresswidget.h"
 #include "opendxmc/saveload.h"

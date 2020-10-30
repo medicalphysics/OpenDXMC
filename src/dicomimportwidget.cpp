@@ -17,9 +17,8 @@ Copyright 2019 Erlend Andersen
 */
 
 #include "opendxmc/dicomimportwidget.h"
+#include "opendxmc/dxmc_specialization.h"
 #include "opendxmc/materialselectionwidget.h"
-
-#include "dxmc/tube.h"
 
 #include <QCompleter>
 #include <QDir>

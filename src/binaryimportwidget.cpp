@@ -57,7 +57,7 @@ FileSelectWidget::FileSelectWidget(QWidget* parent, const QString& title)
     auto browseButton = new QPushButton(tr("Browse"), this);
     connect(browseButton, &QPushButton::clicked, [=](void) {
         QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
-        auto folder = settings.value("binaryimport/browsepath").value<QString>();
+        auto folder = settings.value("saveload/path").value<QString>();
         if (folder.isEmpty())
             folder = ".";
         auto path = QFileDialog::getOpenFileName(this, title, folder);
@@ -65,7 +65,7 @@ FileSelectWidget::FileSelectWidget(QWidget* parent, const QString& title)
             QFileInfo fInfo(path);
             auto dir = fInfo.dir().absolutePath();
             completerModel->setRootPath(dir);
-            settings.setValue("binaryimport/browsepath", dir);
+            settings.setValue("saveload/path", dir);
             settings.sync();
             m_lineEdit->setText(path);
         }

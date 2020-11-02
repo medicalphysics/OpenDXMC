@@ -272,11 +272,19 @@ SliceRenderWidget::SliceRenderWidget(QWidget* parent, SliceRenderWidget::Orienta
 
     menu->addAction(QString(tr("Save to file")), [=]() {
         QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
-        auto filename = settings.value("mediaexport/image", "untitled.png").value<QString>();
+        auto dirname = settings.value("saveload/path", ".").value<QString>();
+        auto filename = dirname = QString("/");
+        if (m_orientation == Orientation::Axial)
+            filename += QString("axial.png");
+        else if (m_orientation == Orientation::Coronal)
+            filename += QString("coronal.png");
+        else 
+            filename += QString("sagittal.png");
+        filename = QDir::toNativeSeparators(filename);
         filename = QFileDialog::getSaveFileName(this, tr("Save File"), filename, tr("Images (*.png)"));
 
         if (!filename.isEmpty()) {
-            settings.setValue("mediaexport/image", filename);
+            settings.setValue("saveload/path", filename);
             auto renderWindow = m_openGLWidget->renderWindow();
             vtkSmartPointer<vtkWindowToImageFilter> windowToImageFilter = vtkSmartPointer<vtkWindowToImageFilter>::New();
             windowToImageFilter->SetInput(renderWindow);
@@ -570,7 +578,16 @@ void SliceRenderWidget::saveCine()
     writer->SetInputConnection(windowFilter->GetOutputPort());
 
     QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
-    auto filename = settings.value("mediaexport/video", "untitled.avi").value<QString>();
+    auto dirname = settings.value("saveload/path", ".").value<QString>();
+    
+    auto filename = dirname = QString("/");
+    if (m_orientation == Orientation::Axial)
+        filename += QString("axial.avi");
+    else if (m_orientation == Orientation::Coronal)
+        filename += QString("coronal.avi");
+    else
+        filename += QString("sagittal.avi");
+    filename = QDir::toNativeSeparators(filename);
     filename = QFileDialog::getSaveFileName(this, tr("Save File"), filename, tr("Movies (*.avi)"));
     if (!filename.isEmpty()) {
         settings.setValue("mediaexport/video", filename);

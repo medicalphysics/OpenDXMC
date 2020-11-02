@@ -172,12 +172,12 @@ void ExportWidget::setupRawExportWidgets()
     m_exportRawLineEdit = new QLineEdit(this);
     m_exportRawLineEdit->setClearButtonEnabled(true);
     m_exportRawLineEdit->setCompleter(exportRawBrowseCompleter);
-    m_exportRawLineEdit->setText(settings.value("dataexport/rawexportfolder").value<QString>());
+    m_exportRawLineEdit->setText(settings.value("saveload/path").value<QString>());
     connect(this, &ExportWidget::rawExportFolderSelected, [=](const QString& folderPath) {
         exportRawBrowseCompleter->setCompletionPrefix(folderPath);
         m_exportRawLineEdit->setText(folderPath);
         QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
-        settings.setValue("dataexport/rawexportfolder", folderPath);
+        settings.setValue("saveload/path", folderPath);
         settings.sync();
     });
 
@@ -248,12 +248,12 @@ void ExportWidget::setupVTKExportWidgets()
     m_exportVTKLineEdit = new QLineEdit(this);
     m_exportVTKLineEdit->setClearButtonEnabled(true);
     m_exportVTKLineEdit->setCompleter(exportVTKBrowseCompleter);
-    m_exportVTKLineEdit->setText(settings.value("dataexport/vtkexportfolder").value<QString>());
+    m_exportVTKLineEdit->setText(settings.value("saveload/path").value<QString>());
     connect(this, &ExportWidget::vtkExportFolderSelected, [=](const QString& folderPath) {
         exportVTKBrowseCompleter->setCompletionPrefix(folderPath);
         m_exportVTKLineEdit->setText(folderPath);
         QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
-        settings.setValue("dataexport/vtkexportfolder", folderPath);
+        settings.setValue("saveload/path", folderPath);
         settings.sync();
     });
 
@@ -291,8 +291,8 @@ void ExportWidget::browseForRawExportFolder()
     //find folder and emit signal
     QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
     QString initPath;
-    if (settings.contains("dataexport/rawexportfolder"))
-        initPath = settings.value("dataexport/rawexportfolder").value<QString>();
+    if (settings.contains("saveload/path"))
+        initPath = settings.value("saveload/path").value<QString>();
     else {
         initPath = ".";
     }
@@ -308,8 +308,8 @@ void ExportWidget::browseForVTKExportFolder()
     //find folder and emit signal
     QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
     QString initPath;
-    if (settings.contains("dataexport/vtkexportfolder"))
-        initPath = settings.value("dataexport/vtkexportfolder").value<QString>();
+    if (settings.contains("saveload/path"))
+        initPath = settings.value("saveload/path").value<QString>();
     else {
         initPath = ".";
     }
@@ -325,8 +325,8 @@ void ExportWidget::exportAllRawData()
     emit processingDataStarted();
     QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
     QString dir;
-    if (settings.contains("dataexport/rawexportfolder"))
-        dir = settings.value("dataexport/rawexportfolder").value<QString>();
+    if (settings.contains("saveload/path"))
+        dir = settings.value("saveload/path").value<QString>();
     else {
         dir = ".";
     }
@@ -338,8 +338,8 @@ void ExportWidget::exportAllVTKData()
     emit processingDataStarted();
     QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
     QString dir;
-    if (settings.contains("dataexport/vtkexportfolder"))
-        dir = settings.value("dataexport/vtkexportfolder").value<QString>();
+    if (settings.contains("saveload/path"))
+        dir = settings.value("saveload/path").value<QString>();
     else {
         dir = ".";
     }

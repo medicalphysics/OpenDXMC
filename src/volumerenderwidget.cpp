@@ -124,10 +124,10 @@ VolumeRenderWidget::VolumeRenderWidget(QWidget* parent)
     });
     menu->addAction(QString(tr("Save image to file")), [=]() {
         QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
-        auto filename = settings.value("mediaexport/image", "untitled.png").value<QString>();
+        auto filename = settings.value("saveload/path", "untitled.png").value<QString>();
         filename = QFileDialog::getSaveFileName(this, tr("Save File"), filename, tr("Images (*.png)"));
         if (!filename.isEmpty()) {
-            settings.setValue("mediaexport/image", filename);
+            settings.setValue("saveload/path", filename);
             auto renderWindow = m_openGLWidget->renderWindow();
             vtkSmartPointer<vtkWindowToImageFilter> windowToImageFilter = vtkSmartPointer<vtkWindowToImageFilter>::New();
             windowToImageFilter->SetInput(renderWindow);

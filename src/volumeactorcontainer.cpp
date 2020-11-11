@@ -237,7 +237,6 @@ void CTSpiralSourceContainer::update()
     const int nPoints = static_cast<int>(m_src->totalExposures());
     m_points->SetNumberOfPoints(nPoints + 4);
 
-    
     for (int i = 0; i < nPoints; ++i) {
         auto exp = m_src->getExposure(i);
         auto pos = exp.position();
@@ -245,20 +244,20 @@ void CTSpiralSourceContainer::update()
     }
 
     std::array<double, 3> p0, p1, p2, p3;
-    auto exp =m_src->getExposure(0);
+    auto exp = m_src->getExposure(0);
     const auto start = exp.position();
     const auto cosines = exp.directionCosines();
     const auto direction = exp.beamDirection();
 
     const double sdd = m_src->sourceDetectorDistance();
 
-    auto angles = exp.collimationAngles();
+    const auto& angles = exp.collimationAngles();
     double lenght = std::sqrt(sdd * sdd * 0.25 + m_src->fieldOfView() * m_src->fieldOfView() * 0.25);
     for (int i = 0; i < 3; ++i) {
-        p0[i] = start[i] + lenght * (direction[i] + std::tan(angles[0] * 0.5) * cosines[i] + std::tan(angles[1] * 0.5) * cosines[i + 3]);
-        p1[i] = start[i] + lenght * (direction[i] + std::tan(angles[0] * 0.5) * cosines[i] - std::tan(angles[1] * 0.5) * cosines[i + 3]);
-        p2[i] = start[i] + lenght * (direction[i] - std::tan(angles[0] * 0.5) * cosines[i] + std::tan(angles[1] * 0.5) * cosines[i + 3]);
-        p3[i] = start[i] + lenght * (direction[i] - std::tan(angles[0] * 0.5) * cosines[i] - std::tan(angles[1] * 0.5) * cosines[i + 3]);
+        p0[i] = start[i] + lenght * (direction[i] + std::tan(angles[0]) * cosines[i] + std::tan(angles[2]) * cosines[i + 3]);
+        p1[i] = start[i] + lenght * (direction[i] + std::tan(angles[0]) * cosines[i] + std::tan(angles[3]) * cosines[i + 3]);
+        p2[i] = start[i] + lenght * (direction[i] + std::tan(angles[1]) * cosines[i] + std::tan(angles[2]) * cosines[i + 3]);
+        p3[i] = start[i] + lenght * (direction[i] + std::tan(angles[1]) * cosines[i] + std::tan(angles[3]) * cosines[i + 3]);
     }
 
     m_points->SetPoint(nPoints, p0[0], p0[1], p0[2]);
@@ -330,7 +329,7 @@ void CTAxialSourceContainer::update()
     m_linesPolyData->Reset();
     const int nPoints = static_cast<int>(m_src->totalExposures());
     m_points->SetNumberOfPoints(nPoints + 4);
-    
+
     for (int i = 0; i < nPoints; ++i) {
         auto exp = m_src->getExposure(i);
         auto pos = exp.position();
@@ -345,13 +344,13 @@ void CTAxialSourceContainer::update()
 
     double sdd = m_src->sourceDetectorDistance();
 
-    auto angles = exp.collimationAngles();
+    const auto& angles = exp.collimationAngles();
     double lenght = std::sqrt(sdd * sdd * 0.25 + m_src->fieldOfView() * m_src->fieldOfView() * 0.25);
     for (int i = 0; i < 3; ++i) {
-        p0[i] = start[i] + lenght * (direction[i] + std::tan(angles[0] * 0.5) * cosines[i] + std::tan(angles[1] * 0.5) * cosines[i + 3]);
-        p1[i] = start[i] + lenght * (direction[i] + std::tan(angles[0] * 0.5) * cosines[i] - std::tan(angles[1] * 0.5) * cosines[i + 3]);
-        p2[i] = start[i] + lenght * (direction[i] - std::tan(angles[0] * 0.5) * cosines[i] + std::tan(angles[1] * 0.5) * cosines[i + 3]);
-        p3[i] = start[i] + lenght * (direction[i] - std::tan(angles[0] * 0.5) * cosines[i] - std::tan(angles[1] * 0.5) * cosines[i + 3]);
+        p0[i] = start[i] + lenght * (direction[i] + std::tan(angles[0]) * cosines[i] + std::tan(angles[2]) * cosines[i + 3]);
+        p1[i] = start[i] + lenght * (direction[i] + std::tan(angles[0]) * cosines[i] + std::tan(angles[3]) * cosines[i + 3]);
+        p2[i] = start[i] + lenght * (direction[i] + std::tan(angles[1]) * cosines[i] + std::tan(angles[2]) * cosines[i + 3]);
+        p3[i] = start[i] + lenght * (direction[i] + std::tan(angles[1]) * cosines[i] + std::tan(angles[3]) * cosines[i + 3]);
     }
 
     m_points->SetPoint(nPoints, p0[0], p0[1], p0[2]);
@@ -442,7 +441,7 @@ void CTDualSourceContainer::updateTubeA()
     const int nPoints = static_cast<int>(m_src->totalExposures()) / 2;
     m_pointsA->SetNumberOfPoints(nPoints + 4);
     for (int i = 0; i < nPoints; ++i) {
-        auto exp =m_src->getExposure( i * 2);
+        auto exp = m_src->getExposure(i * 2);
         auto pos = exp.position();
         m_pointsA->SetPoint(i, pos[0], pos[1], pos[2]);
     }
@@ -455,14 +454,13 @@ void CTDualSourceContainer::updateTubeA()
 
     double sdd = m_src->sourceDetectorDistance();
 
-    auto angles = exp.collimationAngles();
-
+    const auto& angles = exp.collimationAngles();
     double lenght = std::sqrt(sdd * sdd * 0.25 + m_src->fieldOfView() * m_src->fieldOfView() * 0.25);
     for (int i = 0; i < 3; ++i) {
-        p0[i] = start[i] + lenght * (direction[i] + std::tan(angles[0] * 0.5) * cosines[i] + std::tan(angles[1] * 0.5) * cosines[i + 3]);
-        p1[i] = start[i] + lenght * (direction[i] + std::tan(angles[0] * 0.5) * cosines[i] - std::tan(angles[1] * 0.5) * cosines[i + 3]);
-        p2[i] = start[i] + lenght * (direction[i] - std::tan(angles[0] * 0.5) * cosines[i] + std::tan(angles[1] * 0.5) * cosines[i + 3]);
-        p3[i] = start[i] + lenght * (direction[i] - std::tan(angles[0] * 0.5) * cosines[i] - std::tan(angles[1] * 0.5) * cosines[i + 3]);
+        p0[i] = start[i] + lenght * (direction[i] + std::tan(angles[0]) * cosines[i] + std::tan(angles[2]) * cosines[i + 3]);
+        p1[i] = start[i] + lenght * (direction[i] + std::tan(angles[0]) * cosines[i] + std::tan(angles[3]) * cosines[i + 3]);
+        p2[i] = start[i] + lenght * (direction[i] + std::tan(angles[1]) * cosines[i] + std::tan(angles[2]) * cosines[i + 3]);
+        p3[i] = start[i] + lenght * (direction[i] + std::tan(angles[1]) * cosines[i] + std::tan(angles[3]) * cosines[i + 3]);
     }
 
     m_pointsA->SetPoint(nPoints, p0[0], p0[1], p0[2]);
@@ -514,8 +512,8 @@ void CTDualSourceContainer::updateTubeB()
     m_linesPolyDataB->Reset();
     const int nPoints = static_cast<int>(m_src->totalExposures()) / 2;
     m_pointsB->SetNumberOfPoints(nPoints + 4);
-    
-    for (int i = 0; i < nPoints; ++i) {        
+
+    for (int i = 0; i < nPoints; ++i) {
         auto exp = m_src->getExposure(2 * i + 1);
         auto pos = exp.position();
         m_pointsB->SetPoint(i, pos[0], pos[1], pos[2]);
@@ -527,14 +525,13 @@ void CTDualSourceContainer::updateTubeB()
     auto direction = exp.beamDirection();
     auto cosines = exp.directionCosines();
     double sdd = m_src->sourceDetectorDistanceB();
-    auto angles = exp.collimationAngles();
-    double lenght = std::sqrt(sdd * sdd * 0.25 + m_src->fieldOfViewB() * m_src->fieldOfViewB() * 0.25);
-
+    const auto& angles = exp.collimationAngles();
+    double lenght = std::sqrt(sdd * sdd * 0.25 + m_src->fieldOfView() * m_src->fieldOfView() * 0.25);
     for (int i = 0; i < 3; ++i) {
-        p0[i] = start[i] + lenght * (direction[i] + std::tan(angles[0] * 0.5) * cosines[i] + std::tan(angles[1] * 0.5) * cosines[i + 3]);
-        p1[i] = start[i] + lenght * (direction[i] + std::tan(angles[0] * 0.5) * cosines[i] - std::tan(angles[1] * 0.5) * cosines[i + 3]);
-        p2[i] = start[i] + lenght * (direction[i] - std::tan(angles[0] * 0.5) * cosines[i] + std::tan(angles[1] * 0.5) * cosines[i + 3]);
-        p3[i] = start[i] + lenght * (direction[i] - std::tan(angles[0] * 0.5) * cosines[i] - std::tan(angles[1] * 0.5) * cosines[i + 3]);
+        p0[i] = start[i] + lenght * (direction[i] + std::tan(angles[0]) * cosines[i] + std::tan(angles[2]) * cosines[i + 3]);
+        p1[i] = start[i] + lenght * (direction[i] + std::tan(angles[0]) * cosines[i] + std::tan(angles[3]) * cosines[i + 3]);
+        p2[i] = start[i] + lenght * (direction[i] + std::tan(angles[1]) * cosines[i] + std::tan(angles[2]) * cosines[i + 3]);
+        p3[i] = start[i] + lenght * (direction[i] + std::tan(angles[1]) * cosines[i] + std::tan(angles[3]) * cosines[i + 3]);
     }
 
     m_pointsB->SetPoint(nPoints, p0[0], p0[1], p0[2]);

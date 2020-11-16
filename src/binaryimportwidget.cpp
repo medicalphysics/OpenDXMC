@@ -17,6 +17,7 @@ Copyright 2019 Erlend Andersen
 */
 
 #include "opendxmc/binaryimportwidget.h"
+#include "opendxmc/qpathmanipulation.h"
 
 #include <QCompleter>
 #include <QDoubleSpinBox>
@@ -57,13 +58,10 @@ FileSelectWidget::FileSelectWidget(QWidget* parent, const QString& title)
     auto browseButton = new QPushButton(tr("Browse"), this);
     connect(browseButton, &QPushButton::clicked, [=](void) {
         QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
-        auto folder = settings.value("saveload/path").value<QString>();
-        if (folder.isEmpty())
-            folder = ".";
+        auto folder = directoryPath(settings.value("saveload/path", ".").value<QString>());
         auto path = QFileDialog::getOpenFileName(this, title, folder);
         if (!path.isEmpty()) {
-            QFileInfo fInfo(path);
-            auto dir = fInfo.dir().absolutePath();
+            auto dir =directoryPath(path);            
             completerModel->setRootPath(dir);
             settings.setValue("saveload/path", dir);
             settings.sync();

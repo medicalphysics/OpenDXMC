@@ -18,6 +18,7 @@ Copyright 2019 Erlend Andersen
 #include "opendxmc/slicerenderwidget.h"
 #include "opendxmc/colormap.h"
 #include "opendxmc/dxmc_specialization.h"
+#include "opendxmc/qpathmanipulation.h"
 
 #include <QColor>
 #include <QColorDialog>
@@ -272,19 +273,20 @@ SliceRenderWidget::SliceRenderWidget(QWidget* parent, SliceRenderWidget::Orienta
 
     menu->addAction(QString(tr("Save to file")), [=]() {
         QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
-        auto dirname = settings.value("saveload/path", ".").value<QString>();
-        auto filename = dirname = QString("/");
+        auto dirname = directoryPath(settings.value("saveload/path", ".").value<QString>());
+        QString filename;
         if (m_orientation == Orientation::Axial)
-            filename += QString("axial.png");
+            filename = filePath(dirname, QString("axial.png"));
         else if (m_orientation == Orientation::Coronal)
-            filename += QString("coronal.png");
-        else 
-            filename += QString("sagittal.png");
-        filename = QDir::toNativeSeparators(filename);
+            filename = filePath(dirname, QString("coronal.png"));
+        else
+            filename = filePath(dirname, QString("saggital.png"));
+
         filename = QFileDialog::getSaveFileName(this, tr("Save File"), filename, tr("Images (*.png)"));
 
         if (!filename.isEmpty()) {
-            settings.setValue("saveload/path", filename);
+            dirname = directoryPath(filename);
+            settings.setValue("saveload/path", dirname);
             auto renderWindow = m_openGLWidget->renderWindow();
             vtkSmartPointer<vtkWindowToImageFilter> windowToImageFilter = vtkSmartPointer<vtkWindowToImageFilter>::New();
             windowToImageFilter->SetInput(renderWindow);
@@ -579,18 +581,21 @@ void SliceRenderWidget::saveCine()
 
     QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
     auto dirname = settings.value("saveload/path", ".").value<QString>();
-    
-    auto filename = dirname = QString("/");
+    QFileInfo info(dirname);
+    auto dir = info.absoluteDir();
+    QString filename;
     if (m_orientation == Orientation::Axial)
-        filename += QString("axial.avi");
+        filename = dir.absoluteFilePath("axial.avi");
     else if (m_orientation == Orientation::Coronal)
-        filename += QString("coronal.avi");
+        filename = dir.absoluteFilePath("coronal.avi");
     else
-        filename += QString("sagittal.avi");
+        filename = dir.absoluteFilePath("sagittal.avi");
     filename = QDir::toNativeSeparators(filename);
     filename = QFileDialog::getSaveFileName(this, tr("Save File"), filename, tr("Movies (*.avi)"));
     if (!filename.isEmpty()) {
-        settings.setValue("mediaexport/video", filename);
+        info = filename;
+        dir = info.absoluteDir();
+        settings.setValue("saveload/path", dir.absolutePath());
         writer->SetFileName(filename.toLatin1().data());
 
         auto cam = m_renderer->GetActiveCamera();

@@ -32,6 +32,7 @@ Copyright 2019 Erlend Andersen
 #include "opendxmc/mainwindow.h"
 #include "opendxmc/phantomselectionwidget.h"
 #include "opendxmc/progressindicator.h"
+#include "opendxmc/qpathmanipulation.h"
 #include "opendxmc/sourceeditorwidget.h"
 #include "opendxmc/viewportwidget.h"
 
@@ -253,31 +254,31 @@ void MainWindow::createMenu()
 void MainWindow::saveFileAction()
 {
     QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
-    QString path = settings.value("saveload/path").value<QString>();
-    if (path.isNull())
-        path = ".";
-    QWidget* parent = this;
+    auto dirname = directoryPath(settings.value("saveload/path", ".").value<QString>());
 
+    auto path = filePath(dirname, QString("savefile.h5"));
+    QWidget* parent = this;
     path = QFileDialog::getSaveFileName(parent, tr("Save simulation"), path, tr("HDF5 (*.h5)"));
     if (path.isNull())
         return;
+    dirname = directoryPath(path);
+    settings.setValue("saveload/path", dirname);
     emit requestSaveToFile(path);
-    settings.setValue("saveload/path", path);
 }
 
 void MainWindow::loadFileAction()
 {
     //getting file
     QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
-    QString path = settings.value("saveload/path").value<QString>();
-    if (path.isNull())
-        path = ".";
+    auto dirname = directoryPath(settings.value("saveload/path", ".").value<QString>());
+
     QWidget* parent = this;
-    path = QFileDialog::getOpenFileName(parent, tr("Open simulation"), path, tr("HDF5 (*.h5)"));
+    auto path = QFileDialog::getOpenFileName(parent, tr("Open simulation"), dirname, tr("HDF5 (*.h5)"));
     if (path.isNull())
         return;
+    dirname = directoryPath(path);
+    settings.setValue("saveload/path", dirname);
     emit requestOpenSaveFile(path);
-    settings.setValue("saveload/path", path);
 }
 
 void MainWindow::setEnableEditing(void)

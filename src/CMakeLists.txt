@@ -33,6 +33,7 @@ add_library(libopendxmc STATIC
 	h5wrapper.cpp
 	progresswidget.cpp
 	phantomimportpipeline.cpp
+	qpathmanipulation.cpp
 	${HEADER_LIST}
 	)
 

@@ -18,6 +18,7 @@ Copyright 2019 Erlend Andersen
 
 #include "opendxmc/volumerenderwidget.h"
 #include "opendxmc/dxmc_specialization.h"
+#include "opendxmc/qpathmanipulation.h"
 
 #include <QColorDialog>
 #include <QFileDialog>
@@ -124,10 +125,14 @@ VolumeRenderWidget::VolumeRenderWidget(QWidget* parent)
     });
     menu->addAction(QString(tr("Save image to file")), [=]() {
         QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
-        auto filename = settings.value("saveload/path", "untitled.png").value<QString>();
+        auto dirname = directoryPath(settings.value("saveload/path", ".").value<QString>());
+
+        auto filename = filePath(dirname, QString("volume.png"));
         filename = QFileDialog::getSaveFileName(this, tr("Save File"), filename, tr("Images (*.png)"));
+
         if (!filename.isEmpty()) {
-            settings.setValue("saveload/path", filename);
+            dirname = directoryPath(filename);
+            settings.setValue("saveload/path", dirname);
             auto renderWindow = m_openGLWidget->renderWindow();
             vtkSmartPointer<vtkWindowToImageFilter> windowToImageFilter = vtkSmartPointer<vtkWindowToImageFilter>::New();
             windowToImageFilter->SetInput(renderWindow);

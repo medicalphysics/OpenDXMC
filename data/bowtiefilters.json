@@ -31,7 +31,7 @@
           "weight": 0.947716
         }
       ],
-      "name": "Siemens Definition Flash Body W2 100kV"
+      "name": "Siemens Definition Flash W2 100kV"
     },
     {
       "filterdata": [
@@ -64,7 +64,7 @@
           "weight": 2.09645
         }
       ],
-      "name": "Siemens Definition Flash Body 80kV"
+      "name": "Siemens Definition Flash W1 80kV"
     },
     {
       "filterdata": [
@@ -97,7 +97,7 @@
           "weight": 0.583505
         }
       ],
-      "name": "Siemens Definition Flash Body W2 W3 100kV"
+      "name": "Siemens Definition Flash W2+W3 100kV"
     },
     {
       "filterdata": [
@@ -130,7 +130,7 @@
           "weight": 2.01452
         }
       ],
-      "name": "Siemens Definition Flash Body W2 W3 140kV"
+      "name": "Siemens Definition Flash W2+W3 140kV"
     },
     {
       "filterdata": [
@@ -163,7 +163,7 @@
           "weight": 3.5142800000000003
         }
       ],
-      "name": "Siemens Definition Flash Body W3 120kV"
+      "name": "Siemens Definition Flash W3 120kV"
     },
     {
       "filterdata": [
@@ -196,7 +196,7 @@
           "weight": 9.8136
         }
       ],
-      "name": "Siemens Definition Flash Body 140kV"
+      "name": "Siemens Definition Flash W1 140kV"
     },
     {
       "filterdata": [
@@ -229,7 +229,7 @@
           "weight": 1.1636
         }
       ],
-      "name": "Siemens Definition Flash Body W2 W3 120kV"
+      "name": "Siemens Definition Flash W2+W3 120kV"
     },
     {
       "filterdata": [
@@ -262,7 +262,7 @@
           "weight": 6.5248099999999996
         }
       ],
-      "name": "Siemens Definition Flash Body 120kV"
+      "name": "Siemens Definition Flash W1 120kV"
     },
     {
       "filterdata": [
@@ -295,7 +295,7 @@
           "weight": 0.384338
         }
       ],
-      "name": "Siemens Definition Flash Body W2 80kV"
+      "name": "Siemens Definition Flash W2 80kV"
     },
     {
       "filterdata": [
@@ -328,7 +328,7 @@
           "weight": 0.201356
         }
       ],
-      "name": "Siemens Definition Flash Body W2 70kV"
+      "name": "Siemens Definition Flash W2 70kV"
     },
     {
       "filterdata": [
@@ -361,7 +361,7 @@
           "weight": 0.111661
         }
       ],
-      "name": "Siemens Definition Flash Body W2 W3 70kV"
+      "name": "Siemens Definition Flash W2+W3 70kV"
     },
     {
       "filterdata": [
@@ -394,7 +394,7 @@
           "weight": 3.0324400000000002
         }
       ],
-      "name": "Siemens Definition Flash Body W2 140kV"
+      "name": "Siemens Definition Flash W2 140kV"
     },
     {
       "filterdata": [
@@ -427,7 +427,7 @@
           "weight": 1.8074400000000002
         }
       ],
-      "name": "Siemens Definition Flash Body W2 120kV"
+      "name": "Siemens Definition Flash W2 120kV"
     },
     {
       "filterdata": [
@@ -460,7 +460,7 @@
           "weight": 1.3692
         }
       ],
-      "name": "Siemens Definition Flash Body 70kV"
+      "name": "Siemens Definition Flash W1 70kV"
     },
     {
       "filterdata": [
@@ -493,7 +493,7 @@
           "weight": 5.57793
         }
       ],
-      "name": "Siemens Definition Flash Body W3 140kV"
+      "name": "Siemens Definition Flash W3 140kV"
     },
     {
       "filterdata": [
@@ -526,7 +526,7 @@
           "weight": 0.533293
         }
       ],
-      "name": "Siemens Definition Flash Body W3 70kV"
+      "name": "Siemens Definition Flash W3 70kV"
     },
     {
       "filterdata": [
@@ -559,7 +559,7 @@
           "weight": 0.219894
         }
       ],
-      "name": "Siemens Definition Flash Body W2 W3 80kV"
+      "name": "Siemens Definition Flash W2+W3 80kV"
     },
     {
       "filterdata": [
@@ -592,7 +592,7 @@
           "weight": 1.99545
         }
       ],
-      "name": "Siemens Definition Flash Body W3 100kV"
+      "name": "Siemens Definition Flash W3 100kV"
     },
     {
       "filterdata": [
@@ -625,7 +625,7 @@
           "weight": 4.0340300000000004
         }
       ],
-      "name": "Siemens Definition Flash Body 100kV"
+      "name": "Siemens Definition Flash W1 100kV"
     },
     {
       "filterdata": [
@@ -658,7 +658,7 @@
           "weight": 0.9101450000000001
         }
       ],
-      "name": "Siemens Definition Flash Body W3 80kV"
+      "name": "Siemens Definition Flash W3 80kV"
     },
     {
       "filterdata": [

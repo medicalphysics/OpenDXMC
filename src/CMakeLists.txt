@@ -32,6 +32,7 @@ add_library(libopendxmc STATIC
 	stringmanipulation.cpp
 	h5wrapper.cpp
 	progresswidget.cpp
+	phantomimportpipeline.cpp
 	${HEADER_LIST}
 	)
 

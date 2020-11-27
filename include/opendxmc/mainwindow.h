@@ -25,6 +25,7 @@ Copyright 2019 Erlend Andersen
 #include "opendxmc/binaryimportpipeline.h"
 #include "opendxmc/dxmc_specialization.h"
 #include "opendxmc/imageimportpipeline.h"
+#include "opendxmc/phantomimportpipeline.h"
 #include "opendxmc/progresswidget.h"
 #include "opendxmc/saveload.h"
 #include "opendxmc/simulationpipeline.h"
@@ -52,6 +53,8 @@ private:
     ImageImportPipeline* m_importPipeline = nullptr;
     SimulationPipeline* m_simulationPipeline = nullptr;
     BinaryImportPipeline* m_binaryImportPipeline = nullptr;
+    PhantomImportPipeline* m_phantomImportPipeline = nullptr;
+
     QTabWidget* m_menuWidget = nullptr;
 
     SaveLoad* m_saveLoad = nullptr;

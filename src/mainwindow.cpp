@@ -30,6 +30,7 @@ Copyright 2019 Erlend Andersen
 #include "opendxmc/exportwidget.h"
 #include "opendxmc/imageimportpipeline.h"
 #include "opendxmc/mainwindow.h"
+#include "opendxmc/phantomimportpipeline.h"
 #include "opendxmc/phantomselectionwidget.h"
 #include "opendxmc/progressindicator.h"
 #include "opendxmc/sourceeditorwidget.h"
@@ -44,12 +45,20 @@ MainWindow::MainWindow(QWidget* parent)
     m_importPipeline->moveToThread(&m_workerThread);
     connect(m_importPipeline, &ImageImportPipeline::processingDataStarted, this, &MainWindow::setDisableEditing);
     connect(m_importPipeline, &ImageImportPipeline::processingDataEnded, this, &MainWindow::setEnableEditing);
+    // phantom import pipeline
+    m_phantomImportPipeline = new PhantomImportPipeline();
+    m_phantomImportPipeline->moveToThread(&m_workerThread);
+    connect(m_phantomImportPipeline, &PhantomImportPipeline::processingDataStarted, this, &MainWindow::setDisableEditing);
+    connect(m_phantomImportPipeline, &PhantomImportPipeline::processingDataEnded, this, &MainWindow::setEnableEditing);
     //simulation pipeline
     m_simulationPipeline = new SimulationPipeline();
     m_simulationPipeline->moveToThread(&m_workerThread);
     connect(m_importPipeline, &ImageImportPipeline::imageDataChanged, m_simulationPipeline, &SimulationPipeline::setImageData);
     connect(m_importPipeline, &ImageImportPipeline::materialDataChanged, m_simulationPipeline, &SimulationPipeline::setMaterials);
     connect(m_importPipeline, &ImageImportPipeline::organDataChanged, m_simulationPipeline, &SimulationPipeline::setOrganList);
+    connect(m_phantomImportPipeline, &PhantomImportPipeline::imageDataChanged, m_simulationPipeline, &SimulationPipeline::setImageData);
+    connect(m_phantomImportPipeline, &PhantomImportPipeline::materialDataChanged, m_simulationPipeline, &SimulationPipeline::setMaterials);
+    connect(m_phantomImportPipeline, &PhantomImportPipeline::organDataChanged, m_simulationPipeline, &SimulationPipeline::setOrganList);
     //connections to disable widgets when simulationpipeline is working
     connect(m_simulationPipeline, &SimulationPipeline::processingDataStarted, this, &MainWindow::setDisableEditing);
     connect(m_simulationPipeline, &SimulationPipeline::processingDataEnded, this, &MainWindow::setEnableEditing);
@@ -67,6 +76,8 @@ MainWindow::MainWindow(QWidget* parent)
     auto progressIndicator = new ProgressIndicator(this);
     connect(m_importPipeline, &ImageImportPipeline::processingDataStarted, progressIndicator, &ProgressIndicator::startAnimation);
     connect(m_importPipeline, &ImageImportPipeline::processingDataEnded, progressIndicator, &ProgressIndicator::stopAnimation);
+    connect(m_phantomImportPipeline, &PhantomImportPipeline::processingDataStarted, progressIndicator, &ProgressIndicator::startAnimation);
+    connect(m_phantomImportPipeline, &PhantomImportPipeline::processingDataEnded, progressIndicator, &ProgressIndicator::stopAnimation);
     connect(m_binaryImportPipeline, &BinaryImportPipeline::processingDataStarted, progressIndicator, &ProgressIndicator::startAnimation);
     connect(m_binaryImportPipeline, &BinaryImportPipeline::processingDataEnded, progressIndicator, &ProgressIndicator::stopAnimation);
     connect(m_simulationPipeline, &SimulationPipeline::processingDataStarted, progressIndicator, &ProgressIndicator::startAnimation);
@@ -95,10 +106,10 @@ MainWindow::MainWindow(QWidget* parent)
     //phantom import widget
     PhantomSelectionWidget* phantomWidget = new PhantomSelectionWidget(this);
     importWidget->addTab(phantomWidget, tr("Digital phantoms"));
-    connect(phantomWidget, &PhantomSelectionWidget::readIRCUFemalePhantom, m_importPipeline, &ImageImportPipeline::importICRUFemalePhantom);
-    connect(phantomWidget, &PhantomSelectionWidget::readIRCUMalePhantom, m_importPipeline, &ImageImportPipeline::importICRUMalePhantom);
-    connect(phantomWidget, &PhantomSelectionWidget::readCTDIPhantom, m_importPipeline, &ImageImportPipeline::importCTDIPhantom);
-    connect(phantomWidget, &PhantomSelectionWidget::readAWSPhantom, m_importPipeline, &ImageImportPipeline::importAWSPhantom);
+    connect(phantomWidget, &PhantomSelectionWidget::readIRCUFemalePhantom, m_phantomImportPipeline, &PhantomImportPipeline::importICRUFemalePhantom);
+    connect(phantomWidget, &PhantomSelectionWidget::readIRCUMalePhantom, m_phantomImportPipeline, &PhantomImportPipeline::importICRUMalePhantom);
+    connect(phantomWidget, &PhantomSelectionWidget::readCTDIPhantom, m_phantomImportPipeline, &PhantomImportPipeline::importCTDIPhantom);
+    connect(phantomWidget, &PhantomSelectionWidget::readAWSPhantom, m_phantomImportPipeline, &PhantomImportPipeline::importAWSPhantom);
 
     //binary import widget
     BinaryImportWidget* binaryWidget = new BinaryImportWidget(this);
@@ -145,6 +156,7 @@ MainWindow::MainWindow(QWidget* parent)
     //Viewport
     ViewPortWidget* viewPort = new ViewPortWidget(this);
     connect(m_importPipeline, &ImageImportPipeline::imageDataChanged, viewPort, &ViewPortWidget::setImageData);
+    connect(m_phantomImportPipeline, &PhantomImportPipeline::imageDataChanged, viewPort, &ViewPortWidget::setImageData);
     connect(m_simulationPipeline, &SimulationPipeline::imageDataChanged, viewPort, &ViewPortWidget::setImageData);
     connect(m_binaryImportPipeline, &BinaryImportPipeline::imageDataChanged, viewPort, &ViewPortWidget::setImageData);
 
@@ -161,10 +173,13 @@ MainWindow::MainWindow(QWidget* parent)
     m_saveLoad = new SaveLoad();
     m_saveLoad->moveToThread(&m_workerThread);
     connect(m_importPipeline, &ImageImportPipeline::imageDataChanged, m_saveLoad, &SaveLoad::setImageData);
-    connect(m_simulationPipeline, &SimulationPipeline::imageDataChanged, m_saveLoad, &SaveLoad::setImageData);
-    connect(m_binaryImportPipeline, &BinaryImportPipeline::imageDataChanged, m_saveLoad, &SaveLoad::setImageData);
     connect(m_importPipeline, &ImageImportPipeline::materialDataChanged, m_saveLoad, &SaveLoad::setMaterials);
     connect(m_importPipeline, &ImageImportPipeline::organDataChanged, m_saveLoad, &SaveLoad::setOrganList);
+    connect(m_phantomImportPipeline, &PhantomImportPipeline::imageDataChanged, m_saveLoad, &SaveLoad::setImageData);
+    connect(m_phantomImportPipeline, &PhantomImportPipeline::materialDataChanged, m_saveLoad, &SaveLoad::setMaterials);
+    connect(m_phantomImportPipeline, &PhantomImportPipeline::organDataChanged, m_saveLoad, &SaveLoad::setOrganList);
+    connect(m_simulationPipeline, &SimulationPipeline::imageDataChanged, m_saveLoad, &SaveLoad::setImageData);
+    connect(m_binaryImportPipeline, &BinaryImportPipeline::imageDataChanged, m_saveLoad, &SaveLoad::setImageData);
     connect(m_binaryImportPipeline, &BinaryImportPipeline::materialDataChanged, m_saveLoad, &SaveLoad::setMaterials);
     connect(m_binaryImportPipeline, &BinaryImportPipeline::organDataChanged, m_saveLoad, &SaveLoad::setOrganList);
 
@@ -229,6 +244,8 @@ MainWindow::~MainWindow()
     m_saveLoad = nullptr;
     delete m_binaryImportPipeline;
     m_binaryImportPipeline = nullptr;
+    delete m_phantomImportPipeline;
+    m_phantomImportPipeline = nullptr;
 }
 
 void MainWindow::createMenu()

@@ -174,11 +174,6 @@ public:
     void setCTImportAqusitionAlFiltration(double mm) { m_tube.setAlFiltration(mm); }
     void setCTImportAqusitionCuFiltration(double mm) { m_tube.setCuFiltration(mm); }
 
-    void importICRUMalePhantom(bool ignoreArms = false);
-    void importICRUFemalePhantom(bool ignoreArms = false);
-    void importCTDIPhantom(int mm, bool force_interaction_measurements = false);
-    void importAWSPhantom(const QString& name);
-
 signals:
     void processingDataStarted();
     void processingDataEnded();

@@ -156,6 +156,9 @@ add_subdirectory(src)
 # The executable code is here
 add_subdirectory(apps)
 
+# Add helper executable to convert ICRU adult phantoms to binary
+add_subdirectory(utilities)
+
 # Testing only available if this is the main app
 # Emergency override MODERN_CMAKE_BUILD_TESTING provided as well
 if(BUILD_TESTING)

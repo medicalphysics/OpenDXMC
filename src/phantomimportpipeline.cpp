@@ -175,7 +175,6 @@ std::vector<organElement> readICRPOrgans(const std::string& path)
     std::ifstream input(path);
     if (!input.is_open())
         return std::vector<organElement>();
-    std::size_t teller = 0;
 
     //reading organs
     std::vector<organElement> organs;
@@ -189,41 +188,40 @@ std::vector<organElement> readICRPOrgans(const std::string& path)
     airElement.name = airMaterial.name();
     organs.push_back(airElement);
 
+    //regex find
+    std::string regex_string = "([[:digit:]]+)[[:space:]]+([0-9a-zA-Z, \\(\\)]+)[[:space:]]+([[:digit:]]+)[[:space:]]+([[:digit:]]+\\.[[:digit:]]+)";
+
+    const std::regex regex(regex_string);
+    const std::size_t required_matches = 4;
+
     for (std::string line; getline(input, line);) {
-        //skipping first 4 lines
-        if (teller > 3) {
-            if (line.size() > 65) {
-                std::string id = line.substr(0, 6);
-                std::string name = line.substr(6, 49);
-                std::string tissue = line.substr(54, 3);
-                std::string density = line.substr(61, 5);
+        std::smatch regex_result;
+        auto test = std::regex_search(line, regex_result, regex);
+        if (std::regex_search(line, regex_result, regex)) {
+            if (regex_result.size() >= required_matches + 1) {
+                std::string id = regex_result[1];
+                std::string name = regex_result[2];
+                std::string medium = regex_result[3];
+                std::string dens = regex_result[4];
 
                 bool valid = true;
-
-                //testing if organ is valid
+                organElement o;
                 try {
-                    int medium = std::stoi(tissue);
+                    o.ID = static_cast<std::size_t>(std::stoi(id));
+                    o.medium = static_cast<std::size_t>(std::stoi(medium));
+                    o.density = std::stod(dens);
                 } catch (const std::invalid_argument& e) {
                     valid = false;
                 } catch (const std::out_of_range& e) {
                     valid = false;
                 }
                 if (valid) {
-                    organElement o;
-                    o.ID = static_cast<std::size_t>(std::stoi(id));
-                    o.medium = static_cast<std::size_t>(std::stoi(tissue));
-                    //name.erase(name.find_last_not_of(" \n\r\t") + 1);
                     o.name = string_trim(name);
-                    o.density = std::stod(density);
                     organs.push_back(o);
                 }
             }
         }
-        ++teller;
     }
-    //sorting
-    airElement.ID = static_cast<std::uint8_t>(organs.size());
-    organs.push_back(airElement);
 
     std::sort(organs.begin(), organs.end(), [](auto& left, auto& right) {
         return left.ID < right.ID;
@@ -250,7 +248,7 @@ std::vector<std::pair<std::size_t, Material>> readICRPMedia(const std::string& p
     std::transform(elements.cbegin(), elements.cend(), elementsZ.begin(), [](const auto& s) { return Material::getAtomicNumberFromSymbol(s); });
 
     //regex find
-    std::string regex_string = "([[:digit:]]+)[[:space:]]+([a-zA-Z, ]+[[:space:]]+)";
+    std::string regex_string = "([[:digit:]]+)[[:space:]]+([a-zA-Z, \\(\\)]+)[[:space:]]+";
     for (std::size_t i = 0; i < elements.size(); ++i) {
         regex_string += "([[:digit:]]+\\.[[:digit:]]+)[[:space:]]*";
     }
@@ -315,11 +313,16 @@ std::pair<std::shared_ptr<std::vector<std::uint8_t>>, std::shared_ptr<std::vecto
     const std::vector<Material>& materials)
 {
 
-    std::vector<std::uint8_t> matLut;
-    std::vector<double> densLut;
+    //max organ ID
+    std::size_t maxID = 0;
     for (const auto& organ : organs) {
-        matLut.push_back(static_cast<std::uint8_t>(organ.medium));
-        densLut.push_back(organ.density);
+        maxID = std::max(organ.ID, maxID);
+    }
+    std::vector<double> densLut(maxID + 1, 0.0);
+    std::vector<std::uint8_t> matLut(maxID + 1, 0);
+    for (const auto& organ : organs) {
+        matLut[organ.ID] = static_cast<std::uint8_t>(organ.medium);
+        densLut[organ.ID] = organ.density;
     }
 
     auto materialArray = std::make_shared<std::vector<std::uint8_t>>(organArray->size());

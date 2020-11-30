@@ -115,29 +115,29 @@ PhantomSelectionWidget::PhantomSelectionWidget(QWidget* parent)
                 emit this->readIRCUPhantom(p::Icrp10YrMale, false);
             else if (index == 16)
                 emit this->readIRCUPhantom(p::Icrp10YrMale, true);
-            else if (index == 13)
-                emit this->readIRCUPhantom(p::Icrp5YrFemale, false);
-            else if (index == 14)
-                emit this->readIRCUPhantom(p::Icrp5YrFemale, true);
-            else if (index == 15)
-                emit this->readIRCUPhantom(p::Icrp5YrMale, false);
-            else if (index == 16)
-                emit this->readIRCUPhantom(p::Icrp5YrMale, true);
             else if (index == 17)
-                emit this->readIRCUPhantom(p::Icrp1YrFemale, false);
+                emit this->readIRCUPhantom(p::Icrp5YrFemale, false);
             else if (index == 18)
-                emit this->readIRCUPhantom(p::Icrp1YrFemale, true);
+                emit this->readIRCUPhantom(p::Icrp5YrFemale, true);
             else if (index == 19)
-                emit this->readIRCUPhantom(p::Icrp1YrMale, false);
+                emit this->readIRCUPhantom(p::Icrp5YrMale, false);
             else if (index == 20)
-                emit this->readIRCUPhantom(p::Icrp1YrMale, true);
+                emit this->readIRCUPhantom(p::Icrp5YrMale, true);
             else if (index == 21)
-                emit this->readIRCUPhantom(p::Icrp0YrFemale, false);
+                emit this->readIRCUPhantom(p::Icrp1YrFemale, false);
             else if (index == 22)
-                emit this->readIRCUPhantom(p::Icrp0YrFemale, true);
+                emit this->readIRCUPhantom(p::Icrp1YrFemale, true);
             else if (index == 23)
-                emit this->readIRCUPhantom(p::Icrp0YrMale, false);
+                emit this->readIRCUPhantom(p::Icrp1YrMale, false);
             else if (index == 24)
+                emit this->readIRCUPhantom(p::Icrp1YrMale, true);
+            else if (index == 25)
+                emit this->readIRCUPhantom(p::Icrp0YrFemale, false);
+            else if (index == 26)
+                emit this->readIRCUPhantom(p::Icrp0YrFemale, true);
+            else if (index == 27)
+                emit this->readIRCUPhantom(p::Icrp0YrMale, false);
+            else if (index == 28)
                 emit this->readIRCUPhantom(p::Icrp0YrMale, true);
         });
     connect(m_phantomSelector, QOverload<const QString&>::of(&QComboBox::activated),

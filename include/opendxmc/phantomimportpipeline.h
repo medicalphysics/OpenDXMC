@@ -24,6 +24,7 @@ Copyright 2020 Erlend Andersen
 #include <QObject>
 #include <QString>
 
+#include <array>
 #include <memory>
 #include <string>
 #include <vector>
@@ -41,15 +42,29 @@ Q_DECLARE_METATYPE(std::vector<Material>)
 Q_DECLARE_METATYPE(std::vector<std::string>)
 #endif
 
-
 class PhantomImportPipeline : public QObject {
     Q_OBJECT
 public:
+    enum class Phantom {
+        IcrpAdultMale,
+        IcrpAdultFemale,
+        Icrp15YrMale,
+        Icrp15YrFemale,
+        Icrp10YrMale,
+        Icrp10YrFemale,
+        Icrp5YrMale,
+        Icrp5YrFemale,
+        Icrp1YrMale,
+        Icrp1YrFemale,
+        Icrp0YrMale,
+        Icrp0YrFemale
+    };
     PhantomImportPipeline(QObject* parent = nullptr);
 
-    void importICRUMalePhantom(bool ignoreArms = false);
-    void importICRUFemalePhantom(bool ignoreArms = false);
+    void importICRUPhantom(PhantomImportPipeline::Phantom phantom, bool ignoreArms = false);
+
     void importCTDIPhantom(int mm, bool force_interaction_measurements = false);
+
     void importAWSPhantom(const QString& name);
 
 signals:
@@ -58,4 +73,14 @@ signals:
     void imageDataChanged(std::shared_ptr<ImageContainer> imageData);
     void materialDataChanged(const std::vector<Material>& materials);
     void organDataChanged(const std::vector<std::string>& organs);
+
+protected:
+    std::array<double, 3> icrpSpacing(Phantom phantom);
+    std::array<std::size_t, 3> icrpDimensions(Phantom phantom);
+    std::string icrpFolderPath(Phantom phantom);
 };
+
+#ifndef Q_DECLARE_METATYPE_PHANTOM
+#define Q_DECLARE_METATYPE_PHANTOM
+Q_DECLARE_METATYPE(PhantomImportPipeline::Phantom)
+#endif

@@ -19,17 +19,153 @@ Copyright 2020 Erlend Andersen
 #include "opendxmc/phantomimportpipeline.h"
 #include "opendxmc/stringmanipulation.h"
 
+#include <algorithm>
+#include <regex>
+#include <stdexcept>
+
 PhantomImportPipeline::PhantomImportPipeline(QObject* parent)
     : QObject(parent)
 {
     qRegisterMetaType<std::shared_ptr<ImageContainer>>();
     qRegisterMetaType<std::vector<Material>>();
     qRegisterMetaType<std::vector<std::string>>();
+    qRegisterMetaType<std::vector<PhantomImportPipeline::Phantom>>();
+}
+
+std::array<double, 3> PhantomImportPipeline::icrpSpacing(Phantom phantom)
+{
+    std::array<double, 3> arr = { 0, 0, 0 };
+    switch (phantom) {
+    case Phantom::IcrpAdultMale:
+        arr = { 2.137, 2.137, 8 };
+        break;
+    case Phantom::IcrpAdultFemale:
+        arr = { 1.775, 1.775, 4.84 };
+        break;
+    case Phantom::Icrp15YrMale:
+        arr = { 1.25, 1.25, 2.832 };
+        break;
+    case Phantom::Icrp15YrFemale:
+        arr = { 1.2, 1.2, 2.828 };
+        break;
+    case Phantom::Icrp10YrMale:
+        arr = { .99, .99, 2.425 };
+        break;
+    case Phantom::Icrp10YrFemale:
+        arr = { .99, .99, 2.425 };
+        break;
+    case Phantom::Icrp5YrMale:
+        arr = { .85, .85, 1.928 };
+        break;
+    case Phantom::Icrp5YrFemale:
+        arr = { .85, .85, 1.928 };
+        break;
+    case Phantom::Icrp1YrMale:
+        arr = { .663, .633, 1.4 };
+        break;
+    case Phantom::Icrp1YrFemale:
+        arr = { .663, .633, 1.4 };
+        break;
+    case Phantom::Icrp0YrMale:
+        arr = { .663, .663, .663 };
+        break;
+    case Phantom::Icrp0YrFemale:
+        arr = { .663, .663, .663 };
+        break;
+    }
+    return arr;
+}
+std::array<std::size_t, 3> PhantomImportPipeline::icrpDimensions(Phantom phantom)
+{
+    std::array<std::size_t, 3> arr = { 0, 0, 0 };
+    switch (phantom) {
+    case Phantom::IcrpAdultMale:
+        arr = { 254, 127, 222 };
+        break;
+    case Phantom::IcrpAdultFemale:
+        arr = { 299, 137, 348 };
+        break;
+    case Phantom::Icrp15YrMale:
+        arr = { 407, 225, 586 };
+        break;
+    case Phantom::Icrp15YrFemale:
+        arr = { 401, 236, 571 };
+        break;
+    case Phantom::Icrp10YrMale:
+        arr = { 419, 226, 576 };
+        break;
+    case Phantom::Icrp10YrFemale:
+        arr = { 419, 226, 576 };
+        break;
+    case Phantom::Icrp5YrMale:
+        arr = { 419, 230, 572 };
+        break;
+    case Phantom::Icrp5YrFemale:
+        arr = { 419, 230, 572 };
+        break;
+    case Phantom::Icrp1YrMale:
+        arr = { 393, 248, 546 };
+        break;
+    case Phantom::Icrp1YrFemale:
+        arr = { 393, 248, 546 };
+        break;
+    case Phantom::Icrp0YrMale:
+        arr = { 345, 211, 716 };
+        break;
+    case Phantom::Icrp0YrFemale:
+        arr = { 345, 211, 716 };
+        break;
+    }
+    return arr;
+}
+
+std::string PhantomImportPipeline::icrpFolderPath(Phantom phantom)
+{
+    std::string path;
+    switch (phantom) {
+    case Phantom::IcrpAdultMale:
+        path = "resources/phantoms/icrp/AM/AM_";
+        break;
+    case Phantom::IcrpAdultFemale:
+        path = "resources/phantoms/icrp/AF/AF_";
+        break;
+    case Phantom::Icrp15YrMale:
+        path = "resources/phantoms/icrp/15M/15M_";
+        break;
+    case Phantom::Icrp15YrFemale:
+        path = "resources/phantoms/icrp/15F/15F_";
+        break;
+    case Phantom::Icrp10YrMale:
+        path = "resources/phantoms/icrp/10M/10M_";
+        break;
+    case Phantom::Icrp10YrFemale:
+        path = "resources/phantoms/icrp/10F/10F_";
+        break;
+    case Phantom::Icrp5YrMale:
+        path = "resources/phantoms/icrp/05M/05M_";
+        break;
+    case Phantom::Icrp5YrFemale:
+        path = "resources/phantoms/icrp/05F/05F_";
+        break;
+    case Phantom::Icrp1YrMale:
+        path = "resources/phantoms/icrp/01M/01M_";
+        break;
+    case Phantom::Icrp1YrFemale:
+        path = "resources/phantoms/icrp/01F/01F_";
+        break;
+    case Phantom::Icrp0YrMale:
+        path = "resources/phantoms/icrp/00M/00M_";
+        break;
+    case Phantom::Icrp0YrFemale:
+        path = "resources/phantoms/icrp/00F/00F_";
+        break;
+    }
+    return path;
 }
 
 struct organElement {
-    unsigned char ID = 0;
-    unsigned char tissue = 0;
+    std::size_t ID = 0;
+    std::size_t medium = 0;
     double density = 0;
     std::string name;
 };
@@ -47,7 +183,7 @@ std::vector<organElement> readICRPOrgans(const std::string& path)
     // adding 0 air organ
     struct organElement airElement;
     airElement.ID = 0;
-    airElement.tissue = 0;
+    airElement.medium = 0;
     Material airMaterial("Air, Dry (near sea level)");
     airElement.density = airMaterial.standardDensity();
     airElement.name = airMaterial.name();
@@ -61,85 +197,95 @@ std::vector<organElement> readICRPOrgans(const std::string& path)
                 std::string name = line.substr(6, 49);
                 std::string tissue = line.substr(54, 3);
                 std::string density = line.substr(61, 5);
-                struct organElement o;
-                o.ID = std::stoi(id);
-                o.tissue = std::stoi(tissue);
-                name.erase(name.find_last_not_of(" \n\r\t") + 1);
-                o.name = name;
-                o.density = std::stod(density);
-                organs.push_back(o);
+
+                bool valid = true;
+
+                //testing if organ is valid
+                try {
+                    int medium = std::stoi(tissue);
+                } catch (const std::invalid_argument& e) {
+                    valid = false;
+                } catch (const std::out_of_range& e) {
+                    valid = false;
+                }
+                if (valid) {
+                    organElement o;
+                    o.ID = static_cast<std::size_t>(std::stoi(id));
+                    o.medium = static_cast<std::size_t>(std::stoi(tissue));
+                    //name.erase(name.find_last_not_of(" \n\r\t") + 1);
+                    o.name = string_trim(name);
+                    o.density = std::stod(density);
+                    organs.push_back(o);
+                }
             }
         }
         ++teller;
     }
     //sorting
-    airElement.ID = static_cast<int>(organs.size());
+    airElement.ID = static_cast<std::uint8_t>(organs.size());
     organs.push_back(airElement);
 
     std::sort(organs.begin(), organs.end(), [](auto& left, auto& right) {
         return left.ID < right.ID;
     });
-
     return organs;
 }
 
-std::vector<std::pair<unsigned char, Material>> readICRPMedia(const std::string& path)
+std::vector<std::pair<std::size_t, Material>> readICRPMedia(const std::string& path)
 {
     std::ifstream input(path);
     if (!input.is_open())
-        return std::vector<std::pair<unsigned char, Material>>();
+        return std::vector<std::pair<std::size_t, Material>>();
     std::size_t teller = 0;
 
     //reading media
-    std::vector<std::pair<unsigned char, Material>> media;
+    std::vector<std::pair<std::size_t, Material>> media;
     media.push_back(std::make_pair(0, Material("Air, Dry (near sea level)")));
 
     std::vector<int> atomicNumbers;
     std::vector<double> massFractions;
 
-    std::size_t lineOffset = 78;
-    std::size_t numberSkip = 6;
-    for (std::string line; getline(input, line);) {
-        //First line contains atomic numbers
-        if (teller == 0) {
-            std::size_t offset = lineOffset;
-            while ((offset + numberSkip) < line.size()) {
-                auto subString = line.substr(offset, numberSkip);
-                atomicNumbers.push_back(std::stoi(subString));
-                offset += numberSkip;
-            }
-        }
-        //skipping first 4 lines
-        if (teller > 2) {
-            //read media here make materials remember convert to number of atoms
-            std::size_t offset = lineOffset;
-            massFractions.clear();
-            while ((offset + numberSkip) < line.size()) {
-                auto subString = line.substr(offset, numberSkip);
-                massFractions.push_back(std::stod(subString));
-                offset += numberSkip;
-            }
+    std::array<std::string, 13> elements = { "H", "C", "N", "O", "Na", "Mg", "P", "S", "Cl", "K", "Ca", "Fe", "I" };
+    std::array<int, elements.size()> elementsZ;
+    std::transform(elements.cbegin(), elements.cend(), elementsZ.begin(), [](const auto& s) { return Material::getAtomicNumberFromSymbol(s); });
 
-            //constructing material string
-            std::string compound;
-            for (std::size_t i = 0; i < atomicNumbers.size(); ++i) {
-                if (massFractions[i] > 0.0) {
-                    double numberFraction = massFractions[i] / Material::getAtomicWeight(atomicNumbers[i]);
-                    auto element = Material::getAtomicNumberToSymbol(atomicNumbers[i]);
-                    compound += element;
-                    compound += std::to_string(numberFraction);
+    //regex find
+    std::string regex_string = "([[:digit:]]+)[[:space:]]+([a-zA-Z, ]+[[:space:]]+)";
+    for (std::size_t i = 0; i < elements.size(); ++i) {
+        regex_string += "([[:digit:]]+\\.[[:digit:]]+)[[:space:]]*";
+    }
+    const std::regex regex(regex_string);
+    const std::size_t required_matches = 2 + elements.size();
+
+    for (std::string line; getline(input, line);) {
+
+        std::smatch regex_result;
+        if (std::regex_search(line, regex_result, regex)) {
+            if (regex_result.size() >= required_matches + 1) {
+
+                const std::size_t mediaNumber = static_cast<std::size_t>(std::stoi(regex_result[1]));
+                const std::string pretty_name = string_trim(regex_result[2]);
+                std::string compound;
+                bool validMaterial = true;
+                try {
+
+                    for (std::size_t i = 3; i < regex_result.size(); ++i) {
+                        const std::size_t index = i - 3;
+                        const double massFraction = std::stod(regex_result[i]);
+                        if (massFraction > 0) {
+                            const double atomicWeight = Material::getAtomicWeight(elementsZ[index]);
+                            const double numberFraction = massFraction / atomicWeight;
+                            compound += elements[index] + std::to_string(numberFraction);
+                        }
+                    }
+                } catch (const std::exception& e) {
+                    validMaterial = false;
+                }
+                if (validMaterial) {
+                    media.push_back(std::make_pair(mediaNumber, Material(compound, pretty_name)));
                 }
             }
-
-            // finding material number
-            auto materialNumber = static_cast<unsigned char>(std::stoi(line.substr(0, 3)));
-            //material name
-            std::string materialName = line.substr(6, 69);
-            materialName.erase(materialName.find_last_not_of(" \n\r\t") + 1);
-            // adding material
-            media.push_back(std::make_pair(materialNumber, Material(compound, materialName)));
         }
-        ++teller;
     }
     // sorting
     std::sort(media.begin(), media.end(), [](auto& left, auto& right) {
@@ -148,184 +294,121 @@ std::vector<std::pair<unsigned char, Material>> readICRPMedia(const std::string&
     return media;
 }
 
-std::shared_ptr<std::vector<unsigned char>> readICRPData(const std::string& path, std::size_t size)
+std::shared_ptr<std::vector<std::uint8_t>> readICRPData(const std::string& path, std::size_t size)
 {
-    auto organs = std::make_shared<std::vector<unsigned char>>();
-    std::ifstream input(path);
+    auto organs = std::make_shared<std::vector<std::uint8_t>>();
+    std::ifstream input(path, std::ios::binary | std::ios::in);
+
     if (!input.is_open())
         return organs;
+    input.unsetf(std::ios::skipws);
     organs->reserve(size);
-    int c;
-    while (input >> c) {
-        organs->push_back(static_cast<unsigned char>(c));
-    }
+    organs->insert(organs->begin(),
+        std::istream_iterator<std::uint8_t>(input),
+        std::istream_iterator<std::uint8_t>());
     return organs;
 }
 
-std::pair<std::shared_ptr<std::vector<unsigned char>>, std::shared_ptr<std::vector<double>>> generateICRUPhantomArrays(
-    std::vector<unsigned char>& organArray,
-    std::vector<organElement>& organs,
-    const std::vector<std::pair<unsigned char, Material>>& media)
+std::pair<std::shared_ptr<std::vector<std::uint8_t>>, std::shared_ptr<std::vector<double>>> generateICRUPhantomArrays(
+    std::shared_ptr<std::vector<std::uint8_t>> organArray,
+    const std::vector<organElement>& organs,
+    const std::vector<Material>& materials)
 {
-    std::map<unsigned char, double> densityLut;
-    std::map<unsigned char, unsigned char> materialLut;
-    std::map<unsigned char, unsigned char> organLut;
 
-    for (std::size_t i = 0; i < organs.size(); ++i) {
-        auto key = organs[i].ID;
-        materialLut[key] = static_cast<unsigned char>(organs[i].tissue);
-        densityLut[key] = organs[i].density;
-        organLut[key] = static_cast<unsigned char>(i);
-        organs[i].ID = static_cast<unsigned char>(i);
+    std::vector<std::uint8_t> matLut;
+    std::vector<double> densLut;
+    for (const auto& organ : organs) {
+        matLut.push_back(static_cast<std::uint8_t>(organ.medium));
+        densLut.push_back(organ.density);
     }
 
-    auto materialArray = std::make_shared<std::vector<unsigned char>>(organArray.size());
-    auto densityArray = std::make_shared<std::vector<double>>(organArray.size());
+    auto materialArray = std::make_shared<std::vector<std::uint8_t>>(organArray->size());
+    auto densityArray = std::make_shared<std::vector<double>>(organArray->size());
 
-    auto materialBuffer = materialArray->data();
-    auto densityBuffer = densityArray->data();
-    for (std::size_t i = 0; i < organArray.size(); ++i) {
-        materialBuffer[i] = materialLut[organArray[i]];
-        densityBuffer[i] = densityLut[organArray[i]];
-        organArray[i] = organLut[organArray[i]];
-    }
+    std::transform(std::execution::par_unseq, organArray->cbegin(), organArray->cend(), materialArray->begin(),
+        [&](const auto organ) { return matLut[organ]; });
+    std::transform(std::execution::par_unseq, organArray->cbegin(), organArray->cend(), densityArray->begin(),
+        [&](const auto organ) { return densLut[organ]; });
+
     return std::make_pair(materialArray, densityArray);
 }
 
-void PhantomImportPipeline::importICRUMalePhantom(bool ignoreArms)
+std::vector<Material> sortICRUMaterials(std::vector<organElement>& organs, const std::vector<std::pair<std::size_t, Material>>& mediums)
 {
-    emit processingDataStarted();
-    std::array<double, 3> spacing = { 2.137, 2.137, 8.8 };
-    std::array<std::size_t, 3> dimensions = { 254, 127, 222 };
-    std::array<double, 3> origin;
-    for (std::size_t i = 0; i < 3; ++i)
-        origin[i] = -(dimensions[i] * spacing[i] * 0.5);
-    auto size = dimensions[0] * dimensions[1] * dimensions[2];
+    std::vector<std::size_t> mediumIdx;
+    for (const auto& organ : organs) {
+        mediumIdx.push_back(organ.medium);
+    }
+    //remove duplicates
+    std::sort(mediumIdx.begin(), mediumIdx.end());
+    auto last = std::unique(mediumIdx.begin(), mediumIdx.end());
+    mediumIdx.erase(last, mediumIdx.end());
 
-    auto organs = readICRPOrgans("resources/phantoms/icrp/AM/AM_organs.dat");
-    auto media = readICRPMedia("resources/phantoms/icrp/AM/AM_media.dat");
-    auto organArray = readICRPData("resources/phantoms/icrp/AM/AM.dat", size);
-
-    if (ignoreArms) {
-        for (auto& organ : organs) {
-            //find arm string
-            auto armPos = organ.name.find("arm");
-            if (armPos != std::string::npos) {
-                std::replace(std::execution::par_unseq, organArray->begin(), organArray->end(), static_cast<unsigned char>(organ.ID), static_cast<unsigned char>(0));
-            }
-            auto handPos = organ.name.find("hand");
-            if (handPos != std::string::npos) {
-                std::replace(std::execution::par_unseq, organArray->begin(), organArray->end(), static_cast<unsigned char>(organ.ID), static_cast<unsigned char>(0));
-            }
-            auto humeriPos = organ.name.find("Humeri");
-            if (humeriPos != std::string::npos) {
-                std::replace(std::execution::par_unseq, organArray->begin(), organArray->end(), static_cast<unsigned char>(organ.ID), static_cast<unsigned char>(0));
-            }
-            auto ulnaRadiiPos = organ.name.find("Ulnae");
-            if (ulnaRadiiPos != std::string::npos) {
-                std::replace(std::execution::par_unseq, organArray->begin(), organArray->end(), static_cast<unsigned char>(organ.ID), static_cast<unsigned char>(0));
+    for (auto& organ : organs) {
+        for (std::size_t i = 0; i < mediumIdx.size(); ++i) {
+            if (mediumIdx[i] == organ.medium) {
+                organ.medium = i;
+                break;
             }
         }
     }
 
-    auto [materialArray, densityArray] = generateICRUPhantomArrays(*organArray, organs, media);
-
-    bool valid = true;
-    std::vector<std::string> organMap(organs.size());
-    std::vector<Material> materialMap(organs.size());
-    for (std::size_t i = 0; i < organs.size(); ++i) {
-        if (organs[i].ID == i)
-            organMap[i] = organs[i].name;
-        else
-            valid = false;
-    }
-    for (std::size_t i = 0; i < media.size(); ++i) {
-        auto& [id, material] = media[i];
-        material.setStandardDensity(1.0);
-        if (id == i)
-            materialMap[i] = material;
-        else
-            valid = false;
-    }
-    if (!valid) {
-        emit processingDataEnded();
-        return;
+    std::vector<Material> materials(mediumIdx.size());
+    for (const auto& [medium, mat] : mediums) {
+        for (std::size_t i = 0; i < mediumIdx.size(); ++i) {
+            if (medium == mediumIdx[i]) {
+                materials[i] = mat;
+                break;
+            }
+        }
     }
 
-    auto organImage = std::make_shared<OrganImageContainer>(organArray, dimensions, spacing, origin);
-    auto materialImage = std::make_shared<MaterialImageContainer>(materialArray, dimensions, spacing, origin);
-    auto densityImage = std::make_shared<DensityImageContainer>(densityArray, dimensions, spacing, origin);
-    organImage->ID = ImageContainer::generateID();
-    materialImage->ID = organImage->ID;
-    densityImage->ID = organImage->ID;
-
-    emit processingDataEnded();
-    emit materialDataChanged(materialMap);
-    emit organDataChanged(organMap);
-    emit imageDataChanged(organImage);
-    emit imageDataChanged(densityImage);
-    emit imageDataChanged(materialImage);
+    return materials;
 }
 
-void PhantomImportPipeline::importICRUFemalePhantom(bool ignoreArms)
+void PhantomImportPipeline::importICRUPhantom(PhantomImportPipeline::Phantom phantom, bool ignoreArms)
 {
     emit processingDataStarted();
-    std::array<double, 3> spacing = { 1.775, 1.775, 4.84 };
-    std::array<std::size_t, 3> dimensions = { 299, 137, 348 };
+    auto spacing = icrpSpacing(phantom);
+    auto dimensions = icrpDimensions(phantom);
     std::array<double, 3> origin;
     for (std::size_t i = 0; i < 3; ++i)
         origin[i] = -(dimensions[i] * spacing[i] * 0.5);
     auto size = dimensions[0] * dimensions[1] * dimensions[2];
 
-    auto organs = readICRPOrgans("resources/phantoms/icrp/AF/AF_organs.dat");
-    auto media = readICRPMedia("resources/phantoms/icrp/AF/AF_media.dat");
-    auto organArray = readICRPData("resources/phantoms/icrp/AF/AF.dat", size);
+    auto organPath = icrpFolderPath(phantom) + "organs.dat";
+    auto mediaPath = icrpFolderPath(phantom) + "media.dat";
+    auto arrayPath = icrpFolderPath(phantom) + "binary.dat";
 
+    auto organs = readICRPOrgans(organPath);
+    auto media = readICRPMedia(mediaPath);
+
+    auto organArray = readICRPData(arrayPath, size);
     if (ignoreArms) {
         for (auto& organ : organs) {
             //find arm string
             auto armPos = organ.name.find("arm");
             if (armPos != std::string::npos) {
-                std::replace(std::execution::par_unseq, organArray->begin(), organArray->end(), static_cast<unsigned char>(organ.ID), static_cast<unsigned char>(0));
+                std::replace(std::execution::par_unseq, organArray->begin(), organArray->end(), static_cast<std::uint8_t>(organ.ID), static_cast<std::uint8_t>(0));
             }
             auto handPos = organ.name.find("hand");
             if (handPos != std::string::npos) {
-                std::replace(std::execution::par_unseq, organArray->begin(), organArray->end(), static_cast<unsigned char>(organ.ID), static_cast<unsigned char>(0));
+                std::replace(std::execution::par_unseq, organArray->begin(), organArray->end(), static_cast<std::uint8_t>(organ.ID), static_cast<std::uint8_t>(0));
             }
             auto humeriPos = organ.name.find("Humeri");
             if (humeriPos != std::string::npos) {
-                std::replace(std::execution::par_unseq, organArray->begin(), organArray->end(), static_cast<unsigned char>(organ.ID), static_cast<unsigned char>(0));
+                std::replace(std::execution::par_unseq, organArray->begin(), organArray->end(), static_cast<std::uint8_t>(organ.ID), static_cast<std::uint8_t>(0));
             }
             auto ulnaRadiiPos = organ.name.find("Ulnae");
             if (ulnaRadiiPos != std::string::npos) {
-                std::replace(std::execution::par_unseq, organArray->begin(), organArray->end(), static_cast<unsigned char>(organ.ID), static_cast<unsigned char>(0));
+                std::replace(std::execution::par_unseq, organArray->begin(), organArray->end(), static_cast<std::uint8_t>(organ.ID), static_cast<std::uint8_t>(0));
             }
         }
     }
 
-    auto [materialArray, densityArray] = generateICRUPhantomArrays(*organArray, organs, media);
+    auto materials = sortICRUMaterials(organs, media);
 
-    bool valid = true;
-    std::vector<std::string> organMap(organs.size());
-    for (std::size_t i = 0; i < organs.size(); ++i) {
-        if (organs[i].ID == i)
-            organMap[i] = organs[i].name;
-        else
-            valid = false;
-    }
-    std::vector<Material> materialMap(media.size());
-    for (std::size_t i = 0; i < media.size(); ++i) {
-        auto& [id, material] = media[i];
-        material.setStandardDensity(1.0);
-        if (id == i)
-            materialMap[i] = material;
-        else
-            valid = false;
-    }
-    if (!valid) {
-        emit processingDataEnded();
-        return;
-    }
+    auto [materialArray, densityArray] = generateICRUPhantomArrays(organArray, organs, materials);
 
     auto organImage = std::make_shared<OrganImageContainer>(organArray, dimensions, spacing, origin);
     auto materialImage = std::make_shared<MaterialImageContainer>(materialArray, dimensions, spacing, origin);
@@ -334,9 +417,14 @@ void PhantomImportPipeline::importICRUFemalePhantom(bool ignoreArms)
     materialImage->ID = organImage->ID;
     densityImage->ID = organImage->ID;
 
+    std::vector<std::string> organNames;
+    for (const auto& organ : organs) {
+        organNames.push_back(organ.name);
+    }
+
     emit processingDataEnded();
-    emit materialDataChanged(materialMap);
-    emit organDataChanged(organMap);
+    emit materialDataChanged(materials);
+    emit organDataChanged(organNames);
     emit imageDataChanged(organImage);
     emit imageDataChanged(densityImage);
     emit imageDataChanged(materialImage);
@@ -346,7 +434,7 @@ struct AWSImageData {
     std::array<std::size_t, 3> dimensions = { 0, 0, 0 };
     std::array<double, 3> spacing = { 0, 0, 0 };
     std::array<double, 6> cosines = { 1, 0, 0, 0, 1, 0 };
-    std::shared_ptr<std::vector<unsigned char>> image = nullptr;
+    std::shared_ptr<std::vector<std::uint8_t>> image = nullptr;
 };
 
 AWSImageData readAWSData(const std::string& path)
@@ -457,29 +545,12 @@ void PhantomImportPipeline::importAWSPhantom(const QString& name)
     for (std::size_t i = 0; i < 3; ++i)
         origin[i] = -(dimensions[i] * spacing[i] * 0.5);
 
-    auto [materialArray, densityArray] = generateICRUPhantomArrays(*organArray, organs, media);
-
-    bool valid = true;
-    std::vector<std::string> organMap(organs.size());
-    std::vector<Material> materialMap(media.size());
-    for (std::size_t i = 0; i < organs.size(); ++i) {
-        if (organs[i].ID == i)
-            organMap[i] = organs[i].name;
-        else
-            valid = false;
+    auto materials = sortICRUMaterials(organs, media);
+    std::vector<std::string> organNames;
+    for (const auto& organ : organs) {
+        organNames.push_back(organ.name);
     }
-    for (std::size_t i = 0; i < media.size(); ++i) {
-        auto& [id, material] = media[i];
-        material.setStandardDensity(1.0);
-        if (id == i)
-            materialMap[i] = material;
-        else
-            valid = false;
-    }
-    if (!valid) {
-        emit processingDataEnded();
-        return;
-    }
+    auto [materialArray, densityArray] = generateICRUPhantomArrays(organArray, organs, materials);
 
     auto organImage = std::make_shared<OrganImageContainer>(organArray, dimensions, spacing, origin);
     auto materialImage = std::make_shared<MaterialImageContainer>(materialArray, dimensions, spacing, origin);
@@ -494,8 +565,8 @@ void PhantomImportPipeline::importAWSPhantom(const QString& name)
     emit imageDataChanged(densityImage);
     emit imageDataChanged(organImage);
     emit imageDataChanged(materialImage);
-    emit materialDataChanged(materialMap);
-    emit organDataChanged(organMap);
+    emit materialDataChanged(materials);
+    emit organDataChanged(organNames);
     emit processingDataEnded();
 }
 
@@ -518,7 +589,7 @@ void PhantomImportPipeline::importCTDIPhantom(int mm, bool force_interaction_mea
 
     //copying organMap and organArray from materialMap and materialArray
     std::vector<std::string> organMap;
-    auto organArray = std::make_shared<std::vector<unsigned char>>(materialArray->size());
+    auto organArray = std::make_shared<std::vector<std::uint8_t>>(materialArray->size());
     std::copy(materialArray->begin(), materialArray->end(), organArray->begin());
     for (const auto& m : materialMap) {
         organMap.push_back(m.name());
@@ -532,11 +603,11 @@ void PhantomImportPipeline::importCTDIPhantom(int mm, bool force_interaction_mea
     organMap.push_back("CTDI measurement south");
     organMap.push_back("CTDI measurement center");
     auto organBuffer = organArray->data();
-    const auto nMaterials = static_cast<unsigned char>(materialMap.size());
+    const auto nMaterials = static_cast<std::uint8_t>(materialMap.size());
     for (std::size_t i = 0; i < 5; ++i) {
         const auto idx = w.holeIndices(CTDIpositions[i]);
         for (auto ind : idx)
-            organBuffer[ind] = static_cast<unsigned char>(i + nMaterials);
+            organBuffer[ind] = static_cast<std::uint8_t>(i + nMaterials);
     }
 
     auto materialImage = std::make_shared<MaterialImageContainer>(materialArray, dimensions, spacing, origin);

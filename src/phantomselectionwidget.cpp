@@ -40,6 +40,7 @@ constexpr std::size_t IMPORT_HEADER_SIZE = 4096;
 PhantomSelectionWidget::PhantomSelectionWidget(QWidget* parent)
     : QWidget(parent)
 {
+    qRegisterMetaType<std::vector<PhantomImportPipeline::Phantom>>();
     auto mainLayout = new QVBoxLayout();
 
     auto selectLayout = new QHBoxLayout(this);
@@ -53,14 +54,35 @@ PhantomSelectionWidget::PhantomSelectionWidget(QWidget* parent)
     m_phantomSelector->addItem(tr("CTDI Phantom 320 mm (measurement)"));
     m_phantomSelector->addItem(tr("CTDI Phantom 160 mm"));
     m_phantomSelector->addItem(tr("CTDI Phantom 160 mm (measurement)"));
-    m_phantomSelector->addItem(tr("Female ICRU reference phantom"));
-    m_phantomSelector->addItem(tr("Female ICRU reference phantom without arms"));
-    m_phantomSelector->addItem(tr("Male ICRU reference phantom"));
-    m_phantomSelector->addItem(tr("Male ICRU reference phantom without arms"));
+    m_phantomSelector->addItem(tr("Female adult ICRU reference phantom"));
+    m_phantomSelector->addItem(tr("Female adult ICRU reference phantom without arms"));
+    m_phantomSelector->addItem(tr("Male adult ICRU reference phantom"));
+    m_phantomSelector->addItem(tr("Male adult ICRU reference phantom without arms"));
+    m_phantomSelector->addItem(tr("Female 15 yr ICRU reference phantom"));
+    m_phantomSelector->addItem(tr("Female 15 yr ICRU reference phantom without arms"));
+    m_phantomSelector->addItem(tr("Male 15 yr ICRU reference phantom"));
+    m_phantomSelector->addItem(tr("Male 15 yr ICRU reference phantom without arms"));
+    m_phantomSelector->addItem(tr("Female 10 yr ICRU reference phantom"));
+    m_phantomSelector->addItem(tr("Female 10 yr ICRU reference phantom without arms"));
+    m_phantomSelector->addItem(tr("Male 10 yr ICRU reference phantom"));
+    m_phantomSelector->addItem(tr("Male 10 yr ICRU reference phantom without arms"));
+    m_phantomSelector->addItem(tr("Female 5 yr ICRU reference phantom"));
+    m_phantomSelector->addItem(tr("Female 5 yr ICRU reference phantom without arms"));
+    m_phantomSelector->addItem(tr("Male 5 yr ICRU reference phantom"));
+    m_phantomSelector->addItem(tr("Male 5 yr ICRU reference phantom without arms"));
+    m_phantomSelector->addItem(tr("Female 1 yr ICRU reference phantom"));
+    m_phantomSelector->addItem(tr("Female 1 yr ICRU reference phantom without arms"));
+    m_phantomSelector->addItem(tr("Male 1 yr ICRU reference phantom"));
+    m_phantomSelector->addItem(tr("Male 1 yr ICRU reference phantom without arms"));
+    m_phantomSelector->addItem(tr("Female 0 yr ICRU reference phantom"));
+    m_phantomSelector->addItem(tr("Female 0 yr ICRU reference phantom without arms"));
+    m_phantomSelector->addItem(tr("Male 0 yr ICRU reference phantom"));
+    m_phantomSelector->addItem(tr("Male 0 yr ICRU reference phantom without arms"));
 
     //connecting slots
     connect(m_phantomSelector, QOverload<int>::of(&QComboBox::activated),
         [=](int index) {
+            using p = PhantomImportPipeline::Phantom;
             if (index == 1)
                 emit this->readCTDIPhantom(320, false);
             else if (index == 2)
@@ -70,13 +92,53 @@ PhantomSelectionWidget::PhantomSelectionWidget(QWidget* parent)
             else if (index == 4)
                 emit this->readCTDIPhantom(160, true);
             else if (index == 5)
-                emit this->readIRCUFemalePhantom(false);
+                emit this->readIRCUPhantom(p::IcrpAdultFemale, false);
             else if (index == 6)
-                emit this->readIRCUFemalePhantom(true);
+                emit this->readIRCUPhantom(p::IcrpAdultFemale, true);
             else if (index == 7)
-                emit this->readIRCUMalePhantom(false);
+                emit this->readIRCUPhantom(p::IcrpAdultMale, false);
             else if (index == 8)
-                emit this->readIRCUMalePhantom(true);
+                emit this->readIRCUPhantom(p::IcrpAdultMale, true);
+            else if (index == 9)
+                emit this->readIRCUPhantom(p::Icrp15YrFemale, false);
+            else if (index == 10)
+                emit this->readIRCUPhantom(p::Icrp15YrFemale, true);
+            else if (index == 11)
+                emit this->readIRCUPhantom(p::Icrp15YrMale, false);
+            else if (index == 12)
+                emit this->readIRCUPhantom(p::Icrp15YrMale, true);
+            else if (index == 13)
+                emit this->readIRCUPhantom(p::Icrp10YrFemale, false);
+            else if (index == 14)
+                emit this->readIRCUPhantom(p::Icrp10YrFemale, true);
+            else if (index == 15)
+                emit this->readIRCUPhantom(p::Icrp10YrMale, false);
+            else if (index == 16)
+                emit this->readIRCUPhantom(p::Icrp10YrMale, true);
+            else if (index == 13)
+                emit this->readIRCUPhantom(p::Icrp5YrFemale, false);
+            else if (index == 14)
+                emit this->readIRCUPhantom(p::Icrp5YrFemale, true);
+            else if (index == 15)
+                emit this->readIRCUPhantom(p::Icrp5YrMale, false);
+            else if (index == 16)
+                emit this->readIRCUPhantom(p::Icrp5YrMale, true);
+            else if (index == 17)
+                emit this->readIRCUPhantom(p::Icrp1YrFemale, false);
+            else if (index == 18)
+                emit this->readIRCUPhantom(p::Icrp1YrFemale, true);
+            else if (index == 19)
+                emit this->readIRCUPhantom(p::Icrp1YrMale, false);
+            else if (index == 20)
+                emit this->readIRCUPhantom(p::Icrp1YrMale, true);
+            else if (index == 21)
+                emit this->readIRCUPhantom(p::Icrp0YrFemale, false);
+            else if (index == 22)
+                emit this->readIRCUPhantom(p::Icrp0YrFemale, true);
+            else if (index == 23)
+                emit this->readIRCUPhantom(p::Icrp0YrMale, false);
+            else if (index == 24)
+                emit this->readIRCUPhantom(p::Icrp0YrMale, true);
         });
     connect(m_phantomSelector, QOverload<const QString&>::of(&QComboBox::activated),
         [=](const QString& text) {

@@ -107,8 +107,7 @@ MainWindow::MainWindow(QWidget* parent)
     //phantom import widget
     PhantomSelectionWidget* phantomWidget = new PhantomSelectionWidget(this);
     importWidget->addTab(phantomWidget, tr("Digital phantoms"));
-    connect(phantomWidget, &PhantomSelectionWidget::readIRCUFemalePhantom, m_phantomImportPipeline, &PhantomImportPipeline::importICRUFemalePhantom);
-    connect(phantomWidget, &PhantomSelectionWidget::readIRCUMalePhantom, m_phantomImportPipeline, &PhantomImportPipeline::importICRUMalePhantom);
+    connect(phantomWidget, &PhantomSelectionWidget::readIRCUPhantom, m_phantomImportPipeline, &PhantomImportPipeline::importICRUPhantom);
     connect(phantomWidget, &PhantomSelectionWidget::readCTDIPhantom, m_phantomImportPipeline, &PhantomImportPipeline::importCTDIPhantom);
     connect(phantomWidget, &PhantomSelectionWidget::readAWSPhantom, m_phantomImportPipeline, &PhantomImportPipeline::importAWSPhantom);
 

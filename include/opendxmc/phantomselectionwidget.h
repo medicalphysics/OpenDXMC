@@ -18,6 +18,7 @@ Copyright 2019 Erlend Andersen
 #pragma once
 
 #include "opendxmc/imagecontainer.h"
+#include "opendxmc/phantomimportpipeline.h"
 #include <QComboBox>
 #include <QString>
 #include <QWidget>
@@ -31,8 +32,7 @@ public:
     void importHelmholtzPhantoms();
 
 signals:
-    void readIRCUMalePhantom(bool removeArms = false);
-    void readIRCUFemalePhantom(bool removeArms = false);
+    void readIRCUPhantom(PhantomImportPipeline::Phantom phantom, bool removeArms = false);
     void readCTDIPhantom(int diameter_mm, bool force_measurements);
     void readAWSPhantom(const QString& name);
 

@@ -307,7 +307,7 @@ std::shared_ptr<std::vector<std::uint8_t>> readICRPData(const std::string& path,
     return organs;
 }
 
-std::pair<std::shared_ptr<std::vector<std::uint8_t>>, std::shared_ptr<std::vector<double>>> generateICRUPhantomArrays(
+std::pair<std::shared_ptr<std::vector<std::uint8_t>>, std::shared_ptr<std::vector<floating>>> generateICRUPhantomArrays(
     std::shared_ptr<std::vector<std::uint8_t>> organArray,
     const std::vector<organElement>& organs,
     const std::vector<Material>& materials)
@@ -318,15 +318,15 @@ std::pair<std::shared_ptr<std::vector<std::uint8_t>>, std::shared_ptr<std::vecto
     for (const auto& organ : organs) {
         maxID = std::max(organ.ID, maxID);
     }
-    std::vector<double> densLut(maxID + 1, 0.0);
+    std::vector<floating> densLut(maxID + 1, 0.0);
     std::vector<std::uint8_t> matLut(maxID + 1, 0);
     for (const auto& organ : organs) {
         matLut[organ.ID] = static_cast<std::uint8_t>(organ.medium);
-        densLut[organ.ID] = organ.density;
+        densLut[organ.ID] = static_cast<floating>(organ.density);
     }
 
     auto materialArray = std::make_shared<std::vector<std::uint8_t>>(organArray->size());
-    auto densityArray = std::make_shared<std::vector<double>>(organArray->size());
+    auto densityArray = std::make_shared<std::vector<floating>>(organArray->size());
 
     std::transform(std::execution::par_unseq, organArray->cbegin(), organArray->cend(), materialArray->begin(),
         [&](const auto organ) { return matLut[organ]; });
@@ -585,7 +585,8 @@ void PhantomImportPipeline::importCTDIPhantom(int mm, bool force_interaction_mea
     auto forceInteractionArray = w.measurementMapArray();
 
     auto dimensions = w.dimensions();
-    auto spacing = w.spacing();
+    auto spacing_f = w.spacing();
+    auto spacing = convert_array_to<double>(spacing_f);
     std::array<double, 3> origin;
     for (std::size_t i = 0; i < 3; ++i)
         origin[i] = -(dimensions[i] * spacing[i] * 0.5);
@@ -621,10 +622,10 @@ void PhantomImportPipeline::importCTDIPhantom(int mm, bool force_interaction_mea
     densityImage->ID = materialImage->ID;
     organImage->ID = materialImage->ID;
     measureImage->ID = materialImage->ID;
-    materialImage->directionCosines = w.directionCosines();
-    densityImage->directionCosines = w.directionCosines();
-    organImage->directionCosines = w.directionCosines();
-    measureImage->directionCosines = w.directionCosines();
+    materialImage->directionCosines = convert_array_to<double>(w.directionCosines());
+    densityImage->directionCosines = materialImage->directionCosines;
+    organImage->directionCosines = materialImage->directionCosines;
+    measureImage->directionCosines = materialImage->directionCosines;
     emit processingDataEnded();
     emit materialDataChanged(materialMap);
     emit organDataChanged(organMap);

@@ -116,7 +116,7 @@ DXSourceContainer::DXSourceContainer(std::shared_ptr<DXSource> src)
     //test points
     const auto origin = m_src->tubePosition();
     std::array<double, 3> direction;
-    const auto& cosines = m_src->directionCosines();
+    const auto& cosines = convert_array_to<double>(m_src->directionCosines());
     dxmc::vectormath::cross(cosines.data(), direction.data());
 
     const double lenght = src->sourceDetectorDistance();
@@ -188,7 +188,7 @@ void DXSourceContainer::update()
 
     const auto& origin = m_src->tubePosition();
     std::array<double, 3> direction;
-    const auto& cosines = m_src->directionCosines();
+    auto cosines = convert_array_to<double>(m_src->directionCosines());
     dxmc::vectormath::cross(cosines.data(), direction.data());
 
     double lenght = m_src->sourceDetectorDistance();

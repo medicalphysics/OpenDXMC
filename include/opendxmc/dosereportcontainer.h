@@ -27,11 +27,11 @@ Copyright 2019 Erlend Andersen
 
 struct DoseReportElement {
     std::size_t voxels = 0;
-    double mass = 0.0;
-    double volume = 0.0;
-    double dose = 0.0;
-    double doseStd = 0.0;
-    double doseMax = 0.0;
+    floating mass = 0.0;
+    floating volume = 0.0;
+    floating dose = 0.0;
+    floating doseStd = 0.0;
+    floating doseMax = 0.0;
     std::size_t ID = 0;
     std::size_t nEvents = 0;
     std::string name;

@@ -243,8 +243,12 @@ void BinaryImportPipeline::validate()
     for (std::size_t i = 0; i < 3; ++i)
         origin[i] = -(m_dimensions[i] * m_spacing[i] * 0.5);
     //generating image containers
-    auto densImage = std::make_shared<DensityImageContainer>(m_densityArray, m_dimensions, m_spacing, origin);
+
+    auto densArray = std::make_shared<std::vector<floating>>(m_densityArray->cbegin(), m_densityArray->cend());
+    m_densityArray = nullptr;
+    auto densImage = std::make_shared<DensityImageContainer>(densArray, m_dimensions, m_spacing, origin);
     auto matImage = std::make_shared<MaterialImageContainer>(m_materialArray, m_dimensions, m_spacing, origin);
+    m_materialArray = nullptr;
     densImage->ID = ImageContainer::generateID();
     matImage->ID = densImage->ID;
 

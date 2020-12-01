@@ -164,19 +164,19 @@ void ImageImportPipeline::setBlurRadius(const double* blur)
 }
 
 template <class Iter>
-std::pair<std::shared_ptr<std::vector<unsigned char>>, std::shared_ptr<std::vector<double>>> ImageImportPipeline::calculateMaterialAndDensityFromCTData(Iter first, Iter last)
+std::pair<std::shared_ptr<std::vector<unsigned char>>, std::shared_ptr<std::vector<floating>>> ImageImportPipeline::calculateMaterialAndDensityFromCTData(Iter first, Iter last)
 {
     CalculateCTNumberFromMaterials worker(m_ctImportMaterialMap, m_tube);
     auto materialIndex = std::make_shared<std::vector<unsigned char>>(std::distance(first, last)); // we must make new vector to not invalidate old vector
 
     //worker.generateMaterialMap(first, last, materialIndex->begin(), nThreads);
     worker.generateMaterialMap(first, last, materialIndex->begin());
-    auto density = std::make_shared<std::vector<double>>(std::distance(first, last)); // we must make new vector to not invalidate old vector
+    auto density = std::make_shared<std::vector<floating>>(std::distance(first, last)); // we must make new vector to not invalidate old vector
     worker.generateDensityMap(first, last, materialIndex->begin(), density->begin());
     return std::make_pair(materialIndex, density);
 }
 
-void ImageImportPipeline::processCTData(std::shared_ptr<ImageContainer> ctImage, const std::pair<std::string, std::vector<double>>& exposureData)
+void ImageImportPipeline::processCTData(std::shared_ptr<ImageContainer> ctImage, const std::pair<std::string, std::vector<floating>>& exposureData)
 {
     if (ctImage->imageType != ImageContainer::ImageType::CTImage) {
         return;
@@ -185,7 +185,7 @@ void ImageImportPipeline::processCTData(std::shared_ptr<ImageContainer> ctImage,
         return; // if ctimage is empty return;
     }
     std::shared_ptr<std::vector<unsigned char>> materialIndex;
-    std::shared_ptr<std::vector<double>> density;
+    std::shared_ptr<std::vector<floating>> density;
 
     std::array<std::size_t, 3> dimensions;
     for (std::size_t i = 0; i < 3; ++i)
@@ -206,16 +206,17 @@ void ImageImportPipeline::processCTData(std::shared_ptr<ImageContainer> ctImage,
     }
 
     std::array<double, 3> origo;
-    std::array<double, 3> spacing;
+    std::array<double, 3> spacing_d;
     std::array<std::size_t, 3> dimensionsArray;
     ctImage->image->GetOrigin(origo.data());
-    ctImage->image->GetSpacing(spacing.data());
+    ctImage->image->GetSpacing(spacing_d.data());
+    auto spacing = convert_array_to<floating>(spacing_d);
     auto dim = ctImage->image->GetDimensions();
     for (std::size_t i = 0; i < 3; ++i)
         dimensionsArray[i] = static_cast<std::size_t>(dim[i]);
 
-    std::shared_ptr<ImageContainer> materialImage = std::make_shared<MaterialImageContainer>(materialIndex, dimensionsArray, spacing, origo);
-    std::shared_ptr<ImageContainer> densityImage = std::make_shared<DensityImageContainer>(density, dimensionsArray, spacing, origo);
+    std::shared_ptr<ImageContainer> materialImage = std::make_shared<MaterialImageContainer>(materialIndex, dimensionsArray, spacing_d, origo);
+    std::shared_ptr<ImageContainer> densityImage = std::make_shared<DensityImageContainer>(density, dimensionsArray, spacing_d, origo);
     materialImage->directionCosines = ctImage->directionCosines;
     densityImage->directionCosines = ctImage->directionCosines;
     materialImage->ID = ctImage->ID;
@@ -231,7 +232,7 @@ void ImageImportPipeline::processCTData(std::shared_ptr<ImageContainer> ctImage,
     const auto& exposure = exposureData.second;
 
     //interpolating exposure to reduced image data
-    std::vector<double> exposure_interp(dimensionsArray[2], 1.0);
+    std::vector<floating> exposure_interp(dimensionsArray[2], 1.0);
     if (dimensionsArray[2] > 1) {
         const std::size_t exposureSize = exposure.size();
         for (std::size_t i = 0; i < dimensionsArray[2]; ++i) {
@@ -246,11 +247,11 @@ void ImageImportPipeline::processCTData(std::shared_ptr<ImageContainer> ctImage,
     }
 }
 
-std::pair<std::string, std::vector<double>> ImageImportPipeline::readExposureData(vtkSmartPointer<vtkDICOMReader>& dicomReader)
+std::pair<std::string, std::vector<floating>> ImageImportPipeline::readExposureData(vtkSmartPointer<vtkDICOMReader>& dicomReader)
 {
     vtkDICOMMetaData* meta = dicomReader->GetMetaData();
     const int n = meta->GetNumberOfInstances();
-    std::vector<std::pair<double, double>> posExposure(n);
+    std::vector<std::pair<floating, floating>> posExposure(n);
 
     vtkDICOMTag directionCosinesTag(32, 555);
     auto directionCosinesValue = meta->GetAttributeValue(directionCosinesTag);
@@ -262,7 +263,7 @@ std::pair<std::string, std::vector<double>> ImageImportPipeline::readExposureDat
     const std::size_t dirIdx = dxmc::vectormath::argmax3<std::size_t, double>(imagedirection.data());
 
     if (!meta->Has(DC::Exposure)) {
-        return std::make_pair(std::string(), std::vector<double>(n, 1.0));
+        return std::make_pair(std::string(), std::vector<floating>(n, 1.0));
     }
 
     // Get the arrays that map slice to file and frame.
@@ -273,12 +274,12 @@ std::pair<std::string, std::vector<double>> ImageImportPipeline::readExposureDat
         //logger->debug("Reading exposure from file number {}", i);
 
         const auto pv = meta->Get(fileIndex, DC::Exposure);
-        double exposure = 1.0;
+        floating exposure = 1.0;
         if (pv.IsValid())
             exposure = pv.GetDouble(0);
 
         // Get the position for that slice.
-        double position = 0.0;
+        floating position = 0.0;
         const auto pos = meta->Get(fileIndex, DC::ImagePositionPatient);
         if (pos.IsValid()) {
             position = pos.GetDouble(dirIdx);
@@ -289,8 +290,8 @@ std::pair<std::string, std::vector<double>> ImageImportPipeline::readExposureDat
     //sorting on position
     std::sort(posExposure.begin(), posExposure.end());
 
-    std::vector<double> exposure(n);
-    std::transform(posExposure.cbegin(), posExposure.cend(), exposure.begin(), [](auto el) -> double { return el.second; });
+    std::vector<floating> exposure(n);
+    std::transform(posExposure.cbegin(), posExposure.cend(), exposure.begin(), [](auto el) -> auto { return el.second; });
 
     vtkDICOMTag seriesDescriptionTag(8, 4158);
     auto seriesDescriptionValue = meta->GetAttributeValue(seriesDescriptionTag);

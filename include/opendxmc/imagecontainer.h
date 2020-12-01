@@ -18,6 +18,8 @@ Copyright 2019 Erlend Andersen
 
 #pragma once
 
+#include "opendxmc/precision_specialization.h"
+
 #include <array>
 #include <chrono>
 #include <memory>
@@ -186,14 +188,17 @@ public:
         imageType = ImageType::DensityImage;
         dataUnits = "g/cm3";
     }
-    DensityImageContainer(std::shared_ptr<std::vector<double>> imageData, const std::array<std::size_t, 3>& dimensions, const std::array<double, 3>& dataSpacing, const std::array<double, 3>& origin)
+    DensityImageContainer(std::shared_ptr<std::vector<floating>> imageData, const std::array<std::size_t, 3>& dimensions, const std::array<double, 3>& dataSpacing, const std::array<double, 3>& origin)
         : ImageContainer(ImageType::DensityImage, imageData, dimensions, dataSpacing, origin, "g/cm3")
     {
     }
     virtual ~DensityImageContainer() = default;
-    std::shared_ptr<std::vector<double>> imageData(void)
+    std::shared_ptr<std::vector<floating>> imageData(void)
     {
-        return m_image_data_double;
+        if constexpr (sizeof(floating) == sizeof(double))
+            return m_image_data_double;
+        else
+            return m_image_data_float;
     }
 };
 
@@ -204,14 +209,17 @@ public:
     {
         imageType = ImageType::DoseImage;
     }
-    DoseImageContainer(std::shared_ptr<std::vector<double>> imageData, const std::array<std::size_t, 3>& dimensions, const std::array<double, 3>& dataSpacing, const std::array<double, 3>& origin)
+    DoseImageContainer(std::shared_ptr<std::vector<floating>> imageData, const std::array<std::size_t, 3>& dimensions, const std::array<double, 3>& dataSpacing, const std::array<double, 3>& origin)
         : ImageContainer(ImageType::DoseImage, imageData, dimensions, dataSpacing, origin)
     {
     }
     virtual ~DoseImageContainer() = default;
-    std::shared_ptr<std::vector<double>> imageData(void)
+    std::shared_ptr<std::vector<floating>> imageData(void)
     {
-        return m_image_data_double;
+        if constexpr (sizeof(floating) == sizeof(double))
+            return m_image_data_double;
+        else
+            return m_image_data_float;
     }
 };
 
@@ -276,14 +284,17 @@ public:
     {
         imageType = ImageType::VarianceImage;
     }
-    VarianceImageContainer(std::shared_ptr<std::vector<double>> imageData, const std::array<std::size_t, 3>& dimensions, const std::array<double, 3>& dataSpacing, const std::array<double, 3>& origin)
+    VarianceImageContainer(std::shared_ptr<std::vector<floating>> imageData, const std::array<std::size_t, 3>& dimensions, const std::array<double, 3>& dataSpacing, const std::array<double, 3>& origin)
         : ImageContainer(ImageType::VarianceImage, imageData, dimensions, dataSpacing, origin)
     {
     }
     virtual ~VarianceImageContainer() = default;
-    std::shared_ptr<std::vector<double>> imageData(void)
+    std::shared_ptr<std::vector<floating>> imageData(void)
     {
-        return m_image_data_double;
+        if constexpr (sizeof(floating) == sizeof(double))
+            return m_image_data_double;
+        else
+            return m_image_data_float;
     }
 };
 

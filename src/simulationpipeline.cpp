@@ -90,16 +90,18 @@ void SimulationPipeline::runSimulation(const std::vector<std::shared_ptr<Source>
         return;
     }
 
-    std::array<double, 3> spacing;
+    std::array<double, 3> spacing_d;
     std::array<std::size_t, 3> dimensions;
     for (std::size_t i = 0; i < 3; ++i) {
-        spacing[i] = (m_densityImage->image->GetSpacing())[i];
+        spacing_d[i] = (m_densityImage->image->GetSpacing())[i];
         dimensions[i] = static_cast<std::size_t>((m_densityImage->image->GetDimensions())[i]);
     }
     World world;
+    auto spacing = convert_array_to<floating>(spacing_d);
     world.setSpacing(spacing);
     world.setDimensions(dimensions);
-    world.setDirectionCosines(m_densityImage->directionCosines);
+    auto directionCosines = convert_array_to<floating>(m_densityImage->directionCosines);
+    world.setDirectionCosines(directionCosines);
     world.setMaterialIndexArray(m_materialImage->imageData());
     world.setDensityArray(m_densityImage->imageData());
     for (const Material& m : m_materialList)
@@ -113,14 +115,14 @@ void SimulationPipeline::runSimulation(const std::vector<std::shared_ptr<Source>
         return;
     }
 
-    auto totalDose = std::make_shared<std::vector<double>>(world.size(), 0.0);
+    auto totalDose = std::make_shared<std::vector<floating>>(world.size(), 0);
     auto totalTally = std::make_shared<std::vector<std::uint32_t>>(world.size(), 0);
-    auto totalVariance = std::make_shared<std::vector<double>>(world.size(), 0.0);
+    auto totalVariance = std::make_shared<std::vector<floating>>(world.size(), 0);
 
     for (std::shared_ptr<Source> s : sources) {
         auto progressBar = std::make_unique<ProgressBar>(s->totalExposures());
         const auto& cosines = s->directionCosines();
-        std::array<double, 3> dir;
+        std::array<floating, 3> dir;
         dxmc::vectormath::cross(cosines.data(), dir.data());
         const auto ind = dxmc::vectormath::argmax3<std::size_t>(dir.data());
         if (ind == 0)
@@ -146,37 +148,37 @@ void SimulationPipeline::runSimulation(const std::vector<std::shared_ptr<Source>
         if (mat0.name().compare("Air, Dry (near sea level)") == 0) //ignore air only if present
         {
             std::transform(std::execution::par_unseq, totalDose->cbegin(), totalDose->cend(), mat->cbegin(), totalDose->begin(),
-                [](double e, unsigned char i) -> double { return i == 0 ? 0.0 : e; });
+                [](auto e, unsigned char i) -> floating { return i == 0 ? 0 : e; });
         }
     }
     std::array<double, 3> origin;
     for (int i = 0; i < 3; ++i)
-        origin[i] = -(dimensions[i] * spacing[i] * 0.5);
+        origin[i] = -(dimensions[i] * spacing_d[i] * 0.5);
 
     //scaling dosevalues to sane units
-    const double maxDose = *std::max_element(std::execution::par_unseq, totalDose->cbegin(), totalDose->cend());
+    const auto maxDose = *std::max_element(std::execution::par_unseq, totalDose->cbegin(), totalDose->cend());
     std::string dataUnits = "mGy";
     if (maxDose < 1.0 / 1000.0) {
         dataUnits = "nGy";
         std::transform(std::execution::par_unseq, totalDose->cbegin(), totalDose->cend(), totalDose->begin(),
-            [](double d) { return d * 1e6; });
+            [](auto d) ->floating{ return d * 1e6; });
     } else if (maxDose < 1.0) {
         dataUnits = "uGy";
         std::transform(std::execution::par_unseq, totalDose->cbegin(), totalDose->cend(), totalDose->begin(),
-            [](double d) { return d * 1e3; });
+            [](auto d) ->floating{ return d * 1e3; });
     }
 
-    auto doseContainer = std::make_shared<DoseImageContainer>(totalDose, dimensions, spacing, origin);
+    auto doseContainer = std::make_shared<DoseImageContainer>(totalDose, dimensions, spacing_d, origin);
     doseContainer->directionCosines = m_densityImage->directionCosines;
     doseContainer->ID = m_densityImage->ID;
     doseContainer->dataUnits = dataUnits;
 
-    auto tallyContainer = std::make_shared<TallyImageContainer>(totalTally, dimensions, spacing, origin);
+    auto tallyContainer = std::make_shared<TallyImageContainer>(totalTally, dimensions, spacing_d, origin);
     tallyContainer->directionCosines = m_densityImage->directionCosines;
     tallyContainer->ID = m_densityImage->ID;
     tallyContainer->dataUnits = "# Events";
 
-    auto varianceContainer = std::make_shared<VarianceImageContainer>(totalVariance, dimensions, spacing, origin);
+    auto varianceContainer = std::make_shared<VarianceImageContainer>(totalVariance, dimensions, spacing_d, origin);
     varianceContainer->directionCosines = m_densityImage->directionCosines;
     varianceContainer->ID = m_densityImage->ID;
     varianceContainer->dataUnits = "Variance " + dataUnits;

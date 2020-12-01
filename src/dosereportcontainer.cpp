@@ -53,7 +53,7 @@ std::vector<DoseReportElement> DoseReportContainer::createData(const std::vector
         organValues[i].ID = i;
     }
     auto spacing = organImage->image->GetSpacing();
-    const double voxelVolume = spacing[0] * spacing[1] * spacing[2] / 1000.0; //cm
+    const auto voxelVolume = spacing[0] * spacing[1] * spacing[2] / 1000.0; //cm
     std::size_t size = organImage->imageData()->size();
 
     const auto mBuffer = organImage->imageData()->data();

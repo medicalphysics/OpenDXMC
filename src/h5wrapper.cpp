@@ -642,8 +642,8 @@ bool H5Wrapper::loadSource(std::shared_ptr<Source> src, const std::string& name,
     if (!group)
         return false;
 
-    std::array<double, 3> position;
-    std::array<double, 6> cosines;
+    std::array<double, 3> position_d;
+    std::array<double, 6> cosines_d;
     std::uint64_t he;
 
     const hsize_t dim3 = 3;
@@ -653,14 +653,17 @@ bool H5Wrapper::loadSource(std::shared_ptr<Source> src, const std::string& name,
 
     try {
         auto pos_attr = group->openAttribute("position");
-        pos_attr.read(H5::PredType::NATIVE_DOUBLE, position.data());
+        pos_attr.read(H5::PredType::NATIVE_DOUBLE, position_d.data());
         auto co_attr = group->openAttribute("directionCosines");
-        co_attr.read(H5::PredType::NATIVE_DOUBLE, cosines.data());
+        co_attr.read(H5::PredType::NATIVE_DOUBLE, cosines_d.data());
         auto he_attr = group->openAttribute("historiesPerExposure");
         he_attr.read(H5::PredType::NATIVE_UINT64, &he);
     } catch (...) {
         return false;
     }
+
+    auto position = convert_array_to<floating>(position_d);
+    auto cosines = convert_array_to<floating>(cosines_d);
     src->setPosition(position);
     src->setDirectionCosines(cosines);
     src->setHistoriesPerExposure(he);
@@ -688,19 +691,21 @@ bool H5Wrapper::saveSource(std::shared_ptr<DXSource> src, const std::string& nam
     H5::DataSpace doubleSpace1(1, &dim1);
     H5::DataSpace doubleSpace2(1, &dim2);
 
-    double sdd = src->sourceDetectorDistance();
+    double sdd = static_cast<double>(src->sourceDetectorDistance());
     auto sdd_att = srcGroup->createAttribute("sdd", H5::PredType::NATIVE_DOUBLE, doubleSpace1);
     sdd_att.write(H5::PredType::NATIVE_DOUBLE, &sdd);
 
-    double dap = src->dap();
+    double dap = static_cast<double>(src->dap());
     auto dap_att = srcGroup->createAttribute("dap", H5::PredType::NATIVE_DOUBLE, doubleSpace1);
     dap_att.write(H5::PredType::NATIVE_DOUBLE, &dap);
 
+    auto fieldSize = convert_array_to<double>(src->fieldSize());
     auto fs_att = srcGroup->createAttribute("fieldSize", H5::PredType::NATIVE_DOUBLE, doubleSpace2);
-    fs_att.write(H5::PredType::NATIVE_DOUBLE, src->fieldSize().data());
+    fs_att.write(H5::PredType::NATIVE_DOUBLE, fieldSize.data());
 
+    auto collimationAngles = convert_array_to<double>(src->collimationAngles());
     auto ca_att = srcGroup->createAttribute("collimationAngles", H5::PredType::NATIVE_DOUBLE, doubleSpace2);
-    ca_att.write(H5::PredType::NATIVE_DOUBLE, src->collimationAngles().data());
+    ca_att.write(H5::PredType::NATIVE_DOUBLE, collimationAngles.data());
 
     auto te = src->totalExposures();
     auto te_att = srcGroup->createAttribute("totalExposures", H5::PredType::NATIVE_UINT64, doubleSpace1);
@@ -728,8 +733,13 @@ bool H5Wrapper::saveSource(std::shared_ptr<CTSource> src, const std::string& nam
     //saving AEC profile
     if (auto filter = src->aecFilter(); filter) {
         auto aecPath = srcPath + "/" + "AECData";
-        saveDoubleList(filter->mass(), "AECmass", aecPath);
-        saveDoubleList(filter->massIntensity(), "AECintensity", aecPath);
+
+        std::vector<double> AECmass(filter->mass().cbegin(), filter->mass().cend());
+        saveDoubleList(AECmass, "AECmass", aecPath);
+
+        std::vector<double> massIntensity(filter->massIntensity().cbegin(), filter->massIntensity().cend());
+        saveDoubleList(massIntensity, "AECintensity", aecPath);
+
         auto aecGroup = getGroup(aecPath, false);
         if (aecGroup) {
             auto aecName = filter->filterName();
@@ -748,7 +758,7 @@ bool H5Wrapper::saveSource(std::shared_ptr<CTSource> src, const std::string& nam
         auto bowtiePath = srcPath + "/" + "BowTieData";
         auto data = filter->data();
         std::vector<double> x, y;
-        for (auto [angle, weight] : data) {
+        for (const auto& [angle, weight] : data) {
             x.push_back(angle);
             y.push_back(weight);
         }
@@ -916,8 +926,8 @@ bool H5Wrapper::loadSource(std::shared_ptr<DXSource> src, const std::string& nam
     double sdd = 0;
     double dap = 0;
     std::uint64_t te = 0;
-    std::array<double, 2> fe;
-    std::array<double, 2> ca;
+    std::array<double, 2> fe_d;
+    std::array<double, 2> ca_d;
     try {
 
         auto sdd_attr = group->openAttribute("sdd");
@@ -927,9 +937,9 @@ bool H5Wrapper::loadSource(std::shared_ptr<DXSource> src, const std::string& nam
         auto te_attr = group->openAttribute("totalExposures");
         te_attr.read(H5::PredType::NATIVE_UINT64, &te);
         auto fe_attr = group->openAttribute("fieldSize");
-        fe_attr.read(H5::PredType::NATIVE_DOUBLE, fe.data());
+        fe_attr.read(H5::PredType::NATIVE_DOUBLE, fe_d.data());
         auto ca_attr = group->openAttribute("collimationAngles");
-        ca_attr.read(H5::PredType::NATIVE_DOUBLE, ca.data());
+        ca_attr.read(H5::PredType::NATIVE_DOUBLE, ca_d.data());
     } catch (const H5::DataTypeIException e) {
         auto msg = e.getDetailMsg();
         return false;
@@ -937,10 +947,13 @@ bool H5Wrapper::loadSource(std::shared_ptr<DXSource> src, const std::string& nam
         auto msg = e.getDetailMsg();
         return false;
     }
-    src->setSourceDetectorDistance(sdd);
-    src->setDap(dap);
+
+    src->setSourceDetectorDistance(static_cast<floating>(sdd));
+    src->setDap(static_cast<floating>(dap));
     src->setTotalExposures(te);
+    auto fe = convert_array_to<floating>(fe_d);
     src->setFieldSize(fe);
+    auto ca = convert_array_to<floating>(ca_d);
     src->setCollimationAngles(ca);
     return true;
 }
@@ -962,8 +975,10 @@ bool H5Wrapper::loadSource(std::shared_ptr<CTSource> src, const std::string& nam
     auto aecPath = path + "/" + "AECData";
     auto aecGroup = getGroup(aecPath, false);
     if (aecGroup) {
-        auto aecMass = loadDoubleList("AECmass", aecPath);
-        auto aecIntensity = loadDoubleList("AECintensity", aecPath);
+        auto aecMass_d = loadDoubleList("AECmass", aecPath);
+        auto aecIntensity_d = loadDoubleList("AECintensity", aecPath);
+        std::vector<floating> aecMass(aecMass_d.cbegin(), aecMass_d.cend());
+        std::vector<floating> aecIntensity(aecIntensity_d.cbegin(), aecIntensity_d.cend());
         auto aec = std::make_shared<AECFilter>(aecMass, aecIntensity);
         std::string name;
         if (aecGroup->attrExists("filterName")) {
@@ -980,8 +995,10 @@ bool H5Wrapper::loadSource(std::shared_ptr<CTSource> src, const std::string& nam
     auto bowtiePath = path + "/" + "BowTieData";
     auto bowtieGroup = getGroup(bowtiePath, false);
     if (bowtieGroup) {
-        auto angles = loadDoubleList("BowTieAngle", bowtiePath);
-        auto weight = loadDoubleList("BowTieWeight", bowtiePath);
+        auto angles_d = loadDoubleList("BowTieAngle", bowtiePath);
+        auto weight_d = loadDoubleList("BowTieWeight", bowtiePath);
+        std::vector<floating> angles(angles_d.cbegin(), angles_d.cend());
+        std::vector<floating> weight(weight_d.cbegin(), weight_d.cend());
         auto bowtie = std::make_shared<BowTieFilter>(angles, weight);
         std::string name;
         if (bowtieGroup->attrExists("filterName")) {
@@ -1114,8 +1131,10 @@ bool H5Wrapper::loadSource(std::shared_ptr<CTSpiralDualSource> src, const std::s
     auto bowtiePath = path + "/" + "BowTieDataB";
     auto bowtieGroup = getGroup(bowtiePath, false);
     if (bowtieGroup) {
-        auto angles = loadDoubleList("BowTieAngle", bowtiePath);
-        auto weight = loadDoubleList("BowTieWeight", bowtiePath);
+        auto angles_d = loadDoubleList("BowTieAngle", bowtiePath);
+        auto weight_d = loadDoubleList("BowTieWeight", bowtiePath);
+        std::vector<floating> angles(angles_d.cbegin(), angles_d.cend());
+        std::vector<floating> weight(weight_d.cbegin(), weight_d.cend());
         auto bowtie = std::make_shared<BowTieFilter>(angles, weight);
         std::string name;
         if (bowtieGroup->attrExists("filterName")) {

@@ -76,7 +76,7 @@ public:
         const std::size_t nThres = m_materialCTNumbers.size();
         std::vector<T> CTThres(nThres);
         for (std::size_t i = 0; i < nThres - 1; ++i) {
-            CTThres[i] = (m_materialCTNumbers[i].second + m_materialCTNumbers[i + 1].second) * 0.5;
+            CTThres[i] = (m_materialCTNumbers[i].second + m_materialCTNumbers[i + 1].second) / 2;
         }
 
         CTThres[nThres - 1] = std::numeric_limits<T>::infinity();
@@ -126,7 +126,7 @@ private:
         calibrationLut.generate(calibrationMaterials, 1.0, tube.voltage());
 
         m_calibrationEnergy.clear();
-        auto specterEnergy = std::vector<double>(calibrationLut.energyBegin(), calibrationLut.energyEnd());
+        auto specterEnergy = std::vector<floating>(calibrationLut.energyBegin(), calibrationLut.energyEnd());
         auto specterIntensity = tube.getSpecter(specterEnergy);
         m_calibrationDensity.clear();
         for (std::size_t i = 0; i < calibrationMaterials.size(); ++i) {
@@ -147,17 +147,17 @@ private:
         for (std::size_t index = 0; index < materialMap.size(); ++index) {
             m_materialEnergy.push_back(std::transform_reduce(std::execution::par, attLut.attenuationTotalBegin(index), attLut.attenuationTotalEnd(index), specterIntensity.cbegin(), 0.0));
             m_materialDensity.push_back((materialMap[index]).standardDensity());
-            double ctNumber = (m_materialEnergy[index] * m_materialDensity[index] - m_calibrationEnergy[0] * m_calibrationDensity[0]) / (m_calibrationEnergy[0] * m_calibrationDensity[0] - m_calibrationEnergy[1] * m_calibrationDensity[1]) * 1000.0; //Houndsfield units
+            floating ctNumber = (m_materialEnergy[index] * m_materialDensity[index] - m_calibrationEnergy[0] * m_calibrationDensity[0]) / (m_calibrationEnergy[0] * m_calibrationDensity[0] - m_calibrationEnergy[1] * m_calibrationDensity[1]) * 1000.0; //Houndsfield units
             m_materialCTNumbers.push_back(std::make_pair(index, ctNumber));
         }
-        std::sort(m_materialCTNumbers.begin(), m_materialCTNumbers.end(), [](const std::pair<std::size_t, double>& a, const std::pair<std::size_t, double>& b) { return a.second < b.second; });
+        std::sort(m_materialCTNumbers.begin(), m_materialCTNumbers.end(), [](const std::pair<std::size_t, floating>& a, const std::pair<std::size_t, floating>& b) { return a.second < b.second; });
     }
 
-    std::vector<std::pair<std::size_t, double>> m_materialCTNumbers;
-    std::vector<double> m_calibrationEnergy;
-    std::vector<double> m_calibrationDensity;
-    std::vector<double> m_materialEnergy;
-    std::vector<double> m_materialDensity;
+    std::vector<std::pair<std::size_t, floating>> m_materialCTNumbers;
+    std::vector<floating> m_calibrationEnergy;
+    std::vector<floating> m_calibrationDensity;
+    std::vector<floating> m_materialEnergy;
+    std::vector<floating> m_materialDensity;
 };
 
 class ImageImportPipeline : public QObject {
@@ -170,9 +170,9 @@ public:
     void setBlurRadius(const double* radius);
 
     void setCTImportMaterialMap(const std::vector<Material>& map) { m_ctImportMaterialMap = map; }
-    void setCTImportAqusitionVoltage(double voltage) { m_tube.setVoltage(voltage); }
-    void setCTImportAqusitionAlFiltration(double mm) { m_tube.setAlFiltration(mm); }
-    void setCTImportAqusitionCuFiltration(double mm) { m_tube.setCuFiltration(mm); }
+    void setCTImportAqusitionVoltage(double voltage) { m_tube.setVoltage(static_cast<floating>(voltage)); }
+    void setCTImportAqusitionAlFiltration(double mm) {m_tube.setAlFiltration(static_cast<floating>(mm)); }
+    void setCTImportAqusitionCuFiltration(double mm) {m_tube.setCuFiltration(static_cast<floating>(mm)); }
 
 signals:
     void processingDataStarted();
@@ -184,9 +184,9 @@ signals:
 
 protected:
     template <class Iter>
-    std::pair<std::shared_ptr<std::vector<unsigned char>>, std::shared_ptr<std::vector<double>>> calculateMaterialAndDensityFromCTData(Iter first, Iter last);
-    void processCTData(std::shared_ptr<ImageContainer> ctImage, const std::pair<std::string, std::vector<double>>& exposureData);
-    std::pair<std::string, std::vector<double>> readExposureData(vtkSmartPointer<vtkDICOMReader>& dicomReader);
+    std::pair<std::shared_ptr<std::vector<unsigned char>>, std::shared_ptr<std::vector<floating>>> calculateMaterialAndDensityFromCTData(Iter first, Iter last);
+    void processCTData(std::shared_ptr<ImageContainer> ctImage, const std::pair<std::string, std::vector<floating>>& exposureData);
+    std::pair<std::string, std::vector<floating>> readExposureData(vtkSmartPointer<vtkDICOMReader>& dicomReader);
 
 private:
     std::array<double, 3> m_outputSpacing = { 2, 2, 2 };

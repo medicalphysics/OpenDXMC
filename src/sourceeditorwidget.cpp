@@ -75,7 +75,7 @@ bool BowtieFilterReader::saveFilters()
 std::shared_ptr<BowTieFilter> BowtieFilterReader::readFilter(QJsonObject& json) const
 {
     std::string name {};
-    std::vector<std::pair<double, double>> filterData;
+    std::vector<std::pair<floating, floating>> filterData;
     if (json.contains("name") && json["name"].isString())
         name = json["name"].toString().toStdString();
 
@@ -84,9 +84,9 @@ std::shared_ptr<BowTieFilter> BowtieFilterReader::readFilter(QJsonObject& json) 
         for (int dataIndex = 0; dataIndex < filtersArray.size(); ++dataIndex) {
             QJsonObject filterObject = filtersArray[dataIndex].toObject();
             if (filterObject.contains("angle") && filterObject["angle"].isDouble()) {
-                double angle = filterObject["angle"].toDouble();
+                floating angle = filterObject["angle"].toDouble(); 
                 if (filterObject.contains("weight") && filterObject["weight"].isDouble()) {
-                    double weight = filterObject["weight"].toDouble();
+                    floating weight = filterObject["weight"].toDouble();
                     filterData.push_back(std::make_pair(angle, weight));
                 }
             }

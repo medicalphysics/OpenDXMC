@@ -18,22 +18,23 @@ Copyright 2019 Erlend Andersen
 
 #pragma once
 #include "dxmc.h"
+#include "opendxmc/precision_specialization.h"
 
-//Here we spesialize types from the dxmc template library.
+//Here we specialize types from the dxmc template library.
 
 using Material = dxmc::Material;
-using Tube = dxmc::Tube<double>;
-using Transport = dxmc::Transport<double>;
-using AECFilter = dxmc::AECFilter<double>;
-using BowTieFilter = dxmc::BowTieFilter<double>;
-using Source = dxmc::Source<double>;
-using DXSource = dxmc::DXSource<double>;
-using CTSource = dxmc::CTSource<double>;
-using CTAxialSource = dxmc::CTAxialSource<double>;
-using CTSpiralSource = dxmc::CTSpiralSource<double>;
-using CTSpiralDualSource = dxmc::CTSpiralDualSource<double>;
-using World = dxmc::World<double>;
-using CTDIPhantom = dxmc::CTDIPhantom<double>;
-using ProgressBar = dxmc::ProgressBar<double>;
-using AttenuationLut = dxmc::AttenuationLut<double>;
-using DoseProgressImageData = dxmc::DoseProgressImageData<double>;
+using Tube = dxmc::Tube<floating>;
+using Transport = dxmc::Transport<floating>;
+using AECFilter = dxmc::AECFilter<floating>;
+using BowTieFilter = dxmc::BowTieFilter<floating>;
+using Source = dxmc::Source<floating>;
+using DXSource = dxmc::DXSource<floating>;
+using CTSource = dxmc::CTSource<floating>;
+using CTAxialSource = dxmc::CTAxialSource<floating>;
+using CTSpiralSource = dxmc::CTSpiralSource<floating>;
+using CTSpiralDualSource = dxmc::CTSpiralDualSource<floating>;
+using World = dxmc::World<floating>;
+using CTDIPhantom = dxmc::CTDIPhantom<floating>;
+using ProgressBar = dxmc::ProgressBar<floating>;
+using AttenuationLut = dxmc::AttenuationLut<floating>;
+using DoseProgressImageData = dxmc::DoseProgressImageData<floating>;

@@ -148,7 +148,7 @@ void SourceItem<DXSource, std::uint64_t>::setData(const QVariant& data, int role
 }
 
 template <std::size_t N>
-QString arrayToQString(const std::array<double, N>& arr)
+QString arrayToQString(const std::array<floating, N>& arr)
 {
     QString str;
     for (std::size_t i = 0; i < N - 1; ++i) {
@@ -159,15 +159,15 @@ QString arrayToQString(const std::array<double, N>& arr)
 }
 
 template <std::size_t N>
-std::pair<bool, std::array<double, N>> qstringToArray(const QString& str)
+std::pair<bool, std::array<floating, N>> qstringToArray(const QString& str)
 {
     auto stringList = str.split(",", QString::SkipEmptyParts);
-    std::array<double, N> data;
+    std::array<floating, N> data;
     if (stringList.size() < data.size())
         return std::make_pair(false, data);
     for (int i = 0; i < N; ++i) {
         bool ok;
-        double value = stringList[i].toDouble(&ok);
+        floating value = stringList[i].toDouble(&ok);
         if (ok)
             data[i] = value;
         else
@@ -177,7 +177,7 @@ std::pair<bool, std::array<double, N>> qstringToArray(const QString& str)
 }
 
 template <>
-QVariant SourceItem<DXSource, std::array<double, 2>>::data(int role) const
+QVariant SourceItem<DXSource, std::array<floating, 2>>::data(int role) const
 {
     if (role == Qt::DisplayRole || role == Qt::EditRole) {
         auto n = f_data();
@@ -188,7 +188,7 @@ QVariant SourceItem<DXSource, std::array<double, 2>>::data(int role) const
 }
 
 template <>
-void SourceItem<DXSource, std::array<double, 2>>::setData(const QVariant& data, int role)
+void SourceItem<DXSource, std::array<floating, 2>>::setData(const QVariant& data, int role)
 {
     if (role == Qt::DisplayRole || role == Qt::EditRole) {
         auto string = data.toString();
@@ -201,7 +201,7 @@ void SourceItem<DXSource, std::array<double, 2>>::setData(const QVariant& data, 
 }
 
 template <>
-QVariant SourceItem<Source, std::array<double, 3>>::data(int role) const
+QVariant SourceItem<Source, std::array<floating, 3>>::data(int role) const
 {
     if (role == Qt::DisplayRole || role == Qt::EditRole) {
         auto n = f_data();
@@ -212,7 +212,7 @@ QVariant SourceItem<Source, std::array<double, 3>>::data(int role) const
 }
 
 template <>
-void SourceItem<Source, std::array<double, 3>>::setData(const QVariant& data, int role)
+void SourceItem<Source, std::array<floating, 3>>::setData(const QVariant& data, int role)
 {
     if (role == Qt::DisplayRole || role == Qt::EditRole) {
         auto string = data.toString();
@@ -228,7 +228,7 @@ void SourceItem<Source, std::array<double, 3>>::setData(const QVariant& data, in
 }
 
 template <>
-QVariant SourceItem<Source, std::array<double, 6>>::data(int role) const
+QVariant SourceItem<Source, std::array<floating, 6>>::data(int role) const
 {
     if (role == Qt::DisplayRole || role == Qt::EditRole) {
         auto n = f_data();
@@ -239,7 +239,7 @@ QVariant SourceItem<Source, std::array<double, 6>>::data(int role) const
 }
 
 template <>
-void SourceItem<Source, std::array<double, 6>>::setData(const QVariant& data, int role)
+void SourceItem<Source, std::array<floating, 6>>::setData(const QVariant& data, int role)
 {
     if (role == Qt::DisplayRole || role == Qt::EditRole) {
         auto string = data.toString();
@@ -281,21 +281,21 @@ void SourceModel::addSource(Source::Type type)
     auto parent = this->invisibleRootItem();
     if (type == Source::Type::CTSpiral) {
         auto src = std::make_shared<CTSpiralSource>();
-        std::array<double, 6> cosines = { -1, 0, 0, 0, 0, 1 };
+        std::array<floating, 6> cosines = { -1, 0, 0, 0, 0, 1 };
         src->setDirectionCosines(cosines);
 
         //fitting src position to cover image data
         if (m_currentImageID != 0) {
-            std::array<double, 2> srcCoverage;
+            std::array<floating, 2> srcCoverage;
             if (m_currentImageExtent[5] - m_currentImageExtent[4] < 500.0) {
                 srcCoverage[0] = m_currentImageExtent[4];
                 srcCoverage[1] = m_currentImageExtent[5];
             } else {
-                double center = (m_currentImageExtent[5] + m_currentImageExtent[4]) * 0.5;
+                floating center = (m_currentImageExtent[5] + m_currentImageExtent[4]) * 0.5;
                 srcCoverage[0] = center - 250.0;
                 srcCoverage[1] = center + 250.0;
             }
-            std::array<double, 3> position = { 0, 0, srcCoverage[0] };
+            std::array<floating, 3> position = { 0, 0, srcCoverage[0] };
             src->setPosition(position);
             src->setScanLenght(srcCoverage[1] - srcCoverage[0]);
         }
@@ -308,20 +308,20 @@ void SourceModel::addSource(Source::Type type)
         emit layoutChanged();
     } else if (type == Source::Type::CTAxial) {
         auto src = std::make_shared<CTAxialSource>();
-        std::array<double, 6> cosines = { -1, 0, 0, 0, 0, 1 };
+        std::array<floating, 6> cosines = { -1, 0, 0, 0, 0, 1 };
         src->setDirectionCosines(cosines);
         //fitting src position to cover image data
         if (m_currentImageID != 0) {
-            std::array<double, 2> srcCoverage;
+            std::array<floating, 2> srcCoverage;
             if (m_currentImageExtent[5] - m_currentImageExtent[4] < 500.0) {
                 srcCoverage[0] = m_currentImageExtent[4];
                 srcCoverage[1] = m_currentImageExtent[5];
             } else {
-                double center = (m_currentImageExtent[5] + m_currentImageExtent[4]) * 0.5;
+                floating center = (m_currentImageExtent[5] + m_currentImageExtent[4]) * 0.5;
                 srcCoverage[0] = center - 250.0;
                 srcCoverage[1] = center + 250.0;
             }
-            std::array<double, 3> position = { 0, 0, srcCoverage[0] };
+            std::array<floating, 3> position = { 0, 0, srcCoverage[0] };
             src->setPosition(position);
             src->setScanLenght(srcCoverage[1] - srcCoverage[0]);
         }
@@ -334,20 +334,20 @@ void SourceModel::addSource(Source::Type type)
         emit layoutChanged();
     } else if (type == Source::Type::CTDual) {
         auto src = std::make_shared<CTSpiralDualSource>();
-        std::array<double, 6> cosines = { -1, 0, 0, 0, 0, 1 };
+        std::array<floating, 6> cosines = { -1, 0, 0, 0, 0, 1 };
         src->setDirectionCosines(cosines);
         //fitting src position to cover image data
         if (m_currentImageID != 0) {
-            std::array<double, 2> srcCoverage;
+            std::array<floating, 2> srcCoverage;
             if (m_currentImageExtent[5] - m_currentImageExtent[4] < 500.0) {
                 srcCoverage[0] = m_currentImageExtent[4];
                 srcCoverage[1] = m_currentImageExtent[5];
             } else {
-                double center = (m_currentImageExtent[5] + m_currentImageExtent[4]) * 0.5;
+                floating center = (m_currentImageExtent[5] + m_currentImageExtent[4]) * 0.5;
                 srcCoverage[0] = center - 250.0;
                 srcCoverage[1] = center + 250.0;
             }
-            std::array<double, 3> position = { 0, 0, srcCoverage[0] };
+            std::array<floating, 3> position = { 0, 0, srcCoverage[0] };
             src->setPosition(position);
             src->setScanLenght(srcCoverage[1] - srcCoverage[0]);
         }
@@ -360,8 +360,8 @@ void SourceModel::addSource(Source::Type type)
         emit layoutChanged();
     } else if (type == Source::Type::DX) {
         auto src = std::make_shared<DXSource>();
-        std::array<double, 3> position = { 0, 0, 0 };
-        std::array<double, 6> cosines = { -1, 0, 0, 0, 0, 1 };
+        std::array<floating, 3> position = { 0, 0, 0 };
+        std::array<floating, 6> cosines = { -1, 0, 0, 0, 0, 1 };
         src->setDirectionCosines(cosines);
         src->setPosition(position);
         m_sources.emplace_back(std::static_pointer_cast<Source>(src));
@@ -500,39 +500,39 @@ template <class S>
 void setupTube(std::shared_ptr<S> src, QStandardItem* parent)
 {
     QVector<QPair<QString, QStandardItem*>> nodes;
-    auto l2Item = new SourceItem<S, double>(
+    auto l2Item = new SourceItem<S, floating>(
         src,
-        [=](double val) { src->tube().setVoltage(val); },
+        [=](floating val) { src->tube().setVoltage(val); },
         [=]() { return src->tube().voltage(); });
     nodes.append(qMakePair(QString("Tube voltage [kV]"), static_cast<QStandardItem*>(l2Item)));
 
-    auto l3Item = new SourceItem<S, double>(
+    auto l3Item = new SourceItem<S, floating>(
         src,
-        [=](double val) { src->tube().setAnodeAngleDeg(val); },
+        [=](floating val) { src->tube().setAnodeAngleDeg(val); },
         [=]() { return src->tube().anodeAngleDeg(); });
     nodes.append(qMakePair(QString("Tube anode angle [deg]"), static_cast<QStandardItem*>(l3Item)));
 
-    auto l4Item = new SourceItem<S, double>(
+    auto l4Item = new SourceItem<S, floating>(
         src,
-        [=](double val) { src->tube().setAlFiltration(val); },
+        [=](floating val) { src->tube().setAlFiltration(val); },
         [=]() { return src->tube().AlFiltration(); });
     nodes.append(qMakePair(QString("Tube Al filtration [mm]"), static_cast<QStandardItem*>(l4Item)));
 
-    auto l5Item = new SourceItem<S, double>(
+    auto l5Item = new SourceItem<S, floating>(
         src,
-        [=](double val) { src->tube().setCuFiltration(val); },
+        [=](floating val) { src->tube().setCuFiltration(val); },
         [=]() { return src->tube().CuFiltration(); });
     nodes.append(qMakePair(QString("Tube Cu filtration [mm]"), static_cast<QStandardItem*>(l5Item)));
 
-    auto l6Item = new SourceItem<S, double>(
+    auto l6Item = new SourceItem<S, floating>(
         src,
-        [=](double val) { src->tube().setSnFiltration(val); },
+        [=](floating val) { src->tube().setSnFiltration(val); },
         [=]() { return src->tube().SnFiltration(); });
     nodes.append(qMakePair(QString("Tube Sn (Tin) filtration [mm]"), static_cast<QStandardItem*>(l6Item)));
 
-    auto l7Item = new SourceItem<S, double>(
+    auto l7Item = new SourceItem<S, floating>(
         src,
-        [=](double val) {},
+        [=](floating val) {},
         [=]() { return src->tube().mmAlHalfValueLayer(); });
     l7Item->setEditable(false);
     nodes.append(qMakePair(QString("Half value layer in Al [mm]"), static_cast<QStandardItem*>(l7Item)));
@@ -543,39 +543,39 @@ void setupTube(std::shared_ptr<S> src, QStandardItem* parent)
 void setupTubeB(std::shared_ptr<CTSpiralDualSource> src, QStandardItem* parent)
 {
     QVector<QPair<QString, QStandardItem*>> nodes;
-    auto l2Item = new SourceItem<CTSpiralDualSource, double>(
+    auto l2Item = new SourceItem<CTSpiralDualSource, floating>(
         src,
-        [=](double val) { src->tubeB().setVoltage(val); },
+        [=](floating val) { src->tubeB().setVoltage(val); },
         [=]() { return src->tubeB().voltage(); });
     nodes.append(qMakePair(QString("Tube voltage [kV]"), static_cast<QStandardItem*>(l2Item)));
 
-    auto l3Item = new SourceItem<CTSpiralDualSource, double>(
+    auto l3Item = new SourceItem<CTSpiralDualSource, floating>(
         src,
-        [=](double val) { src->tubeB().setAnodeAngleDeg(val); },
+        [=](floating val) { src->tubeB().setAnodeAngleDeg(val); },
         [=]() { return src->tubeB().anodeAngleDeg(); });
     nodes.append(qMakePair(QString("Tube anode angle [deg]"), static_cast<QStandardItem*>(l3Item)));
 
-    auto l4Item = new SourceItem<CTSpiralDualSource, double>(
+    auto l4Item = new SourceItem<CTSpiralDualSource, floating>(
         src,
-        [=](double val) { src->tubeB().setAlFiltration(val); },
+        [=](floating val) { src->tubeB().setAlFiltration(val); },
         [=]() { return src->tubeB().AlFiltration(); });
     nodes.append(qMakePair(QString("Tube Al filtration [mm]"), static_cast<QStandardItem*>(l4Item)));
 
-    auto l5Item = new SourceItem<CTSpiralDualSource, double>(
+    auto l5Item = new SourceItem<CTSpiralDualSource, floating>(
         src,
-        [=](double val) { src->tubeB().setCuFiltration(val); },
+        [=](floating val) { src->tubeB().setCuFiltration(val); },
         [=]() { return src->tubeB().CuFiltration(); });
     nodes.append(qMakePair(QString("Tube Cu filtration [mm]"), static_cast<QStandardItem*>(l5Item)));
 
-    auto l6Item = new SourceItem<CTSpiralDualSource, double>(
+    auto l6Item = new SourceItem<CTSpiralDualSource, floating>(
         src,
-        [=](double val) { src->tubeB().setSnFiltration(val); },
+        [=](floating val) { src->tubeB().setSnFiltration(val); },
         [=]() { return src->tubeB().SnFiltration(); });
     nodes.append(qMakePair(QString("Tube Sn (Tin) filtration [mm]"), static_cast<QStandardItem*>(l6Item)));
 
-    auto l7Item = new SourceItem<CTSpiralDualSource, double>(
+    auto l7Item = new SourceItem<CTSpiralDualSource, floating>(
         src,
-        [=](double val) {},
+        [=](floating val) {},
         [=]() { return src->tubeB().mmAlHalfValueLayer(); });
     l7Item->setEditable(false);
     nodes.append(qMakePair(QString("Half value layer in Al [mm]"), static_cast<QStandardItem*>(l7Item)));
@@ -592,29 +592,29 @@ void setupXCare(std::shared_ptr<S> src, QStandardItem* parent)
         [=](bool val) { src->setUseXCareFilter(val); },
         [=]() { return src->useXCareFilter(); });
     xcareNodes.append(qMakePair(QString("Use organ exposure control"), static_cast<QStandardItem*>(useXCare)));
-    auto angleXCare = new SourceItem<S, double>(
+    auto angleXCare = new SourceItem<S, floating>(
         src,
-        [=](double val) { src->xcareFilter().setFilterAngleDeg(val); },
+        [=](floating val) { src->xcareFilter().setFilterAngleDeg(val); },
         [=]() { return src->xcareFilter().filterAngleDeg(); });
     xcareNodes.append(qMakePair(QString("Angle of filter [deg]"), static_cast<QStandardItem*>(angleXCare)));
-    auto spanXCare = new SourceItem<S, double>(
+    auto spanXCare = new SourceItem<S, floating>(
         src,
-        [=](double val) { src->xcareFilter().setSpanAngleDeg(val); },
+        [=](floating val) { src->xcareFilter().setSpanAngleDeg(val); },
         [=]() { return src->xcareFilter().spanAngleDeg(); });
     xcareNodes.append(qMakePair(QString("Filter span angle [deg]"), static_cast<QStandardItem*>(spanXCare)));
-    auto rampXCare = new SourceItem<S, double>(
+    auto rampXCare = new SourceItem<S, floating>(
         src,
-        [=](double val) { src->xcareFilter().setRampAngleDeg(val); },
+        [=](floating val) { src->xcareFilter().setRampAngleDeg(val); },
         [=]() { return src->xcareFilter().rampAngleDeg(); });
     xcareNodes.append(qMakePair(QString("Filter ramp angle (included in span angle) [deg]"), static_cast<QStandardItem*>(rampXCare)));
-    auto lowXCare = new SourceItem<S, double>(
+    auto lowXCare = new SourceItem<S, floating>(
         src,
-        [=](double val) { src->xcareFilter().setLowWeight(val); },
+        [=](floating val) { src->xcareFilter().setLowWeight(val); },
         [=]() { return src->xcareFilter().lowWeight(); });
     xcareNodes.append(qMakePair(QString("Lowest beam intensity. Value between (0.0, 1.0]"), static_cast<QStandardItem*>(lowXCare)));
-    auto highXCare = new SourceItem<S, double>(
+    auto highXCare = new SourceItem<S, floating>(
         src,
-        [=](double val) {},
+        [=](floating val) {},
         [=]() { return src->xcareFilter().highWeight(); });
     highXCare->setEditable(false);
     xcareNodes.append(qMakePair(QString("Highest beam intensity (calculated value)"), static_cast<QStandardItem*>(highXCare)));
@@ -626,15 +626,15 @@ void SourceModel::setupSource(std::shared_ptr<Source> src, QStandardItem* parent
 {
     QVector<QPair<QString, QStandardItem*>> nodes;
 
-    auto posItem = new SourceItem<Source, std::array<double, 3>>(
+    auto posItem = new SourceItem<Source, std::array<floating, 3>>(
         src,
-        [=](const std::array<double, 3>& val) { src->setPosition(val); },
+        [=](const std::array<floating, 3>& val) { src->setPosition(val); },
         [=]() { return src->position(); });
     nodes.append(qMakePair(QString("Source isocenter position [mm]"), static_cast<QStandardItem*>(posItem)));
 
-    auto l1Item = new SourceItem<Source, std::array<double, 6>>(
+    auto l1Item = new SourceItem<Source, std::array<floating, 6>>(
         src,
-        [=](const std::array<double, 6>& val) { src->setDirectionCosines(val); },
+        [=](const std::array<floating, 6>& val) { src->setDirectionCosines(val); },
         [=]() { return src->directionCosines(); });
     nodes.append(qMakePair(QString("Source direction cosines"), static_cast<QStandardItem*>(l1Item)));
 
@@ -648,21 +648,21 @@ void SourceModel::setupCTSource(std::shared_ptr<CTSource> src, QStandardItem* pa
     //CT parameters
     QVector<QPair<QString, QStandardItem*>> nodes;
 
-    auto sddItem = new SourceItem<CTSource, double>(
+    auto sddItem = new SourceItem<CTSource, floating>(
         src,
-        [=](double val) { src->setSourceDetectorDistance(val); },
+        [=](floating val) { src->setSourceDetectorDistance(val); },
         [=]() { return src->sourceDetectorDistance(); });
     nodes.append(qMakePair(QString("Source detector distance [mm]"), static_cast<QStandardItem*>(sddItem)));
 
-    auto fovItem = new SourceItem<CTSource, double>(
+    auto fovItem = new SourceItem<CTSource, floating>(
         src,
-        [=](double val) { src->setFieldOfView(val); },
+        [=](floating val) { src->setFieldOfView(val); },
         [=]() { return src->fieldOfView(); });
     nodes.append(qMakePair(QString("Field of view [mm]"), static_cast<QStandardItem*>(fovItem)));
 
-    auto colItem = new SourceItem<CTSource, double>(
+    auto colItem = new SourceItem<CTSource, floating>(
         src,
-        [=](double val) { src->setCollimation(val); },
+        [=](floating val) { src->setCollimation(val); },
         [=]() { return src->collimation(); });
     nodes.append(qMakePair(QString("Collimation [mm]"), static_cast<QStandardItem*>(colItem)));
 
@@ -686,27 +686,27 @@ void SourceModel::setupCTSource(std::shared_ptr<CTSource> src, QStandardItem* pa
     setupXCare(src, xcareItem);
     nodes.append(qMakePair(QString(), xcareItem));
 
-    auto gangItem = new SourceItem<CTSource, double>(
+    auto gangItem = new SourceItem<CTSource, floating>(
         src,
-        [=](double val) { src->setGantryTiltAngleDeg(val); },
+        [=](floating val) { src->setGantryTiltAngleDeg(val); },
         [=]() { return src->gantryTiltAngleDeg(); });
     nodes.append(qMakePair(QString("Gantry tilt angle [deg]"), static_cast<QStandardItem*>(gangItem)));
 
-    auto sangItem = new SourceItem<CTSource, double>(
+    auto sangItem = new SourceItem<CTSource, floating>(
         src,
-        [=](double val) { src->setStartAngleDeg(val); },
+        [=](floating val) { src->setStartAngleDeg(val); },
         [=]() { return src->startAngleDeg(); });
     nodes.append(qMakePair(QString("Start angle [deg]"), static_cast<QStandardItem*>(sangItem)));
 
-    auto l1Item = new SourceItem<CTSource, double>(
+    auto l1Item = new SourceItem<CTSource, floating>(
         src,
-        [=](double val) { src->setExposureAngleStepDeg(val); },
+        [=](floating val) { src->setExposureAngleStepDeg(val); },
         [=]() { return src->exposureAngleStepDeg(); });
     nodes.append(qMakePair(QString("Step angle [deg]"), static_cast<QStandardItem*>(l1Item)));
 
-    auto l3Item = new SourceItem<CTSource, double>(
+    auto l3Item = new SourceItem<CTSource, floating>(
         src,
-        [=](double val) { src->setScanLenght(val); },
+        [=](floating val) { src->setScanLenght(val); },
         [=]() { return src->scanLenght(); });
     nodes.append(qMakePair(QString("Scan lenght [mm]"), static_cast<QStandardItem*>(l3Item)));
 
@@ -723,9 +723,9 @@ void SourceModel::setupCTSource(std::shared_ptr<CTSource> src, QStandardItem* pa
         [=]() { return src->historiesPerExposure(); });
     nodes.append(qMakePair(QString("Histories per exposure"), static_cast<QStandardItem*>(l14Item)));
 
-    auto l5Item = new SourceItem<CTSource, double>(
+    auto l5Item = new SourceItem<CTSource, floating>(
         src,
-        [=](double val) { src->setCtdiVol(val); },
+        [=](floating val) { src->setCtdiVol(val); },
         [=]() { return src->ctdiVol(); });
     nodes.append(qMakePair(QString("CTDIvol mean value [mGy] "), static_cast<QStandardItem*>(l5Item)));
 
@@ -748,9 +748,9 @@ void SourceModel::setupCTAxialSource(std::shared_ptr<CTAxialSource> src, QStanda
 
     QVector<QPair<QString, QStandardItem*>> nodes;
 
-    auto l2Item = new SourceItem<CTAxialSource, double>(
+    auto l2Item = new SourceItem<CTAxialSource, floating>(
         src,
-        [=](double val) { src->setStep(val); },
+        [=](floating val) { src->setStep(val); },
         [=]() { return src->step(); });
     nodes.append(qMakePair(QString("Rotation step [mm]"), static_cast<QStandardItem*>(l2Item)));
 
@@ -770,9 +770,9 @@ void SourceModel::setupCTSpiralSource(std::shared_ptr<CTSpiralSource> src, QStan
 
     QVector<QPair<QString, QStandardItem*>> nodes;
 
-    auto l2Item = new SourceItem<CTSpiralSource, double>(
+    auto l2Item = new SourceItem<CTSpiralSource, floating>(
         src,
-        [=](double val) { src->setPitch(val); },
+        [=](floating val) { src->setPitch(val); },
         [=]() { return src->pitch(); });
     nodes.append(qMakePair(QString("Pitch"), static_cast<QStandardItem*>(l2Item)));
 
@@ -792,31 +792,31 @@ void SourceModel::setupCTDualSource(std::shared_ptr<CTSpiralDualSource> src, QSt
     QVector<QPair<QString, QStandardItem*>> tubeANodes;
     QVector<QPair<QString, QStandardItem*>> tubeBNodes;
 
-    auto sddItem = new SourceItem<CTSpiralDualSource, double>(
+    auto sddItem = new SourceItem<CTSpiralDualSource, floating>(
         src,
-        [=](double val) { src->setSourceDetectorDistance(val); },
+        [=](floating val) { src->setSourceDetectorDistance(val); },
         [=]() { return src->sourceDetectorDistance(); });
     tubeANodes.append(qMakePair(QString("Source detector distance [mm]"), static_cast<QStandardItem*>(sddItem)));
-    auto sddItemb = new SourceItem<CTSpiralDualSource, double>(
+    auto sddItemb = new SourceItem<CTSpiralDualSource, floating>(
         src,
-        [=](double val) { src->setSourceDetectorDistanceB(val); },
+        [=](floating val) { src->setSourceDetectorDistanceB(val); },
         [=]() { return src->sourceDetectorDistanceB(); });
     tubeBNodes.append(qMakePair(QString("Source detector distance [mm]"), static_cast<QStandardItem*>(sddItemb)));
 
-    auto fovItem = new SourceItem<CTSpiralDualSource, double>(
+    auto fovItem = new SourceItem<CTSpiralDualSource, floating>(
         src,
-        [=](double val) { src->setFieldOfView(val); },
+        [=](floating val) { src->setFieldOfView(val); },
         [=]() { return src->fieldOfView(); });
     tubeANodes.append(qMakePair(QString("Field of view [mm]"), static_cast<QStandardItem*>(fovItem)));
-    auto fovItemb = new SourceItem<CTSpiralDualSource, double>(
+    auto fovItemb = new SourceItem<CTSpiralDualSource, floating>(
         src,
-        [=](double val) { src->setFieldOfViewB(val); },
+        [=](floating val) { src->setFieldOfViewB(val); },
         [=]() { return src->fieldOfViewB(); });
     tubeBNodes.append(qMakePair(QString("Field of view [mm]"), static_cast<QStandardItem*>(fovItemb)));
 
-    auto colItem = new SourceItem<CTSpiralDualSource, double>(
+    auto colItem = new SourceItem<CTSpiralDualSource, floating>(
         src,
-        [=](double val) { src->setCollimation(val); },
+        [=](floating val) { src->setCollimation(val); },
         [=]() { return src->collimation(); });
     commonNodes.append(qMakePair(QString("Collimation [mm]"), static_cast<QStandardItem*>(colItem)));
 
@@ -837,14 +837,14 @@ void SourceModel::setupCTDualSource(std::shared_ptr<CTSpiralDualSource> src, QSt
         [=]() { return src->bowTieFilterB(); });
     tubeBNodes.append(qMakePair(QString("Select bowtie filter"), static_cast<QStandardItem*>(bowItemb)));
 
-    auto masItema = new SourceItem<CTSpiralDualSource, double>(
+    auto masItema = new SourceItem<CTSpiralDualSource, floating>(
         src,
-        [=](double val) { src->setTubeAmas(val); },
+        [=](floating val) { src->setTubeAmas(val); },
         [=]() { return src->tubeAmas(); });
     tubeANodes.append(qMakePair(QString("Relative tube current for tube A [mAs]"), static_cast<QStandardItem*>(masItema)));
-    auto masItemb = new SourceItem<CTSpiralDualSource, double>(
+    auto masItemb = new SourceItem<CTSpiralDualSource, floating>(
         src,
-        [=](double val) { src->setTubeBmas(val); },
+        [=](floating val) { src->setTubeBmas(val); },
         [=]() { return src->tubeBmas(); });
     tubeBNodes.append(qMakePair(QString("Relative tube current for tube B [mAs]"), static_cast<QStandardItem*>(masItemb)));
 
@@ -858,38 +858,38 @@ void SourceModel::setupCTDualSource(std::shared_ptr<CTSpiralDualSource> src, QSt
     setupXCare(src, xcareItem);
     commonNodes.append(qMakePair(QString(), xcareItem));
 
-    auto gangItem = new SourceItem<CTSource, double>(
+    auto gangItem = new SourceItem<CTSource, floating>(
         src,
-        [=](double val) { src->setGantryTiltAngleDeg(val); },
+        [=](floating val) { src->setGantryTiltAngleDeg(val); },
         [=]() { return src->gantryTiltAngleDeg(); });
     commonNodes.append(qMakePair(QString("Gantry tilt angle [deg]"), static_cast<QStandardItem*>(gangItem)));
 
-    auto sangItema = new SourceItem<CTSpiralDualSource, double>(
+    auto sangItema = new SourceItem<CTSpiralDualSource, floating>(
         src,
-        [=](double val) { src->setStartAngleDeg(val); },
+        [=](floating val) { src->setStartAngleDeg(val); },
         [=]() { return src->startAngleDeg(); });
     tubeANodes.append(qMakePair(QString("Start angle [deg]"), static_cast<QStandardItem*>(sangItema)));
-    auto sangItemb = new SourceItem<CTSpiralDualSource, double>(
+    auto sangItemb = new SourceItem<CTSpiralDualSource, floating>(
         src,
-        [=](double val) { src->setStartAngleDegB(val); },
+        [=](floating val) { src->setStartAngleDegB(val); },
         [=]() { return src->startAngleDegB(); });
     tubeBNodes.append(qMakePair(QString("Start angle [deg]"), static_cast<QStandardItem*>(sangItemb)));
 
-    auto l1Item = new SourceItem<CTSpiralDualSource, double>(
+    auto l1Item = new SourceItem<CTSpiralDualSource, floating>(
         src,
-        [=](double val) { src->setExposureAngleStepDeg(val); },
+        [=](floating val) { src->setExposureAngleStepDeg(val); },
         [=]() { return src->exposureAngleStepDeg(); });
     commonNodes.append(qMakePair(QString("Step angle [deg]"), static_cast<QStandardItem*>(l1Item)));
 
-    auto l3Item = new SourceItem<CTSpiralDualSource, double>(
+    auto l3Item = new SourceItem<CTSpiralDualSource, floating>(
         src,
-        [=](double val) { src->setScanLenght(val); },
+        [=](floating val) { src->setScanLenght(val); },
         [=]() { return src->scanLenght(); });
     commonNodes.append(qMakePair(QString("Scan lenght [mm]"), static_cast<QStandardItem*>(l3Item)));
 
-    auto pitchItem = new SourceItem<CTSpiralDualSource, double>(
+    auto pitchItem = new SourceItem<CTSpiralDualSource, floating>(
         src,
-        [=](double val) { src->setPitch(val); },
+        [=](floating val) { src->setPitch(val); },
         [=]() { return src->pitch(); });
     commonNodes.append(qMakePair(QString("Pitch [A.U]"), static_cast<QStandardItem*>(pitchItem)));
 
@@ -906,9 +906,9 @@ void SourceModel::setupCTDualSource(std::shared_ptr<CTSpiralDualSource> src, QSt
         [=]() { return src->historiesPerExposure(); });
     commonNodes.append(qMakePair(QString("Histories per exposure"), static_cast<QStandardItem*>(l14Item)));
 
-    auto l5Item = new SourceItem<CTSpiralDualSource, double>(
+    auto l5Item = new SourceItem<CTSpiralDualSource, floating>(
         src,
-        [=](double val) { src->setCtdiVol(val); },
+        [=](floating val) { src->setCtdiVol(val); },
         [=]() { return src->ctdiVol(); });
     commonNodes.append(qMakePair(QString("CTDIvol for scan [mGy] "), static_cast<QStandardItem*>(l5Item)));
 
@@ -945,31 +945,31 @@ void SourceModel::setupDXSource(std::shared_ptr<DXSource> src, QStandardItem* pa
 
     //DX parameters
 
-    auto sourceAngleItem = new SourceItem<DXSource, std::array<double, 2>>(
+    auto sourceAngleItem = new SourceItem<DXSource, std::array<floating, 2>>(
         src,
         [=](const auto& val) { src->setSourceAnglesDeg(val); },
         [=]() { return src->sourceAnglesDeg(); });
     nodes.append(qMakePair(QString("Source angles (primary angle, secondary angle) [deg]"), static_cast<QStandardItem*>(sourceAngleItem)));
 
-    auto tubeRotItem = new SourceItem<DXSource, double>(
+    auto tubeRotItem = new SourceItem<DXSource, floating>(
         src,
         [=](const auto& val) { src->setTubeRotationDeg(val); },
         [=]() { return src->tubeRotationDeg(); });
     nodes.append(qMakePair(QString("X-ray tube rotation angle [deg]"), static_cast<QStandardItem*>(tubeRotItem)));
 
-    auto l1Item = new SourceItem<DXSource, std::array<double, 2>>(
+    auto l1Item = new SourceItem<DXSource, std::array<floating, 2>>(
         src,
         [=](const auto& val) { src->setCollimationAnglesDeg(val); },
         [=]() { return src->collimationAnglesDeg(); });
     nodes.append(qMakePair(QString("Collimation angles [deg]"), static_cast<QStandardItem*>(l1Item)));
 
-    auto l11Item = new SourceItem<DXSource, std::array<double, 2>>(
+    auto l11Item = new SourceItem<DXSource, std::array<floating, 2>>(
         src,
         [=](const auto& val) { src->setFieldSize(val); },
         [=]() { return src->fieldSize(); });
     nodes.append(qMakePair(QString("Field size [mm]"), static_cast<QStandardItem*>(l11Item)));
 
-    auto l12Item = new SourceItem<DXSource, double>(
+    auto l12Item = new SourceItem<DXSource, floating>(
         src,
         [=](const auto& val) { src->setSourceDetectorDistance(val); },
         [=]() { return src->sourceDetectorDistance(); });
@@ -987,9 +987,9 @@ void SourceModel::setupDXSource(std::shared_ptr<DXSource> src, QStandardItem* pa
         [=]() { return src->historiesPerExposure(); });
     nodes.append(qMakePair(QString("Histories per exposure"), static_cast<QStandardItem*>(l14Item)));
 
-    auto l5Item = new SourceItem<DXSource, double>(
+    auto l5Item = new SourceItem<DXSource, floating>(
         src,
-        [=](double val) { src->setDap(val); },
+        [=](floating val) { src->setDap(val); },
         [=]() { return src->dap(); });
     nodes.append(qMakePair(QString("Dose Area Product for beam [Gycm2]"), static_cast<QStandardItem*>(l5Item)));
 

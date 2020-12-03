@@ -250,7 +250,7 @@ std::vector<std::pair<std::size_t, Material>> readICRPMedia(const std::string& p
     std::transform(elements.cbegin(), elements.cend(), elementsZ.begin(), [](const auto& s) { return Material::getAtomicNumberFromSymbol(s); });
 
     //regex find
-    std::string regex_string = "([[:digit:]]+)[[:space:]]+([a-zA-Z,. \\(\\)\\-]+)[[:space:]]+";
+    std::string regex_string = "([[:digit:]]+)[[:space:]]+([a-zA-Z,.& \\(\\)\\-]+)[[:space:]]+";
     for (std::size_t i = 0; i < elements.size(); ++i) {
         regex_string += "([[:digit:]]+\\.[[:digit:]]+)[[:space:]]*";
     }

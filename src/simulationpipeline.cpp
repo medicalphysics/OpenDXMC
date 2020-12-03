@@ -120,31 +120,34 @@ void SimulationPipeline::runSimulation(const std::vector<std::shared_ptr<Source>
     auto totalVariance = std::make_shared<std::vector<floating>>(world.size(), 0);
 
     for (std::shared_ptr<Source> s : sources) {
-        auto progressBar = std::make_unique<ProgressBar>(s->totalExposures());
+        ProgressBar progressBar(s->totalExposures());
         const auto& cosines = s->directionCosines();
         std::array<floating, 3> dir;
         dxmc::vectormath::cross(cosines.data(), dir.data());
         const auto ind = dxmc::vectormath::argmax3<std::size_t>(dir.data());
         if (ind == 0)
-            progressBar->setPlaneNormal(ProgressBar::Axis::X);
-        else if (ind==1)
-            progressBar->setPlaneNormal(ProgressBar::Axis::Y);
-        else 
-            progressBar->setPlaneNormal(ProgressBar::Axis::Z);
+            progressBar.setPlaneNormal(ProgressBar::Axis::X);
+        else if (ind == 1)
+            progressBar.setPlaneNormal(ProgressBar::Axis::Y);
+        else
+            progressBar.setPlaneNormal(ProgressBar::Axis::Z);
 
-
-        emit progressBarChanged(progressBar.get());
+        emit progressBarChanged(&progressBar);
         Transport transport;
-        const auto result = transport(world, s.get(), progressBar.get(), true);
+        const auto result = transport(world, s.get(), &progressBar, true);
         std::transform(std::execution::par_unseq, totalDose->cbegin(), totalDose->cend(), result.dose.cbegin(), totalDose->begin(), std::plus<>());
         std::transform(std::execution::par_unseq, totalTally->cbegin(), totalTally->cend(), result.nEvents.cbegin(), totalTally->begin(), std::plus<>());
         std::transform(std::execution::par_unseq, totalVariance->cbegin(), totalVariance->cend(), result.variance.cbegin(), totalVariance->begin(), std::plus<>());
         emit progressBarChanged(nullptr);
+        if (progressBar.cancel()) {
+            emit processingDataEnded();
+            return;
+        }
     }
 
     if (m_ignoreAirDose) {
         auto mat = world.materialIndexArray();
-        auto mat0 = world.materialMap().at(0);
+        const auto& mat0 = world.materialMap().at(0);
         if (mat0.name().compare("Air, Dry (near sea level)") == 0) //ignore air only if present
         {
             std::transform(std::execution::par_unseq, totalDose->cbegin(), totalDose->cend(), mat->cbegin(), totalDose->begin(),
@@ -161,11 +164,11 @@ void SimulationPipeline::runSimulation(const std::vector<std::shared_ptr<Source>
     if (maxDose < 1.0 / 1000.0) {
         dataUnits = "nGy";
         std::transform(std::execution::par_unseq, totalDose->cbegin(), totalDose->cend(), totalDose->begin(),
-            [](auto d) ->floating{ return d * 1e6; });
+            [](auto d) -> floating { return d * 1e6; });
     } else if (maxDose < 1.0) {
         dataUnits = "uGy";
         std::transform(std::execution::par_unseq, totalDose->cbegin(), totalDose->cend(), totalDose->begin(),
-            [](auto d) ->floating{ return d * 1e3; });
+            [](auto d) -> floating { return d * 1e3; });
     }
 
     auto doseContainer = std::make_shared<DoseImageContainer>(totalDose, dimensions, spacing_d, origin);

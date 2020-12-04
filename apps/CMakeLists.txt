@@ -90,6 +90,29 @@ if (WIN32)
 			)
 	endforeach()
 
+	##deploy all win32 dlls since all are not included by default for cmake 3.19
+	include(InstallRequiredSystemLibraries)
+	# For windows we need to include msvcp_atomic_wait library manually
+	foreach(WIN32LIB ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS})
+		get_filename_component(WIN32LIBFOLDER ${WIN32LIB} DIRECTORY)
+		file(GLOB WIN32ALLLIBS "${WIN32LIBFOLDER}/*.dll")
+		foreach(WIN32LIBPATH ${WIN32ALLLIBS})
+			set(CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS ${WIN32LIBPATH} ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS})        
+		endforeach()    
+	endforeach()
+	list(REMOVE_DUPLICATES CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS)
+	foreach(WIN32LIB ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS})
+		get_filename_component(WIN32LIBNAME ${WIN32LIB} NAME)
+		set(outpath "${OPENDXMC_DEPLOY}/${WIN32LIBNAME}")
+		add_custom_command(TARGET opendxmc POST_BUILD
+			COMMENT "Copying WIN32 dll ${WIN32LIB} to ${outpath}"
+			DEPENDS ${WIN32LIB}
+			COMMAND ${CMAKE_COMMAND} -E copy_if_different
+			${WIN32LIB}
+			${outpath}
+			)
+	endforeach()
+
 	#Install windows requirered dlls
     install(DIRECTORY "${OPENDXMC_DEPLOY}" DESTINATION bin)
 

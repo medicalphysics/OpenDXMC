@@ -70,7 +70,7 @@ protected:
 private:
     std::array<std::size_t, 3> m_dimensions = { 64, 64, 64 };
     std::array<double, 3> m_spacing = { 1, 1, 1 };
-    std::shared_ptr<std::vector<double>> m_densityArray = nullptr;
-    std::shared_ptr<std::vector<unsigned char>> m_materialArray = nullptr;
+    std::shared_ptr<std::vector<float>> m_densityArray = nullptr;
+    std::shared_ptr<std::vector<std::uint8_t>> m_materialArray = nullptr;
     std::vector<std::pair<std::uint8_t, Material>> m_materialMap;
 };

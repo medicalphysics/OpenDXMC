@@ -101,9 +101,8 @@ std::shared_ptr<std::vector<T>> BinaryImportPipeline::readBinaryArray(const QStr
         return nullptr;
     }
 
-    auto buffer = std::make_shared<std::vector<T>>(size);
-    //std::vector<T> buffer(size);
-    buffer->resize(m_dimensions[0] * m_dimensions[1] * m_dimensions[2]);
+    const auto buffer_size = m_dimensions[0] * m_dimensions[1] * m_dimensions[2];
+    auto buffer = std::make_shared<std::vector<T>>(buffer_size);
 
     if (!ifs.read(reinterpret_cast<char*>(buffer->data()), size)) {
         auto msq = QString(tr("Error reading file: ")) + path;
@@ -126,7 +125,7 @@ void BinaryImportPipeline::setMaterialArrayPath(const QString& path)
 void BinaryImportPipeline::setDensityArrayPath(const QString& path)
 {
     emit resultsReady(false);
-    m_densityArray = readBinaryArray<double>(path);
+    m_densityArray = readBinaryArray<float>(path);
     if (!m_densityArray) {
         return;
     }

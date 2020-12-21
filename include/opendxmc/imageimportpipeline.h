@@ -118,7 +118,6 @@ public:
 private:
     void materialCTNumbers(std::vector<Material>& materialMap, const Tube& tube)
     {
-
         std::vector<Material> calibrationMaterials;
         calibrationMaterials.push_back(Material("Water, Liquid"));
         calibrationMaterials.push_back(Material("Air, Dry (near sea level)"));
@@ -137,7 +136,7 @@ private:
         AttenuationLut attLut;
         attLut.generate(materialMap, 1.0, tube.voltage());
 
-        //calculating CT number for each matrial based on the materials detector response
+        //calculating CT number for each material based on the materials detector response
         m_materialCTNumbers.clear();
         m_materialCTNumbers.reserve(materialMap.size());
         m_materialEnergy.clear();

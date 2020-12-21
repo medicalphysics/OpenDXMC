@@ -208,7 +208,7 @@ void BinaryImportPipeline::validate()
 
     //finding uniqe elements in material array
     // we must make a copy :(
-    std::vector<unsigned char> matInd(m_materialArray->begin(), m_materialArray->end());
+    std::vector<unsigned char> matInd(m_materialArray->cbegin(), m_materialArray->cend());
     std::sort(matInd.begin(), matInd.end());
     auto last = std::unique(matInd.begin(), matInd.end());
     matInd.erase(last, matInd.end());
@@ -227,7 +227,7 @@ void BinaryImportPipeline::validate()
         emit errorMessage(msg);
         return; // this means that there are material array values that does not have a corresponding material definition
     }
-    //making sure all indices are concecutive
+    //making sure all indices are consecutive
     for (std::uint8_t i = 0; i < matInd.size(); ++i) {
         if (i != matInd[i]) {
             //changing indices

@@ -55,10 +55,11 @@ void SaveLoad::loadFromFile(const QString& path)
     std::shared_ptr<ImageContainer> densImage = nullptr;
     std::shared_ptr<ImageContainer> doseImage = nullptr;
     std::shared_ptr<ImageContainer> tallyImage = nullptr;
+    std::shared_ptr<ImageContainer> varianceImage = nullptr;
+
     for (auto im : m_images) {
         if (im->imageType == ImageContainer::ImageType::MaterialImage)
             matImage = im;
-        ;
         if (im->imageType == ImageContainer::ImageType::OrganImage)
             orgImage = im;
         if (im->imageType == ImageContainer::ImageType::DensityImage)
@@ -67,10 +68,12 @@ void SaveLoad::loadFromFile(const QString& path)
             doseImage = im;
         if (im->imageType == ImageContainer::ImageType::TallyImage)
             tallyImage = im;
+        if (im->imageType == ImageContainer::ImageType::VarianceImage)
+            varianceImage = im;
     }
 
     //creating dose data
-    if (matImage && densImage && doseImage && tallyImage) {
+    if (matImage && densImage && doseImage && tallyImage && varianceImage) {
         if (orgImage) {
             DoseReportContainer cont(
                 m_materialList,
@@ -79,7 +82,8 @@ void SaveLoad::loadFromFile(const QString& path)
                 std::static_pointer_cast<OrganImageContainer>(orgImage),
                 std::static_pointer_cast<DensityImageContainer>(densImage),
                 std::static_pointer_cast<DoseImageContainer>(doseImage),
-                std::static_pointer_cast<TallyImageContainer>(tallyImage));
+                std::static_pointer_cast<TallyImageContainer>(tallyImage),
+                std::static_pointer_cast<VarianceImageContainer>(varianceImage));
             emit doseDataChanged(cont);
         } else {
             DoseReportContainer cont(
@@ -87,7 +91,8 @@ void SaveLoad::loadFromFile(const QString& path)
                 std::static_pointer_cast<MaterialImageContainer>(matImage),
                 std::static_pointer_cast<DensityImageContainer>(densImage),
                 std::static_pointer_cast<DoseImageContainer>(doseImage),
-                std::static_pointer_cast<TallyImageContainer>(tallyImage));
+                std::static_pointer_cast<TallyImageContainer>(tallyImage),
+                std::static_pointer_cast<VarianceImageContainer>(varianceImage));
             emit doseDataChanged(cont);
         }
     }

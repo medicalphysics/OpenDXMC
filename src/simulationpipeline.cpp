@@ -133,7 +133,15 @@ void SimulationPipeline::runSimulation(const std::vector<std::shared_ptr<Source>
             progressBar.setPlaneNormal(ProgressBar::Axis::Z);
 
         emit progressBarChanged(&progressBar);
+
         Transport transport;
+        if (m_lowEnergyCorrection == 2) {
+            transport.setLowEnergyCorrectionModel(Transport::LOWENERGYCORRECTION::IA);
+        } else if (m_lowEnergyCorrection == 1) {
+            transport.setLowEnergyCorrectionModel(Transport::LOWENERGYCORRECTION::LIVERMORE);
+        } else {
+            transport.setLowEnergyCorrectionModel(Transport::LOWENERGYCORRECTION::NONE);
+        }
         const auto result = transport(world, s.get(), &progressBar, true);
         std::transform(std::execution::par_unseq, totalDose->cbegin(), totalDose->cend(), result.dose.cbegin(), totalDose->begin(), std::plus<>());
         std::transform(std::execution::par_unseq, totalTally->cbegin(), totalTally->cend(), result.nEvents.cbegin(), totalTally->begin(), std::plus<>());
@@ -151,12 +159,15 @@ void SimulationPipeline::runSimulation(const std::vector<std::shared_ptr<Source>
         if (mat0.name().compare("Air, Dry (near sea level)") == 0) //ignore air only if present
         {
             std::transform(std::execution::par_unseq, totalDose->cbegin(), totalDose->cend(), mat->cbegin(), totalDose->begin(),
-                [](auto e, unsigned char i) -> floating { return i == 0 ? 0 : e; });
+                [](auto e, auto i) -> floating { return i == 0 ? 0 : e; });
+            std::transform(std::execution::par_unseq, totalVariance->cbegin(), totalVariance->cend(), mat->cbegin(), totalVariance->begin(),
+                [](const auto v, const auto i) -> floating { return i == 0 ? 0 : v; });
         }
     }
     std::array<double, 3> origin;
-    for (int i = 0; i < 3; ++i)
+    for (int i = 0; i < 3; ++i) {
         origin[i] = -(dimensions[i] * spacing_d[i] * 0.5);
+    }
 
     //scaling dosevalues to sane units
     const auto maxDose = *std::max_element(std::execution::par_unseq, totalDose->cbegin(), totalDose->cend());
@@ -165,10 +176,14 @@ void SimulationPipeline::runSimulation(const std::vector<std::shared_ptr<Source>
         dataUnits = "nGy";
         std::transform(std::execution::par_unseq, totalDose->cbegin(), totalDose->cend(), totalDose->begin(),
             [](auto d) -> floating { return d * 1e6; });
+        std::transform(std::execution::par_unseq, totalVariance->cbegin(), totalVariance->cend(), totalVariance->begin(),
+            [](auto d) -> floating { return d * 1e12; }); // variance must be multipliet by square
     } else if (maxDose < 1.0) {
         dataUnits = "uGy";
         std::transform(std::execution::par_unseq, totalDose->cbegin(), totalDose->cend(), totalDose->begin(),
             [](auto d) -> floating { return d * 1e3; });
+        std::transform(std::execution::par_unseq, totalVariance->cbegin(), totalVariance->cend(), totalVariance->begin(),
+            [](auto d) -> floating { return d * 1e6; }); // variance must be multipliet by square
     }
 
     auto doseContainer = std::make_shared<DoseImageContainer>(totalDose, dimensions, spacing_d, origin);
@@ -184,18 +199,18 @@ void SimulationPipeline::runSimulation(const std::vector<std::shared_ptr<Source>
     auto varianceContainer = std::make_shared<VarianceImageContainer>(totalVariance, dimensions, spacing_d, origin);
     varianceContainer->directionCosines = m_densityImage->directionCosines;
     varianceContainer->ID = m_densityImage->ID;
-    varianceContainer->dataUnits = "Variance " + dataUnits;
+    varianceContainer->dataUnits = dataUnits + "^2";
 
     if (m_organImage && (m_organList.size() > 0)) {
         if (m_organImage->ID == m_materialImage->ID) {
-            DoseReportContainer cont(world.materialMap(), m_organList, m_materialImage, m_organImage, m_densityImage, doseContainer, tallyContainer);
+            DoseReportContainer cont(world.materialMap(), m_organList, m_materialImage, m_organImage, m_densityImage, doseContainer, tallyContainer, varianceContainer);
             emit doseDataChanged(cont);
         } else {
-            DoseReportContainer cont(world.materialMap(), m_materialImage, m_densityImage, doseContainer, tallyContainer);
+            DoseReportContainer cont(world.materialMap(), m_materialImage, m_densityImage, doseContainer, tallyContainer, varianceContainer);
             emit doseDataChanged(cont);
         }
     } else {
-        DoseReportContainer cont(world.materialMap(), m_materialImage, m_densityImage, doseContainer, tallyContainer);
+        DoseReportContainer cont(world.materialMap(), m_materialImage, m_densityImage, doseContainer, tallyContainer, varianceContainer);
         emit doseDataChanged(cont);
     }
     emit imageDataChanged(doseContainer);

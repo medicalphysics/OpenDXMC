@@ -190,7 +190,7 @@ BinaryImportWidget::BinaryImportWidget(QWidget* parent)
     auto densityBox = new QGroupBox(tr("Density array:"), this);
     auto densityLayout = new QVBoxLayout;
     densityBox->setLayout(densityLayout);
-    auto densityDescription = new QLabel(tr("Select binary density array. The density array must be a binary file consisting of one 32 bit number per index (type of float). The size of the array must be dimension_x * dimension_y * dimension_z * 4 bytes. The array is read in standard C-style, meaning the first index is varying most."), this);
+    auto densityDescription = new QLabel(tr("Select binary density array, units must be given in g/cm^3. The density array must be a binary file consisting of one 32 bit number per index (type of float). The size of the array must be dimension_x * dimension_y * dimension_z * 4 bytes. The array is read in standard C-style, meaning the first index is varying most."), this);
     densityDescription->setWordWrap(true);
     densityLayout->addWidget(densityDescription);
     auto densityFileSelect = new FileSelectWidget(this, tr("Select density binary file"));

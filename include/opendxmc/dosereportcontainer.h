@@ -27,11 +27,12 @@ Copyright 2019 Erlend Andersen
 
 struct DoseReportElement {
     std::size_t voxels = 0;
-    floating mass = 0.0;
-    floating volume = 0.0;
-    floating dose = 0.0;
-    floating doseStd = 0.0;
-    floating doseMax = 0.0;
+    floating mass = 0;
+    floating volume = 0;
+    floating dose = 0;
+    floating variance = 0;
+    floating doseStd = 0;
+    floating doseMax = 0;
     std::size_t ID = 0;
     std::size_t nEvents = 0;
     std::string name;
@@ -49,7 +50,8 @@ public:
         std::shared_ptr<MaterialImageContainer> materialImage,
         std::shared_ptr<DensityImageContainer> densityImage,
         std::shared_ptr<DoseImageContainer> doseImage,
-        std::shared_ptr<TallyImageContainer> tallyImage);
+        std::shared_ptr<TallyImageContainer> tallyImage,
+        std::shared_ptr<VarianceImageContainer> varianceImage);
 
     DoseReportContainer(
         const std::vector<Material>& materialMap,
@@ -58,7 +60,8 @@ public:
         std::shared_ptr<OrganImageContainer> organImage,
         std::shared_ptr<DensityImageContainer> densityImage,
         std::shared_ptr<DoseImageContainer> doseImage,
-        std::shared_ptr<TallyImageContainer> tallyImage);
+        std::shared_ptr<TallyImageContainer> tallyImage,
+        std::shared_ptr<VarianceImageContainer> varianceImage);
     std::shared_ptr<std::vector<DoseReportElement>> organData() const { return m_organValues; }
     std::shared_ptr<std::vector<DoseReportElement>> materialData() const { return m_materialValues; }
     const std::string& doseUnits(void) const { return m_doseUnits; }
@@ -69,13 +72,15 @@ protected:
         RegionImage regionImage,
         std::shared_ptr<DensityImageContainer> densityImage,
         std::shared_ptr<DoseImageContainer> doseImage,
-        std::shared_ptr<TallyImageContainer> tallyImage) const;
+        std::shared_ptr<TallyImageContainer> tallyImage,
+        std::shared_ptr<VarianceImageContainer> varianceImage) const;
     template <typename RegionImage>
     std::vector<DoseReportElement> createData(const std::vector<Material>& nameMap,
         RegionImage regionImage,
         std::shared_ptr<DensityImageContainer> densityImage,
         std::shared_ptr<DoseImageContainer> doseImage,
-        std::shared_ptr<TallyImageContainer> tallyImage) const;
+        std::shared_ptr<TallyImageContainer> tallyImage,
+        std::shared_ptr<VarianceImageContainer> varianceImage) const;
     void setDoseUnits(const std::string& units) { m_doseUnits = units; }
 
 private:

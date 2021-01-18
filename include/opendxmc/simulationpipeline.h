@@ -52,7 +52,7 @@ public:
     void setMaterials(const std::vector<Material>& materials);
     void setOrganList(const std::vector<std::string>& organList) { m_organList = organList; }
     void runSimulation(const std::vector<std::shared_ptr<Source>> sources);
-
+    void setLowEnergyCorrection(int value) { m_lowEnergyCorrection = std::max(std::min(value, 2), 0); }
     bool ignoreAirDose() const { return m_ignoreAirDose; }
     void setIgnoreAirDose(bool on) { m_ignoreAirDose = on; }
 
@@ -65,6 +65,7 @@ signals:
 
 private:
     bool m_ignoreAirDose = true;
+    int m_lowEnergyCorrection = 1;
     std::uint64_t m_currentImageID = 0;
     std::shared_ptr<DensityImageContainer> m_densityImage = nullptr;
     std::shared_ptr<MaterialImageContainer> m_materialImage = nullptr;

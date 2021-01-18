@@ -20,18 +20,19 @@ Copyright 2019 Erlend Andersen
 #include "opendxmc/volumeactorcontainer.h"
 
 #include <QComboBox>
+#include <QFile>
 #include <QGroupBox>
 #include <QHBoxLayout>
-#include <QItemEditorFactory>
-#include <QKeyEvent>
-#include <QPushButton>
-#include <QStyledItemDelegate>
-#include <QVBoxLayout>
-
-#include <QFile>
 #include <QHeaderView>
+#include <QItemEditorFactory>
 #include <QJsonArray>
 #include <QJsonDocument>
+#include <QKeyEvent>
+#include <QLabel>
+#include <QPushButton>
+#include <QSettings>
+#include <QStyledItemDelegate>
+#include <QVBoxLayout>
 
 BowtieFilterReader::BowtieFilterReader(QWidget* parent)
     : QWidget(parent)
@@ -84,7 +85,7 @@ std::shared_ptr<BowTieFilter> BowtieFilterReader::readFilter(QJsonObject& json) 
         for (int dataIndex = 0; dataIndex < filtersArray.size(); ++dataIndex) {
             QJsonObject filterObject = filtersArray[dataIndex].toObject();
             if (filterObject.contains("angle") && filterObject["angle"].isDouble()) {
-                floating angle = filterObject["angle"].toDouble(); 
+                floating angle = filterObject["angle"].toDouble();
                 if (filterObject.contains("weight") && filterObject["weight"].isDouble()) {
                     floating weight = filterObject["weight"].toDouble();
                     filterData.push_back(std::make_pair(angle, weight));
@@ -339,17 +340,47 @@ SourceEditWidget::SourceEditWidget(QWidget* parent)
         m_delegate->addBowtieFilter(filter);
     }
 
-    //Perhaps make an interface to start and stop simulations//
-    auto runbutton = new QPushButton(tr("Run simulation"), this);
-    mainLayout->addWidget(runbutton);
-    connect(runbutton, &QPushButton::clicked, this, &SourceEditWidget::requestRunSimulation);
-
     modelView->showColumn(2);
     mainLayout->addWidget(addSourceBox);
     mainLayout->addWidget(modelView);
+
+    auto runBox = new QGroupBox(tr("Run simulation"), this);
+    auto runBoxLayout = new QVBoxLayout(runBox);
+    auto lowEnergyCorrectionLabel = new QLabel(tr("Select low energy correction mode"));
+
+    auto lowEnergyComboBox = new QComboBox(runBox);
+    lowEnergyComboBox->addItem(tr("None"));
+    lowEnergyComboBox->addItem(tr("Livermore correction"));
+    lowEnergyComboBox->addItem(tr("Impulse approximation"));
+
+    QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
+    if (settings.contains("sourceEditor/lowEnergyCorrectionMode"))
+        m_lowEnergyCorrection = static_cast<std::size_t>(settings.value("sourceEditor/lowEnergyCorrectionMode").value<int>());
+    lowEnergyComboBox->setCurrentIndex(m_lowEnergyCorrection);
+    connect(lowEnergyComboBox, QOverload<int>::of(&QComboBox::activated), [=](int value) { 
+        this->setLowEnergyCorrection(value);
+        emit lowEnergyCorrectionChanged(m_lowEnergyCorrection); });
+    emit lowEnergyCorrectionChanged(m_lowEnergyCorrection);
+
+    auto labelLayout = new QHBoxLayout(runBox);
+    labelLayout->addWidget(lowEnergyCorrectionLabel);
+    labelLayout->addWidget(lowEnergyComboBox);
+    runBoxLayout->addLayout(labelLayout);
+    auto runbutton = new QPushButton(tr("Run simulation"), this);
+    runBoxLayout->addWidget(runbutton);
+    connect(runbutton, &QPushButton::clicked, this, &SourceEditWidget::requestRunSimulation);
+
+    mainLayout->addWidget(runBox);
+
     this->setLayout(mainLayout);
 }
 
+void SourceEditWidget::setLowEnergyCorrection(int value)
+{
+    m_lowEnergyCorrection = std::max(std::min(value, 2), 0);
+    QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
+    settings.setValue("sourceEditor/lowEnergyCorrectionMode", m_lowEnergyCorrection);
+}
 void SourceEditWidget::addCurrentSourceType(void)
 {
     if (m_currentSourceTypeSelected == 0) {

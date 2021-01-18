@@ -130,6 +130,7 @@ MainWindow::MainWindow(QWidget* parent)
     connect(m_importPipeline, &ImageImportPipeline::imageDataChanged, sourceEditWidget->model(), &SourceModel::setImageData);
     connect(m_binaryImportPipeline, &BinaryImportPipeline::imageDataChanged, sourceEditWidget->model(), &SourceModel::setImageData);
 
+
     //dosereportWidget
     auto doseReportWidget = new DoseReportWidget(this);
     connect(m_simulationPipeline, &SimulationPipeline::doseDataChanged, doseReportWidget, &DoseReportWidget::setDoseData);
@@ -168,6 +169,8 @@ MainWindow::MainWindow(QWidget* parent)
 
     //request to run simulation connection
     connect(sourceEditWidget, &SourceEditWidget::runSimulation, m_simulationPipeline, &SimulationPipeline::runSimulation);
+    connect(sourceEditWidget, &SourceEditWidget::lowEnergyCorrectionChanged, m_simulationPipeline, &SimulationPipeline::setLowEnergyCorrection);
+
 
     //setting up saveload
     m_saveLoad = new SaveLoad();

@@ -68,6 +68,8 @@ QVariant DoseReportModel::headerData(int section, Qt::Orientation orientation, i
         else if (section == 8)
             return QString(tr("Number of events [N]"));
         else if (section == 9)
+            return QString(tr("Dose variance"))+ QString(" [") + QString(m_dataUnits) + QString("^2]");
+        else if (section == 10)
             return QString(tr("ID"));
     }
     return QVariant();
@@ -121,10 +123,14 @@ void DoseReportModel::sort(int column, Qt::SortOrder order)
             std::sort(beg, end, [=](auto& left, auto& right) { return left.nEvents > right.nEvents; });
     else if (column == 9)
         if (order == Qt::AscendingOrder)
+            std::sort(beg, end, [=](auto& left, auto& right) { return left.variance < right.variance; });
+        else
+            std::sort(beg, end, [=](auto& left, auto& right) { return left.variance > right.variance; });
+    else if (column == 10)
+        if (order == Qt::AscendingOrder)
             std::sort(beg, end, [=](auto& left, auto& right) { return left.ID < right.ID; });
         else
             std::sort(beg, end, [=](auto& left, auto& right) { return left.ID > right.ID; });
-
     emit layoutChanged(changedList);
 }
 
@@ -158,6 +164,8 @@ QVariant DoseReportModel::data(const QModelIndex& index, int role) const
         else if (index.column() == 8)
             return (*m_data)[index.row()].nEvents;
         else if (index.column() == 9)
+            return (*m_data)[index.row()].variance;
+        else if (index.column() == 10)
             return (*m_data)[index.row()].ID;
     } else if (role == Qt::BackgroundRole) {
         if (index.column() == 0)

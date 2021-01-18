@@ -85,8 +85,11 @@ public:
     SourceEditWidget(QWidget* parent = nullptr);
     SourceModel* model() { return m_model; }
     SourceDelegate* delegate() { return m_delegate; }
+    void setLowEnergyCorrection(int value);
+
 signals:
     void runSimulation(const std::vector<std::shared_ptr<Source>> sources);
+    void lowEnergyCorrectionChanged(int value);
 
 protected:
     void setCurrentSourceTypeSelected(int index) { m_currentSourceTypeSelected = index; }
@@ -98,4 +101,5 @@ private:
     SourceModel* m_model = nullptr;
     SourceDelegate* m_delegate = nullptr;
     int m_currentSourceTypeSelected;
+    int m_lowEnergyCorrection = 1;
 };

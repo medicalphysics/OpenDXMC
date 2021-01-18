@@ -136,11 +136,11 @@ void SimulationPipeline::runSimulation(const std::vector<std::shared_ptr<Source>
 
         Transport transport;
         if (m_lowEnergyCorrection == 2) {
-            transport.setLowEnergyCorrectionModel(Transport::LOWENERGYCORRECTION::IA);
+            transport.setLowEnergyCorrectionModel(dxmc::LOWENERGYCORRECTION::IA);
         } else if (m_lowEnergyCorrection == 1) {
-            transport.setLowEnergyCorrectionModel(Transport::LOWENERGYCORRECTION::LIVERMORE);
+            transport.setLowEnergyCorrectionModel(dxmc::LOWENERGYCORRECTION::LIVERMORE);
         } else {
-            transport.setLowEnergyCorrectionModel(Transport::LOWENERGYCORRECTION::NONE);
+            transport.setLowEnergyCorrectionModel(dxmc::LOWENERGYCORRECTION::NONE);
         }
         const auto result = transport(world, s.get(), &progressBar, true);
         std::transform(std::execution::par_unseq, totalDose->cbegin(), totalDose->cend(), result.dose.cbegin(), totalDose->begin(), std::plus<>());

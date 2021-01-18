@@ -247,7 +247,7 @@ std::unique_ptr<H5::DataSet> H5Wrapper::createDataSet(std::shared_ptr<ImageConta
         return nullptr;
     auto namePath = groupPath + "/" + name;
 
-    constexpr hsize_t rank = 3;
+    constexpr int rank = 3;
     hsize_t dims[3];
     for (std::size_t i = 0; i < 3; ++i)
         dims[i] = static_cast<hsize_t>(image->image->GetDimensions()[i]);

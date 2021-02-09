@@ -55,109 +55,50 @@ Q_DECLARE_METATYPE(std::vector<std::string>)
 Q_DECLARE_METATYPE(std::shared_ptr<AECFilter>)
 #endif
 
-class CalculateCTNumberFromMaterials {
-public:
-    CalculateCTNumberFromMaterials(std::vector<Material>& materialMap, const Tube& tube)
-    {
-        materialCTNumbers(materialMap, tube);
+template <typename CTIter, typename MatIter, typename DensIter>
+void calculateMaterialAndDensityFromCTData(const Tube& tube, const std::vector<Material>& materials, CTIter ctBegin, CTIter ctEnd, MatIter matBegin, DensIter densBegin)
+{
+    Material air("Air, Dry (near sea level)");
+    Material water("Water, Liquid");
+    auto specter = tube.getSpecter(true);
+    using floatingType = typename std::iterator_traits<DensIter>::value_type;
+    static_assert(std::is_same<floatingType, typename std::iterator_traits<CTIter>::value_type>::value, "CT data and density data must be of same type");
+
+    const floatingType airAttenuation = static_cast<floatingType>(air.standardDensity()) * std::transform_reduce(std::execution::par_unseq, specter.cbegin(), specter.cend(), floatingType { 0 }, std::plus<>(), [&](const auto s) -> floatingType { return s.second * static_cast<floatingType>(air.getTotalAttenuation(s.first)); });
+    const floatingType waterAttenuation = static_cast<floatingType>(water.standardDensity()) * std::transform_reduce(std::execution::par_unseq, specter.cbegin(), specter.cend(), floatingType { 0 }, std::plus<>(), [&](const auto s) -> floatingType { return s.second * static_cast<floatingType>(water.getTotalAttenuation(s.first)); });
+
+    std::vector<floatingType> materialAttenuation(materials.size());
+    std::vector<floatingType> materialHUvalue(materials.size());
+    for (std::size_t i = 0; i < materials.size(); ++i) {
+        const auto dens = static_cast<floatingType>(materials[i].standardDensity());
+        const auto attenuation = std::transform_reduce(std::execution::par_unseq, specter.cbegin(), specter.cend(), floatingType { 0 }, std::plus<>(), [&](const auto s) -> floatingType { return s.second * static_cast<floatingType>(materials[i].getTotalAttenuation(s.first)); });
+        materialAttenuation[i] = attenuation;
+        materialHUvalue[i] = (materialAttenuation[i] * dens - waterAttenuation) / (waterAttenuation - airAttenuation) * 1000;
     }
 
-    template <class iterT, class iterU>
-    void generateMaterialMap(iterT CTArrayFirst, iterT CTArrayLast, iterU destination)
-    {
-        if (m_materialCTNumbers.size() <= 1) {
-            std::fill(destination, destination + std::distance(CTArrayFirst, CTArrayLast), 0);
-            return;
-        }
-
-        typedef typename std::iterator_traits<iterT>::value_type T;
-        typedef typename std::iterator_traits<iterU>::value_type U;
-
-        const std::size_t nThres = m_materialCTNumbers.size();
-        std::vector<T> CTThres(nThres);
-        for (std::size_t i = 0; i < nThres - 1; ++i) {
-            CTThres[i] = (m_materialCTNumbers[i].second + m_materialCTNumbers[i + 1].second) / 2;
-        }
-
-        CTThres[nThres - 1] = std::numeric_limits<T>::infinity();
-
-        std::transform(std::execution::par_unseq, CTArrayFirst, CTArrayLast, destination,
-            [&](const T ctNumber) -> U {
-                for (std::size_t i = 0; i < nThres; ++i) {
-                    if (CTThres[i] >= ctNumber)
-                        return static_cast<U>(i);
-                }
-                return static_cast<U>(0);
-            });
+    // assigning materials
+    using matType = typename std::iterator_traits<MatIter>::value_type;
+    std::vector<std::pair<matType, floatingType>> CTNumberThreshold(materialHUvalue.size());
+    for (matType i = 0; i < CTNumberThreshold.size() - 1; ++i) {
+        const auto thres = (materialHUvalue[i] + materialHUvalue[i + 1]) / 2;
+        CTNumberThreshold[i] = std::make_pair(i, thres);
     }
-    template <class iterT, class iterU, class iterD>
-    void generateDensityMap(iterT CTArrayFirst, iterT CTArrayLast, iterU materialIndex, iterD destination)
-    {
-        //calculate density based on voxel_i CT number and estimated CT number from material M in voxel_i
-
-        typedef typename std::iterator_traits<iterD>::value_type D;
-
-        if (m_materialCTNumbers.size() > 0) {
-            std::vector<double> ctNumbers(m_materialCTNumbers.size());
-            for (auto [index, hu] : m_materialCTNumbers)
-                ctNumbers[index] = hu;
-            const auto constant = (m_calibrationEnergy[0] * m_calibrationDensity[0] - m_calibrationEnergy[1] * m_calibrationDensity[1]) / 1000.0;
-
-            std::transform(std::execution::par_unseq, CTArrayFirst, CTArrayLast, materialIndex, destination,
-                [constant, &ctNumbers, this](auto val, auto index) -> D {
-                    const D dens = (val - ctNumbers[index]) * constant / m_materialEnergy[index] + m_materialDensity[index];
-                    return dens > 0.0 ? dens : D { 0 };
-                });
-        } else {
-            auto destination_stop = destination;
-            std::advance(destination_stop, std::distance(CTArrayFirst, CTArrayLast));
-            std::fill(destination, destination_stop, D { 0 });
+    CTNumberThreshold[CTNumberThreshold.size() - 1] = std::make_pair(static_cast<matType>(CTNumberThreshold.size() - 1), std ::numeric_limits<floatingType>::infinity());
+    std::sort(CTNumberThreshold.begin(), CTNumberThreshold.end(), [](const auto lh, const auto rh) { return lh.second < rh.second; });
+    std::transform(std::execution::par_unseq, ctBegin, ctEnd, matBegin, [&](const auto HU) -> matType {
+        for (const auto& [idx, HUthres] : CTNumberThreshold) {
+            if (HU <= HUthres)
+                return idx;
         }
-    }
+        return CTNumberThreshold.back().first; // this will never be hit, but we include it to make the compiler happy
+    });
 
-private:
-    void materialCTNumbers(std::vector<Material>& materialMap, const Tube& tube)
-    {
-        std::vector<Material> calibrationMaterials;
-        calibrationMaterials.push_back(Material("Water, Liquid"));
-        calibrationMaterials.push_back(Material("Air, Dry (near sea level)"));
-        AttenuationLut calibrationLut;
-        calibrationLut.generate(calibrationMaterials, 1.0, tube.voltage());
-
-        m_calibrationEnergy.clear();
-        auto specterEnergy = std::vector<floating>(calibrationLut.energyBegin(), calibrationLut.energyEnd());
-        auto specterIntensity = tube.getSpecter(specterEnergy);
-        m_calibrationDensity.clear();
-        for (std::size_t i = 0; i < calibrationMaterials.size(); ++i) {
-            m_calibrationDensity.push_back(calibrationMaterials[i].standardDensity());
-            m_calibrationEnergy.push_back(std::transform_reduce(std::execution::par, calibrationLut.attenuationTotalBegin(i), calibrationLut.attenuationTotalEnd(i), specterIntensity.cbegin(), 0.0));
-        }
-
-        AttenuationLut attLut;
-        attLut.generate(materialMap, 1.0, tube.voltage());
-
-        //calculating CT number for each material based on the materials detector response
-        m_materialCTNumbers.clear();
-        m_materialCTNumbers.reserve(materialMap.size());
-        m_materialEnergy.clear();
-        m_materialEnergy.reserve(materialMap.size());
-        m_materialDensity.clear();
-        m_materialDensity.reserve(materialMap.size());
-        for (std::size_t index = 0; index < materialMap.size(); ++index) {
-            m_materialEnergy.push_back(std::transform_reduce(std::execution::par, attLut.attenuationTotalBegin(index), attLut.attenuationTotalEnd(index), specterIntensity.cbegin(), 0.0));
-            m_materialDensity.push_back((materialMap[index]).standardDensity());
-            floating ctNumber = (m_materialEnergy[index] * m_materialDensity[index] - m_calibrationEnergy[0] * m_calibrationDensity[0]) / (m_calibrationEnergy[0] * m_calibrationDensity[0] - m_calibrationEnergy[1] * m_calibrationDensity[1]) * 1000.0; //Houndsfield units
-            m_materialCTNumbers.push_back(std::make_pair(index, ctNumber));
-        }
-        std::sort(m_materialCTNumbers.begin(), m_materialCTNumbers.end(), [](const std::pair<std::size_t, floating>& a, const std::pair<std::size_t, floating>& b) { return a.second < b.second; });
-    }
-
-    std::vector<std::pair<std::size_t, floating>> m_materialCTNumbers;
-    std::vector<floating> m_calibrationEnergy;
-    std::vector<floating> m_calibrationDensity;
-    std::vector<floating> m_materialEnergy;
-    std::vector<floating> m_materialDensity;
-};
+    // calculating density
+    std::transform(std::execution::par_unseq, ctBegin, ctEnd, matBegin, densBegin, [&](const auto HU, const auto mIdx) -> floatingType {
+        const auto att = HU * (waterAttenuation - airAttenuation) / 1000 + waterAttenuation;
+        return materialAttenuation[mIdx] > 0 ? att / materialAttenuation[mIdx] : 0;
+    });
+}
 
 class ImageImportPipeline : public QObject {
     Q_OBJECT
@@ -170,8 +111,8 @@ public:
 
     void setCTImportMaterialMap(const std::vector<Material>& map) { m_ctImportMaterialMap = map; }
     void setCTImportAqusitionVoltage(double voltage) { m_tube.setVoltage(static_cast<floating>(voltage)); }
-    void setCTImportAqusitionAlFiltration(double mm) {m_tube.setAlFiltration(static_cast<floating>(mm)); }
-    void setCTImportAqusitionCuFiltration(double mm) {m_tube.setCuFiltration(static_cast<floating>(mm)); }
+    void setCTImportAqusitionAlFiltration(double mm) { m_tube.setAlFiltration(static_cast<floating>(mm)); }
+    void setCTImportAqusitionCuFiltration(double mm) { m_tube.setCuFiltration(static_cast<floating>(mm)); }
 
 signals:
     void processingDataStarted();
@@ -182,8 +123,8 @@ signals:
     void aecFilterChanged(std::shared_ptr<AECFilter> filter);
 
 protected:
-    template <class Iter>
-    std::pair<std::shared_ptr<std::vector<unsigned char>>, std::shared_ptr<std::vector<floating>>> calculateMaterialAndDensityFromCTData(Iter first, Iter last);
+    //template <class Iter>
+    //std::pair<std::shared_ptr<std::vector<unsigned char>>, std::shared_ptr<std::vector<floating>>> calculateMaterialAndDensityFromCTData(Iter first, Iter last);
     void processCTData(std::shared_ptr<ImageContainer> ctImage, const std::pair<std::string, std::vector<floating>>& exposureData);
     std::pair<std::string, std::vector<floating>> readExposureData(vtkSmartPointer<vtkDICOMReader>& dicomReader);
 

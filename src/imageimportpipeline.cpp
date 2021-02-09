@@ -38,6 +38,7 @@ Copyright 2019 Erlend Andersen
 #include <execution>
 #include <fstream>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -162,7 +163,7 @@ void ImageImportPipeline::setBlurRadius(const double* blur)
     for (std::size_t i = 0; i < 3; ++i)
         m_blurRadius[i] = blur[i];
 }
-
+/*
 template <class Iter>
 std::pair<std::shared_ptr<std::vector<unsigned char>>, std::shared_ptr<std::vector<floating>>> ImageImportPipeline::calculateMaterialAndDensityFromCTData(Iter first, Iter last)
 {
@@ -174,7 +175,7 @@ std::pair<std::shared_ptr<std::vector<unsigned char>>, std::shared_ptr<std::vect
     auto density = std::make_shared<std::vector<floating>>(std::distance(first, last)); // we must make new vector to not invalidate old vector
     worker.generateDensityMap(first, last, materialIndex->begin(), density->begin());
     return std::make_pair(materialIndex, density);
-}
+}*/
 
 void ImageImportPipeline::processCTData(std::shared_ptr<ImageContainer> ctImage, const std::pair<std::string, std::vector<floating>>& exposureData)
 {
@@ -184,25 +185,21 @@ void ImageImportPipeline::processCTData(std::shared_ptr<ImageContainer> ctImage,
     if (!ctImage->image) {
         return; // if ctimage is empty return;
     }
-    std::shared_ptr<std::vector<unsigned char>> materialIndex;
-    std::shared_ptr<std::vector<floating>> density;
 
     std::array<std::size_t, 3> dimensions;
     for (std::size_t i = 0; i < 3; ++i)
         dimensions[i] = (ctImage->image->GetDimensions())[i];
+    const auto size = std::reduce(dimensions.cbegin(), dimensions.cend(), std::size_t { 1 }, std::multiplies<>());
 
-    if (ctImage->image->GetScalarType() == VTK_DOUBLE) {
-        auto begin = static_cast<double*>(ctImage->image->GetScalarPointer());
-        auto end = begin + dimensions[0] * dimensions[1] * dimensions[2];
-        auto p = calculateMaterialAndDensityFromCTData(begin, end);
-        materialIndex = p.first;
-        density = p.second;
-    } else if (ctImage->image->GetScalarType() == VTK_FLOAT) {
+    auto materialIndex = std::make_shared<std::vector<std::uint8_t>>(size);
+    auto density = std::make_shared<std::vector<floating>>(size);
+
+    if (ctImage->image->GetScalarType() == VTK_FLOAT) {
         auto begin = static_cast<float*>(ctImage->image->GetScalarPointer());
-        auto end = begin + dimensions[0] * dimensions[1] * dimensions[2];
-        auto p = calculateMaterialAndDensityFromCTData(begin, end);
-        materialIndex = p.first;
-        density = p.second;
+        auto end = begin + size;
+        calculateMaterialAndDensityFromCTData(m_tube, m_ctImportMaterialMap, begin, end, materialIndex->begin(), density->begin());
+    } else {
+        throw std::invalid_argument("CT image type must be float");
     }
 
     std::array<double, 3> origo;
@@ -291,7 +288,8 @@ std::pair<std::string, std::vector<floating>> ImageImportPipeline::readExposureD
     std::sort(posExposure.begin(), posExposure.end());
 
     std::vector<floating> exposure(n);
-    std::transform(posExposure.cbegin(), posExposure.cend(), exposure.begin(), [](auto el) -> auto { return el.second; });
+    std::transform(
+        posExposure.cbegin(), posExposure.cend(), exposure.begin(), [](auto el) -> auto { return el.second; });
 
     vtkDICOMTag seriesDescriptionTag(8, 4158);
     auto seriesDescriptionValue = meta->GetAttributeValue(seriesDescriptionTag);

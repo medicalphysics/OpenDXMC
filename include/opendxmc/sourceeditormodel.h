@@ -59,17 +59,36 @@ public:
     SourceItem(std::shared_ptr<S> source, std::function<void(T)> setter, std::function<T(void)> getter);
     QVariant data(int role) const override
     {
-        if (role == Qt::DisplayRole)
-            return f_data();
-        else
-            return QVariant();
+        if constexpr (std::is_same<T, bool>::value) {
+            // For boelan data we want to use checkboxes
+            if (role == Qt::CheckStateRole)
+                return f_data() ? Qt::Checked : Qt::Unchecked;
+        } else {
+            if (role == Qt::DisplayRole)
+                return f_data();
+        }
+
+        return QStandardItem::data(role);
     }
     void setData(const QVariant& data, int role) override
     {
-        if (role == Qt::EditRole) {
-            T val = data.value<T>();
-            f_setData(val);
-            emitDataChanged();
+        if constexpr (std::is_same<T, bool>::value) {
+            // For bolean data we want to use checkboxes
+            if (role == Qt::CheckStateRole) {
+                const T val = data.value<int>() == Qt::Checked;
+                f_setData(val);
+                emitDataChanged();
+            } else {
+                QStandardItem::setData(data, role);
+            }
+        } else {
+            if (role == Qt::EditRole) {
+                const T val = data.value<T>();
+                f_setData(val);
+                emitDataChanged();
+            } else {
+                QStandardItem::setData(data, role);
+            }
         }
     }
 
@@ -115,5 +134,5 @@ private:
     std::vector<std::shared_ptr<SourceActorContainer>> m_actors;
     std::vector<std::shared_ptr<Source>> m_sources;
     std::uint64_t m_currentImageID = 0;
-    std::array<double, 6> m_currentImageExtent;
+    std::array<double, 6> m_currentImageExtent = { 0, 0, 0, 0, 0, 0 };
 };

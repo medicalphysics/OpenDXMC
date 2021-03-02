@@ -25,6 +25,11 @@ SourceItem<S, T>::SourceItem(std::shared_ptr<S> source, std::function<void(T)> s
     f_data = getter;
     f_setData = setter;
     m_source = source;
+
+    //For boolean data we want to use checkboxes
+    if constexpr (std::is_same<bool, T>::value) {
+        setCheckable(true);
+    }
 }
 
 template <>
@@ -40,7 +45,7 @@ template <>
 void SourceItem<CTSource, std::shared_ptr<BowTieFilter>>::setData(const QVariant& data, int role)
 {
     if (role == Qt::DisplayRole || role == Qt::EditRole) {
-        auto val = qvariant_cast<std::shared_ptr<BowTieFilter>>(data);
+        const auto val = qvariant_cast<std::shared_ptr<BowTieFilter>>(data);
         f_setData(val);
         emitDataChanged();
     }
@@ -59,7 +64,7 @@ template <>
 void SourceItem<CTSpiralDualSource, std::shared_ptr<BowTieFilter>>::setData(const QVariant& data, int role)
 {
     if (role == Qt::DisplayRole || role == Qt::EditRole) {
-        auto val = qvariant_cast<std::shared_ptr<BowTieFilter>>(data);
+        const auto val = qvariant_cast<std::shared_ptr<BowTieFilter>>(data);
         f_setData(val);
         emitDataChanged();
     }
@@ -78,7 +83,7 @@ template <>
 void SourceItem<CTSource, std::shared_ptr<AECFilter>>::setData(const QVariant& data, int role)
 {
     if (role == Qt::DisplayRole || role == Qt::EditRole) {
-        auto val = qvariant_cast<std::shared_ptr<AECFilter>>(data);
+        const auto val = qvariant_cast<std::shared_ptr<AECFilter>>(data);
         f_setData(val);
         emitDataChanged();
     }
@@ -88,8 +93,8 @@ template <>
 QVariant SourceItem<CTSource, std::uint64_t>::data(int role) const
 {
     if (role == Qt::DisplayRole || role == Qt::EditRole) {
-        auto n = f_data();
-        auto data = static_cast<qlonglong>(n);
+        const auto n = f_data();
+        const auto data = static_cast<qlonglong>(n);
         return QVariant(data);
     }
     return QVariant();
@@ -99,7 +104,7 @@ template <>
 void SourceItem<CTSource, std::uint64_t>::setData(const QVariant& data, int role)
 {
     if (role == Qt::DisplayRole || role == Qt::EditRole) {
-        auto n = static_cast<std::uint64_t>(data.toULongLong());
+        const auto n = static_cast<std::uint64_t>(data.toULongLong());
         f_setData(n);
         emitDataChanged();
     }
@@ -109,8 +114,8 @@ template <>
 QVariant SourceItem<CTSpiralDualSource, std::uint64_t>::data(int role) const
 {
     if (role == Qt::DisplayRole || role == Qt::EditRole) {
-        auto n = f_data();
-        auto data = static_cast<qlonglong>(n);
+        const auto n = f_data();
+        const auto data = static_cast<qlonglong>(n);
         return QVariant(data);
     }
     return QVariant();
@@ -120,7 +125,7 @@ template <>
 void SourceItem<CTSpiralDualSource, std::uint64_t>::setData(const QVariant& data, int role)
 {
     if (role == Qt::DisplayRole || role == Qt::EditRole) {
-        auto n = static_cast<std::uint64_t>(data.toULongLong());
+        const auto n = static_cast<std::uint64_t>(data.toULongLong());
         f_setData(n);
         emitDataChanged();
     }
@@ -130,8 +135,8 @@ template <>
 QVariant SourceItem<DXSource, std::uint64_t>::data(int role) const
 {
     if (role == Qt::DisplayRole || role == Qt::EditRole) {
-        auto n = f_data();
-        auto data = static_cast<qlonglong>(n);
+        const auto n = f_data();
+        const auto data = static_cast<qlonglong>(n);
         return QVariant(data);
     }
     return QVariant();
@@ -141,7 +146,7 @@ template <>
 void SourceItem<DXSource, std::uint64_t>::setData(const QVariant& data, int role)
 {
     if (role == Qt::DisplayRole || role == Qt::EditRole) {
-        auto n = static_cast<std::uint64_t>(data.toULongLong());
+        const auto n = static_cast<std::uint64_t>(data.toULongLong());
         f_setData(n);
         emitDataChanged();
     }
@@ -180,7 +185,7 @@ template <>
 QVariant SourceItem<DXSource, std::array<floating, 2>>::data(int role) const
 {
     if (role == Qt::DisplayRole || role == Qt::EditRole) {
-        auto n = f_data();
+        const auto n = f_data();
         auto data = arrayToQString(n);
         return QVariant(data);
     }
@@ -191,8 +196,8 @@ template <>
 void SourceItem<DXSource, std::array<floating, 2>>::setData(const QVariant& data, int role)
 {
     if (role == Qt::DisplayRole || role == Qt::EditRole) {
-        auto string = data.toString();
-        auto [valid, data] = qstringToArray<2>(string);
+        const auto string = data.toString();
+        const auto& [valid, data] = qstringToArray<2>(string);
         if (valid) {
             f_setData(data);
             emitDataChanged();
@@ -204,8 +209,8 @@ template <>
 QVariant SourceItem<Source, std::array<floating, 3>>::data(int role) const
 {
     if (role == Qt::DisplayRole || role == Qt::EditRole) {
-        auto n = f_data();
-        auto data = arrayToQString(n);
+        const auto n = f_data();
+        const auto data = arrayToQString(n);
         return QVariant(data);
     }
     return QVariant();
@@ -214,15 +219,13 @@ QVariant SourceItem<Source, std::array<floating, 3>>::data(int role) const
 template <>
 void SourceItem<Source, std::array<floating, 3>>::setData(const QVariant& data, int role)
 {
+
     if (role == Qt::DisplayRole || role == Qt::EditRole) {
-        auto string = data.toString();
-        if (role == Qt::DisplayRole || role == Qt::EditRole) {
-            auto string = data.toString();
-            auto [valid, data] = qstringToArray<3>(string);
-            if (valid) {
-                f_setData(data);
-                emitDataChanged();
-            }
+        const auto string = data.toString();
+        const auto [valid, data] = qstringToArray<3>(string);
+        if (valid) {
+            f_setData(data);
+            emitDataChanged();
         }
     }
 }
@@ -231,8 +234,8 @@ template <>
 QVariant SourceItem<Source, std::array<floating, 6>>::data(int role) const
 {
     if (role == Qt::DisplayRole || role == Qt::EditRole) {
-        auto n = f_data();
-        auto data = arrayToQString(n);
+        const auto n = f_data();
+        const auto data = arrayToQString(n);
         return QVariant(data);
     }
     return QVariant();
@@ -241,15 +244,13 @@ QVariant SourceItem<Source, std::array<floating, 6>>::data(int role) const
 template <>
 void SourceItem<Source, std::array<floating, 6>>::setData(const QVariant& data, int role)
 {
+
     if (role == Qt::DisplayRole || role == Qt::EditRole) {
-        auto string = data.toString();
-        if (role == Qt::DisplayRole || role == Qt::EditRole) {
-            auto string = data.toString();
-            auto [valid, data] = qstringToArray<6>(string);
-            if (valid) {
-                f_setData(data);
-                emitDataChanged();
-            }
+        const auto string = data.toString();
+        const auto& [valid, data] = qstringToArray<6>(string);
+        if (valid) {
+            f_setData(data);
+            emitDataChanged();
         }
     }
 }
@@ -590,7 +591,7 @@ void setupXCare(std::shared_ptr<S> src, QStandardItem* parent)
     auto useXCare = new SourceItem<S, bool>(
         src,
         [=](bool val) { src->setUseXCareFilter(val); },
-        [=]() { return src->useXCareFilter(); });
+        [=]() -> bool { return src->useXCareFilter(); });
     xcareNodes.append(qMakePair(QString("Use organ exposure control"), static_cast<QStandardItem*>(useXCare)));
     auto angleXCare = new SourceItem<S, floating>(
         src,
@@ -669,6 +670,12 @@ void SourceModel::setupCTSource(std::shared_ptr<CTSource> src, QStandardItem* pa
     auto tubeNode = new QStandardItem("X-ray tube settings");
     setupTube(src, tubeNode);
     nodes.append(qMakePair(QString(), tubeNode));
+
+    auto heelItem = new SourceItem<CTSource, bool>(
+        src,
+        [=](const bool val) { src->setModelHeelEffect(val); },
+        [=]() -> auto { return src->modelHeelEffect(); });
+    nodes.append(qMakePair(QString("Model Heel effect"), static_cast<QStandardItem*>(heelItem)));
 
     auto bowItem = new SourceItem<CTSource, std::shared_ptr<BowTieFilter>>(
         src,
@@ -943,6 +950,12 @@ void SourceModel::setupDXSource(std::shared_ptr<DXSource> src, QStandardItem* pa
     setupTube(src, tubeNode);
     nodes.append(qMakePair(QString(), tubeNode));
 
+    auto heelItem = new SourceItem<DXSource, bool>(
+        src,
+        [=](const bool val) { src->setModelHeelEffect(val); },
+        [=]() -> auto { return src->modelHeelEffect(); });
+    nodes.append(qMakePair(QString("Model Heel effect"), static_cast<QStandardItem*>(heelItem)));
+
     //DX parameters
 
     auto sourceAngleItem = new SourceItem<DXSource, std::array<floating, 2>>(
@@ -994,7 +1007,7 @@ void SourceModel::setupDXSource(std::shared_ptr<DXSource> src, QStandardItem* pa
     nodes.append(qMakePair(QString("Dose Area Product for beam [Gycm2]"), static_cast<QStandardItem*>(l5Item)));
 
     addModelItems(nodes, sourceItem);
-    
+
     //adding source
     this->invisibleRootItem()->appendRow(sourceItem);
 }

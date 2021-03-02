@@ -696,8 +696,8 @@ bool H5Wrapper::saveSource(std::shared_ptr<DXSource> src, const std::string& nam
     sdd_att.write(H5::PredType::NATIVE_DOUBLE, &sdd);
 
     bool heel = src->modelHeelEffect();
-    auto sdd_att = srcGroup->createAttribute("modelHeelEffect", H5::PredType::NATIVE_HBOOL, doubleSpace1);
-    sdd_att.write(H5::PredType::NATIVE_HBOOL, &heel);
+    auto heel_att = srcGroup->createAttribute("modelHeelEffect", H5::PredType::NATIVE_HBOOL, doubleSpace1);
+    heel_att.write(H5::PredType::NATIVE_HBOOL, &heel);
 
     double dap = static_cast<double>(src->dap());
     auto dap_att = srcGroup->createAttribute("dap", H5::PredType::NATIVE_DOUBLE, doubleSpace1);

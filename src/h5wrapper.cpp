@@ -695,6 +695,10 @@ bool H5Wrapper::saveSource(std::shared_ptr<DXSource> src, const std::string& nam
     auto sdd_att = srcGroup->createAttribute("sdd", H5::PredType::NATIVE_DOUBLE, doubleSpace1);
     sdd_att.write(H5::PredType::NATIVE_DOUBLE, &sdd);
 
+    bool heel = src->modelHeelEffect();
+    auto sdd_att = srcGroup->createAttribute("modelHeelEffect", H5::PredType::NATIVE_HBOOL, doubleSpace1);
+    sdd_att.write(H5::PredType::NATIVE_HBOOL, &heel);
+
     double dap = static_cast<double>(src->dap());
     auto dap_att = srcGroup->createAttribute("dap", H5::PredType::NATIVE_DOUBLE, doubleSpace1);
     dap_att.write(H5::PredType::NATIVE_DOUBLE, &dap);
@@ -809,6 +813,11 @@ bool H5Wrapper::saveSource(std::shared_ptr<CTSource> src, const std::string& nam
     auto xc = src->useXCareFilter();
     auto xc_att = srcGroup->createAttribute("useXCareFilter", H5::PredType::NATIVE_HBOOL, doubleSpace1);
     xc_att.write(H5::PredType::NATIVE_HBOOL, &xc);
+
+    bool heel = src->modelHeelEffect();
+    auto sdd_att = srcGroup->createAttribute("modelHeelEffect", H5::PredType::NATIVE_HBOOL, doubleSpace1);
+    sdd_att.write(H5::PredType::NATIVE_HBOOL, &heel);
+
     return true;
 }
 
@@ -925,6 +934,7 @@ bool H5Wrapper::loadSource(std::shared_ptr<DXSource> src, const std::string& nam
 
     double sdd = 0;
     double dap = 0;
+    bool heel = true;
     std::uint64_t te = 0;
     std::array<double, 2> fe_d;
     std::array<double, 2> ca_d;
@@ -940,6 +950,8 @@ bool H5Wrapper::loadSource(std::shared_ptr<DXSource> src, const std::string& nam
         fe_attr.read(H5::PredType::NATIVE_DOUBLE, fe_d.data());
         auto ca_attr = group->openAttribute("collimationAngles");
         ca_attr.read(H5::PredType::NATIVE_DOUBLE, ca_d.data());
+        auto heel_attr = group->openAttribute("modelHeelEffect");
+        heel_attr.read(H5::PredType::NATIVE_HBOOL, &heel);
     } catch (const H5::DataTypeIException e) {
         auto msg = e.getDetailMsg();
         return false;
@@ -948,6 +960,7 @@ bool H5Wrapper::loadSource(std::shared_ptr<DXSource> src, const std::string& nam
         return false;
     }
 
+    src->setModelHeelEffect(heel);
     src->setSourceDetectorDistance(static_cast<floating>(sdd));
     src->setDap(static_cast<floating>(dap));
     src->setTotalExposures(te);
@@ -1040,17 +1053,20 @@ bool H5Wrapper::loadSource(std::shared_ptr<CTSource> src, const std::string& nam
     }
     auto pd = src->ctdiPhantomDiameter();
     auto xc = src->useXCareFilter();
+    auto heel = src->modelHeelEffect();
     try {
-
         auto pd_attr = group->openAttribute("ctdiPhantomDiameter");
         pd_attr.read(H5::PredType::NATIVE_UINT64, &pd);
         auto xc_attr = group->openAttribute("useXCareFilter");
         xc_attr.read(H5::PredType::NATIVE_HBOOL, &xc);
+        auto heel_attr = group->openAttribute("modelHeelEffect");
+        heel_attr.read(H5::PredType::NATIVE_HBOOL, &heel);
     } catch (...) {
         return false;
     }
     src->setCtdiPhantomDiameter(pd);
     src->setUseXCareFilter(xc);
+    src->setModelHeelEffect(heel);
     src->setSourceDetectorDistance(d1par["sdd"]);
     src->setCollimation(d1par["collimation"]);
     src->setFieldOfView(d1par["fov"]);

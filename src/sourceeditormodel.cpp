@@ -417,9 +417,8 @@ void SourceModel::addSource(Source::Type type)
         m_actors.push_back(std::static_pointer_cast<SourceActorContainer>(actor));
         emit sourceActorAdded(actor.get());
         emit sourceAdded(std::static_pointer_cast<Source>(src));
-        emit layoutChanged();    
+        emit layoutChanged();
     }
-
 }
 
 void SourceModel::addSource(std::shared_ptr<Source> src)
@@ -1010,8 +1009,8 @@ void SourceModel::setupCTTopogramSource(std::shared_ptr<CTTopogramSource> src, Q
         [=](std::size_t val) { src->setTotalExposures(val); },
         [=]() -> auto { return src->totalExposures(); });
     nodes.append(qMakePair(QString("Total number of exposures"), static_cast<QStandardItem*>(l2Item)));
-    
-    addModelItems(nodes, sourceItem);    
+
+    addModelItems(nodes, sourceItem);
     this->invisibleRootItem()->appendRow(sourceItem);
 }
 

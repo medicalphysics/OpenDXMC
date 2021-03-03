@@ -33,7 +33,7 @@ SourceItem<S, T>::SourceItem(std::shared_ptr<S> source, std::function<void(T)> s
 }
 
 template <>
-QVariant SourceItem<CTSource, std::shared_ptr<BowTieFilter>>::data(int role) const
+QVariant SourceItem<CTBaseSource, std::shared_ptr<BowTieFilter>>::data(int role) const
 {
     if (role == Qt::DisplayRole || role == Qt::EditRole) {
         return QVariant::fromValue(f_data());
@@ -42,7 +42,7 @@ QVariant SourceItem<CTSource, std::shared_ptr<BowTieFilter>>::data(int role) con
 }
 
 template <>
-void SourceItem<CTSource, std::shared_ptr<BowTieFilter>>::setData(const QVariant& data, int role)
+void SourceItem<CTBaseSource, std::shared_ptr<BowTieFilter>>::setData(const QVariant& data, int role)
 {
     if (role == Qt::DisplayRole || role == Qt::EditRole) {
         const auto val = qvariant_cast<std::shared_ptr<BowTieFilter>>(data);
@@ -101,7 +101,27 @@ QVariant SourceItem<CTSource, std::uint64_t>::data(int role) const
 }
 
 template <>
+QVariant SourceItem<CTBaseSource, std::uint64_t>::data(int role) const
+{
+    if (role == Qt::DisplayRole || role == Qt::EditRole) {
+        const auto n = f_data();
+        const auto data = static_cast<qlonglong>(n);
+        return QVariant(data);
+    }
+    return QVariant();
+}
+
+template <>
 void SourceItem<CTSource, std::uint64_t>::setData(const QVariant& data, int role)
+{
+    if (role == Qt::DisplayRole || role == Qt::EditRole) {
+        const auto n = static_cast<std::uint64_t>(data.toULongLong());
+        f_setData(n);
+        emitDataChanged();
+    }
+}
+template <>
+void SourceItem<CTBaseSource, std::uint64_t>::setData(const QVariant& data, int role)
 {
     if (role == Qt::DisplayRole || role == Qt::EditRole) {
         const auto n = static_cast<std::uint64_t>(data.toULongLong());
@@ -372,7 +392,34 @@ void SourceModel::addSource(Source::Type type)
         emit sourceActorAdded(actor.get());
         emit sourceAdded(std::static_pointer_cast<Source>(src));
         emit layoutChanged();
+    } else if (type == Source::Type::CTTopogram) {
+        auto src = std::make_shared<CTTopogramSource>();
+        std::array<floating, 6> cosines = { -1, 0, 0, 0, 0, 1 };
+        src->setDirectionCosines(cosines);
+        //fitting src position to cover image data
+        if (m_currentImageID != 0) {
+            std::array<floating, 2> srcCoverage;
+            if (m_currentImageExtent[5] - m_currentImageExtent[4] < 500.0) {
+                srcCoverage[0] = m_currentImageExtent[4];
+                srcCoverage[1] = m_currentImageExtent[5];
+            } else {
+                floating center = (m_currentImageExtent[5] + m_currentImageExtent[4]) * 0.5;
+                srcCoverage[0] = center - 250.0;
+                srcCoverage[1] = center + 250.0;
+            }
+            std::array<floating, 3> position = { 0, 0, srcCoverage[0] };
+            src->setPosition(position);
+            src->setScanLenght(srcCoverage[1] - srcCoverage[0]);
+        }
+        m_sources.emplace_back(std::static_pointer_cast<Source>(src));
+        setupCTTopogramSource(src, parent);
+        auto actor = std::make_shared<CTTopogramSourceContainer>(src);
+        m_actors.push_back(std::static_pointer_cast<SourceActorContainer>(actor));
+        emit sourceActorAdded(actor.get());
+        emit sourceAdded(std::static_pointer_cast<Source>(src));
+        emit layoutChanged();    
     }
+
 }
 
 void SourceModel::addSource(std::shared_ptr<Source> src)
@@ -395,6 +442,10 @@ void SourceModel::addSource(std::shared_ptr<Source> src)
     case Source::Type::CTDual:
         actor = std::make_shared<CTDualSourceContainer>(std::static_pointer_cast<CTSpiralDualSource>(src));
         setupCTDualSource(std::static_pointer_cast<CTSpiralDualSource>(src), parent);
+        break;
+    case Source::Type::CTTopogram:
+        actor = std::make_shared<CTTopogramSourceContainer>(std::static_pointer_cast<CTTopogramSource>(src));
+        setupCTTopogramSource(std::static_pointer_cast<CTTopogramSource>(src), parent);
         break;
     default:
         return;
@@ -641,27 +692,26 @@ void SourceModel::setupSource(std::shared_ptr<Source> src, QStandardItem* parent
 
     addModelItems(nodes, parent);
 }
-
-void SourceModel::setupCTSource(std::shared_ptr<CTSource> src, QStandardItem* parent)
+void SourceModel::setupCTBaseSource(std::shared_ptr<CTBaseSource> src, QStandardItem* parent)
 {
     setupSource(std::static_pointer_cast<Source>(src), parent);
 
     //CT parameters
     QVector<QPair<QString, QStandardItem*>> nodes;
 
-    auto sddItem = new SourceItem<CTSource, floating>(
+    auto sddItem = new SourceItem<CTBaseSource, floating>(
         src,
         [=](floating val) { src->setSourceDetectorDistance(val); },
         [=]() { return src->sourceDetectorDistance(); });
     nodes.append(qMakePair(QString("Source detector distance [mm]"), static_cast<QStandardItem*>(sddItem)));
 
-    auto fovItem = new SourceItem<CTSource, floating>(
+    auto fovItem = new SourceItem<CTBaseSource, floating>(
         src,
         [=](floating val) { src->setFieldOfView(val); },
         [=]() { return src->fieldOfView(); });
     nodes.append(qMakePair(QString("Field of view [mm]"), static_cast<QStandardItem*>(fovItem)));
 
-    auto colItem = new SourceItem<CTSource, floating>(
+    auto colItem = new SourceItem<CTBaseSource, floating>(
         src,
         [=](floating val) { src->setCollimation(val); },
         [=]() { return src->collimation(); });
@@ -671,39 +721,62 @@ void SourceModel::setupCTSource(std::shared_ptr<CTSource> src, QStandardItem* pa
     setupTube(src, tubeNode);
     nodes.append(qMakePair(QString(), tubeNode));
 
-    auto heelItem = new SourceItem<CTSource, bool>(
+    auto heelItem = new SourceItem<CTBaseSource, bool>(
         src,
         [=](const bool val) { src->setModelHeelEffect(val); },
         [=]() -> auto { return src->modelHeelEffect(); });
     nodes.append(qMakePair(QString("Model Heel effect"), static_cast<QStandardItem*>(heelItem)));
 
-    auto bowItem = new SourceItem<CTSource, std::shared_ptr<BowTieFilter>>(
+    auto bowItem = new SourceItem<CTBaseSource, std::shared_ptr<BowTieFilter>>(
         src,
         [=](std::shared_ptr<BowTieFilter> val) { src->setBowTieFilter(val); },
         [=]() { return src->bowTieFilter(); });
     nodes.append(qMakePair(QString("Select bowtie filter"), static_cast<QStandardItem*>(bowItem)));
 
-    auto aecItem = new SourceItem<CTSource, std::shared_ptr<AECFilter>>(
-        src,
-        [=](std::shared_ptr<AECFilter> val) { src->setAecFilter(val); },
-        [=]() { return src->aecFilter(); });
-    nodes.append(qMakePair(QString("Select tube current modulation profile"), static_cast<QStandardItem*>(aecItem)));
-
-    auto xcareItem = new QStandardItem("Organ exposure control");
-    setupXCare(src, xcareItem);
-    nodes.append(qMakePair(QString(), xcareItem));
-
-    auto gangItem = new SourceItem<CTSource, floating>(
+    auto gangItem = new SourceItem<CTBaseSource, floating>(
         src,
         [=](floating val) { src->setGantryTiltAngleDeg(val); },
         [=]() { return src->gantryTiltAngleDeg(); });
     nodes.append(qMakePair(QString("Gantry tilt angle [deg]"), static_cast<QStandardItem*>(gangItem)));
 
-    auto sangItem = new SourceItem<CTSource, floating>(
+    auto l3Item = new SourceItem<CTBaseSource, floating>(
+        src,
+        [=](floating val) { src->setScanLenght(val); },
+        [=]() { return src->scanLenght(); });
+    nodes.append(qMakePair(QString("Scan lenght [mm]"), static_cast<QStandardItem*>(l3Item)));
+
+    auto l14Item = new SourceItem<CTBaseSource, std::uint64_t>(
+        src,
+        [=](auto val) { src->setHistoriesPerExposure(val); },
+        [=]() { return src->historiesPerExposure(); });
+    nodes.append(qMakePair(QString("Histories per exposure"), static_cast<QStandardItem*>(l14Item)));
+
+    auto l5Item = new SourceItem<CTBaseSource, floating>(
+        src,
+        [=](floating val) { src->setCtdiVol(val); },
+        [=]() { return src->ctdiVol(); });
+    nodes.append(qMakePair(QString("CTDIvol mean value [mGy] "), static_cast<QStandardItem*>(l5Item)));
+
+    auto l6Item = new SourceItem<CTBaseSource, std::uint64_t>(
+        src,
+        [=](auto val) { src->setCtdiPhantomDiameter(val); },
+        [=]() { return src->ctdiPhantomDiameter(); });
+    nodes.append(qMakePair(QString("CTDI phantom diameter [mm] "), static_cast<QStandardItem*>(l6Item)));
+
+    auto sangItem = new SourceItem<CTBaseSource, floating>(
         src,
         [=](floating val) { src->setStartAngleDeg(val); },
         [=]() { return src->startAngleDeg(); });
     nodes.append(qMakePair(QString("Start angle [deg]"), static_cast<QStandardItem*>(sangItem)));
+
+    addModelItems(nodes, parent);
+}
+void SourceModel::setupCTSource(std::shared_ptr<CTSource> src, QStandardItem* parent)
+{
+    setupCTBaseSource(std::static_pointer_cast<CTBaseSource>(src), parent);
+
+    //CT parameters
+    QVector<QPair<QString, QStandardItem*>> nodes;
 
     auto l1Item = new SourceItem<CTSource, floating>(
         src,
@@ -711,11 +784,9 @@ void SourceModel::setupCTSource(std::shared_ptr<CTSource> src, QStandardItem* pa
         [=]() { return src->exposureAngleStepDeg(); });
     nodes.append(qMakePair(QString("Step angle [deg]"), static_cast<QStandardItem*>(l1Item)));
 
-    auto l3Item = new SourceItem<CTSource, floating>(
-        src,
-        [=](floating val) { src->setScanLenght(val); },
-        [=]() { return src->scanLenght(); });
-    nodes.append(qMakePair(QString("Scan lenght [mm]"), static_cast<QStandardItem*>(l3Item)));
+    auto xcareItem = new QStandardItem("Organ exposure control");
+    setupXCare(src, xcareItem);
+    nodes.append(qMakePair(QString(), xcareItem));
 
     auto l4Item = new SourceItem<CTSource, std::uint64_t>(
         src,
@@ -724,23 +795,11 @@ void SourceModel::setupCTSource(std::shared_ptr<CTSource> src, QStandardItem* pa
     nodes.append(qMakePair(QString("Total number of exposures"), static_cast<QStandardItem*>(l4Item)));
     l4Item->setEditable(false);
 
-    auto l14Item = new SourceItem<CTSource, std::uint64_t>(
+    auto aecItem = new SourceItem<CTSource, std::shared_ptr<AECFilter>>(
         src,
-        [=](auto val) { src->setHistoriesPerExposure(val); },
-        [=]() { return src->historiesPerExposure(); });
-    nodes.append(qMakePair(QString("Histories per exposure"), static_cast<QStandardItem*>(l14Item)));
-
-    auto l5Item = new SourceItem<CTSource, floating>(
-        src,
-        [=](floating val) { src->setCtdiVol(val); },
-        [=]() { return src->ctdiVol(); });
-    nodes.append(qMakePair(QString("CTDIvol mean value [mGy] "), static_cast<QStandardItem*>(l5Item)));
-
-    auto l6Item = new SourceItem<CTSource, std::uint64_t>(
-        src,
-        [=](auto val) { src->setCtdiPhantomDiameter(val); },
-        [=]() { return src->ctdiPhantomDiameter(); });
-    nodes.append(qMakePair(QString("CTDI phantom diameter [mm] "), static_cast<QStandardItem*>(l6Item)));
+        [=](std::shared_ptr<AECFilter> val) { src->setAecFilter(val); },
+        [=]() { return src->aecFilter(); });
+    nodes.append(qMakePair(QString("Select tube current modulation profile"), static_cast<QStandardItem*>(aecItem)));
 
     addModelItems(nodes, parent);
 }
@@ -937,6 +996,25 @@ void SourceModel::setupCTDualSource(std::shared_ptr<CTSpiralDualSource> src, QSt
     //adding source
     parent->appendRow(sourceItem);
 }
+
+void SourceModel::setupCTTopogramSource(std::shared_ptr<CTTopogramSource> src, QStandardItem* parent)
+{
+    //sourve root node
+    auto sourceItem = new QStandardItem("CT Topogram");
+    //setupSource(std::static_pointer_cast<Source>(src), sourceItem);
+    setupCTBaseSource(std::static_pointer_cast<CTBaseSource>(src), sourceItem);
+    QVector<QPair<QString, QStandardItem*>> nodes;
+
+    auto l2Item = new SourceItem<CTTopogramSource, std::size_t>(
+        src,
+        [=](std::size_t val) { src->setTotalExposures(val); },
+        [=]() -> auto { return src->totalExposures(); });
+    nodes.append(qMakePair(QString("Total number of exposures"), static_cast<QStandardItem*>(l2Item)));
+    
+    addModelItems(nodes, sourceItem);    
+    this->invisibleRootItem()->appendRow(sourceItem);
+}
+
 void SourceModel::setupDXSource(std::shared_ptr<DXSource> src, QStandardItem* parent)
 {
     //sourve root node
@@ -946,6 +1024,7 @@ void SourceModel::setupDXSource(std::shared_ptr<DXSource> src, QStandardItem* pa
     setupSource(std::static_pointer_cast<Source>(src), sourceItem);
 
     QVector<QPair<QString, QStandardItem*>> nodes;
+
     auto tubeNode = new QStandardItem("X-ray tube settings");
     setupTube(src, tubeNode);
     nodes.append(qMakePair(QString(), tubeNode));

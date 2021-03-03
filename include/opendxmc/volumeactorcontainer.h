@@ -127,6 +127,25 @@ private:
     vtkSmartPointer<vtkPolyDataMapper> m_mapper;
 };
 
+class CTTopogramSourceContainer final : public SourceActorContainer {
+public:
+    CTTopogramSourceContainer(std::shared_ptr<CTTopogramSource> src);
+    virtual ~CTTopogramSourceContainer() = default;
+    void update() override;
+
+private:
+    std::shared_ptr<CTTopogramSource> m_src;
+    vtkSmartPointer<vtkPolyData> m_linesPolyData;
+    vtkSmartPointer<vtkPoints> m_points;
+    vtkSmartPointer<vtkPolyLine> m_polyLine;
+    vtkSmartPointer<vtkLine> m_line1;
+    vtkSmartPointer<vtkLine> m_line2;
+    vtkSmartPointer<vtkLine> m_line3;
+    vtkSmartPointer<vtkLine> m_line4;
+    vtkSmartPointer<vtkTubeFilter> m_tubeFilter;
+    vtkSmartPointer<vtkPolyDataMapper> m_mapper;
+};
+
 class CTDualSourceContainer final : public SourceActorContainer {
 public:
     CTDualSourceContainer(std::shared_ptr<CTSpiralDualSource> src);

@@ -400,6 +400,100 @@ void CTAxialSourceContainer::update()
     getActor()->SetMapper(m_mapper);
 }
 
+CTTopogramSourceContainer::CTTopogramSourceContainer(std::shared_ptr<CTTopogramSource> src)
+    : SourceActorContainer(src.get())
+    , m_src(src)
+{
+    m_points = vtkSmartPointer<vtkPoints>::New();
+    m_mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+    m_linesPolyData = vtkSmartPointer<vtkPolyData>::New();
+    m_tubeFilter = vtkSmartPointer<vtkTubeFilter>::New();
+    m_mapper->SetInputConnection(m_tubeFilter->GetOutputPort());
+    m_polyLine = vtkSmartPointer<vtkPolyLine>::New();
+    m_tubeFilter->SetRadius(8.0);
+    m_tubeFilter->SetNumberOfSides(16);
+    m_tubeFilter->CappingOn();
+    update();
+}
+
+void CTTopogramSourceContainer::update()
+{
+    //generate points
+    m_points->Reset();
+    m_linesPolyData->Reset();
+    const int nPoints = static_cast<int>(m_src->totalExposures());
+    m_points->SetNumberOfPoints(nPoints + 4);
+
+    for (int i = 0; i < nPoints; ++i) {
+        auto exp = m_src->getExposure(i);
+        auto pos = exp.position();
+        m_points->SetPoint(i, pos[0], pos[1], pos[2]);
+    }
+
+    auto exp = m_src->getExposure(0);
+    std::array<double, 3> p0, p1, p2, p3;
+    auto start = exp.position();
+    auto cosines = exp.directionCosines();
+    auto direction = exp.beamDirection();
+
+    double sdd = m_src->sourceDetectorDistance();
+
+    const auto& angles = exp.collimationAngles();
+    double lenght = std::sqrt(sdd * sdd * 0.25 + m_src->fieldOfView() * m_src->fieldOfView() * 0.25);
+    for (int i = 0; i < 3; ++i) {
+        p0[i] = start[i] + lenght * (direction[i] + std::tan(angles[0]) * cosines[i] + std::tan(angles[2]) * cosines[i + 3]);
+        p1[i] = start[i] + lenght * (direction[i] + std::tan(angles[0]) * cosines[i] + std::tan(angles[3]) * cosines[i + 3]);
+        p2[i] = start[i] + lenght * (direction[i] + std::tan(angles[1]) * cosines[i] + std::tan(angles[2]) * cosines[i + 3]);
+        p3[i] = start[i] + lenght * (direction[i] + std::tan(angles[1]) * cosines[i] + std::tan(angles[3]) * cosines[i + 3]);
+    }
+
+    m_points->SetPoint(nPoints, p0[0], p0[1], p0[2]);
+    m_points->SetPoint(nPoints + 1, p1[0], p1[1], p1[2]);
+    m_points->SetPoint(nPoints + 2, p2[0], p2[1], p2[2]);
+    m_points->SetPoint(nPoints + 3, p3[0], p3[1], p3[2]);
+    m_linesPolyData->SetPoints(m_points);
+
+    m_polyLine->GetPointIds()->SetNumberOfIds(nPoints);
+    for (int i = 0; i < nPoints; ++i)
+        m_polyLine->GetPointIds()->SetId(i, i);
+    m_line1 = vtkSmartPointer<vtkLine>::New();
+    m_line1->GetPointIds()->SetId(0, 0);
+    m_line1->GetPointIds()->SetId(1, nPoints);
+    m_line2 = vtkSmartPointer<vtkLine>::New();
+    m_line2->GetPointIds()->SetId(0, 0);
+    m_line2->GetPointIds()->SetId(1, nPoints + 1);
+
+    m_line3 = vtkSmartPointer<vtkLine>::New();
+    m_line3->GetPointIds()->SetId(0, 0);
+    m_line3->GetPointIds()->SetId(1, nPoints + 2);
+
+    m_line4 = vtkSmartPointer<vtkLine>::New();
+    m_line4->GetPointIds()->SetId(0, 0);
+    m_line4->GetPointIds()->SetId(1, nPoints + 3);
+
+    vtkSmartPointer<vtkCellArray> cells = vtkSmartPointer<vtkCellArray>::New();
+    cells->InsertNextCell(m_polyLine);
+    cells->InsertNextCell(m_line1);
+    cells->InsertNextCell(m_line2);
+    cells->InsertNextCell(m_line3);
+    cells->InsertNextCell(m_line4);
+
+    m_linesPolyData->SetLines(cells);
+
+    vtkSmartPointer<vtkNamedColors> namedColors = vtkSmartPointer<vtkNamedColors>::New();
+    auto m_colors = vtkSmartPointer<vtkUnsignedCharArray>::New();
+    m_colors->SetNumberOfComponents(3);
+    m_colors->InsertNextTypedTuple(namedColors->GetColor3ub("Tomato").GetData());
+    for (int i = 0; i < 4; ++i)
+        m_colors->InsertNextTypedTuple(namedColors->GetColor3ub("Mint").GetData());
+
+    m_linesPolyData->GetCellData()->SetScalars(m_colors);
+
+    m_tubeFilter->SetInputData(m_linesPolyData);
+    m_tubeFilter->Update();
+    getActor()->SetMapper(m_mapper);
+}
+
 CTDualSourceContainer::CTDualSourceContainer(std::shared_ptr<CTSpiralDualSource> src)
     : SourceActorContainer(src.get())
     , m_src(src)

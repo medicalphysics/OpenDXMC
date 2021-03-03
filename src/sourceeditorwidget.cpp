@@ -307,6 +307,7 @@ SourceEditWidget::SourceEditWidget(QWidget* parent)
     m_sourceTypes[1] = "CT Spiral tube";
     m_sourceTypes[2] = "CT Axial tube";
     m_sourceTypes[3] = "CT Dual tube";
+    m_sourceTypes[4] = "CT Topogram";
 
     //add source button and selector
     auto addSourceBox = new QGroupBox(tr("Add a x-ray source"), this);
@@ -395,6 +396,9 @@ void SourceEditWidget::addCurrentSourceType(void)
     } else if (m_currentSourceTypeSelected == 3) {
         //add DE beam
         m_model->addSource(Source::Type::CTDual);
+    } else if (m_currentSourceTypeSelected == 4) {
+        //add topogram beam
+        m_model->addSource(Source::Type::CTTopogram);
     }
 }
 

@@ -1004,9 +1004,9 @@ void SourceModel::setupCTTopogramSource(std::shared_ptr<CTTopogramSource> src, Q
     setupCTBaseSource(std::static_pointer_cast<CTBaseSource>(src), sourceItem);
     QVector<QPair<QString, QStandardItem*>> nodes;
 
-    auto l2Item = new SourceItem<CTTopogramSource, std::size_t>(
+    auto l2Item = new SourceItem<CTTopogramSource, std::uint64_t>(
         src,
-        [=](std::size_t val) { src->setTotalExposures(val); },
+        [=](std::uint64_t val) { },
         [=]() -> auto { return src->totalExposures(); });
     nodes.append(qMakePair(QString("Total number of exposures"), static_cast<QStandardItem*>(l2Item)));
 

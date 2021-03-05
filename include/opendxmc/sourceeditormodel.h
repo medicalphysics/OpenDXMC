@@ -61,11 +61,13 @@ public:
     {
         if constexpr (std::is_same<T, bool>::value) {
             // For boelan data we want to use checkboxes
-            if (role == Qt::CheckStateRole)
+            if (role == Qt::CheckStateRole) {
                 return f_data() ? Qt::Checked : Qt::Unchecked;
+            }
         } else {
-            if (role == Qt::DisplayRole)
+            if (role == Qt::DisplayRole) {
                 return f_data();
+            }
         }
 
         return QStandardItem::data(role);

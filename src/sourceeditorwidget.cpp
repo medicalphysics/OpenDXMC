@@ -20,6 +20,7 @@ Copyright 2019 Erlend Andersen
 #include "opendxmc/volumeactorcontainer.h"
 
 #include <QComboBox>
+#include <QDoubleSpinBox>
 #include <QFile>
 #include <QGroupBox>
 #include <QHBoxLayout>
@@ -162,6 +163,11 @@ QWidget* SourceDelegate::createEditor(QWidget* parent, const QStyleOptionViewIte
             cb->addItem(name);
         }
         return cb;
+    } else if (userType == QMetaType::Float || userType == QMetaType::Double) {
+        QDoubleSpinBox* cb = new QDoubleSpinBox(parent);
+        cb->setMinimum(-1.0e6);
+        cb->setMaximum(1.e6);
+        return cb;
     }
     return QStyledItemDelegate::createEditor(parent, option, index);
 }
@@ -189,6 +195,11 @@ void SourceDelegate::setEditorData(QWidget* editor, const QModelIndex& index) co
             cb->setCurrentIndex(idx);
             return;
         }
+    } else if (userType == QMetaType::Float || userType == QMetaType::Double) {
+        auto spinBox = qobject_cast<QDoubleSpinBox*>(editor);
+        const auto value = index.data(Qt::DisplayRole).toDouble();
+        spinBox->setValue(value);
+        return;
     }
     QStyledItemDelegate::setEditorData(editor, index);
 }
@@ -216,6 +227,11 @@ void SourceDelegate::setModelData(QWidget* editor, QAbstractItemModel* model, co
             std::shared_ptr<AECFilter> empty = nullptr;
             model->setData(index, QVariant::fromValue(empty), Qt::EditRole);
         }
+    } else if (userType == QMetaType::Float || userType == QMetaType::Double) {
+        auto spinBox = qobject_cast<QDoubleSpinBox*>(editor);
+        const auto value = spinBox->value();
+        QVariant data(value);
+        model->setData(index, data, Qt::EditRole);        
     } else {
         QStyledItemDelegate::setModelData(editor, model, index);
     }

@@ -307,11 +307,8 @@ void SourceModel::addSource(Source::Type type)
 
         //fitting src position to cover image data
         if (m_currentImageID != 0) {
-            std::array<floating, 2> srcCoverage;
-            if (m_currentImageExtent[5] - m_currentImageExtent[4] < 500.0) {
-                srcCoverage[0] = m_currentImageExtent[4];
-                srcCoverage[1] = m_currentImageExtent[5];
-            } else {
+            std::array<floating, 2> srcCoverage = { static_cast<floating>(m_currentImageExtent[4]), static_cast<floating>(m_currentImageExtent[5]) };
+            if (m_currentImageExtent[5] - m_currentImageExtent[4] > 500.0) {
                 floating center = (m_currentImageExtent[5] + m_currentImageExtent[4]) * 0.5;
                 srcCoverage[0] = center - 250.0;
                 srcCoverage[1] = center + 250.0;
@@ -333,11 +330,8 @@ void SourceModel::addSource(Source::Type type)
         src->setDirectionCosines(cosines);
         //fitting src position to cover image data
         if (m_currentImageID != 0) {
-            std::array<floating, 2> srcCoverage;
-            if (m_currentImageExtent[5] - m_currentImageExtent[4] < 500.0) {
-                srcCoverage[0] = m_currentImageExtent[4];
-                srcCoverage[1] = m_currentImageExtent[5];
-            } else {
+            std::array<floating, 2> srcCoverage = { static_cast<floating>(m_currentImageExtent[4]), static_cast<floating>(m_currentImageExtent[5]) };
+            if (m_currentImageExtent[5] - m_currentImageExtent[4] > 500.0) {
                 floating center = (m_currentImageExtent[5] + m_currentImageExtent[4]) * 0.5;
                 srcCoverage[0] = center - 250.0;
                 srcCoverage[1] = center + 250.0;
@@ -359,11 +353,8 @@ void SourceModel::addSource(Source::Type type)
         src->setDirectionCosines(cosines);
         //fitting src position to cover image data
         if (m_currentImageID != 0) {
-            std::array<floating, 2> srcCoverage;
-            if (m_currentImageExtent[5] - m_currentImageExtent[4] < 500.0) {
-                srcCoverage[0] = m_currentImageExtent[4];
-                srcCoverage[1] = m_currentImageExtent[5];
-            } else {
+            std::array<floating, 2> srcCoverage = { static_cast<floating>(m_currentImageExtent[4]), static_cast<floating>(m_currentImageExtent[5]) };
+            if (m_currentImageExtent[5] - m_currentImageExtent[4] > 500.0) {
                 floating center = (m_currentImageExtent[5] + m_currentImageExtent[4]) * 0.5;
                 srcCoverage[0] = center - 250.0;
                 srcCoverage[1] = center + 250.0;
@@ -398,11 +389,8 @@ void SourceModel::addSource(Source::Type type)
         src->setDirectionCosines(cosines);
         //fitting src position to cover image data
         if (m_currentImageID != 0) {
-            std::array<floating, 2> srcCoverage;
-            if (m_currentImageExtent[5] - m_currentImageExtent[4] < 500.0) {
-                srcCoverage[0] = m_currentImageExtent[4];
-                srcCoverage[1] = m_currentImageExtent[5];
-            } else {
+            std::array<floating, 2> srcCoverage = { static_cast<floating>(m_currentImageExtent[4]), static_cast<floating>(m_currentImageExtent[5]) };
+            if (m_currentImageExtent[5] - m_currentImageExtent[4] > 500.0) {
                 floating center = (m_currentImageExtent[5] + m_currentImageExtent[4]) * 0.5;
                 srcCoverage[0] = center - 250.0;
                 srcCoverage[1] = center + 250.0;
@@ -463,15 +451,15 @@ void SourceModel::setSources(const std::vector<std::shared_ptr<Source>>& sources
     auto parentItem = invisibleRootItem();
     removeRows(0, m_sources.size(), parentItem->index());
 
-    for (auto actor : m_actors) {
+    for (auto& actor : m_actors) {
         emit sourceActorRemoved(actor.get());
     }
     m_actors.clear();
-    for (auto src : m_sources) {
+    for (auto& src : m_sources) {
         emit sourceRemoved(src);
     }
     m_sources.clear();
-    for (auto s : sources) {
+    for (auto& s : sources) {
         addSource(s);
     }
 }
@@ -504,7 +492,7 @@ bool SourceModel::removeRows(int row, int count, const QModelIndex& parent)
     if ((!parent.isValid()) && (row >= 0)) // top level, we handle this
     {
         if (row < static_cast<int>(m_sources.size())) {
-            auto src = m_sources[row];
+            auto& src = m_sources[row];
             if (!removeSource(src)) // we could not remove it for some reason
                 return false;
         }
@@ -1006,7 +994,7 @@ void SourceModel::setupCTTopogramSource(std::shared_ptr<CTTopogramSource> src, Q
 
     auto l2Item = new SourceItem<CTTopogramSource, std::uint64_t>(
         src,
-        [=](std::uint64_t val) { },
+        [=](std::uint64_t val) {},
         [=]() -> auto { return src->totalExposures(); });
     nodes.append(qMakePair(QString("Total number of exposures"), static_cast<QStandardItem*>(l2Item)));
 
@@ -1092,7 +1080,7 @@ void SourceModel::setupDXSource(std::shared_ptr<DXSource> src, QStandardItem* pa
 
 void SourceModel::sourceDataChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>& roles)
 {
-    for (auto actor : m_actors)
+    for (auto& actor : m_actors)
         actor->update();
     emit actorsChanged();
 }

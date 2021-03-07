@@ -105,8 +105,8 @@ void BowtieFilterReader::writeFilter(QJsonObject& json, std::shared_ptr<BowTieFi
 {
     json["name"] = QString::fromStdString(filter->filterName());
     QJsonArray filtersArray;
-    auto values = filter->data();
-    for (auto [angle, weight] : values) {
+    const auto& values = filter->data();
+    for (const auto& [angle, weight] : values) {
         QJsonObject filterObject;
         filterObject["angle"] = angle;
         filterObject["weight"] = weight;
@@ -231,7 +231,7 @@ void SourceDelegate::setModelData(QWidget* editor, QAbstractItemModel* model, co
         auto spinBox = qobject_cast<QDoubleSpinBox*>(editor);
         const auto value = spinBox->value();
         QVariant data(value);
-        model->setData(index, data, Qt::EditRole);        
+        model->setData(index, data, Qt::EditRole);
     } else {
         QStyledItemDelegate::setModelData(editor, model, index);
     }
@@ -353,7 +353,7 @@ SourceEditWidget::SourceEditWidget(QWidget* parent)
     auto filters = new BowtieFilterReader(this);
     filters->loadFilters();
 
-    for (auto filter : filters->filters()) {
+    for (auto& filter : filters->filters()) {
         m_delegate->addBowtieFilter(filter);
     }
 
@@ -421,7 +421,7 @@ void SourceEditWidget::addCurrentSourceType(void)
 void SourceEditWidget::requestRunSimulation(void)
 {
     if (m_model) {
-        auto sources = m_model->sources();
+        auto& sources = m_model->sources();
         emit runSimulation(sources);
     }
 }

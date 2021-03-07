@@ -718,7 +718,7 @@ bool H5Wrapper::saveSource(std::shared_ptr<DXSource> src, const std::string& nam
     return true;
 }
 
-bool H5Wrapper::saveSource(std::shared_ptr<CTSource> src, const std::string& name, const std::string& groupPath)
+bool H5Wrapper::saveSource(std::shared_ptr<CTBaseSource> src, const std::string& name, const std::string& groupPath)
 {
     if (!m_file)
         return false;
@@ -734,29 +734,6 @@ bool H5Wrapper::saveSource(std::shared_ptr<CTSource> src, const std::string& nam
     if (!tubeGroup)
         return false;
 
-    //saving AEC profile
-    if (auto filter = src->aecFilter(); filter) {
-        auto aecPath = srcPath + "/" + "AECData";
-
-        std::vector<double> AECmass(filter->mass().cbegin(), filter->mass().cend());
-        saveDoubleList(AECmass, "AECmass", aecPath);
-
-        std::vector<double> massIntensity(filter->massIntensity().cbegin(), filter->massIntensity().cend());
-        saveDoubleList(massIntensity, "AECintensity", aecPath);
-
-        auto aecGroup = getGroup(aecPath, false);
-        if (aecGroup) {
-            auto aecName = filter->filterName();
-            if (aecName.length() == 0) {
-                aecName = "Unknown";
-            }
-            hsize_t strLen = static_cast<hsize_t>(aecName.length());
-            H5::StrType stringType(0, strLen);
-            H5::DataSpace stringSpace(H5S_SCALAR);
-            auto dataUnits = aecGroup->createAttribute("filterName", stringType, stringSpace);
-            dataUnits.write(stringType, aecName.c_str());
-        }
-    }
     //save bowtiefilter
     if (auto filter = src->bowTieFilter(); filter) {
         auto bowtiePath = srcPath + "/" + "BowTieData";
@@ -791,10 +768,68 @@ bool H5Wrapper::saveSource(std::shared_ptr<CTSource> src, const std::string& nam
     d1par["fov"] = src->fieldOfView();
     d1par["gantryTiltAngle"] = src->gantryTiltAngle();
     d1par["startAngle"] = src->startAngle();
-    d1par["exposureAngleStep"] = src->exposureAngleStep();
+
     d1par["scanLenght"] = src->scanLenght();
     d1par["ctdivol"] = src->ctdiVol();
 
+    for (auto [key, val] : d1par) {
+        auto att = srcGroup->createAttribute(key.c_str(), H5::PredType::NATIVE_DOUBLE, doubleSpace1);
+        att.write(H5::PredType::NATIVE_DOUBLE, &val);
+    }
+
+    auto pd = src->ctdiPhantomDiameter();
+    auto pd_att = srcGroup->createAttribute("ctdiPhantomDiameter", H5::PredType::NATIVE_UINT64, doubleSpace1);
+    pd_att.write(H5::PredType::NATIVE_UINT64, &pd);
+
+    bool heel = src->modelHeelEffect();
+    auto sdd_att = srcGroup->createAttribute("modelHeelEffect", H5::PredType::NATIVE_HBOOL, doubleSpace1);
+    sdd_att.write(H5::PredType::NATIVE_HBOOL, &heel);
+
+    return true;
+}
+
+bool H5Wrapper::saveSource(std::shared_ptr<CTSource> src, const std::string& name, const std::string& groupPath)
+{
+    if (!m_file)
+        return false;
+    auto srcPath = groupPath + "/" + name;
+    auto srcGroup = getGroup(srcPath, true);
+    if (!srcGroup)
+        return false;
+
+    if (!saveSource(std::static_pointer_cast<CTBaseSource>(src), name, groupPath))
+        return false;
+
+    //saving AEC profile
+    if (auto filter = src->aecFilter(); filter) {
+        auto aecPath = srcPath + "/" + "AECData";
+
+        std::vector<double> AECmass(filter->mass().cbegin(), filter->mass().cend());
+        saveDoubleList(AECmass, "AECmass", aecPath);
+
+        std::vector<double> massIntensity(filter->massIntensity().cbegin(), filter->massIntensity().cend());
+        saveDoubleList(massIntensity, "AECintensity", aecPath);
+
+        auto aecGroup = getGroup(aecPath, false);
+        if (aecGroup) {
+            auto aecName = filter->filterName();
+            if (aecName.length() == 0) {
+                aecName = "Unknown";
+            }
+            hsize_t strLen = static_cast<hsize_t>(aecName.length());
+            H5::StrType stringType(0, strLen);
+            H5::DataSpace stringSpace(H5S_SCALAR);
+            auto dataUnits = aecGroup->createAttribute("filterName", stringType, stringSpace);
+            dataUnits.write(stringType, aecName.c_str());
+        }
+    }
+
+    const hsize_t dim1 = 1;
+    H5::DataSpace doubleSpace1(1, &dim1);
+
+    std::map<std::string, double> d1par;
+
+    d1par["exposureAngleStep"] = src->exposureAngleStep();
     auto xcarefilter = src->xcareFilter();
     d1par["filterAngle"] = xcarefilter.filterAngle();
     d1par["spanAngle"] = xcarefilter.spanAngle();
@@ -806,17 +841,9 @@ bool H5Wrapper::saveSource(std::shared_ptr<CTSource> src, const std::string& nam
         att.write(H5::PredType::NATIVE_DOUBLE, &val);
     }
 
-    auto pd = src->ctdiPhantomDiameter();
-    auto pd_att = srcGroup->createAttribute("ctdiPhantomDiameter", H5::PredType::NATIVE_UINT64, doubleSpace1);
-    pd_att.write(H5::PredType::NATIVE_UINT64, &pd);
-
     auto xc = src->useXCareFilter();
     auto xc_att = srcGroup->createAttribute("useXCareFilter", H5::PredType::NATIVE_HBOOL, doubleSpace1);
     xc_att.write(H5::PredType::NATIVE_HBOOL, &xc);
-
-    bool heel = src->modelHeelEffect();
-    auto sdd_att = srcGroup->createAttribute("modelHeelEffect", H5::PredType::NATIVE_HBOOL, doubleSpace1);
-    sdd_att.write(H5::PredType::NATIVE_HBOOL, &heel);
 
     return true;
 }
@@ -857,6 +884,19 @@ bool H5Wrapper::saveSource(std::shared_ptr<CTAxialSource> src, const std::string
     auto step = src->step();
     auto att = srcGroup->createAttribute("step", H5::PredType::NATIVE_DOUBLE, doubleSpace1);
     att.write(H5::PredType::NATIVE_DOUBLE, &step);
+    return true;
+}
+bool H5Wrapper::saveSource(std::shared_ptr<CTTopogramSource> src, const std::string& name, const std::string& groupPath)
+{
+    if (!m_file)
+        return false;
+    auto srcPath = groupPath + "/" + name;
+    auto srcGroup = getGroup(srcPath, true);
+    if (!srcGroup)
+        return false;
+
+    if (!saveSource(std::static_pointer_cast<CTBaseSource>(src), name, groupPath))
+        return false;
     return true;
 }
 
@@ -970,8 +1010,7 @@ bool H5Wrapper::loadSource(std::shared_ptr<DXSource> src, const std::string& nam
     src->setCollimationAngles(ca);
     return true;
 }
-
-bool H5Wrapper::loadSource(std::shared_ptr<CTSource> src, const std::string& name, const std::string& groupPath)
+bool H5Wrapper::loadSource(std::shared_ptr<CTBaseSource> src, const std::string& name, const std::string& groupPath)
 {
     if (!m_file)
         return false;
@@ -984,26 +1023,6 @@ bool H5Wrapper::loadSource(std::shared_ptr<CTSource> src, const std::string& nam
         return false;
     loadTube(src->tube(), "Tube", path.c_str());
 
-    //loading aec data
-    auto aecPath = path + "/" + "AECData";
-    auto aecGroup = getGroup(aecPath, false);
-    if (aecGroup) {
-        auto aecMass_d = loadDoubleList("AECmass", aecPath);
-        auto aecIntensity_d = loadDoubleList("AECintensity", aecPath);
-        std::vector<floating> aecMass(aecMass_d.cbegin(), aecMass_d.cend());
-        std::vector<floating> aecIntensity(aecIntensity_d.cbegin(), aecIntensity_d.cend());
-        auto aec = std::make_shared<AECFilter>(aecMass, aecIntensity);
-        std::string name;
-        if (aecGroup->attrExists("filterName")) {
-            auto units_attr = aecGroup->openAttribute("filterName");
-            std::size_t units_size = units_attr.getInMemDataSize();
-            name.resize(units_size);
-            H5::StrType stringType(0, units_size);
-            units_attr.read(stringType, name.data());
-        }
-        aec->setFilterName(name);
-        src->setAecFilter(aec);
-    }
     //loading bowtie data
     auto bowtiePath = path + "/" + "BowTieData";
     auto bowtieGroup = getGroup(bowtiePath, false);
@@ -1033,15 +1052,8 @@ bool H5Wrapper::loadSource(std::shared_ptr<CTSource> src, const std::string& nam
     d1par["fov"] = src->fieldOfView();
     d1par["gantryTiltAngle"] = src->gantryTiltAngle();
     d1par["startAngle"] = src->startAngle();
-    d1par["exposureAngleStep"] = src->exposureAngleStep();
     d1par["scanLenght"] = src->scanLenght();
     d1par["ctdivol"] = src->ctdiVol();
-
-    auto xcarefilter = src->xcareFilter();
-    d1par["filterAngle"] = xcarefilter.filterAngle();
-    d1par["spanAngle"] = xcarefilter.spanAngle();
-    d1par["rampAngle"] = xcarefilter.rampAngle();
-    d1par["lowWeight"] = xcarefilter.lowWeight();
 
     for (auto& [key, val] : d1par) {
         try {
@@ -1052,29 +1064,91 @@ bool H5Wrapper::loadSource(std::shared_ptr<CTSource> src, const std::string& nam
         }
     }
     auto pd = src->ctdiPhantomDiameter();
-    auto xc = src->useXCareFilter();
+
     auto heel = src->modelHeelEffect();
     try {
         auto pd_attr = group->openAttribute("ctdiPhantomDiameter");
         pd_attr.read(H5::PredType::NATIVE_UINT64, &pd);
-        auto xc_attr = group->openAttribute("useXCareFilter");
-        xc_attr.read(H5::PredType::NATIVE_HBOOL, &xc);
         auto heel_attr = group->openAttribute("modelHeelEffect");
         heel_attr.read(H5::PredType::NATIVE_HBOOL, &heel);
     } catch (...) {
         return false;
     }
     src->setCtdiPhantomDiameter(pd);
-    src->setUseXCareFilter(xc);
+
     src->setModelHeelEffect(heel);
     src->setSourceDetectorDistance(d1par["sdd"]);
     src->setCollimation(d1par["collimation"]);
     src->setFieldOfView(d1par["fov"]);
     src->setGantryTiltAngle(d1par["gantryTiltAngle"]);
     src->setStartAngle(d1par["startAngle"]);
-    src->setExposureAngleStep(d1par["exposureAngleStep"]);
+
     src->setScanLenght(d1par["scanLenght"]);
     src->setCtdiVol(d1par["ctdivol"]);
+
+    return true;
+}
+bool H5Wrapper::loadSource(std::shared_ptr<CTSource> src, const std::string& name, const std::string& groupPath)
+{
+    if (!m_file)
+        return false;
+    auto path = groupPath + "/" + name;
+    auto group = getGroup(path, false);
+    if (!group)
+        return false;
+
+    if (!loadSource(std::static_pointer_cast<CTBaseSource>(src), name.c_str(), groupPath.c_str()))
+        return false;
+
+    //loading aec data
+    auto aecPath = path + "/" + "AECData";
+    auto aecGroup = getGroup(aecPath, false);
+    if (aecGroup) {
+        auto aecMass_d = loadDoubleList("AECmass", aecPath);
+        auto aecIntensity_d = loadDoubleList("AECintensity", aecPath);
+        std::vector<floating> aecMass(aecMass_d.cbegin(), aecMass_d.cend());
+        std::vector<floating> aecIntensity(aecIntensity_d.cbegin(), aecIntensity_d.cend());
+        auto aec = std::make_shared<AECFilter>(aecMass, aecIntensity);
+        std::string name;
+        if (aecGroup->attrExists("filterName")) {
+            auto units_attr = aecGroup->openAttribute("filterName");
+            std::size_t units_size = units_attr.getInMemDataSize();
+            name.resize(units_size);
+            H5::StrType stringType(0, units_size);
+            units_attr.read(stringType, name.data());
+        }
+        aec->setFilterName(name);
+        src->setAecFilter(aec);
+    }
+
+    std::map<std::string, double> d1par;
+
+    d1par["exposureAngleStep"] = src->exposureAngleStep();
+
+    auto& xcarefilter = src->xcareFilter();
+    d1par["filterAngle"] = xcarefilter.filterAngle();
+    d1par["spanAngle"] = xcarefilter.spanAngle();
+    d1par["rampAngle"] = xcarefilter.rampAngle();
+    d1par["lowWeight"] = xcarefilter.lowWeight();
+    for (auto& [key, val] : d1par) {
+        try {
+            auto attr = group->openAttribute(key.c_str());
+            attr.read(H5::PredType::NATIVE_DOUBLE, &val);
+        } catch (...) {
+            return false;
+        }
+    }
+
+    auto xc = src->useXCareFilter();
+    try {
+        auto xc_attr = group->openAttribute("useXCareFilter");
+        xc_attr.read(H5::PredType::NATIVE_HBOOL, &xc);
+    } catch (...) {
+        return false;
+    }
+
+    src->setUseXCareFilter(xc);
+    src->setExposureAngleStep(d1par["exposureAngleStep"]);
     xcarefilter.setFilterAngle(d1par["filterAngle"]);
     xcarefilter.setRampAngle(d1par["rampAngle"]);
     xcarefilter.setSpanAngle(d1par["spanAngle"]);
@@ -1187,5 +1261,19 @@ bool H5Wrapper::loadSource(std::shared_ptr<CTSpiralDualSource> src, const std::s
     src->setPitch(d1par["pitch"]);
     src->setTubeAmas(d1par["tubeAmas"]);
     src->setTubeBmas(d1par["tubeBmas"]);
+    return true;
+}
+bool H5Wrapper::loadSource(std::shared_ptr<CTTopogramSource> src, const std::string& name, const std::string& groupPath)
+{
+    if (!m_file)
+        return false;
+    auto path = groupPath + "/" + name;
+    auto group = getGroup(path, false);
+    if (!group)
+        return false;
+
+    if (!loadSource(std::static_pointer_cast<CTBaseSource>(src), name.c_str(), groupPath.c_str()))
+        return false;
+
     return true;
 }

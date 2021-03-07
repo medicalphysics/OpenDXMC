@@ -54,6 +54,8 @@ protected:
     void loadTube(Tube& tube, const std::string& name, const std::string& groupPath);
     bool saveSource(std::shared_ptr<Source> src, const std::string& name, const std::string& groupPath);
     bool loadSource(std::shared_ptr<Source> src, const std::string& name, const std::string& groupPath);
+    bool saveSource(std::shared_ptr<CTBaseSource> src, const std::string& name, const std::string& groupPath);
+    bool loadSource(std::shared_ptr<CTBaseSource> src, const std::string& name, const std::string& groupPath);
     bool saveSource(std::shared_ptr<CTSource> src, const std::string& name, const std::string& groupPath);
     bool loadSource(std::shared_ptr<CTSource> src, const std::string& name, const std::string& groupPath);
 
@@ -61,11 +63,13 @@ protected:
     bool saveSource(std::shared_ptr<CTAxialSource> src, const std::string& name, const std::string& groupPath);
     bool saveSource(std::shared_ptr<CTSpiralSource> src, const std::string& name, const std::string& groupPath);
     bool saveSource(std::shared_ptr<CTSpiralDualSource> src, const std::string& name, const std::string& groupPath);
+    bool saveSource(std::shared_ptr<CTTopogramSource> src, const std::string& name, const std::string& groupPath);
 
     bool loadSource(std::shared_ptr<DXSource> src, const std::string& name, const std::string& groupPath);
     bool loadSource(std::shared_ptr<CTAxialSource> src, const std::string& name, const std::string& groupPath);
     bool loadSource(std::shared_ptr<CTSpiralSource> src, const std::string& name, const std::string& groupPath);
     bool loadSource(std::shared_ptr<CTSpiralDualSource> src, const std::string& name, const std::string& groupPath);
+    bool loadSource(std::shared_ptr<CTTopogramSource> src, const std::string& name, const std::string& groupPath);
 
 private:
     std::unique_ptr<H5::H5File> m_file = nullptr;

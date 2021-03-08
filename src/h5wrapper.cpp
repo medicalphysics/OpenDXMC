@@ -142,6 +142,11 @@ bool H5Wrapper::saveSources(const std::vector<std::shared_ptr<Source>>& sources)
             auto path = groupPath + "/" + "CTDual";
             auto name = std::to_string(tellerCTDual++);
             valid = saveSource(s_downcast, name, path);
+        } else if (s->type() == Source::Type::CTTopogram) {
+            auto s_downcast = std::static_pointer_cast<CTTopogramSource>(s);
+            auto path = groupPath + "/" + "CTTopogram";
+            auto name = std::to_string(tellerCTDual++);
+            valid = saveSource(s_downcast, name, path);
         }
         if (!valid)
             return false;
@@ -166,6 +171,7 @@ std::vector<std::shared_ptr<Source>> H5Wrapper::loadSources(void)
     sourceFolders["CTAxial"] = Source::Type::CTAxial;
     sourceFolders["CTSpiral"] = Source::Type::CTSpiral;
     sourceFolders["DX"] = Source::Type::DX;
+    sourceFolders["CTTopogram"] = Source::Type::CTTopogram;
 
     for (const auto [sourceFolder, type] : sourceFolders) {
         auto folderPath = "sources/" + sourceFolder;
@@ -195,8 +201,12 @@ std::vector<std::shared_ptr<Source>> H5Wrapper::loadSources(void)
                     bool valid = loadSource(src, name, folderPath);
                     if (valid)
                         sources.push_back(src);
+                } else if (type == Source::Type::CTTopogram) {
+                    auto src = std::make_shared<CTTopogramSource>();
+                    bool valid = loadSource(src, name, folderPath);
+                    if (valid)
+                        sources.push_back(src);
                 }
-
                 teller++;
                 name = std::to_string(teller);
                 sourcepath = folderPath + "/" + name;
@@ -622,10 +632,16 @@ bool H5Wrapper::saveSource(std::shared_ptr<Source> src, const std::string& name,
     H5::DataSpace doubleSpace6(1, &dim6);
     H5::DataSpace doubleSpace1(1, &dim1);
 
+    const auto& pos_s = src->position();
+    const auto& dir_s = src->directionCosines();
+
+    const auto pos = convert_array_to<double>(pos_s);
+    const auto dir = convert_array_to<double>(dir_s);
+
     auto pos_att = group->createAttribute("position", H5::PredType::NATIVE_DOUBLE, doubleSpace3);
-    pos_att.write(H5::PredType::NATIVE_DOUBLE, src->position().data());
+    pos_att.write(H5::PredType::NATIVE_DOUBLE, pos.data());
     auto dir_att = group->createAttribute("directionCosines", H5::PredType::NATIVE_DOUBLE, doubleSpace6);
-    dir_att.write(H5::PredType::NATIVE_DOUBLE, src->directionCosines().data());
+    dir_att.write(H5::PredType::NATIVE_DOUBLE, dir.data());
     auto he = src->historiesPerExposure();
     auto he_att = group->createAttribute("historiesPerExposure", H5::PredType::NATIVE_UINT64, doubleSpace1);
     he_att.write(H5::PredType::NATIVE_UINT64, &he);
@@ -662,8 +678,8 @@ bool H5Wrapper::loadSource(std::shared_ptr<Source> src, const std::string& name,
         return false;
     }
 
-    auto position = convert_array_to<floating>(position_d);
-    auto cosines = convert_array_to<floating>(cosines_d);
+    const auto position = convert_array_to<floating>(position_d);
+    const auto cosines = convert_array_to<floating>(cosines_d);
     src->setPosition(position);
     src->setDirectionCosines(cosines);
     src->setHistoriesPerExposure(he);
@@ -736,8 +752,8 @@ bool H5Wrapper::saveSource(std::shared_ptr<CTBaseSource> src, const std::string&
 
     //save bowtiefilter
     if (auto filter = src->bowTieFilter(); filter) {
-        auto bowtiePath = srcPath + "/" + "BowTieData";
-        auto data = filter->data();
+        const auto bowtiePath = srcPath + "/" + "BowTieData";
+        const auto& data = filter->data();
         std::vector<double> x, y;
         for (const auto& [angle, weight] : data) {
             x.push_back(angle);

@@ -3,8 +3,6 @@
 
 # Optionally glob, but only for CMake 3.12 or later:
 file(GLOB HEADER_LIST CONFIGURE_DEPENDS "${OpenDXMC_SOURCE_DIR}/include/opendxmc/*.h")
-#set(HEADER_LIST "${ModernCMakeExample_SOURCE_DIR}/include/modern/lib.hpp")
-
 
 add_library(libopendxmc STATIC
 	mainwindow.cpp
@@ -50,10 +48,10 @@ endif()
 
 target_link_libraries(libopendxmc PUBLIC
 	${VTK_LIBRARIES}
-	Qt5::Widgets
-	Qt5::Core
-	Qt5::Gui
-	Qt5::Charts
+	Qt${QT_VERSION_MAJOR}::Widgets
+	Qt${QT_VERSION_MAJOR}::Core
+	Qt${QT_VERSION_MAJOR}::Gui
+	Qt${QT_VERSION_MAJOR}::Charts
 	PRIVATE
 	${HDF5_LIBRARIES}
 	libdxmc	
@@ -65,6 +63,3 @@ vtk_module_autoinit(
     TARGETS libopendxmc
     MODULES ${VTK_LIBRARIES}
     )
-
-# All users of this library will need at least C++17
-#target_compile_features(opendxmclib PUBLIC cxx_std_17)

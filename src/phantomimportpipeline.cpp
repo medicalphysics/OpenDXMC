@@ -334,9 +334,9 @@ std::pair<std::shared_ptr<std::vector<std::uint8_t>>, std::shared_ptr<std::vecto
     auto densityArray = std::make_shared<std::vector<floating>>(organArray->size());
 
     std::transform(std::execution::par_unseq, organArray->cbegin(), organArray->cend(), materialArray->begin(),
-        [&](const auto organ) { return matLut[organ]; });
+        [&](const auto organ) { return organ > maxID ? matLut[0] : matLut[organ]; });
     std::transform(std::execution::par_unseq, organArray->cbegin(), organArray->cend(), densityArray->begin(),
-        [&](const auto organ) { return densLut[organ]; });
+        [&](const auto organ) { return organ > maxID ? densLut[0] : densLut[organ]; });
 
     return std::make_pair(materialArray, densityArray);
 }

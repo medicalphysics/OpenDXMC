@@ -118,6 +118,7 @@ bool H5Wrapper::saveSources(const std::vector<std::shared_ptr<Source>>& sources)
     std::size_t tellerCTAxial = 1;
     std::size_t tellerCTSpiral = 1;
     std::size_t tellerCTDual = 1;
+    std::size_t tellerCTTopogram = 1;
 
     std::string groupPath = "/sources";
     for (auto s : sources) {
@@ -145,7 +146,7 @@ bool H5Wrapper::saveSources(const std::vector<std::shared_ptr<Source>>& sources)
         } else if (s->type() == Source::Type::CTTopogram) {
             auto s_downcast = std::static_pointer_cast<CTTopogramSource>(s);
             auto path = groupPath + "/" + "CTTopogram";
-            auto name = std::to_string(tellerCTDual++);
+            auto name = std::to_string(tellerCTTopogram++);
             valid = saveSource(s_downcast, name, path);
         }
         if (!valid)
@@ -173,7 +174,7 @@ std::vector<std::shared_ptr<Source>> H5Wrapper::loadSources(void)
     sourceFolders["DX"] = Source::Type::DX;
     sourceFolders["CTTopogram"] = Source::Type::CTTopogram;
 
-    for (const auto [sourceFolder, type] : sourceFolders) {
+    for (const auto& [sourceFolder, type] : sourceFolders) {
         auto folderPath = "sources/" + sourceFolder;
         auto folderGroup = getGroup(folderPath, false);
         if (folderGroup) {

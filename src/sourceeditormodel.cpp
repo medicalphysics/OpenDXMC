@@ -419,7 +419,7 @@ void SourceModel::addSource(Source::Type type)
                 srcCoverage[1] = center + 250.0;
             }
             std::array<floating, 3> position = { 0, 0, srcCoverage[0] };
-            src->setPosition(position);            
+            src->setPosition(position);
         }
         m_sources.emplace_back(std::static_pointer_cast<Source>(src));
         setupCBCTSource(src, parent);
@@ -429,8 +429,6 @@ void SourceModel::addSource(Source::Type type)
         emit sourceAdded(std::static_pointer_cast<Source>(src));
         emit layoutChanged();
     }
-
-
 }
 
 void SourceModel::addSource(std::shared_ptr<Source> src)
@@ -1090,8 +1088,6 @@ void SourceModel::setupDAPSource(std::shared_ptr<DAPSource> src, QStandardItem* 
     nodes.append(qMakePair(QString("Dose Area Product for beam [Gycm2]"), static_cast<QStandardItem*>(l5Item)));
 
     addModelItems(nodes, parent);
-
-
 }
 
 void SourceModel::setupDXSource(std::shared_ptr<DXSource> src, QStandardItem* parent)
@@ -1104,7 +1100,6 @@ void SourceModel::setupDXSource(std::shared_ptr<DXSource> src, QStandardItem* pa
 
     QVector<QPair<QString, QStandardItem*>> nodes;
 
-    
     auto l2Item = new SourceItem<DXSource, std::size_t>(
         src,
         [=](std::size_t val) { src->setTotalExposures(val); },
@@ -1143,7 +1138,7 @@ void SourceModel::setupCBCTSource(std::shared_ptr<CBCTSource> src, QStandardItem
         [=](auto ang) { src->setStepAngleDeg(ang); },
         [=]() { return src->stepAngleDeg(); });
     nodes.append(qMakePair(QString("Cone beam step angle [deg]"), static_cast<QStandardItem*>(stepAngleItem)));
-    
+
     addModelItems(nodes, sourceItem);
 
     //adding source

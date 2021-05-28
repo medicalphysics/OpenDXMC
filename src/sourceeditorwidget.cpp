@@ -324,6 +324,7 @@ SourceEditWidget::SourceEditWidget(QWidget* parent)
     m_sourceTypes[2] = "CT Axial tube";
     m_sourceTypes[3] = "CT Dual tube";
     m_sourceTypes[4] = "CT Topogram";
+    m_sourceTypes[5] = "Cone Beam CT";
 
     //add source button and selector
     auto addSourceBox = new QGroupBox(tr("Add a x-ray source"), this);
@@ -415,6 +416,9 @@ void SourceEditWidget::addCurrentSourceType(void)
     } else if (m_currentSourceTypeSelected == 4) {
         //add topogram beam
         m_model->addSource(Source::Type::CTTopogram);
+    } else if (m_currentSourceTypeSelected == 5) {
+        //add topogram beam
+        m_model->addSource(Source::Type::CBCT);
     }
 }
 

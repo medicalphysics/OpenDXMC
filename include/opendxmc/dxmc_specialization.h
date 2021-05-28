@@ -17,7 +17,7 @@ Copyright 2019 Erlend Andersen
 */
 
 #pragma once
-#include "dxmc.h"
+#include "dxmc.hpp"
 #include "opendxmc/precision_specialization.h"
 
 //Here we specialize types from the dxmc template library.
@@ -28,6 +28,7 @@ using Transport = dxmc::Transport<floating>;
 using AECFilter = dxmc::AECFilter<floating>;
 using BowTieFilter = dxmc::BowTieFilter<floating>;
 using Source = dxmc::Source<floating>;
+using DAPSource = dxmc::DAPSource<floating>;
 using DXSource = dxmc::DXSource<floating>;
 using CTBaseSource = dxmc::CTBaseSource<floating>;
 using CTSource = dxmc::CTSource<floating>;
@@ -35,6 +36,7 @@ using CTAxialSource = dxmc::CTAxialSource<floating>;
 using CTTopogramSource = dxmc::CTTopogramSource<floating>;
 using CTSpiralSource = dxmc::CTSpiralSource<floating>;
 using CTSpiralDualSource = dxmc::CTSpiralDualSource<floating>;
+using CBCTSource =dxmc::CBCTSource<floating>;
 using World = dxmc::World<floating>;
 using CTDIPhantom = dxmc::CTDIPhantom<floating>;
 using ProgressBar = dxmc::ProgressBar<floating>;

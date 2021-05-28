@@ -202,7 +202,7 @@ std::pair<bool, std::array<floating, N>> qstringToArray(const QString& str)
 }
 
 template <>
-QVariant SourceItem<DXSource, std::array<floating, 2>>::data(int role) const
+QVariant SourceItem<DAPSource, std::array<floating, 2>>::data(int role) const
 {
     if (role == Qt::DisplayRole || role == Qt::EditRole) {
         const auto n = f_data();
@@ -213,7 +213,7 @@ QVariant SourceItem<DXSource, std::array<floating, 2>>::data(int role) const
 }
 
 template <>
-void SourceItem<DXSource, std::array<floating, 2>>::setData(const QVariant& data, int role)
+void SourceItem<DAPSource, std::array<floating, 2>>::setData(const QVariant& data, int role)
 {
     if (role == Qt::DisplayRole || role == Qt::EditRole) {
         const auto string = data.toString();
@@ -406,7 +406,31 @@ void SourceModel::addSource(Source::Type type)
         emit sourceActorAdded(actor.get());
         emit sourceAdded(std::static_pointer_cast<Source>(src));
         emit layoutChanged();
+    } else if (type == Source::Type::CBCT) {
+        auto src = std::make_shared<CBCTSource>();
+        std::array<floating, 6> cosines = { -1, 0, 0, 0, 0, 1 };
+        src->setDirectionCosines(cosines);
+        //fitting src position to cover image data
+        if (m_currentImageID != 0) {
+            std::array<floating, 2> srcCoverage = { static_cast<floating>(m_currentImageExtent[4]), static_cast<floating>(m_currentImageExtent[5]) };
+            if (m_currentImageExtent[5] - m_currentImageExtent[4] > 500.0) {
+                floating center = (m_currentImageExtent[5] + m_currentImageExtent[4]) * 0.5;
+                srcCoverage[0] = center - 250.0;
+                srcCoverage[1] = center + 250.0;
+            }
+            std::array<floating, 3> position = { 0, 0, srcCoverage[0] };
+            src->setPosition(position);            
+        }
+        m_sources.emplace_back(std::static_pointer_cast<Source>(src));
+        setupCBCTSource(src, parent);
+        auto actor = std::make_shared<CBCTSourceContainer>(src);
+        m_actors.push_back(std::static_pointer_cast<SourceActorContainer>(actor));
+        emit sourceActorAdded(actor.get());
+        emit sourceAdded(std::static_pointer_cast<Source>(src));
+        emit layoutChanged();
     }
+
+
 }
 
 void SourceModel::addSource(std::shared_ptr<Source> src)
@@ -433,6 +457,10 @@ void SourceModel::addSource(std::shared_ptr<Source> src)
     case Source::Type::CTTopogram:
         actor = std::make_shared<CTTopogramSourceContainer>(std::static_pointer_cast<CTTopogramSource>(src));
         setupCTTopogramSource(std::static_pointer_cast<CTTopogramSource>(src), parent);
+        break;
+    case Source::Type::CBCT:
+        actor = std::make_shared<CBCTSourceContainer>(std::static_pointer_cast<CBCTSource>(src));
+        setupCBCTSource(std::static_pointer_cast<CBCTSource>(src), parent);
         break;
     default:
         return;
@@ -1002,21 +1030,16 @@ void SourceModel::setupCTTopogramSource(std::shared_ptr<CTTopogramSource> src, Q
     this->invisibleRootItem()->appendRow(sourceItem);
 }
 
-void SourceModel::setupDXSource(std::shared_ptr<DXSource> src, QStandardItem* parent)
+void SourceModel::setupDAPSource(std::shared_ptr<DAPSource> src, QStandardItem* parent)
 {
-    //sourve root node
-    auto sourceItem = new QStandardItem("DX Source");
-
-    //standard parameters
-    setupSource(std::static_pointer_cast<Source>(src), sourceItem);
-
+    setupSource(std::static_pointer_cast<Source>(src), parent);
     QVector<QPair<QString, QStandardItem*>> nodes;
 
     auto tubeNode = new QStandardItem("X-ray tube settings");
     setupTube(src, tubeNode);
     nodes.append(qMakePair(QString(), tubeNode));
 
-    auto heelItem = new SourceItem<DXSource, bool>(
+    auto heelItem = new SourceItem<DAPSource, bool>(
         src,
         [=](const bool val) { src->setModelHeelEffect(val); },
         [=]() -> auto { return src->modelHeelEffect(); });
@@ -1024,53 +1047,69 @@ void SourceModel::setupDXSource(std::shared_ptr<DXSource> src, QStandardItem* pa
 
     //DX parameters
 
-    auto sourceAngleItem = new SourceItem<DXSource, std::array<floating, 2>>(
+    auto sourceAngleItem = new SourceItem<DAPSource, std::array<floating, 2>>(
         src,
         [=](const auto& val) { src->setSourceAnglesDeg(val); },
         [=]() { return src->sourceAnglesDeg(); });
     nodes.append(qMakePair(QString("Source angles (primary angle, secondary angle) [deg]"), static_cast<QStandardItem*>(sourceAngleItem)));
 
-    auto tubeRotItem = new SourceItem<DXSource, floating>(
+    auto tubeRotItem = new SourceItem<DAPSource, floating>(
         src,
         [=](const auto& val) { src->setTubeRotationDeg(val); },
         [=]() { return src->tubeRotationDeg(); });
     nodes.append(qMakePair(QString("X-ray tube rotation angle [deg]"), static_cast<QStandardItem*>(tubeRotItem)));
 
-    auto l1Item = new SourceItem<DXSource, std::array<floating, 2>>(
+    auto l1Item = new SourceItem<DAPSource, std::array<floating, 2>>(
         src,
         [=](const auto& val) { src->setCollimationAnglesDeg(val); },
         [=]() { return src->collimationAnglesDeg(); });
     nodes.append(qMakePair(QString("Collimation angles [deg]"), static_cast<QStandardItem*>(l1Item)));
 
-    auto l11Item = new SourceItem<DXSource, std::array<floating, 2>>(
+    auto l11Item = new SourceItem<DAPSource, std::array<floating, 2>>(
         src,
         [=](const auto& val) { src->setFieldSize(val); },
         [=]() { return src->fieldSize(); });
     nodes.append(qMakePair(QString("Field size [mm]"), static_cast<QStandardItem*>(l11Item)));
 
-    auto l12Item = new SourceItem<DXSource, floating>(
+    auto l12Item = new SourceItem<DAPSource, floating>(
         src,
         [=](const auto& val) { src->setSourceDetectorDistance(val); },
         [=]() { return src->sourceDetectorDistance(); });
     nodes.append(qMakePair(QString("Source detector distance [mm]"), static_cast<QStandardItem*>(l12Item)));
 
-    auto l2Item = new SourceItem<DXSource, std::size_t>(
-        src,
-        [=](std::size_t val) { src->setTotalExposures(val); },
-        std::bind(&DXSource::totalExposures, src));
-    nodes.append(qMakePair(QString("Total number of exposures"), static_cast<QStandardItem*>(l2Item)));
-
-    auto l14Item = new SourceItem<DXSource, std::uint64_t>(
+    auto l14Item = new SourceItem<DAPSource, std::uint64_t>(
         src,
         [=](auto val) { src->setHistoriesPerExposure(val); },
         [=]() { return src->historiesPerExposure(); });
     nodes.append(qMakePair(QString("Histories per exposure"), static_cast<QStandardItem*>(l14Item)));
 
-    auto l5Item = new SourceItem<DXSource, floating>(
+    auto l5Item = new SourceItem<DAPSource, floating>(
         src,
         [=](floating val) { src->setDap(val); },
         [=]() { return src->dap(); });
     nodes.append(qMakePair(QString("Dose Area Product for beam [Gycm2]"), static_cast<QStandardItem*>(l5Item)));
+
+    addModelItems(nodes, parent);
+
+
+}
+
+void SourceModel::setupDXSource(std::shared_ptr<DXSource> src, QStandardItem* parent)
+{
+    //sourve root node
+    auto sourceItem = new QStandardItem("DX Source");
+
+    //standard parameters
+    setupDAPSource(std::static_pointer_cast<DAPSource>(src), sourceItem);
+
+    QVector<QPair<QString, QStandardItem*>> nodes;
+
+    
+    auto l2Item = new SourceItem<DXSource, std::size_t>(
+        src,
+        [=](std::size_t val) { src->setTotalExposures(val); },
+        std::bind(&DXSource::totalExposures, src));
+    nodes.append(qMakePair(QString("Total number of exposures"), static_cast<QStandardItem*>(l2Item)));
 
     addModelItems(nodes, sourceItem);
 
@@ -1078,6 +1117,38 @@ void SourceModel::setupDXSource(std::shared_ptr<DXSource> src, QStandardItem* pa
     this->invisibleRootItem()->appendRow(sourceItem);
 }
 
+void SourceModel::setupCBCTSource(std::shared_ptr<CBCTSource> src, QStandardItem* parent)
+{
+    auto sourceItem = new QStandardItem("CBCT Source");
+
+    //standard parameters
+    setupDAPSource(std::static_pointer_cast<DAPSource>(src), sourceItem);
+
+    QVector<QPair<QString, QStandardItem*>> nodes;
+
+    auto l2Item = new SourceItem<CBCTSource, std::uint64_t>(
+        src,
+        [=](std::uint64_t val) {},
+        [=]() { return src->totalExposures(); });
+    nodes.append(qMakePair(QString("Total number of exposures"), static_cast<QStandardItem*>(l2Item)));
+    l2Item->setEditable(false);
+
+    auto spanAngleItem = new SourceItem<CBCTSource, floating>(
+        src,
+        [=](auto ang) { src->setSpanAngleDeg(ang); },
+        [=]() { return src->spanAngleDeg(); });
+    nodes.append(qMakePair(QString("Cone beam span angle [deg]"), static_cast<QStandardItem*>(spanAngleItem)));
+    auto stepAngleItem = new SourceItem<CBCTSource, floating>(
+        src,
+        [=](auto ang) { src->setStepAngleDeg(ang); },
+        [=]() { return src->stepAngleDeg(); });
+    nodes.append(qMakePair(QString("Cone beam step angle [deg]"), static_cast<QStandardItem*>(stepAngleItem)));
+    
+    addModelItems(nodes, sourceItem);
+
+    //adding source
+    this->invisibleRootItem()->appendRow(sourceItem);
+}
 void SourceModel::sourceDataChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>& roles)
 {
     for (auto& actor : m_actors)

@@ -119,6 +119,7 @@ bool H5Wrapper::saveSources(const std::vector<std::shared_ptr<Source>>& sources)
     std::size_t tellerCTSpiral = 1;
     std::size_t tellerCTDual = 1;
     std::size_t tellerCTTopogram = 1;
+    std::size_t tellerCBCT = 1;
 
     std::string groupPath = "/sources";
     for (auto s : sources) {
@@ -127,6 +128,11 @@ bool H5Wrapper::saveSources(const std::vector<std::shared_ptr<Source>>& sources)
             auto s_downcast = std::static_pointer_cast<DXSource>(s);
             auto path = groupPath + "/" + "DX";
             auto name = std::to_string(tellerDX++);
+            valid = saveSource(s_downcast, name, path);
+        } else if (s->type() == Source::Type::CBCT) {
+            auto s_downcast = std::static_pointer_cast<CBCTSource>(s);
+            auto path = groupPath + "/" + "CBCT";
+            auto name = std::to_string(tellerCBCT++);
             valid = saveSource(s_downcast, name, path);
         } else if (s->type() == Source::Type::CTAxial) {
             auto s_downcast = std::static_pointer_cast<CTAxialSource>(s);
@@ -173,6 +179,7 @@ std::vector<std::shared_ptr<Source>> H5Wrapper::loadSources(void)
     sourceFolders["CTSpiral"] = Source::Type::CTSpiral;
     sourceFolders["DX"] = Source::Type::DX;
     sourceFolders["CTTopogram"] = Source::Type::CTTopogram;
+    sourceFolders["CBCT"] = Source::Type::CBCT;
 
     for (const auto& [sourceFolder, type] : sourceFolders) {
         auto folderPath = "sources/" + sourceFolder;
@@ -184,6 +191,11 @@ std::vector<std::shared_ptr<Source>> H5Wrapper::loadSources(void)
             while (getGroup(sourcepath, false)) {
                 if (type == Source::Type::DX) {
                     auto src = std::make_shared<DXSource>();
+                    bool valid = loadSource(src, name, folderPath);
+                    if (valid)
+                        sources.push_back(src);
+                } else if (type == Source::Type::CBCT) {
+                    auto src = std::make_shared<CBCTSource>();
                     bool valid = loadSource(src, name, folderPath);
                     if (valid)
                         sources.push_back(src);
@@ -687,7 +699,7 @@ bool H5Wrapper::loadSource(std::shared_ptr<Source> src, const std::string& name,
     return true;
 }
 
-bool H5Wrapper::saveSource(std::shared_ptr<DXSource> src, const std::string& name, const std::string& groupPath)
+bool H5Wrapper::saveSource(std::shared_ptr<DAPSource> src, const std::string& name, const std::string& groupPath)
 {
     if (!m_file)
         return false;
@@ -728,9 +740,53 @@ bool H5Wrapper::saveSource(std::shared_ptr<DXSource> src, const std::string& nam
     auto ca_att = srcGroup->createAttribute("collimationAngles", H5::PredType::NATIVE_DOUBLE, doubleSpace2);
     ca_att.write(H5::PredType::NATIVE_DOUBLE, collimationAngles.data());
 
+    return true;
+}
+
+bool H5Wrapper::saveSource(std::shared_ptr<DXSource> src, const std::string& name, const std::string& groupPath)
+{
+    if (!m_file)
+        return false;
+    auto srcPath = groupPath + "/" + name;
+    auto srcGroup = getGroup(srcPath, true);
+    if (!srcGroup)
+        return false;
+
+    if (!saveSource(std::static_pointer_cast<DAPSource>(src), name, groupPath))
+        return false;
+
+    const hsize_t dim1 = 1;
+    H5::DataSpace doubleSpace1(1, &dim1);
+
     auto te = src->totalExposures();
     auto te_att = srcGroup->createAttribute("totalExposures", H5::PredType::NATIVE_UINT64, doubleSpace1);
     te_att.write(H5::PredType::NATIVE_UINT64, &te);
+
+    return true;
+}
+
+bool H5Wrapper::saveSource(std::shared_ptr<CBCTSource> src, const std::string& name, const std::string& groupPath)
+{
+    if (!m_file)
+        return false;
+    auto srcPath = groupPath + "/" + name;
+    auto srcGroup = getGroup(srcPath, true);
+    if (!srcGroup)
+        return false;
+
+    if (!saveSource(std::static_pointer_cast<DAPSource>(src), name, groupPath))
+        return false;
+
+    const hsize_t dim1 = 1;
+    H5::DataSpace doubleSpace1(1, &dim1);
+
+    const double te = src->spanAngle();
+    auto te_att = srcGroup->createAttribute("spanAngle", H5::PredType::NATIVE_DOUBLE, doubleSpace1);
+    te_att.write(H5::PredType::NATIVE_DOUBLE, &te);
+
+    const double sa = src->stepAngle();
+    auto sa_att = srcGroup->createAttribute("stepAngle", H5::PredType::NATIVE_DOUBLE, doubleSpace1);
+    sa_att.write(H5::PredType::NATIVE_DOUBLE, &sa);
 
     return true;
 }
@@ -976,7 +1032,7 @@ bool H5Wrapper::saveSource(std::shared_ptr<CTSpiralDualSource> src, const std::s
     return true;
 }
 
-bool H5Wrapper::loadSource(std::shared_ptr<DXSource> src, const std::string& name, const std::string& groupPath)
+bool H5Wrapper::loadSource(std::shared_ptr<DAPSource> src, const std::string& name, const std::string& groupPath)
 {
     if (!m_file)
         return false;
@@ -992,7 +1048,6 @@ bool H5Wrapper::loadSource(std::shared_ptr<DXSource> src, const std::string& nam
     double sdd = 0;
     double dap = 0;
     bool heel = true;
-    std::uint64_t te = 0;
     std::array<double, 2> fe_d;
     std::array<double, 2> ca_d;
     try {
@@ -1001,8 +1056,6 @@ bool H5Wrapper::loadSource(std::shared_ptr<DXSource> src, const std::string& nam
         sdd_attr.read(H5::PredType::NATIVE_DOUBLE, &sdd);
         auto dap_attr = group->openAttribute("dap");
         dap_attr.read(H5::PredType::NATIVE_DOUBLE, &dap);
-        auto te_attr = group->openAttribute("totalExposures");
-        te_attr.read(H5::PredType::NATIVE_UINT64, &te);
         auto fe_attr = group->openAttribute("fieldSize");
         fe_attr.read(H5::PredType::NATIVE_DOUBLE, fe_d.data());
         auto ca_attr = group->openAttribute("collimationAngles");
@@ -1020,11 +1073,70 @@ bool H5Wrapper::loadSource(std::shared_ptr<DXSource> src, const std::string& nam
     src->setModelHeelEffect(heel);
     src->setSourceDetectorDistance(static_cast<floating>(sdd));
     src->setDap(static_cast<floating>(dap));
-    src->setTotalExposures(te);
     auto fe = convert_array_to<floating>(fe_d);
     src->setFieldSize(fe);
     auto ca = convert_array_to<floating>(ca_d);
     src->setCollimationAngles(ca);
+    return true;
+}
+
+bool H5Wrapper::loadSource(std::shared_ptr<DXSource> src, const std::string& name, const std::string& groupPath)
+{
+    if (!m_file)
+        return false;
+    auto path = groupPath + "/" + name;
+    auto group = getGroup(path, false);
+    if (!group)
+        return false;
+
+    if (!loadSource(std::static_pointer_cast<DAPSource>(src), name.c_str(), groupPath.c_str()))
+        return false;
+
+    std::uint64_t te = 0;
+
+    try {
+        auto te_attr = group->openAttribute("totalExposures");
+        te_attr.read(H5::PredType::NATIVE_UINT64, &te);
+    } catch (const H5::DataTypeIException e) {
+        auto msg = e.getDetailMsg();
+        return false;
+    } catch (const H5::AttributeIException e) {
+        auto msg = e.getDetailMsg();
+        return false;
+    }
+    src->setTotalExposures(te);
+    return true;
+}
+
+bool H5Wrapper::loadSource(std::shared_ptr<CBCTSource> src, const std::string& name, const std::string& groupPath)
+{
+    if (!m_file)
+        return false;
+    auto path = groupPath + "/" + name;
+    auto group = getGroup(path, false);
+    if (!group)
+        return false;
+
+    if (!loadSource(std::static_pointer_cast<DAPSource>(src), name.c_str(), groupPath.c_str()))
+        return false;
+
+    double spanAngle = 0;
+    double stepAngle = 0;
+
+    try {
+        auto span_attr = group->openAttribute("spanAngle");
+        span_attr.read(H5::PredType::NATIVE_DOUBLE, &spanAngle);
+        auto step_attr = group->openAttribute("stepAngle");
+        step_attr.read(H5::PredType::NATIVE_DOUBLE, &stepAngle);
+    } catch (const H5::DataTypeIException e) {
+        auto msg = e.getDetailMsg();
+        return false;
+    } catch (const H5::AttributeIException e) {
+        auto msg = e.getDetailMsg();
+        return false;
+    }
+    src->setSpanAngle(spanAngle);
+    src->setStepAngle(stepAngle);
     return true;
 }
 bool H5Wrapper::loadSource(std::shared_ptr<CTBaseSource> src, const std::string& name, const std::string& groupPath)

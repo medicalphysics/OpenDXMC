@@ -130,7 +130,9 @@ protected:
     void setupCTSpiralSource(std::shared_ptr<CTSpiralSource> src, QStandardItem* parent);
     void setupCTDualSource(std::shared_ptr<CTSpiralDualSource> src, QStandardItem* parent);
     void setupCTTopogramSource(std::shared_ptr<CTTopogramSource> src, QStandardItem* parent);
+    void setupDAPSource(std::shared_ptr<DAPSource> src, QStandardItem* parent);
     void setupDXSource(std::shared_ptr<DXSource> src, QStandardItem* parent);
+    void setupCBCTSource(std::shared_ptr<CBCTSource> src, QStandardItem* parent);
     void sourceDataChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>& roles);
     bool removeSource(std::shared_ptr<Source> src);
 

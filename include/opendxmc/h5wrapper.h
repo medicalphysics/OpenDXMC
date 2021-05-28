@@ -58,14 +58,20 @@ protected:
     bool loadSource(std::shared_ptr<CTBaseSource> src, const std::string& name, const std::string& groupPath);
     bool saveSource(std::shared_ptr<CTSource> src, const std::string& name, const std::string& groupPath);
     bool loadSource(std::shared_ptr<CTSource> src, const std::string& name, const std::string& groupPath);
+    bool saveSource(std::shared_ptr<DAPSource> src, const std::string& name, const std::string& groupPath);
+    bool loadSource(std::shared_ptr<DAPSource> src, const std::string& name, const std::string& groupPath);
+
 
     bool saveSource(std::shared_ptr<DXSource> src, const std::string& name, const std::string& groupPath);
+    bool saveSource(std::shared_ptr<CBCTSource> src, const std::string& name, const std::string& groupPath);
     bool saveSource(std::shared_ptr<CTAxialSource> src, const std::string& name, const std::string& groupPath);
     bool saveSource(std::shared_ptr<CTSpiralSource> src, const std::string& name, const std::string& groupPath);
     bool saveSource(std::shared_ptr<CTSpiralDualSource> src, const std::string& name, const std::string& groupPath);
     bool saveSource(std::shared_ptr<CTTopogramSource> src, const std::string& name, const std::string& groupPath);
 
+
     bool loadSource(std::shared_ptr<DXSource> src, const std::string& name, const std::string& groupPath);
+    bool loadSource(std::shared_ptr<CBCTSource> src, const std::string& name, const std::string& groupPath);
     bool loadSource(std::shared_ptr<CTAxialSource> src, const std::string& name, const std::string& groupPath);
     bool loadSource(std::shared_ptr<CTSpiralSource> src, const std::string& name, const std::string& groupPath);
     bool loadSource(std::shared_ptr<CTSpiralDualSource> src, const std::string& name, const std::string& groupPath);

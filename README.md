@@ -5,6 +5,8 @@ OpenDXMC is an application for calculation and visualization of dose distributio
 
 Dose calculations are done by a Monte Carlo method optimized for a voxelized geometry. However only photons are modelled and essentially only KERMA is scored. The application supports dose calculations on CT series of individiual patients and standard human reference phantoms made by ICRU (see report 110 and 143). Phantoms by [HelmholtzZentrum](https://www.helmholtz-muenchen.de/en/irm/service/virtual-human-download-portal/virtual-human-phantoms-registration/index.html) are supported but not distributed with the application as they require an individual licence. Implementation details for the monte carlo code can be found at https://dxmclib.readthedocs.io/ and source code for the library at https://github.com/medicalphysics/DXMClib.    
 
+![Dose calculation of dual source Flash scan](docs/screenshotdethorax.png?raw=true)
+
 There are currently two major show-stoppers for users of this application; lack of documentation and lack of validation of the monte-carlo code. In the short term, these issues are the main focus of further development of the application.
 
 Please do not hesitate if you encounter bugs or errors in the application, or simply missing a feature. The easiest way to report bugs or feature requests is to open an issue: https://github.com/medicalphysics/OpenDXMC/issues. 

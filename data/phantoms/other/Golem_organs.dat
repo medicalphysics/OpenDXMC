@@ -107,7 +107,7 @@ ID                                                     number
 215   Right arm skin                                   27    1.09  
 217   Left leg skin                                    27    1.09  
 218   Right leg skin                                   27    1.09  
-219   Small intestine (wall + contents)                45    1.05  
+219   Small intestine (wall and contents)              45    1.05  
 220   Spinal cord                                      45    1.05  
 221   Spleen                                           45    1.05  
 222   Stomach wall                                     45    1.05  
@@ -120,7 +120,7 @@ ID                                                     number
 243   Large intestine contents                         51    1.05  
 244   Stomach contents                                 45    1.05  
 245   Bed + pillow                                     45    1.05  
-250   Ascending + transverse colon                     45    1.05  
-251   Descending + sigmoid colon                       45    1.05  
+250   Ascending and transverse colon                   45    1.05  
+251   Descending and sigmoid colon                     45    1.05  
 252   Gall bladder                                     45    1.05  
 253   Prostate                                         45    1.05  

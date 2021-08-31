@@ -140,14 +140,14 @@ ID                                                     number
 136   Ureter, right                                    45    1.03  
 137   Urinary bladder wall                             41    1.04  
 138   Urinary bladder contents                         52    1.04  
-139   Uterus / Cervix                                  46    1.03  
-140   Air inside body                                  53    0.001 
+139   Uterus and Cervix                                46    1.03  
+140   Air inside body                                   0    0.001 
 141   Skin at top and bottom                           27    1.09  
 210   Placenta                                         46    1.03  
 211   Umbilical cord                                   45    1.03  
-212   Amniotic fluid                                   53    1     
+212   Amniotic fluid                                   53    1.00     
 213   Fetus Head tissue                                49    0.95  
-214   Fetus cerebrospinal fluid                        53    1     
+214   Fetus cerebrospinal fluid                        53    1.00     
 215   Fetus Spine                                      33    1.05  
 220   Fetus Skin                                       27    1.09  
 221   Fetus Trunk                                      49    0.95  

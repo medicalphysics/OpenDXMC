@@ -54,8 +54,8 @@ ID                                                     number
 93    Stomach contents                                 51    0.9869
 94    Small intestine contents                         51    0.9869
 96    Bladder contents                                 52    0.9869
-103   Upper large intestine (ascending+transverse)     38    1.05  
-104   Lower large intestine (descending+sigmoid colon) 38    1.05  
+103   Upper large intestine (ascending transverse)     38    1.05  
+104   Lower large intestine (descending sigmoid colon) 38    1.05  
 105   Upper large intestine contents                   51    0.9869
 106   Lower large intestine contents                   51    0.9869
 107   Arm skin                                         27    1.1049

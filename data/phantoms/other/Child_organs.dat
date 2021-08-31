@@ -8,9 +8,9 @@ ID                                                     number
 4     Eyes                                             34    1.05  
 5     Eye lenses                                       34    1.05  
 6     Heart                                            33    1.05  
-8     Colon ascending + transverse (wall)              38    1.04  
-9     Colon descending (wall)                          38    1.04  
-10    Small intestine (wall + contents)                37    1.04  
+8     Colon ascending and transverse wall              38    1.04  
+9     Colon descending wall                            38    1.04  
+10    Small intestine wall and contents                37    1.04  
 12    Left kidney                                      35    1.05  
 13    Right kidney                                     35    1.05  
 14    Liver                                            30    1.05  
@@ -58,7 +58,7 @@ ID                                                     number
 66    Lumbar spine                                     2     1.92  
 67    Sacrum                                           2     1.92  
 68    Sternum                                          2     1.92  
-110   Mucous membrane (head)                           49    0.95  
+110   Mucous membrane head                             49    0.95  
 111   Bladder contents                                 52    1.04  
 112   Colon contents                                   51    1.04  
 113   Stomach contents                                 51    1.04  

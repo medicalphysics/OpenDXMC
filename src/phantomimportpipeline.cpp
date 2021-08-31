@@ -164,8 +164,8 @@ std::string PhantomImportPipeline::icrpFolderPath(Phantom phantom)
 }
 
 struct organElement {
-    std::size_t ID = 0;
-    std::size_t medium = 0;
+    std::uint8_t ID = 0;
+    std::uint8_t medium = 0;
     double density = 0;
     std::string name;
 };
@@ -207,8 +207,8 @@ std::vector<organElement> readICRPOrgans(const std::string& path)
                 bool valid = true;
                 organElement o;
                 try {
-                    o.ID = static_cast<std::size_t>(std::stoi(id));
-                    o.medium = static_cast<std::size_t>(std::stoi(medium));
+                    o.ID = static_cast<std::uint8_t>(std::stoi(id));
+                    o.medium = static_cast<std::uint8_t>(std::stoi(medium));
                     o.density = std::stod(dens);
                 } catch (const std::invalid_argument& e) {
                     valid = false;
@@ -226,9 +226,12 @@ std::vector<organElement> readICRPOrgans(const std::string& path)
         return left.ID < right.ID;
     });
     //adding an air organ at the end because thats just how ICRP rolls
-    airElement.ID = organs.back().ID + 1;
+    /* airElement.ID = organs.back().ID + 1;
     organs.push_back(airElement);
+    */
+
     return organs;
+    
 }
 
 std::vector<std::pair<std::size_t, Material>> readICRPMedia(const std::string& path)
@@ -318,7 +321,7 @@ std::pair<std::shared_ptr<std::vector<std::uint8_t>>, std::shared_ptr<std::vecto
 {
 
     //max organ ID
-    std::size_t maxID = 0;
+    std::uint8_t maxID = 0;
     for (const auto& organ : organs) {
         maxID = std::max(organ.ID, maxID);
     }
@@ -343,27 +346,31 @@ std::pair<std::shared_ptr<std::vector<std::uint8_t>>, std::shared_ptr<std::vecto
 
 std::vector<organElement> sortICRUOrgans(std::shared_ptr<std::vector<std::uint8_t>> organArray, const std::vector<organElement>& organs)
 {
-    std::vector<std::uint8_t> organLutInv(organArray->cbegin(), organArray->cend());
-    std::sort(std::execution::par_unseq, organLutInv.begin(), organLutInv.end());
-    auto last = std::unique(std::execution::par_unseq, organLutInv.begin(), organLutInv.end());
-    organLutInv.erase(last, organLutInv.end());
-
-    const std::size_t maxOrganElement = *std::max_element(organLutInv.cbegin(), organLutInv.cend());
-    std::vector<std::uint8_t> organLut(maxOrganElement + 1);
-    for (std::uint8_t i = 0; i < organLutInv.size(); ++i) {
-        organLut[organLutInv[i]] = i;
+    std::vector<std::uint8_t> uniqueOrgans(organArray->cbegin(), organArray->cend());
+    std::sort(std::execution::par_unseq, uniqueOrgans.begin(), uniqueOrgans.end());
+    auto last = std::unique(std::execution::par_unseq, uniqueOrgans.begin(), uniqueOrgans.end());
+    uniqueOrgans.erase(last, uniqueOrgans.end());
+    
+    std::map<std::uint8_t, std::uint8_t> lutInv;
+    for (std::size_t i = 0; i < uniqueOrgans.size(); ++i) {
+        lutInv[i] = uniqueOrgans[i];
+    }
+    std::map<std::uint8_t, std::uint8_t> lut;
+    for (auto [key, value] : lutInv) {
+        lut[value] = key;
     }
 
-    std::transform(std::execution::par_unseq, organArray->cbegin(), organArray->cend(), organArray->begin(), [&](const auto o) { return organLut[o]; });
+    std::transform(std::execution::par_unseq, organArray->cbegin(), organArray->cend(), organArray->begin(), [&](const auto o) { return lut.at(o); });
+   
     std::vector<organElement> newOrgans;
-    newOrgans.push_back(organs[0]);
-    for (std::size_t i = 1; i < organs.size(); ++i) {
-        const std::size_t newID = organLut[organs[i].ID];
-        if (newID > 0) {
-            newOrgans.push_back(organs[i]);
-            newOrgans.back().ID = newID;
+    for (const auto& organ : organs) {
+        if (lut.count(organ.ID) > 0) {
+            newOrgans.push_back(organ);
+            newOrgans.back().ID = lut.at(organ.ID);            
+            lut.extract(organ.ID);
         }
     }
+    
     return newOrgans;
 }
 
@@ -578,7 +585,7 @@ void PhantomImportPipeline::importAWSPhantom(const QString& name)
     std::array<double, 3> origin;
     for (std::size_t i = 0; i < 3; ++i)
         origin[i] = -(dimensions[i] * spacing[i] * 0.5);
-
+    organs = sortICRUOrgans(organArray, organs);
     auto materials = sortICRUMaterials(organs, media);
     std::vector<std::string> organNames;
     for (const auto& organ : organs) {

@@ -114,26 +114,25 @@ std::shared_ptr<std::vector<T>> BinaryImportPipeline::readBinaryArray(const QStr
 
 void BinaryImportPipeline::setMaterialArrayPath(const QString& path)
 {
+    emit processingDataStarted();
     emit resultsReady(false);
     m_materialArray = readBinaryArray<unsigned char>(path);
-    if (!m_materialArray) {
-        return;
-    }
     validate();
+    emit processingDataEnded();
 }
 
 void BinaryImportPipeline::setDensityArrayPath(const QString& path)
 {
+    emit processingDataStarted();
     emit resultsReady(false);
     m_densityArray = readBinaryArray<float>(path);
-    if (!m_densityArray) {
-        return;
-    }
     validate();
+    emit processingDataEnded();
 }
 
 void BinaryImportPipeline::setMaterialMapPath(const QString& path)
 {
+    emit processingDataStarted();
     emit resultsReady(false);
     m_materialMap.clear();
     auto std_path = path.toStdString();
@@ -142,6 +141,7 @@ void BinaryImportPipeline::setMaterialMapPath(const QString& path)
     if (!ifs) {
         auto msq = QString(tr("Error opening material map file: ")) + path;
         emit errorMessage(msq);
+        emit processingDataEnded();
         return;
     }
     std::string str;
@@ -158,11 +158,13 @@ void BinaryImportPipeline::setMaterialMapPath(const QString& path)
                     auto msq = QString(tr("Error in material map file: ")) + path + QString(tr(" when parsing material number: ")) + QString::fromStdString(strings[0]);
                     msq += QString::fromStdString(e.what());
                     emit errorMessage(msq);
+                    emit processingDataEnded();
                     return;
                 } catch (std::out_of_range& e) {
                     auto msq = QString(tr("Error in material map file: ")) + path + QString(tr(" when parsing material number: ")) + QString::fromStdString(strings[0]);
                     msq += QString::fromStdString(e.what());
                     emit errorMessage(msq);
+                    emit processingDataEnded();
                     return;
                 }
                 auto name = strings[1];
@@ -175,6 +177,7 @@ void BinaryImportPipeline::setMaterialMapPath(const QString& path)
                         if (i == ind) {
                             auto msq = QString(tr("Error in material map file: ")) + path + QString(tr(" index is already occupied: ")) + QString::fromStdString(strings[0]);
                             emit errorMessage(msq);
+                            emit processingDataEnded();
                             return;
                         }
                     }
@@ -182,6 +185,7 @@ void BinaryImportPipeline::setMaterialMapPath(const QString& path)
                 } else {
                     auto msg = QString(tr("Error in material map file: ")) + path + QString(tr(" Not able to parse material definition ")) + QString::fromStdString(strings[2]);
                     emit errorMessage(msg);
+                    emit processingDataEnded();
                     return;
                 }
             }
@@ -189,6 +193,7 @@ void BinaryImportPipeline::setMaterialMapPath(const QString& path)
     }
     std::sort(m_materialMap.begin(), m_materialMap.end(), [](auto& a, auto& b) { return a.first < b.first; });
     validate();
+    emit processingDataEnded();
 }
 
 void BinaryImportPipeline::validate()
@@ -244,16 +249,10 @@ void BinaryImportPipeline::validate()
     //generating image containers
 
     auto densArray = std::make_shared<std::vector<floating>>(m_densityArray->cbegin(), m_densityArray->cend());
-    m_densityArray = nullptr;
-    auto densImage = std::make_shared<DensityImageContainer>(densArray, m_dimensions, m_spacing, origin);
+    auto densImage = std::make_shared<DensityImageContainer>(m_densityArray, m_dimensions, m_spacing, origin);
     auto matImage = std::make_shared<MaterialImageContainer>(m_materialArray, m_dimensions, m_spacing, origin);
-    m_materialArray = nullptr;
     densImage->ID = ImageContainer::generateID();
     matImage->ID = densImage->ID;
-
-    //clear arrays
-    m_materialArray = nullptr;
-    m_densityArray = nullptr;
 
     //make material definition array
     std::vector<Material> materials;

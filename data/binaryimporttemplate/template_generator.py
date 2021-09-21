@@ -28,8 +28,8 @@ def generate():
     densArr[r] = 1.0 # water density
     
     material_map = list()
-    material_map.append("0, Air, N0.75O0.25")
-    material_map.append("1, Water, H2O")
+    material_map.append("0; Air; N0.75O0.25")
+    material_map.append("1; Water; H2O")
     
     
     ##writing files

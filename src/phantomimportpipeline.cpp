@@ -20,6 +20,7 @@ Copyright 2020 Erlend Andersen
 #include "opendxmc/stringmanipulation.h"
 
 #include <algorithm>
+#include <numeric>
 #include <regex>
 #include <stdexcept>
 
@@ -163,24 +164,32 @@ std::string PhantomImportPipeline::icrpFolderPath(Phantom phantom)
     return path;
 }
 
-struct organElement {
+struct OrganElement {
     std::uint8_t ID = 0;
     std::uint8_t medium = 0;
     double density = 0;
     std::string name;
 };
 
-std::vector<organElement> readICRPOrgans(const std::string& path)
+struct PhantomData {
+    std::shared_ptr<std::vector<floating>> densityArray = nullptr;
+    std::shared_ptr<std::vector<std::uint8_t>> materialArray = nullptr;
+    std::shared_ptr<std::vector<std::uint8_t>> organArray = nullptr;
+    std::vector<std::string> organNames;
+    std::vector<dxmc::Material> materials;
+};
+
+std::vector<OrganElement> readICRPOrgans(const std::string& path)
 {
     std::ifstream input(path);
     if (!input.is_open())
-        return std::vector<organElement>();
+        return std::vector<OrganElement>();
 
     //reading organs
-    std::vector<organElement> organs;
+    std::vector<OrganElement> organs;
 
     // adding 0 air organ
-    struct organElement airElement;
+    struct OrganElement airElement;
     airElement.ID = 0;
     airElement.medium = 0;
     Material airMaterial("Air, Dry (near sea level)");
@@ -205,7 +214,7 @@ std::vector<organElement> readICRPOrgans(const std::string& path)
                 std::string dens = regex_result[4];
 
                 bool valid = true;
-                organElement o;
+                OrganElement o;
                 try {
                     o.ID = static_cast<std::uint8_t>(std::stoi(id));
                     o.medium = static_cast<std::uint8_t>(std::stoi(medium));
@@ -231,18 +240,17 @@ std::vector<organElement> readICRPOrgans(const std::string& path)
     */
 
     return organs;
-    
 }
 
-std::vector<std::pair<std::size_t, Material>> readICRPMedia(const std::string& path)
+std::vector<std::pair<std::uint8_t, Material>> readICRPMedia(const std::string& path)
 {
     std::ifstream input(path);
     if (!input.is_open())
-        return std::vector<std::pair<std::size_t, Material>>();
+        return std::vector<std::pair<std::uint8_t, Material>>();
     std::size_t teller = 0;
 
     //reading media
-    std::vector<std::pair<std::size_t, Material>> media;
+    std::vector<std::pair<std::uint8_t, Material>> media;
     media.push_back(std::make_pair(0, Material("Air, Dry (near sea level)")));
 
     std::vector<int> atomicNumbers;
@@ -266,7 +274,7 @@ std::vector<std::pair<std::size_t, Material>> readICRPMedia(const std::string& p
         if (std::regex_search(line, regex_result, regex)) {
             if (regex_result.size() >= required_matches + 1) {
 
-                const std::size_t mediaNumber = static_cast<std::size_t>(std::stoi(regex_result[1]));
+                const auto mediaNumber = static_cast<std::uint8_t>(std::stoi(regex_result[1]));
                 const std::string pretty_name = string_trim(regex_result[2]);
                 std::string compound;
                 bool validMaterial = true;
@@ -314,9 +322,110 @@ std::shared_ptr<std::vector<std::uint8_t>> readICRPData(const std::string& path,
     return organs;
 }
 
-std::pair<std::shared_ptr<std::vector<std::uint8_t>>, std::shared_ptr<std::vector<floating>>> generateICRUPhantomArrays(
+PhantomData generateICRUPhantomArrays(
     std::shared_ptr<std::vector<std::uint8_t>> organArray,
-    const std::vector<organElement>& organs,
+    std::vector<OrganElement>& organs,
+    const std::vector<std::pair<std::uint8_t, Material>>& materials)
+{
+    PhantomData data;
+    data.organArray = std::make_shared<std::vector<std::uint8_t>>(organArray->size(), 0);
+    data.densityArray = std::make_shared<std::vector<floating>>(organArray->size(), 0);
+    data.materialArray = std::make_shared<std::vector<std::uint8_t>>(organArray->size(), 0);
+
+    //unique organs
+    std::vector<std::uint8_t> uniqueOrgans(organArray->cbegin(), organArray->cend());
+    std::sort(std::execution::par_unseq, uniqueOrgans.begin(), uniqueOrgans.end());
+    auto last = std::unique(std::execution::par_unseq, uniqueOrgans.begin(), uniqueOrgans.end());
+    uniqueOrgans.erase(last, uniqueOrgans.end());
+
+    //do we have all organs?
+    //if not set organ as air
+    for (std::size_t i = 0; i < uniqueOrgans.size(); ++i) {
+        const auto oIdx = uniqueOrgans[i];
+        bool exists = false;
+        for (const auto& o : organs) {
+            exists = exists || o.ID == oIdx;
+        }
+        if (!exists) {
+            uniqueOrgans[i] = 0;
+        }
+    }
+    std::sort(std::execution::par_unseq, uniqueOrgans.begin(), uniqueOrgans.end());
+    last = std::unique(std::execution::par_unseq, uniqueOrgans.begin(), uniqueOrgans.end());
+    uniqueOrgans.erase(last, uniqueOrgans.end());
+
+    //do we have all materials, if not set material to air
+    for (auto& o : organs) {
+        bool exists = false;
+        for (const auto& [mId, m] : materials) {
+            exists = exists || mId == o.medium;
+        }
+        if (!exists) {
+            o.medium = 0;
+        }
+    }
+
+    std::map<std::uint8_t, std::uint8_t> organLut;
+    std::map<std::uint8_t, std::uint8_t> organLutInv;
+    for (std::uint8_t i = 0; i < uniqueOrgans.size(); ++i) {
+        organLut[i] = uniqueOrgans[i];
+        organLutInv[uniqueOrgans[i]] = i;
+    }
+    std::transform(std::execution::par_unseq, organArray->cbegin(), organArray->cend(), data.organArray->begin(), [&](const auto o) { return organLutInv[o]; });
+    data.organNames.resize(uniqueOrgans.size());
+    for (const auto& [key, value] : organLutInv) {
+        for (const auto& o : organs) {
+            if (o.ID == key) {
+                data.organNames[value] = o.name;
+            }
+        }
+    }
+
+    std::map<std::uint8_t, std::uint8_t> mediumMap;
+    for (const auto& [key, value] : organLutInv) {
+        for (const auto& o : organs) {
+            if (o.ID == key) {
+                mediumMap[key] = o.medium;
+            }
+        }
+    }
+    std::vector<std::uint8_t> uniqueMediums;
+    for (const auto [key, medium] : mediumMap) {
+        uniqueMediums.push_back(medium);
+    }
+    std::sort(std::execution::par_unseq, uniqueMediums.begin(), uniqueMediums.end());
+    last = std::unique(std::execution::par_unseq, uniqueMediums.begin(), uniqueMediums.end());
+    uniqueMediums.erase(last, uniqueMediums.end());
+    data.materials.resize(uniqueMediums.size());
+    std::map<std::uint8_t, std::uint8_t> materialLutInv;
+    for (std::uint8_t i = 0; i < uniqueMediums.size(); ++i) {
+        for (const auto& [medium, mat] : materials) {
+            if (medium == uniqueMediums[i])
+                data.materials[i] = mat;
+        }
+        for (const auto [key, value] : mediumMap) {
+            if (value == uniqueMediums[i]) {
+                materialLutInv[key] = i;
+            }
+        }
+    }
+    std::transform(std::execution::par_unseq, organArray->cbegin(), organArray->cend(), data.materialArray->begin(), [&](const auto o) { return materialLutInv[o]; });
+
+    std::map<std::uint8_t, floating> densLutInv;
+    for (const auto& [key, value] : organLutInv) {
+        for (const auto& o : organs) {
+            if (o.ID == key) {
+                densLutInv[key] = o.density;
+            }
+        }
+    }
+    std::transform(std::execution::par_unseq, organArray->cbegin(), organArray->cend(), data.densityArray->begin(), [&](const auto o) { return densLutInv[o]; });
+
+    return data;
+}
+std::pair<std::shared_ptr<std::vector<std::uint8_t>>, std::shared_ptr<std::vector<floating>>> generateICRUPhantomArrays_old(
+    std::shared_ptr<std::vector<std::uint8_t>> organArray,
+    const std::vector<OrganElement>& organs,
     const std::vector<Material>& materials)
 {
 
@@ -344,13 +453,13 @@ std::pair<std::shared_ptr<std::vector<std::uint8_t>>, std::shared_ptr<std::vecto
     return std::make_pair(materialArray, densityArray);
 }
 
-std::vector<organElement> sortICRUOrgans(std::shared_ptr<std::vector<std::uint8_t>> organArray, const std::vector<organElement>& organs)
+std::vector<OrganElement> sortICRUOrgans(std::shared_ptr<std::vector<std::uint8_t>> organArray, const std::vector<OrganElement>& organs)
 {
     std::vector<std::uint8_t> uniqueOrgans(organArray->cbegin(), organArray->cend());
     std::sort(std::execution::par_unseq, uniqueOrgans.begin(), uniqueOrgans.end());
     auto last = std::unique(std::execution::par_unseq, uniqueOrgans.begin(), uniqueOrgans.end());
     uniqueOrgans.erase(last, uniqueOrgans.end());
-    
+
     std::map<std::uint8_t, std::uint8_t> lutInv;
     for (std::size_t i = 0; i < uniqueOrgans.size(); ++i) {
         lutInv[i] = uniqueOrgans[i];
@@ -361,20 +470,20 @@ std::vector<organElement> sortICRUOrgans(std::shared_ptr<std::vector<std::uint8_
     }
 
     std::transform(std::execution::par_unseq, organArray->cbegin(), organArray->cend(), organArray->begin(), [&](const auto o) { return lut.at(o); });
-   
-    std::vector<organElement> newOrgans;
+
+    std::vector<OrganElement> newOrgans;
     for (const auto& organ : organs) {
         if (lut.count(organ.ID) > 0) {
             newOrgans.push_back(organ);
-            newOrgans.back().ID = lut.at(organ.ID);            
+            newOrgans.back().ID = lut.at(organ.ID);
             lut.extract(organ.ID);
         }
     }
-    
+
     return newOrgans;
 }
 
-std::vector<Material> sortICRUMaterials(std::vector<organElement>& organs, const std::vector<std::pair<std::size_t, Material>>& mediums)
+std::vector<Material> sortICRUMaterials(std::vector<OrganElement>& organs, const std::vector<std::pair<std::size_t, Material>>& mediums)
 {
     std::vector<std::size_t> mediumIdx;
     for (const auto& organ : organs) {
@@ -447,25 +556,21 @@ void PhantomImportPipeline::importICRUPhantom(PhantomImportPipeline::Phantom pha
             }
         }
     }
-    organs = sortICRUOrgans(organArray, organs);
-    auto materials = sortICRUMaterials(organs, media);
-    auto [materialArray, densityArray] = generateICRUPhantomArrays(organArray, organs, materials);
 
-    auto organImage = std::make_shared<OrganImageContainer>(organArray, dimensions, spacing, origin);
-    auto materialImage = std::make_shared<MaterialImageContainer>(materialArray, dimensions, spacing, origin);
-    auto densityImage = std::make_shared<DensityImageContainer>(densityArray, dimensions, spacing, origin);
+    //organs = sortICRUOrgans(organArray, organs);
+    //auto materials = sortICRUMaterials(organs, media);
+    auto data = generateICRUPhantomArrays(organArray, organs, media);
+
+    auto organImage = std::make_shared<OrganImageContainer>(data.organArray, dimensions, spacing, origin);
+    auto materialImage = std::make_shared<MaterialImageContainer>(data.materialArray, dimensions, spacing, origin);
+    auto densityImage = std::make_shared<DensityImageContainer>(data.densityArray, dimensions, spacing, origin);
     organImage->ID = ImageContainer::generateID();
     materialImage->ID = organImage->ID;
     densityImage->ID = organImage->ID;
 
-    std::vector<std::string> organNames;
-    for (const auto& organ : organs) {
-        organNames.push_back(organ.name);
-    }
-
     emit processingDataEnded();
-    emit materialDataChanged(materials);
-    emit organDataChanged(organNames);
+    emit materialDataChanged(data.materials);
+    emit organDataChanged(data.organNames);
     emit imageDataChanged(organImage);
     emit imageDataChanged(densityImage);
     emit imageDataChanged(materialImage);
@@ -585,17 +690,14 @@ void PhantomImportPipeline::importAWSPhantom(const QString& name)
     std::array<double, 3> origin;
     for (std::size_t i = 0; i < 3; ++i)
         origin[i] = -(dimensions[i] * spacing[i] * 0.5);
-    organs = sortICRUOrgans(organArray, organs);
-    auto materials = sortICRUMaterials(organs, media);
-    std::vector<std::string> organNames;
-    for (const auto& organ : organs) {
-        organNames.push_back(organ.name);
-    }
-    auto [materialArray, densityArray] = generateICRUPhantomArrays(organArray, organs, materials);
+    //organs = sortICRUOrgans(organArray, organs);
+    //auto materials = sortICRUMaterials(organs, media);
 
-    auto organImage = std::make_shared<OrganImageContainer>(organArray, dimensions, spacing, origin);
-    auto materialImage = std::make_shared<MaterialImageContainer>(materialArray, dimensions, spacing, origin);
-    auto densityImage = std::make_shared<DensityImageContainer>(densityArray, dimensions, spacing, origin);
+    auto data = generateICRUPhantomArrays(organArray, organs, media);
+
+    auto organImage = std::make_shared<OrganImageContainer>(data.organArray, dimensions, spacing, origin);
+    auto materialImage = std::make_shared<MaterialImageContainer>(data.materialArray, dimensions, spacing, origin);
+    auto densityImage = std::make_shared<DensityImageContainer>(data.densityArray, dimensions, spacing, origin);
     organImage->ID = ImageContainer::generateID();
     materialImage->ID = organImage->ID;
     densityImage->ID = organImage->ID;
@@ -606,8 +708,8 @@ void PhantomImportPipeline::importAWSPhantom(const QString& name)
     emit imageDataChanged(densityImage);
     emit imageDataChanged(organImage);
     emit imageDataChanged(materialImage);
-    emit materialDataChanged(materials);
-    emit organDataChanged(organNames);
+    emit materialDataChanged(data.materials);
+    emit organDataChanged(data.organNames);
     emit processingDataEnded();
 }
 

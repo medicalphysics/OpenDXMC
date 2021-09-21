@@ -935,7 +935,7 @@ bool H5Wrapper::saveSource(std::shared_ptr<CTSpiralSource> src, const std::strin
 
     const hsize_t dim1 = 1;
     H5::DataSpace doubleSpace1(1, &dim1);
-    auto pitch = src->pitch();
+    double pitch = src->pitch();
     auto att = srcGroup->createAttribute("pitch", H5::PredType::NATIVE_DOUBLE, doubleSpace1);
     att.write(H5::PredType::NATIVE_DOUBLE, &pitch);
     return true;
@@ -954,7 +954,7 @@ bool H5Wrapper::saveSource(std::shared_ptr<CTAxialSource> src, const std::string
 
     const hsize_t dim1 = 1;
     H5::DataSpace doubleSpace1(1, &dim1);
-    auto step = src->step();
+    double step = src->step();
     auto att = srcGroup->createAttribute("step", H5::PredType::NATIVE_DOUBLE, doubleSpace1);
     att.write(H5::PredType::NATIVE_DOUBLE, &step);
     return true;

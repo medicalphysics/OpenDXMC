@@ -50,6 +50,7 @@ find_package(VTK COMPONENTS
       FiltersStatistics
       FiltersModeling
       FiltersHybrid
+      FiltersTexture
       ParallelDIY
       ParallelCore
       GUISupportQt
@@ -73,6 +74,7 @@ find_package(VTK COMPONENTS
       RenderingVolume
       RenderingAnnotation
       RenderingVolumeOpenGL2
+      RenderingContext2D
       IOCore
       IOMovie
       IOXML

@@ -64,21 +64,21 @@ protected:
 #endif
 
 private:
-    Orientation m_orientation;
-    QVTKOpenGLNativeWidget* m_openGLWidget;
-    vtkSmartPointer<vtkImageResliceMapper> m_imageMapper;
-    vtkSmartPointer<vtkImageGaussianSmooth> m_imageSmoother;
-    vtkSmartPointer<vtkImageResliceMapper> m_imageMapperBackground;
-    vtkSmartPointer<vtkImageSlice> m_imageSlice;
-    vtkSmartPointer<vtkImageSlice> m_imageSliceBackground;
-    vtkSmartPointer<customMouseInteractorStyle> m_interactionStyle;
+    Orientation m_orientation = Orientation::Axial;
+    QVTKOpenGLNativeWidget* m_openGLWidget = nullptr;
+    vtkSmartPointer<vtkImageResliceMapper> m_imageMapper = nullptr;
+    vtkSmartPointer<vtkImageGaussianSmooth> m_imageSmoother = nullptr;
+    vtkSmartPointer<vtkImageResliceMapper> m_imageMapperBackground = nullptr;
+    vtkSmartPointer<vtkImageSlice> m_imageSlice = nullptr;
+    vtkSmartPointer<vtkImageSlice> m_imageSliceBackground = nullptr;
+    vtkSmartPointer<customMouseInteractorStyle> m_interactionStyle = nullptr;
     std::map<ImageContainer::ImageType, std::array<double, 2>> m_windowLevels;
-    vtkSmartPointer<vtkRenderer> m_renderer;
-    vtkSmartPointer<vtkCornerAnnotation> m_textActorCorners;
-    vtkSmartPointer<vtkScalarBarActor> m_scalarColorBar;
+    vtkSmartPointer<vtkRenderer> m_renderer = nullptr;
+    vtkSmartPointer<vtkCornerAnnotation> m_textActorCorners = nullptr;
+    vtkSmartPointer<vtkScalarBarActor> m_scalarColorBar = nullptr;
     std::map<const QString, QVector<double>> m_colorTables;
     QComboBox* m_colorTablePicker = nullptr;
-    std::shared_ptr<ImageContainer> m_image;
-    std::shared_ptr<ImageContainer> m_imageBackground;
+    std::shared_ptr<ImageContainer> m_image = nullptr;
+    std::shared_ptr<ImageContainer> m_imageBackground = nullptr;
     std::vector<SourceActorContainer*> m_volumeProps;
 };

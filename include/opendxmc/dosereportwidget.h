@@ -18,8 +18,6 @@ Copyright 2019 Erlend Andersen
 
 #pragma once
 
-#include "opendxmc/dosereportcontainer.h"
-
 #include <QAbstractTableModel>
 #include <QHBoxLayout>
 #include <QModelIndex>
@@ -30,6 +28,8 @@ Copyright 2019 Erlend Andersen
 #include <QWidget>
 
 #include <string>
+
+#include "opendxmc/dosereportcontainer.h"
 
 class DoseReportModel : public QAbstractTableModel {
     Q_OBJECT

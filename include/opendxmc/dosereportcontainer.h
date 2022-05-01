@@ -18,12 +18,12 @@ Copyright 2019 Erlend Andersen
 
 #pragma once
 
-#include "opendxmc/dxmc_specialization.h"
-#include "opendxmc/imagecontainer.h"
-
 #include <memory>
 #include <string>
 #include <vector>
+
+#include "opendxmc/dxmc_specialization.h"
+#include "opendxmc/imagecontainer.h"
 
 struct DoseReportElement {
     std::size_t voxels = 0;

@@ -18,8 +18,6 @@ Copyright 2019 Erlend Andersen
 
 #pragma once
 
-#include "opendxmc/sourceeditormodel.h"
-
 #include <QColumnView>
 #include <QJsonObject>
 #include <QStyledItemDelegate>
@@ -28,6 +26,8 @@ Copyright 2019 Erlend Andersen
 
 #include <map>
 #include <vector>
+
+#include "opendxmc/sourceeditormodel.h"
 
 #ifndef Q_DECLARE_METATYPE_SOURCEVECTOR
 #define Q_DECLARE_METATYPE_SOURCEVECTOR

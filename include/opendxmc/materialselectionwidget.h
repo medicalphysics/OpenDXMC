@@ -18,8 +18,6 @@ Copyright 2019 Erlend Andersen
 
 #pragma once
 
-#include "opendxmc/dxmc_specialization.h"
-
 #include <QAbstractTableModel>
 #include <QDoubleSpinBox>
 #include <QLineEdit>
@@ -31,6 +29,8 @@ Copyright 2019 Erlend Andersen
 #include <QWidget>
 
 #include <vector>
+
+#include "opendxmc/dxmc_specialization.h"
 
 #ifndef Q_DECLARE_METATYPE_MATERIALVECTOR
 #define Q_DECLARE_METATYPE_MATERIALVECTOR

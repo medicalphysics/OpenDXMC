@@ -20,12 +20,12 @@ Copyright 2019 Erlend Andersen
 
 #include <QObject>
 
-#include "opendxmc/dxmc_specialization.h"
-#include "opendxmc/imagecontainer.h"
-
 #include <array>
 #include <memory>
 #include <vector>
+
+#include "opendxmc/dxmc_specialization.h"
+#include "opendxmc/imagecontainer.h"
 
 #ifndef Q_DECLARE_METATYPE_IMAGECONTAINER
 #define Q_DECLARE_METATYPE_IMAGECONTAINER

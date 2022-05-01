@@ -18,7 +18,6 @@ Copyright 2019 Erlend Andersen
 
 #pragma once
 
-#include "opendxmc/volumeactorcontainer.h"
 
 #include <vtkCellPicker.h>
 #include <vtkCornerAnnotation.h>
@@ -26,6 +25,8 @@ Copyright 2019 Erlend Andersen
 #include <vtkInteractorStyleImage.h>
 
 #include <functional>
+
+#include "opendxmc/volumeactorcontainer.h"
 
 class customMouseInteractorStyle : public vtkInteractorStyleImage {
 public:

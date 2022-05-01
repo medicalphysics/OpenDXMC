@@ -18,8 +18,6 @@ Copyright 2019 Erlend Andersen
 
 #pragma once
 
-#include "opendxmc/precision_specialization.h"
-
 #include <array>
 #include <chrono>
 #include <memory>
@@ -30,6 +28,8 @@ Copyright 2019 Erlend Andersen
 #include <vtkImageImport.h>
 #include <vtkSmartPointer.h>
 #include <vtkType.h>
+
+#include "opendxmc/precision_specialization.h"
 
 //used onlu for viz
 class ImageContainer {

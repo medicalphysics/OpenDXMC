@@ -51,6 +51,7 @@ public:
     void setMaterialArrayPath(const QString& path);
     void setDensityArrayPath(const QString& path);
     void setMaterialMapPath(const QString& path);
+    void setMeasurementArrayPath(const QString& path);
 
 signals:
     void processingDataStarted();
@@ -72,5 +73,6 @@ private:
     std::array<double, 3> m_spacing = { 1, 1, 1 };
     std::shared_ptr<std::vector<float>> m_densityArray = nullptr;
     std::shared_ptr<std::vector<std::uint8_t>> m_materialArray = nullptr;
+    std::shared_ptr<std::vector<std::uint8_t>> m_measurementArray = nullptr;
     std::vector<std::pair<std::uint8_t, Material>> m_materialMap;
 };

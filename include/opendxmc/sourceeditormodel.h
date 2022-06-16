@@ -17,10 +17,7 @@ Copyright 2019 Erlend Andersen
 */
 
 #pragma once
-#include "opendxmc/dxmc_specialization.h"
-#include "opendxmc/imagecontainer.h"
-#include "opendxmc/imageimportpipeline.h" // for qt meta aecfilter
-#include "opendxmc/volumeactorcontainer.h"
+
 
 #include <QStandardItem>
 #include <QStandardItemModel>
@@ -31,6 +28,11 @@ Copyright 2019 Erlend Andersen
 #include <functional>
 #include <memory>
 #include <vector>
+
+#include "opendxmc/dxmc_specialization.h"
+#include "opendxmc/imagecontainer.h"
+#include "opendxmc/imageimportpipeline.h" // for qt meta aecfilter
+#include "opendxmc/volumeactorcontainer.h"
 
 #ifndef Q_DECLARE_METATYPE_SOURCEVECTOR
 #define Q_DECLARE_METATYPE_SOURCEVECTOR

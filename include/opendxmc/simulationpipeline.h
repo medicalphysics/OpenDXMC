@@ -17,11 +17,6 @@ Copyright 2019 Erlend Andersen
 */
 #pragma once
 
-#include "opendxmc/dosereportcontainer.h"
-#include "opendxmc/dxmc_specialization.h"
-#include "opendxmc/imagecontainer.h"
-#include "opendxmc/imageimportpipeline.h"
-
 #include <QObject>
 
 #include <vtkImageData.h>
@@ -30,6 +25,11 @@ Copyright 2019 Erlend Andersen
 #include <map>
 #include <memory>
 #include <vector>
+
+#include "opendxmc/dosereportcontainer.h"
+#include "opendxmc/dxmc_specialization.h"
+#include "opendxmc/imagecontainer.h"
+#include "opendxmc/imageimportpipeline.h"
 
 #ifndef Q_DECLARE_METATYPE_IMAGECONTAINER
 #define Q_DECLARE_METATYPE_IMAGECONTAINER

@@ -17,7 +17,6 @@ Copyright 2019 Erlend Andersen
 */
 
 #pragma once
-#include "opendxmc/dxmc_specialization.h"
 
 #include <vtkActor.h>
 #include <vtkAppendPolyData.h>
@@ -33,6 +32,8 @@ Copyright 2019 Erlend Andersen
 
 #include <array>
 #include <memory>
+
+#include "opendxmc/dxmc_specialization.h"
 
 class VolumeActorContainer {
 public:

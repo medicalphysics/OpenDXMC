@@ -18,16 +18,16 @@ Copyright 2019 Erlend Andersen
 
 #pragma once
 
-#include "opendxmc/dosereportcontainer.h"
-#include "opendxmc/dxmc_specialization.h"
-#include "opendxmc/imagecontainer.h"
-
 #include <QObject>
 #include <QString>
 
 #include <memory>
 #include <string>
 #include <vector>
+
+#include "opendxmc/dosereportcontainer.h"
+#include "opendxmc/dxmc_specialization.h"
+#include "opendxmc/imagecontainer.h"
 
 #ifndef Q_DECLARE_METATYPE_IMAGECONTAINER
 #define Q_DECLARE_METATYPE_IMAGECONTAINER

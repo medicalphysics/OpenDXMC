@@ -17,7 +17,7 @@ Copyright 2019 Erlend Andersen
 */
 #pragma once
 
-#include "opendxmc/imagecontainer.h"
+
 
 #include <QChartView>
 #include <QComboBox>
@@ -44,6 +44,8 @@ Copyright 2019 Erlend Andersen
 #include <vtkVolumeProperty.h>
 
 #include <memory>
+
+#include "opendxmc/imagecontainer.h"
 
 using namespace QtCharts;
 

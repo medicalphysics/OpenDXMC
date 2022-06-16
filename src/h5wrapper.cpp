@@ -101,13 +101,13 @@ std::vector<Material> H5Wrapper::loadMaterials(void)
         materials.push_back(m);
     }
 
-    //this is better but we must loop anyway to prevent invalid materials
+    // this is better but we must loop anyway to prevent invalid materials
     /*std::transform(materialNames.begin(), materialNames.end(), materialPrettyNames.begin(), std::back_inserter(materials), [](const auto& name, const auto& pname) {
-		Material m(name, pname);
-		m.setStandardDensity(1.0);
-		return m;
-		});
-	*/
+                Material m(name, pname);
+                m.setStandardDensity(1.0);
+                return m;
+                });
+        */
 
     return materials;
 }
@@ -255,8 +255,8 @@ std::unique_ptr<H5::Group> H5Wrapper::getGroup(const std::string& groupPath, boo
 std::unique_ptr<H5::DataSet> H5Wrapper::createDataSet(std::shared_ptr<ImageContainer> image, const std::string& groupPath)
 {
     /*
-	Creates a dataset from image data and writes array
-	*/
+        Creates a dataset from image data and writes array
+        */
     if (!m_file)
         return nullptr;
     if (!image)
@@ -292,35 +292,37 @@ std::unique_ptr<H5::DataSet> H5Wrapper::createDataSet(std::shared_ptr<ImageConta
         type = H5::PredType::NATIVE_FLOAT;
     else if (image->image->GetScalarType() == VTK_UNSIGNED_CHAR)
         type = H5::PredType::NATIVE_UCHAR;
-    else if (image->image->GetScalarType() == VTK_UNSIGNED_INT)
+    else if (image->image->GetScalarType() == VTK_TYPE_UINT32)
         type = H5::PredType::NATIVE_UINT32;
+    else if (image->image->GetScalarType() == VTK_TYPE_UINT64)
+        type = H5::PredType::NATIVE_UINT64;
     else
         return nullptr;
     auto dataset = std::make_unique<H5::DataSet>(group->createDataSet(namePath.c_str(), type, *dataspace, ds_createplist));
     dataset->write(image->image->GetScalarPointer(), type);
 
-    //saving attributes
-    //writing spacing
+    // saving attributes
+    // writing spacing
     const hsize_t dim3 = 3;
     H5::DataSpace doubleSpace3(1, &dim3);
     auto spacing = dataset->createAttribute("spacing", H5::PredType::NATIVE_DOUBLE, doubleSpace3);
     spacing.write(H5::PredType::NATIVE_DOUBLE, image->image->GetSpacing());
-    //writing origin
+    // writing origin
     auto origin = dataset->createAttribute("origin", H5::PredType::NATIVE_DOUBLE, doubleSpace3);
     origin.write(H5::PredType::NATIVE_DOUBLE, image->image->GetOrigin());
-    //writing direction cosines
+    // writing direction cosines
     const hsize_t dim6 = 6;
     H5::DataSpace doubleSpace6(1, &dim6);
     auto cosines = dataset->createAttribute("direction_cosines", H5::PredType::NATIVE_DOUBLE, doubleSpace6);
     double* cosines_data = image->directionCosines.data();
     cosines.write(H5::PredType::NATIVE_DOUBLE, static_cast<void*>(image->directionCosines.data()));
-    //writing ID
+    // writing ID
     const hsize_t dim1 = 1;
     auto id = image->ID;
     H5::DataSpace idSpace6(1, &dim1);
     auto id_attr = dataset->createAttribute("ID", H5::PredType::NATIVE_UINT64, idSpace6);
     id_attr.write(H5::PredType::NATIVE_UINT64, &id);
-    //writing data units
+    // writing data units
     if (image->dataUnits.length() > 0) {
         hsize_t strLen = static_cast<hsize_t>(image->dataUnits.length());
         H5::StrType stringType(0, strLen);
@@ -414,6 +416,11 @@ std::shared_ptr<ImageContainer> H5Wrapper::loadDataSet(ImageContainer::ImageType
             auto data = std::make_shared<std::vector<std::uint32_t>>(size);
             std::uint32_t* buffer = data->data();
             dataset->read(buffer, H5::PredType::NATIVE_UINT32);
+            image = std::make_shared<ImageContainer>(type, data, dim, spacing, origin);
+        } else if (type_size == 8) {
+            auto data = std::make_shared<std::vector<std::uint64_t>>(size);
+            std::uint64_t* buffer = data->data();
+            dataset->read(buffer, H5::PredType::NATIVE_UINT64);
             image = std::make_shared<ImageContainer>(type, data, dim, spacing, origin);
         }
     }
@@ -546,7 +553,7 @@ std::vector<double> H5Wrapper::loadDoubleList(const std::string& name, const std
     space.getSimpleExtentDims(&h5dims);
 
     list.resize(static_cast<std::size_t>(h5dims));
-    //TODO error catching here
+    // TODO error catching here
     dataset->read(list.data(), H5::PredType::NATIVE_DOUBLE);
     return list;
 }
@@ -807,7 +814,7 @@ bool H5Wrapper::saveSource(std::shared_ptr<CTBaseSource> src, const std::string&
     if (!tubeGroup)
         return false;
 
-    //save bowtiefilter
+    // save bowtiefilter
     if (auto filter = src->bowTieFilter(); filter) {
         const auto bowtiePath = srcPath + "/" + "BowTieData";
         const auto& data = filter->data();
@@ -873,7 +880,7 @@ bool H5Wrapper::saveSource(std::shared_ptr<CTSource> src, const std::string& nam
     if (!saveSource(std::static_pointer_cast<CTBaseSource>(src), name, groupPath))
         return false;
 
-    //saving AEC profile
+    // saving AEC profile
     if (auto filter = src->aecFilter(); filter) {
         auto aecPath = srcPath + "/" + "AECData";
 
@@ -988,7 +995,7 @@ bool H5Wrapper::saveSource(std::shared_ptr<CTSpiralDualSource> src, const std::s
     if (!saveTube(tubeB, "TubeB", srcPath))
         return false;
 
-    //save bowtiefilter
+    // save bowtiefilter
     if (auto filter = src->bowTieFilterB(); filter) {
         auto bowtiePath = srcPath + "/" + "BowTieDataB";
         auto data = filter->data();
@@ -1152,7 +1159,7 @@ bool H5Wrapper::loadSource(std::shared_ptr<CTBaseSource> src, const std::string&
         return false;
     loadTube(src->tube(), "Tube", path.c_str());
 
-    //loading bowtie data
+    // loading bowtie data
     auto bowtiePath = path + "/" + "BowTieData";
     auto bowtieGroup = getGroup(bowtiePath, false);
     if (bowtieGroup) {
@@ -1229,7 +1236,7 @@ bool H5Wrapper::loadSource(std::shared_ptr<CTSource> src, const std::string& nam
     if (!loadSource(std::static_pointer_cast<CTBaseSource>(src), name.c_str(), groupPath.c_str()))
         return false;
 
-    //loading aec data
+    // loading aec data
     auto aecPath = path + "/" + "AECData";
     auto aecGroup = getGroup(aecPath, false);
     if (aecGroup) {
@@ -1346,7 +1353,7 @@ bool H5Wrapper::loadSource(std::shared_ptr<CTSpiralDualSource> src, const std::s
         return false;
     loadTube(src->tubeB(), "TubeB", path.c_str());
 
-    //loading bowtie data
+    // loading bowtie data
     auto bowtiePath = path + "/" + "BowTieDataB";
     auto bowtieGroup = getGroup(bowtiePath, false);
     if (bowtieGroup) {

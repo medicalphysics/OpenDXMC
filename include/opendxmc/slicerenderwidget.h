@@ -18,10 +18,6 @@ Copyright 2019 Erlend Andersen
 
 #pragma once
 
-#include "opendxmc/imagecontainer.h"
-#include "opendxmc/slicerenderinteractor.h"
-#include "opendxmc/volumeactorcontainer.h"
-
 #include <QComboBox>
 #include <QWidget>
 
@@ -37,6 +33,11 @@ Copyright 2019 Erlend Andersen
 #include <array>
 #include <map>
 #include <memory>
+
+#include "opendxmc/imagecontainer.h"
+#include "opendxmc/slicerenderinteractor.h"
+#include "opendxmc/volumeactorcontainer.h"
+
 
 // https://github.com/Kitware/VTK/blob/master/Rendering/Image/Testing/Cxx/TestImageResliceMapperAlpha.cxx
 

@@ -23,10 +23,10 @@ Copyright 2019 Erlend Andersen
 #include <QPushButton>
 #include <QWidget>
 
-#include "opendxmc/dxmc_specialization.h"
-
 #include <array>
 #include <memory>
+
+#include "opendxmc/dxmc_specialization.h"
 
 class ProgressWidget : public QWidget {
 public:

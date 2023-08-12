@@ -50,6 +50,7 @@ find_package(VTK COMPONENTS
       FiltersStatistics
       FiltersModeling
       FiltersHybrid
+      FiltersHyperTree
       FiltersTexture
       ParallelDIY
       ParallelCore
@@ -101,6 +102,7 @@ find_package(VTK COMPONENTS
       OPTIONAL_COMPONENTS
       RenderingRayTracing
       RenderingSceneGraph
+      RenderingHyperTreeGrid
       jsoncpp
   )
 

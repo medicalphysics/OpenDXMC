@@ -26,7 +26,7 @@ Copyright 2019 Erlend Andersen
 #include <QVBoxLayout>
 #include <QVariant>
 
-#include <QVTKOpenGLWidget.h>
+#include <QVTKOpenGLNativeWidget.h>
 #include <vtkImageData.h>
 #include <vtkSmartPointer.h>
 

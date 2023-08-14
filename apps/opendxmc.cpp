@@ -17,10 +17,10 @@ Copyright 2019 Erlend Andersen
 */
 
 #include <QApplication>
+#include <QDir>
 #include <QSplashScreen>
 #include <QSurfaceFormat>
-
-#include <QVTKOpenGLWidget.h>
+#include <QVTKOpenGLNativeWidget.h>
 #include <vtkOpenGLRenderWindow.h>
 
 #include "opendxmc/mainwindow.h"
@@ -29,9 +29,10 @@ Copyright 2019 Erlend Andersen
 
 int main(int argc, char* argv[])
 {
+
     // needed to ensure appropriate OpenGL context is created for VTK rendering.
     vtkOpenGLRenderWindow::SetGlobalMaximumNumberOfMultiSamples(0);
-    auto format = QVTKOpenGLWidget::defaultFormat();
+    auto format = QVTKOpenGLNativeWidget::defaultFormat();
     format.setProfile(QSurfaceFormat::CompatibilityProfile);
     QSurfaceFormat::setDefaultFormat(format);
 
@@ -42,6 +43,10 @@ int main(int argc, char* argv[])
     QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
     QApplication app(argc, argv);
+
+    // setting current dir to exe dir
+    const auto exeDirPath = QCoreApplication::applicationDirPath();
+    QDir::setCurrent(exeDirPath);
 
     QPixmap splashMap("resources/icons/icon_fill.png");
     QSplashScreen splash(splashMap);

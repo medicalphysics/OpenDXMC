@@ -50,6 +50,7 @@ find_package(VTK COMPONENTS
       FiltersStatistics
       FiltersModeling
       FiltersHybrid
+      FiltersHyperTree
       FiltersTexture
       ParallelDIY
       ParallelCore
@@ -101,6 +102,7 @@ find_package(VTK COMPONENTS
       OPTIONAL_COMPONENTS
       RenderingRayTracing
       RenderingSceneGraph
+      RenderingHyperTreeGrid
       jsoncpp
   )
 
@@ -178,14 +180,15 @@ set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/COPYING.txt")
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "${CMAKE_PROJECT_NAME}")
 set(CPACK_PACKAGE_VENDOR "Erlend Andersen")
-if (WIN32)    
-    set(CPACK_NSIS_MODIFY_PATH "ON")    
+if(WIN32)
+    set(CPACK_SOURCE_GENERATOR "TGZ")
+    set(CPACK_NSIS_MODIFY_PATH "ON")
     set(CPACK_NSIS_CREATE_ICONS_EXTRA
-        "CreateShortCut '$SMPROGRAMS\\\\$STARTMENU_FOLDER\\\\OpenDXMC.lnk' '$INSTDIR\\\\bin\\\\OpenDXMC.exe'"
+    "CreateShortCut '$SMPROGRAMS\\\\$STARTMENU_FOLDER\\\\OpenDXMC.lnk' '$INSTDIR\\\\bin\\\\OpenDXMC.exe'"
     )
     set(CPACK_NSIS_DELETE_ICONS_EXTRA
-        "Delete '$SMPROGRAMS\\\\$START_MENU\\\\OpenDXMC.lnk'"
-    )
+    "Delete '$SMPROGRAMS\\\\$START_MENU\\\\OpenDXMC.lnk'"
+)
 endif()
 include(CPack)
 

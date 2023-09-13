@@ -37,10 +37,11 @@ void SaveLoad::loadFromFile(const QString& path)
     m_sources.clear();
     m_images.clear();
     H5Wrapper wrapper(path.toStdString(), H5Wrapper::FileOpenType::ReadOnly);
-    constexpr std::array<ImageContainer::ImageType, 7> types({ ImageContainer::ImageType::CTImage,
+    constexpr std::array<ImageContainer::ImageType, 8> types({ ImageContainer::ImageType::CTImage,
         ImageContainer::ImageType::DensityImage, ImageContainer::ImageType::MaterialImage,
         ImageContainer::ImageType::DoseImage, ImageContainer::ImageType::OrganImage,
-        ImageContainer::ImageType::TallyImage, ImageContainer::ImageType::VarianceImage });
+        ImageContainer::ImageType::TallyImage, ImageContainer::ImageType::VarianceImage,
+        ImageContainer::ImageType::MeasurementImage});
     for (auto type : types) {
         auto im = wrapper.loadImage(type);
         if (im)
@@ -56,6 +57,8 @@ void SaveLoad::loadFromFile(const QString& path)
     std::shared_ptr<ImageContainer> doseImage = nullptr;
     std::shared_ptr<ImageContainer> tallyImage = nullptr;
     std::shared_ptr<ImageContainer> varianceImage = nullptr;
+    std::shared_ptr<ImageContainer> measurementImage = nullptr;
+
 
     for (auto im : m_images) {
         if (im->imageType == ImageContainer::ImageType::MaterialImage)
@@ -70,6 +73,8 @@ void SaveLoad::loadFromFile(const QString& path)
             tallyImage = im;
         if (im->imageType == ImageContainer::ImageType::VarianceImage)
             varianceImage = im;
+        if (im->imageType == ImageContainer::ImageType::MeasurementImage)
+            measurementImage= im;
     }
 
     //creating dose data

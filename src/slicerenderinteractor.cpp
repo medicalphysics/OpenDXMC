@@ -7,6 +7,7 @@
 #include <vtkImageProperty.h>
 #include <vtkObjectFactory.h>
 #include <vtkPlane.h>
+#include <vtkRenderWindow.h>
 #include <vtkRenderWindowInteractor.h>
 #include <vtkRendererCollection.h>
 #include <vtkTransform.h>
@@ -104,7 +105,7 @@ void customMouseInteractorStyle::Pan()
     if (this->AutoAdjustCameraClippingRange) {
         this->CurrentRenderer->ResetCameraClippingRange();
     }
-    rwi->Render();
+    update();
 }
 
 void customMouseInteractorStyle::setMapper(vtkSmartPointer<vtkImageResliceMapper> m)
@@ -114,10 +115,6 @@ void customMouseInteractorStyle::setMapper(vtkSmartPointer<vtkImageResliceMapper
 void customMouseInteractorStyle::setMapperBackground(vtkSmartPointer<vtkImageResliceMapper> m)
 {
     m_imageMapperBackground = m;
-}
-void customMouseInteractorStyle::setRenderWindow(vtkSmartPointer<vtkRenderWindow> m)
-{
-    m_renderWindow = m;
 }
 
 void customMouseInteractorStyle::setCornerAnnotation(vtkSmartPointer<vtkCornerAnnotation> actor)
@@ -144,7 +141,12 @@ void customMouseInteractorStyle::update()
 {
     updateWLText();
     updatePlaneActors();
-    m_renderWindow->Render();
+    auto renderer = GetCurrentRenderer();
+    renderer->Render();
+    GetInteractor()->Render();
+    
+    //auto renWin = renderer->GetRenderWindow();
+    //renWin->Render();
 }
 
 void customMouseInteractorStyle::updateWLText()
@@ -161,17 +163,14 @@ void customMouseInteractorStyle::updateWLText()
 void customMouseInteractorStyle::addImagePlaneActor(SourceActorContainer* container)
 {
     m_imagePlaneActors.push_back(container);
-    updatePlaneActors();
-    m_renderWindow->Render();
+    update();
 }
 void customMouseInteractorStyle::removeImagePlaneActor(SourceActorContainer* container)
 {
+    auto renderer = GetCurrentRenderer();
+    renderer->RemoveActor(container->getActor());
     m_imagePlaneActors.erase(std::remove(m_imagePlaneActors.begin(), m_imagePlaneActors.end(), container), m_imagePlaneActors.end());
-    auto renderCollection = m_renderWindow->GetRenderers();
-    auto renderer = renderCollection->GetFirstRenderer();
-    auto actor = container->getActor();
-    renderer->RemoveActor(actor);
-    m_renderWindow->Render();
+    update();
 }
 
 void customMouseInteractorStyle::scrollToStart()
@@ -189,13 +188,10 @@ void customMouseInteractorStyle::scrollToStart()
 }
 void customMouseInteractorStyle::scrollToPoint(double point[3])
 {
-    auto renderCollection = m_renderWindow->GetRenderers();
-    auto nRenderers = renderCollection->GetNumberOfItems();
-    auto renderer = renderCollection->GetFirstRenderer();
+    auto renderer = GetCurrentRenderer();
     auto cam = renderer->GetActiveCamera();
     cam->SetFocalPoint(point);
-    updatePlaneActors();
-    m_renderWindow->Render();
+    update();
 }
 void customMouseInteractorStyle::scrollSlice(bool forward)
 {
@@ -220,21 +216,11 @@ void customMouseInteractorStyle::scrollSlice(bool forward)
             origin[i] = imbounds[i * 2 + 1];
     }
     scrollToPoint(origin);
-    /*
-    auto renderCollection = m_renderWindow->GetRenderers();
-    auto nRenderers = renderCollection->GetNumberOfItems();
-    auto renderer = renderCollection->GetFirstRenderer();
-    auto cam = renderer->GetActiveCamera();
-    cam->SetFocalPoint(origin);
-    updatePlaneActors();
-
-    m_renderWindow->Render();*/
 }
 
 void customMouseInteractorStyle::updatePlaneActors()
 {
-    auto renderCollection = m_renderWindow->GetRenderers();
-    auto renderer = renderCollection->GetFirstRenderer();
+    auto renderer = GetCurrentRenderer();
     auto cam = renderer->GetActiveCamera();
 
     auto plane = m_imageMapper->GetSlicePlane();

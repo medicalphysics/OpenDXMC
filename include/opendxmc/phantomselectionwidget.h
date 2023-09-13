@@ -17,13 +17,15 @@ Copyright 2019 Erlend Andersen
 */
 #pragma once
 
-#include "opendxmc/imagecontainer.h"
-#include "opendxmc/phantomimportpipeline.h"
+
 #include <QComboBox>
 #include <QString>
 #include <QWidget>
 
 #include <vector>
+
+#include "opendxmc/imagecontainer.h"
+#include "opendxmc/phantomimportpipeline.h"
 
 class PhantomSelectionWidget : public QWidget {
     Q_OBJECT

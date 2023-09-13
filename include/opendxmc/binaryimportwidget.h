@@ -65,6 +65,8 @@ signals:
     void materialArrayPathChanged(const QString& array);
     void densityArrayPathChanged(const QString& array);
     void materialMapPathChanged(const QString& array);
+    void measurementArrayPathChanged(const QString& array);
+
 
 private:
     DimensionSpacingWidget* m_dsWidget = nullptr;

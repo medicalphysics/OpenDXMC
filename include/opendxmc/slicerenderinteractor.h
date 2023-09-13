@@ -18,15 +18,15 @@ Copyright 2019 Erlend Andersen
 
 #pragma once
 
-#include "opendxmc/volumeactorcontainer.h"
 
 #include <vtkCellPicker.h>
 #include <vtkCornerAnnotation.h>
-#include <vtkGenericOpenGLRenderWindow.h>
 #include <vtkImageResliceMapper.h>
 #include <vtkInteractorStyleImage.h>
 
 #include <functional>
+
+#include "opendxmc/volumeactorcontainer.h"
 
 class customMouseInteractorStyle : public vtkInteractorStyleImage {
 public:
@@ -45,7 +45,6 @@ public:
     void setCallback(std::function<void(void)> f) { m_callback = f; }
     void setMapper(vtkSmartPointer<vtkImageResliceMapper> m);
     void setMapperBackground(vtkSmartPointer<vtkImageResliceMapper> m);
-    void setRenderWindow(vtkSmartPointer<vtkRenderWindow> m);
     void setCornerAnnotation(vtkSmartPointer<vtkCornerAnnotation> actor);
     static std::string prettyNumber(double number);
     void update();
@@ -53,7 +52,7 @@ public:
     void setImagePlaneActorVisible(bool visible)
     {
         m_imagePlaneActorVisibility = visible;
-        updatePlaneActors();
+        update();
     };
     bool imagePlaneActorVisible() { return m_imagePlaneActorVisibility; };
     void removeImagePlaneActor(SourceActorContainer* container);
@@ -68,7 +67,6 @@ protected:
 private:
     vtkSmartPointer<vtkImageResliceMapper> m_imageMapper = nullptr;
     vtkSmartPointer<vtkImageResliceMapper> m_imageMapperBackground = nullptr;
-    vtkSmartPointer<vtkRenderWindow> m_renderWindow = nullptr;
     vtkSmartPointer<vtkCornerAnnotation> m_textActorCorners = nullptr;
     std::vector<SourceActorContainer*> m_imagePlaneActors;
     SourceActorContainer* m_pickedPlaneActor = nullptr;

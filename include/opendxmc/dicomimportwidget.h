@@ -18,8 +18,6 @@ Copyright 2019 Erlend Andersen
 
 #pragma once
 
-#include "opendxmc/dxmc_specialization.h"
-
 #include <QComboBox>
 #include <QLineEdit>
 #include <QString>
@@ -30,6 +28,8 @@ Copyright 2019 Erlend Andersen
 
 #include <array>
 #include <vector>
+
+#include "opendxmc/dxmc_specialization.h"
 
 #ifndef Q_DECLARE_METATYPE_MATERIALVECTOR
 #define Q_DECLARE_METATYPE_MATERIALVECTOR

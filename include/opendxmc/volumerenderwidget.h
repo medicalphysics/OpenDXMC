@@ -18,9 +18,6 @@ Copyright 2019 Erlend Andersen
 
 #pragma once
 
-#include "opendxmc/imagecontainer.h"
-#include "opendxmc/volumeactorcontainer.h"
-#include "opendxmc/volumerenderwidgetsettings.h"
 
 #include <QWidget>
 
@@ -33,6 +30,11 @@ Copyright 2019 Erlend Andersen
 #include <vtkVolumeProperty.h>
 
 #include <memory>
+
+#include "opendxmc/imagecontainer.h"
+#include "opendxmc/volumeactorcontainer.h"
+#include "opendxmc/volumerenderwidgetsettings.h"
+
 
 #ifndef Q_DECLARE_METATYPE_IMAGECONTAINER
 #define Q_DECLARE_METATYPE_IMAGECONTAINER

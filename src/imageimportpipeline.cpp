@@ -73,13 +73,13 @@ void ImageImportPipeline::setDicomData(QStringList dicomPaths)
         fileNameArray->SetValue(i, path);
     }
 
-    //Dicom file reader
+    // Dicom file reader
     vtkSmartPointer<vtkDICOMReader> dicomReader = vtkSmartPointer<vtkDICOMReader>::New();
     dicomReader->SetMemoryRowOrderToFileNative();
     dicomReader->AutoRescaleOff();
     dicomReader->SetReleaseDataFlag(1);
 
-    //apply scaling to Hounfield units
+    // apply scaling to Hounfield units
     vtkSmartPointer<vtkDICOMApplyRescale> dicomRescaler = vtkSmartPointer<vtkDICOMApplyRescale>::New();
     dicomRescaler->SetInputConnection(dicomReader->GetOutputPort());
     dicomRescaler->SetOutputScalarType(vtkType);
@@ -90,7 +90,7 @@ void ImageImportPipeline::setDicomData(QStringList dicomPaths)
     dicomRectifier->SetInputConnection(dicomRescaler->GetOutputPort());
     dicomRectifier->SetReleaseDataFlag(1);
 
-    //image smoothing filter for volume rendering and segmentation
+    // image smoothing filter for volume rendering and segmentation
     vtkSmartPointer<vtkImageGaussianSmooth> smoother = vtkSmartPointer<vtkImageGaussianSmooth>::New();
     smoother->SetDimensionality(3);
     smoother->SetStandardDeviations(m_blurRadius[0], m_blurRadius[1], m_blurRadius[2]);
@@ -98,7 +98,7 @@ void ImageImportPipeline::setDicomData(QStringList dicomPaths)
     smoother->SetReleaseDataFlag(1);
     smoother->SetInputConnection(dicomRectifier->GetOutputPort());
 
-    //rescale if we want to
+    // rescale if we want to
     vtkSmartPointer<vtkImageResize> rescaler = vtkSmartPointer<vtkImageResize>::New();
     rescaler->SetInputConnection(smoother->GetOutputPort());
     rescaler->SetResizeMethodToOutputSpacing();
@@ -123,7 +123,7 @@ void ImageImportPipeline::setDicomData(QStringList dicomPaths)
     // We must construct a supported type
     static_assert(vtkType == 10, "VTK image type is not required float");
 
-    //selecting image data i.e are we rescaling or not
+    // selecting image data i.e are we rescaling or not
     vtkSmartPointer<vtkImageData> data;
     if (!m_useOutputSpacing) {
         smoother->Update();
@@ -134,7 +134,7 @@ void ImageImportPipeline::setDicomData(QStringList dicomPaths)
     }
     data->GetScalarRange(); // to compute scalar range in this thread contra gui thread
 
-    //setting origin to image senter
+    // setting origin to image senter
     auto spacing = data->GetSpacing();
     auto dimensions = data->GetDimensions();
     double origin[3] = { 0, 0, 0 };
@@ -224,11 +224,11 @@ void ImageImportPipeline::processCTData(std::shared_ptr<ImageContainer> ctImage,
     emit imageDataChanged(densityImage);
     emit materialDataChanged(m_ctImportMaterialMap);
 
-    //making exposure map for CT AEC
+    // making exposure map for CT AEC
     const auto& exposurename = exposureData.first;
     const auto& exposure = exposureData.second;
 
-    //interpolating exposure to reduced image data
+    // interpolating exposure to reduced image data
     std::vector<floating> exposure_interp(dimensionsArray[2], 1.0);
     if (dimensionsArray[2] > 1) {
         const std::size_t exposureSize = exposure.size();
@@ -268,7 +268,7 @@ std::pair<std::string, std::vector<floating>> ImageImportPipeline::readExposureD
 
     for (int i = 0; i < n; ++i) {
         int fileIndex = fileMap->GetComponent(i, 0);
-        //logger->debug("Reading exposure from file number {}", i);
+        // logger->debug("Reading exposure from file number {}", i);
 
         const auto pv = meta->Get(fileIndex, DC::Exposure);
         floating exposure = 1.0;
@@ -284,12 +284,12 @@ std::pair<std::string, std::vector<floating>> ImageImportPipeline::readExposureD
         posExposure[i] = std::make_pair(position, exposure);
     }
 
-    //sorting on position
-    std::sort(posExposure.begin(), posExposure.end());
+    // sorting on position
+    std::sort(posExposure.begin(), posExposure.end(), [](const auto& lh, const auto& rh) { return lh.first < rh.first; });
 
     std::vector<floating> exposure(n);
     std::transform(
-        posExposure.cbegin(), posExposure.cend(), exposure.begin(), [](auto el) -> auto { return el.second; });
+        posExposure.cbegin(), posExposure.cend(), exposure.begin(), [](auto el) -> auto{ return el.second; });
 
     vtkDICOMTag seriesDescriptionTag(8, 4158);
     auto seriesDescriptionValue = meta->GetAttributeValue(seriesDescriptionTag);

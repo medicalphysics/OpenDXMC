@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.14...3.16)
 
-project(OpenDXMC VERSION 1.0.1 DESCRIPTION "OpenDXMC description" LANGUAGES CXX C)
+project(OpenDXMC VERSION 1.0.2 DESCRIPTION "OpenDXMC description" LANGUAGES CXX C)
 
 set(CMAKE_CONFIGURATION_TYPES Debug Release RelWithDebInfo MinSizeRel)
 
@@ -50,6 +50,8 @@ find_package(VTK COMPONENTS
       FiltersStatistics
       FiltersModeling
       FiltersHybrid
+      FiltersHyperTree
+      FiltersTexture
       ParallelDIY
       ParallelCore
       GUISupportQt
@@ -73,6 +75,7 @@ find_package(VTK COMPONENTS
       RenderingVolume
       RenderingAnnotation
       RenderingVolumeOpenGL2
+      RenderingContext2D
       IOCore
       IOMovie
       IOXML
@@ -99,6 +102,7 @@ find_package(VTK COMPONENTS
       OPTIONAL_COMPONENTS
       RenderingRayTracing
       RenderingSceneGraph
+      RenderingHyperTreeGrid
       jsoncpp
   )
 
@@ -129,7 +133,7 @@ include(FetchContent)
 FetchContent_Declare(
     libdxmc
     GIT_REPOSITORY https://github.com/medicalphysics/DXMClib.git
-    GIT_TAG develop
+    GIT_TAG master
     )
 FetchContent_MakeAvailable(libdxmc)
 
@@ -174,7 +178,17 @@ install(TARGETS opendxmc
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Monte carlo dose application for diagnostic x-ray")
 set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/COPYING.txt")
-set(CPACK_PACKAGE_INSTALL_DIRECTORY "${CMAKE_PROJECT_NAME}-${PROJECT_VERSION_MAJOR}-${PROJECT_VERSION_MINOR}")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "${CMAKE_PROJECT_NAME}")
 set(CPACK_PACKAGE_VENDOR "Erlend Andersen")
+if(WIN32)
+    set(CPACK_SOURCE_GENERATOR "TGZ")
+    set(CPACK_NSIS_MODIFY_PATH "ON")
+    set(CPACK_NSIS_CREATE_ICONS_EXTRA
+    "CreateShortCut '$SMPROGRAMS\\\\$STARTMENU_FOLDER\\\\OpenDXMC.lnk' '$INSTDIR\\\\bin\\\\OpenDXMC.exe'"
+    )
+    set(CPACK_NSIS_DELETE_ICONS_EXTRA
+    "Delete '$SMPROGRAMS\\\\$START_MENU\\\\OpenDXMC.lnk'"
+)
+endif()
 include(CPack)
 

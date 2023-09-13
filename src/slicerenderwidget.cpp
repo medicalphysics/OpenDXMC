@@ -38,6 +38,7 @@ Copyright 2019 Erlend Andersen
 
 #include <vtkCamera.h>
 #include <vtkDiscretizableColorTransferFunction.h>
+#include <vtkGenericOpenGLRenderWindow.h>
 #include <vtkImageProperty.h>
 #include <vtkLookupTable.h>
 #include <vtkPNGWriter.h>
@@ -71,29 +72,10 @@ SliceRenderWidget::SliceRenderWidget(QWidget* parent, SliceRenderWidget::Orienta
     , m_orientation(orientation)
 {
     m_openGLWidget = new QVTKOpenGLNativeWidget(this);
-
     auto layout = new QVBoxLayout;
     layout->setContentsMargins(0, 0, 0, 0);
     layout->addWidget(m_openGLWidget);
     this->setLayout(layout);
-
-    //mapper
-    m_imageSmoother = vtkSmartPointer<vtkImageGaussianSmooth>::New();
-    m_imageSmoother->SetDimensionality(3);
-    m_imageSmoother->SetStandardDeviations(0.0, 0.0, 0.0);
-
-    m_imageMapper = vtkSmartPointer<vtkImageResliceMapper>::New();
-    m_imageMapper->StreamingOn();
-    m_imageMapper->SetInputConnection(m_imageSmoother->GetOutputPort());
-
-    m_imageMapperBackground = vtkSmartPointer<vtkImageResliceMapper>::New();
-    m_imageMapperBackground->StreamingOn();
-
-    m_imageSlice = vtkSmartPointer<vtkImageSlice>::New();
-    m_imageSlice->SetMapper(m_imageMapper);
-
-    m_imageSliceBackground = vtkSmartPointer<vtkImageSlice>::New();
-    m_imageSliceBackground->SetMapper(m_imageMapperBackground);
 
     //renderer
     // Setup renderers
@@ -102,26 +84,16 @@ SliceRenderWidget::SliceRenderWidget(QWidget* parent, SliceRenderWidget::Orienta
     m_renderer->GetActiveCamera()->ParallelProjectionOn();
     m_renderer->SetBackground(0, 0, 0);
 
-    //render window
-    //https://lorensen.github.io/VTKExamples/site/Cxx/Images/ImageSliceMapper/
-    //http://vtk.org/gitweb?p=VTK.git;a=blob;f=Examples/GUI/Qt/FourPaneViewer/QtVTKRenderWindows.cxx
-    vtkSmartPointer<vtkGenericOpenGLRenderWindow> renderWindow = vtkSmartPointer<vtkGenericOpenGLRenderWindow>::New();
-    renderWindow->AddRenderer(m_renderer);
-    m_openGLWidget->setRenderWindow(renderWindow);
-
-    // Setup render window interactor
-    vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
-
     m_interactionStyle = vtkSmartPointer<customMouseInteractorStyle>::New();
-    m_interactionStyle->setMapper(m_imageMapper);
-    m_interactionStyle->setMapperBackground(m_imageMapperBackground);
-    m_interactionStyle->setRenderWindow(renderWindow);
     m_interactionStyle->setCallback([=]() { emit this->sourceActorChanged(); });
+    m_interactionStyle->SetCurrentRenderer(m_renderer);
 
     //vtkSmartPointer<vtkInteractorStyleImage> m_interactionStyle = vtkSmartPointer<vtkInteractorStyleImage>::New();
-    //m_interactionStyle->SetInteractionModeToImage3D();
+    m_interactionStyle->SetInteractionModeToImageSlicing();
+    auto renderWindowInteractor = m_openGLWidget->interactor();
     renderWindowInteractor->SetInteractorStyle(m_interactionStyle);
-    renderWindowInteractor->SetRenderWindow(renderWindow);
+    auto renWin = m_openGLWidget->renderWindow();
+    renWin->AddRenderer(m_renderer);
 
     m_textActorCorners = vtkSmartPointer<vtkCornerAnnotation>::New();
     m_textActorCorners->SetText(1, "");
@@ -132,6 +104,26 @@ SliceRenderWidget::SliceRenderWidget(QWidget* parent, SliceRenderWidget::Orienta
     m_scalarColorBar = vtkSmartPointer<vtkScalarBarActor>::New();
     m_scalarColorBar->SetMaximumWidthInPixels(200);
     m_scalarColorBar->AnnotationTextScalingOff();
+
+    //mapper
+    m_imageSmoother = vtkSmartPointer<vtkImageGaussianSmooth>::New();
+    m_imageSmoother->SetDimensionality(3);
+    m_imageSmoother->SetStandardDeviations(0.0, 0.0, 0.0);
+
+    m_imageMapper = vtkSmartPointer<vtkImageResliceMapper>::New();
+    m_imageMapper->StreamingOn();
+    m_imageMapper->SetInputConnection(m_imageSmoother->GetOutputPort());
+    m_interactionStyle->setMapper(m_imageMapper);
+
+    m_imageMapperBackground = vtkSmartPointer<vtkImageResliceMapper>::New();
+    m_imageMapperBackground->StreamingOn();
+    m_interactionStyle->setMapperBackground(m_imageMapperBackground);
+
+    m_imageSlice = vtkSmartPointer<vtkImageSlice>::New();
+    m_imageSlice->SetMapper(m_imageMapper);
+
+    m_imageSliceBackground = vtkSmartPointer<vtkImageSlice>::New();
+    m_imageSliceBackground->SetMapper(m_imageMapperBackground);
 
     //other
     m_imageMapper->SliceFacesCameraOn();
@@ -317,12 +309,7 @@ SliceRenderWidget::SliceRenderWidget(QWidget* parent, SliceRenderWidget::Orienta
 
 void SliceRenderWidget::updateRendering()
 {
-    //might need to call Render
-    auto renderWindow = m_openGLWidget->renderWindow();
-    auto renderCollection = renderWindow->GetRenderers();
-    auto renderer = renderCollection->GetFirstRenderer();
     m_interactionStyle->update();
-    renderWindow->Render();
     m_openGLWidget->update();
     return;
 }
@@ -531,7 +518,6 @@ void SliceRenderWidget::removeActorContainer(SourceActorContainer* actorContaine
 void SliceRenderWidget::setActorsVisible(int visible)
 {
     m_interactionStyle->setImagePlaneActorVisible(visible);
-    updateRendering();
 }
 
 std::array<double, 2> SliceRenderWidget::presetLeveling(ImageContainer::ImageType type)

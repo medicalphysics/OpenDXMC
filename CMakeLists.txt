@@ -4,7 +4,7 @@ project(OpenDXMC VERSION 1.0.2 DESCRIPTION "OpenDXMC description" LANGUAGES CXX 
 
 set(CMAKE_CONFIGURATION_TYPES Debug Release RelWithDebInfo MinSizeRel)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
@@ -106,18 +106,13 @@ find_package(VTK COMPONENTS
       jsoncpp
   )
 
-option(ENABLE_OSPRAY "Build the OSPRay rendering backend. Requires OSPRay" OFF)
-if(NOT ENABLE_OSPRAY)
-	list(REMOVE_ITEM VTK_LIBRARIES "VTK::RenderingRayTracing" "VTK::RenderingSceneGraph" "VTK::jsoncpp")
-endif()
-
 
 ## Include QT
 ## QT specifics for CMake
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
-find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets LinguistTools Charts REQUIRED)
+find_package(QT NAMES Qt6 COMPONENTS Widgets LinguistTools Charts REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets LinguistTools Charts REQUIRED)
 
 #include HDF5
@@ -133,7 +128,7 @@ include(FetchContent)
 FetchContent_Declare(
     libdxmc
     GIT_REPOSITORY https://github.com/medicalphysics/DXMClib.git
-    GIT_TAG master
+    GIT_TAG develop
     )
 FetchContent_MakeAvailable(libdxmc)
 

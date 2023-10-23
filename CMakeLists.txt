@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(OpenDXMC VERSION 1.1.0 DESCRIPTION "OpenDXMC description" LANGUAGES CXX C)
-
+project(OpenDXMC VERSION 1.1.0 DESCRIPTION "OpenDXMC description" LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -136,10 +135,10 @@ set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "${CMAKE_CONFIGURATION_TYPE
 
 # Targets that we develop here
 # The compiled library code is here
-add_subdirectory(src)
+add_subdirectory(src/app)
 
 # The executable code is here
-add_subdirectory(apps)
+add_subdirectory(src/libopendxmc)
 
 # Add helper executable to convert ICRU adult phantoms to binary
 add_subdirectory(utilities)

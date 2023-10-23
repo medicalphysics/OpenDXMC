@@ -18,6 +18,7 @@ set_target_properties(opendxmc PROPERTIES
     MACOSX_BUNDLE ON
 )
 
+
 # Install data folder
 install(DIRECTORY "${CMAKE_SOURCE_DIR}/data/" DESTINATION "bin/resources")
 

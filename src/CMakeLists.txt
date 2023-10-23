@@ -41,10 +41,6 @@ target_include_directories(libopendxmc PUBLIC ${libdxmc_SOURCE_DIR}/include)
 target_include_directories(libopendxmc PRIVATE ${HDF5_INCLUDE_DIRS})
 
 target_compile_definitions(libopendxmc PRIVATE ${HDF5_DEFINITIONS})
-if (ENABLE_OSPRAY)
-	target_compile_definitions(libopendxmc PRIVATE ENABLE_OSPRAY)
-endif()
-
 
 target_link_libraries(libopendxmc PUBLIC
 	${VTK_LIBRARIES}

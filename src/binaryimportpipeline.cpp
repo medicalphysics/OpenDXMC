@@ -121,6 +121,15 @@ void BinaryImportPipeline::setMaterialArrayPath(const QString& path)
     emit processingDataEnded();
 }
 
+void BinaryImportPipeline::setMeasurementArrayPath(const QString& path)
+{
+    emit processingDataStarted();
+    emit resultsReady(false);
+    m_measurementArray = readBinaryArray<unsigned char>(path);
+    validate();
+    emit processingDataEnded();
+}
+
 void BinaryImportPipeline::setDensityArrayPath(const QString& path)
 {
     emit processingDataStarted();
@@ -224,7 +233,7 @@ void BinaryImportPipeline::validate()
         matMapInd.push_back(ind);
     }
     std::vector<unsigned char> matInter;
-    std::set_intersection(matInd.begin(), matInd.end(), matMapInd.begin(), matMapInd.end(), std::back_inserter(matInter));
+    std::set_intersection( matInd.begin(), matInd.end(), matMapInd.begin(), matMapInd.end(), std::back_inserter(matInter));
     std::vector<unsigned char> matDiff;
     std::set_difference(matInd.begin(), matInd.end(), matInter.begin(), matInter.end(), std::back_inserter(matDiff));
     if (matDiff.size() != 0) {
@@ -236,7 +245,7 @@ void BinaryImportPipeline::validate()
     for (std::uint8_t i = 0; i < matInd.size(); ++i) {
         if (i != matInd[i]) {
             //changing indices
-            std::replace(m_materialArray->begin(), m_materialArray->end(), matInd[i], i);
+            std::replace(std::execution::par_unseq, m_materialArray->begin(), m_materialArray->end(), matInd[i], i);
             for (auto& [ind, m] : m_materialMap) {
                 if (ind == matInd[i])
                     ind = i;
@@ -253,7 +262,7 @@ void BinaryImportPipeline::validate()
     auto matImage = std::make_shared<MaterialImageContainer>(m_materialArray, m_dimensions, m_spacing, origin);
     densImage->ID = ImageContainer::generateID();
     matImage->ID = densImage->ID;
-
+    
     //make material definition array
     std::vector<Material> materials;
     materials.reserve(matInd.size());
@@ -266,4 +275,12 @@ void BinaryImportPipeline::validate()
     emit materialDataChanged(materials);
     emit imageDataChanged(densImage);
     emit imageDataChanged(matImage);
+
+    if (m_measurementArray) {
+        if (m_measurementArray->size() == m_materialArray->size()) {
+            auto measImage = std::make_shared<MeasurementImageContainer>(m_measurementArray, m_dimensions, m_spacing, origin);
+            measImage->ID = densImage->ID;
+            emit imageDataChanged(measImage);
+        }
+    }
 }

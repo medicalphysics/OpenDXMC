@@ -17,8 +17,6 @@ Copyright 2019 Erlend Andersen
 */
 
 #pragma once
-#include "opendxmc/dxmc_specialization.h"
-#include "opendxmc/imagecontainer.h"
 
 #include <QObject>
 #include <QString>
@@ -37,6 +35,9 @@ Copyright 2019 Erlend Andersen
 #include <string>
 #include <thread>
 #include <vector>
+
+#include "opendxmc/dxmc_specialization.h"
+#include "opendxmc/imagecontainer.h"
 
 #ifndef Q_DECLARE_METATYPE_IMAGECONTAINER
 #define Q_DECLARE_METATYPE_IMAGECONTAINER

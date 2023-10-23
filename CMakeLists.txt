@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.20)
 project(OpenDXMC VERSION 1.1.0 DESCRIPTION "OpenDXMC description" LANGUAGES CXX C)
 
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
@@ -51,6 +51,8 @@ find_package(VTK COMPONENTS
       FiltersStatistics
       FiltersModeling
       FiltersHybrid
+      FiltersHyperTree
+      FiltersTexture
       ParallelDIY
       ParallelCore
       GUISupportQt
@@ -74,6 +76,7 @@ find_package(VTK COMPONENTS
       RenderingVolume
       RenderingAnnotation
       RenderingVolumeOpenGL2
+      RenderingContext2D
       IOCore
       IOMovie
       IOXML
@@ -100,6 +103,7 @@ find_package(VTK COMPONENTS
       OPTIONAL_COMPONENTS
       RenderingRayTracing
       RenderingSceneGraph
+      RenderingHyperTreeGrid
       jsoncpp
   )
 
@@ -161,7 +165,17 @@ install(TARGETS opendxmc
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Monte carlo dose application for diagnostic x-ray")
 set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/COPYING.txt")
-set(CPACK_PACKAGE_INSTALL_DIRECTORY "${CMAKE_PROJECT_NAME}-${PROJECT_VERSION_MAJOR}-${PROJECT_VERSION_MINOR}")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "${CMAKE_PROJECT_NAME}")
 set(CPACK_PACKAGE_VENDOR "Erlend Andersen")
+if(WIN32)
+    set(CPACK_SOURCE_GENERATOR "TGZ")
+    set(CPACK_NSIS_MODIFY_PATH "ON")
+    set(CPACK_NSIS_CREATE_ICONS_EXTRA
+    "CreateShortCut '$SMPROGRAMS\\\\$STARTMENU_FOLDER\\\\OpenDXMC.lnk' '$INSTDIR\\\\bin\\\\OpenDXMC.exe'"
+    )
+    set(CPACK_NSIS_DELETE_ICONS_EXTRA
+    "Delete '$SMPROGRAMS\\\\$START_MENU\\\\OpenDXMC.lnk'"
+)
+endif()
 include(CPack)
 

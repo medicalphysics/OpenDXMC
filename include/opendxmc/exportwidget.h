@@ -18,8 +18,6 @@ Copyright 2019 Erlend Andersen
 
 #pragma once
 
-#include "opendxmc/imagecontainer.h"
-
 #include <QGroupBox>
 #include <QLineEdit>
 #include <QString>
@@ -29,6 +27,8 @@ Copyright 2019 Erlend Andersen
 #include <memory>
 #include <string>
 #include <vector>
+
+#include "opendxmc/imagecontainer.h"
 
 constexpr std::size_t EXPORT_HEADER_SIZE = 4096;
 

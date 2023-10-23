@@ -198,6 +198,19 @@ BinaryImportWidget::BinaryImportWidget(QWidget* parent)
     mainLayout->addWidget(densityBox);
     connect(densityFileSelect->getLineEditWidget(), &QLineEdit::textChanged, this, &BinaryImportWidget::densityArrayPathChanged);
 
+    // meas array
+    auto measurementMapBox = new QGroupBox(tr("Measurement map file:"), this);
+    auto measurementMapLayout = new QVBoxLayout;
+    measurementMapBox->setLayout(measurementMapLayout);
+    auto measurementMapDescription = new QLabel(tr("Select measurement array. We will force interactions in indices where value is larger than 0. Must be a binary file consisting of one 8 bit number per index (type of unsigned char or uint8). The size of the array must be dimension_x * dimension_y * dimension_z bytes. The array is read in standard C-style, meaning the first index is varying most."), this);
+    measurementMapDescription->setWordWrap(true);
+    measurementMapLayout->addWidget(measurementMapDescription);
+    auto measurementMapFileSelect = new FileSelectWidget(this, tr("Select measurement map file"));
+    measurementMapLayout->addWidget(measurementMapFileSelect);
+    mainLayout->addWidget(measurementMapBox);
+    connect(measurementMapFileSelect->getLineEditWidget(), &QLineEdit::textChanged, this, &BinaryImportWidget::measurementArrayPathChanged);
+
+
     m_errorTxt = new QLabel(this);
     m_errorTxt->setWordWrap(true);
     mainLayout->addWidget(m_errorTxt);

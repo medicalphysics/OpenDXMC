@@ -36,7 +36,7 @@ if (WIN32)
     #VTK deploy windows
 	##BUGFIX vtkRenderingVolumeOpenGL2-8.X is not copied (BUG), a quick fix here
 	## vtksys is not a component and must be copied manually
-	set(VTK_LIBRARIES_DEPLOY ${VTK_LIBRARIES} "vtkRenderingVolumeOpenGL2" "vtksys")
+	set(VTK_LIBRARIES_DEPLOY ${VTK_LIBRARIES} "vtksys" "vtkkissfft" "vtkfmt")
     foreach(vtkdll ${VTK_LIBRARIES_DEPLOY})	
 		set(libname "${vtkdll}-${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}.dll")
 		string(REPLACE "VTK::" "vtk" libname ${libname})

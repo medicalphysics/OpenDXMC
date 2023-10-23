@@ -18,8 +18,6 @@ Copyright 2019 Erlend Andersen
 
 #pragma once
 
-#include "opendxmc/precision_specialization.h"
-
 #include <array>
 #include <chrono>
 #include <memory>
@@ -30,6 +28,8 @@ Copyright 2019 Erlend Andersen
 #include <vtkImageImport.h>
 #include <vtkSmartPointer.h>
 #include <vtkType.h>
+
+#include "opendxmc/precision_specialization.h"
 
 //used onlu for viz
 class ImageContainer {
@@ -126,8 +126,15 @@ public:
     {
         this->imageType = imageType;
         dataUnits = units;
-        registerVector(imageData, dimensions, dataSpacing, origin, VTK_UNSIGNED_INT);
+        registerVector(imageData, dimensions, dataSpacing, origin, VTK_TYPE_UINT32);
         m_image_data_uint32 = imageData;
+    }
+    ImageContainer(ImageType imageType, std::shared_ptr<std::vector<std::uint64_t>> imageData, const std::array<std::size_t, 3>& dimensions, const std::array<double, 3>& dataSpacing, const std::array<double, 3>& origin, const std::string& units = "")
+    {
+        this->imageType = imageType;
+        dataUnits = units;
+        registerVector(imageData, dimensions, dataSpacing, origin, VTK_TYPE_UINT64);
+        m_image_data_uint64 = imageData;
     }
 
 protected:
@@ -135,6 +142,7 @@ protected:
     std::shared_ptr<std::vector<float>> m_image_data_float = nullptr;
     std::shared_ptr<std::vector<unsigned char>> m_image_data_uchar = nullptr;
     std::shared_ptr<std::vector<std::uint32_t>> m_image_data_uint32 = nullptr;
+    std::shared_ptr<std::vector<std::uint64_t>> m_image_data_uint64 = nullptr;
 
 private:
     template <typename T>

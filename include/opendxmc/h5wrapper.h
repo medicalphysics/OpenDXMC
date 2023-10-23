@@ -17,14 +17,14 @@ Copyright 2019 Erlend Andersen
 */
 #pragma once
 
-#include "opendxmc/dxmc_specialization.h"
-#include "opendxmc/imagecontainer.h"
-
 #include "H5Cpp.h"
 
 #include <memory>
 #include <string>
 #include <vector>
+
+#include "opendxmc/dxmc_specialization.h"
+#include "opendxmc/imagecontainer.h"
 
 class H5Wrapper {
 public:

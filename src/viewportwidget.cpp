@@ -26,7 +26,7 @@ Copyright 2019 Erlend Andersen
 #include <QVBoxLayout>
 #include <QVariant>
 
-#include <QVTKOpenGLWidget.h>
+#include <QVTKOpenGLNativeWidget.h>
 #include <vtkImageData.h>
 #include <vtkSmartPointer.h>
 
@@ -144,7 +144,7 @@ void ViewPortWidget::showCurrentImageData()
 void ViewPortWidget::showImageData(int index)
 {
     int imageDescription = -1;
-    if ((index >= 0) & (index < m_volumeSelectorWidget->count()))
+    if ((index >= 0) && (index < m_volumeSelectorWidget->count()))
         imageDescription = m_volumeSelectorWidget->itemData(index).toInt();
 
     constexpr auto customIndex = ImageContainer::imageTypeToIndex(ImageContainer::ImageType::CustomType);

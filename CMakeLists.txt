@@ -1,14 +1,11 @@
-cmake_minimum_required(VERSION 3.14...3.16)
+cmake_minimum_required(VERSION 3.20)
 
-project(OpenDXMC VERSION 1.0.1 DESCRIPTION "OpenDXMC description" LANGUAGES CXX C)
+project(OpenDXMC VERSION 1.1.0 DESCRIPTION "OpenDXMC description" LANGUAGES CXX C)
 
-set(CMAKE_CONFIGURATION_TYPES Debug Release RelWithDebInfo MinSizeRel)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
-
-option(BUILD_SHARED_LIBS "Build shared libraries (.dll/.so) instead of static ones (.lib/.a)" OFF)
 
 # Let's nicely support folders in IDE's
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -31,6 +28,10 @@ else()
 	message(STATUS "Doxygen not found, not building docs")
 endif()
 
+## Include QT
+## QT specifics for CMake (https://doc.qt.io/qt-6/cmake-get-started.html)
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets Charts)
+qt_standard_project_setup()
 
 # Adding VTK package
 find_package(VTK COMPONENTS
@@ -101,20 +102,6 @@ find_package(VTK COMPONENTS
       RenderingSceneGraph
       jsoncpp
   )
-
-option(ENABLE_OSPRAY "Build the OSPRay rendering backend. Requires OSPRay" OFF)
-if(NOT ENABLE_OSPRAY)
-	list(REMOVE_ITEM VTK_LIBRARIES "VTK::RenderingRayTracing" "VTK::RenderingSceneGraph" "VTK::jsoncpp")
-endif()
-
-
-## Include QT
-## QT specifics for CMake
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTOUIC ON)
-set(CMAKE_AUTORCC ON)
-find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets LinguistTools Charts REQUIRED)
-find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets LinguistTools Charts REQUIRED)
 
 #include HDF5
 set(HDF5_USE_STATIC_LIBRARIES OFF)

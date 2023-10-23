@@ -1,5 +1,6 @@
 
-add_executable(opendxmc WIN32 opendxmc.cpp ../data/resources.rc)
+qt_add_executable(opendxmc opendxmc.cpp)
+
 
 vtk_module_autoinit(
     TARGETS opendxmc
@@ -12,6 +13,11 @@ target_link_libraries(opendxmc
 	PRIVATE libopendxmc
 	)
 
+set_target_properties(opendxmc PROPERTIES
+    WIN32_EXECUTABLE ON
+    MACOSX_BUNDLE ON
+)
+
 # Install data folder
 install(DIRECTORY "${CMAKE_SOURCE_DIR}/data/" DESTINATION "bin/resources")
 
@@ -20,11 +26,11 @@ if (WIN32)
     set(OPENDXMC_DEPLOY "${CMAKE_CURRENT_BINARY_DIR}/opendxmcdeploy/")
     
     # QT deploy on windows
-    get_target_property(QT5_QMAKE_EXECUTABLE Qt5::qmake IMPORTED_LOCATION)
-    get_filename_component(QT5_WINDEPLOYQT_EXECUTABLE ${QT5_QMAKE_EXECUTABLE} PATH)
-    set(QT5_WINDEPLOYQT_EXECUTABLE "${QT5_WINDEPLOYQT_EXECUTABLE}/windeployqt.exe")
+    get_target_property(QT6_QMAKE_EXECUTABLE Qt6::qmake IMPORTED_LOCATION)
+    get_filename_component(QT6_WINDEPLOYQT_EXECUTABLE ${QT6_QMAKE_EXECUTABLE} PATH)
+    set(QT6_WINDEPLOYQT_EXECUTABLE "${QT6_WINDEPLOYQT_EXECUTABLE}/windeployqt.exe")
 	add_custom_command(TARGET opendxmc POST_BUILD
-        COMMAND ${QT5_WINDEPLOYQT_EXECUTABLE} --dir "${OPENDXMC_DEPLOY}" "$<TARGET_FILE_DIR:opendxmc>/$<TARGET_FILE_NAME:opendxmc>"
+        COMMAND ${QT6_WINDEPLOYQT_EXECUTABLE} --dir "${OPENDXMC_DEPLOY}" "$<TARGET_FILE_DIR:opendxmc>/$<TARGET_FILE_NAME:opendxmc>"
         )
     
     #VTK deploy windows

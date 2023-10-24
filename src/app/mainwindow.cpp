@@ -23,68 +23,12 @@ Copyright 2019 Erlend Andersen
 #include <QSettings>
 #include <QSplitter>
 #include <QStatusBar>
-
-#include "opendxmc/binaryimportwidget.h"
-#include "opendxmc/dicomimportwidget.h"
-#include "opendxmc/dosereportwidget.h"
-#include "opendxmc/exportwidget.h"
-#include "opendxmc/imageimportpipeline.h"
-#include "opendxmc/mainwindow.h"
-#include "opendxmc/phantomimportpipeline.h"
-#include "opendxmc/phantomselectionwidget.h"
-#include "opendxmc/progressindicator.h"
-#include "opendxmc/qpathmanipulation.h"
-#include "opendxmc/sourceeditorwidget.h"
-#include "opendxmc/viewportwidget.h"
+#include <QTabWidget>
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
 {
-
-    //image import pipeline
-    m_importPipeline = new ImageImportPipeline();
-    m_importPipeline->moveToThread(&m_workerThread);
-    connect(m_importPipeline, &ImageImportPipeline::processingDataStarted, this, &MainWindow::setDisableEditing);
-    connect(m_importPipeline, &ImageImportPipeline::processingDataEnded, this, &MainWindow::setEnableEditing);
-    // phantom import pipeline
-    m_phantomImportPipeline = new PhantomImportPipeline();
-    m_phantomImportPipeline->moveToThread(&m_workerThread);
-    connect(m_phantomImportPipeline, &PhantomImportPipeline::processingDataStarted, this, &MainWindow::setDisableEditing);
-    connect(m_phantomImportPipeline, &PhantomImportPipeline::processingDataEnded, this, &MainWindow::setEnableEditing);
-    //simulation pipeline
-    m_simulationPipeline = new SimulationPipeline();
-    m_simulationPipeline->moveToThread(&m_workerThread);
-    connect(m_importPipeline, &ImageImportPipeline::imageDataChanged, m_simulationPipeline, &SimulationPipeline::setImageData);
-    connect(m_importPipeline, &ImageImportPipeline::materialDataChanged, m_simulationPipeline, &SimulationPipeline::setMaterials);
-    connect(m_importPipeline, &ImageImportPipeline::organDataChanged, m_simulationPipeline, &SimulationPipeline::setOrganList);
-    connect(m_phantomImportPipeline, &PhantomImportPipeline::imageDataChanged, m_simulationPipeline, &SimulationPipeline::setImageData);
-    connect(m_phantomImportPipeline, &PhantomImportPipeline::materialDataChanged, m_simulationPipeline, &SimulationPipeline::setMaterials);
-    connect(m_phantomImportPipeline, &PhantomImportPipeline::organDataChanged, m_simulationPipeline, &SimulationPipeline::setOrganList);
-    //connections to disable widgets when simulationpipeline is working
-    connect(m_simulationPipeline, &SimulationPipeline::processingDataStarted, this, &MainWindow::setDisableEditing);
-    connect(m_simulationPipeline, &SimulationPipeline::processingDataEnded, this, &MainWindow::setEnableEditing);
-    //binary import pipeline
-    m_binaryImportPipeline = new BinaryImportPipeline();
-    m_binaryImportPipeline->moveToThread(&m_workerThread);
-    connect(m_binaryImportPipeline, &BinaryImportPipeline::processingDataStarted, this, &MainWindow::setDisableEditing);
-    connect(m_binaryImportPipeline, &BinaryImportPipeline::processingDataEnded, this, &MainWindow::setEnableEditing);
-    connect(m_binaryImportPipeline, &BinaryImportPipeline::imageDataChanged, m_simulationPipeline, &SimulationPipeline::setImageData);
-    connect(m_binaryImportPipeline, &BinaryImportPipeline::materialDataChanged, m_simulationPipeline, &SimulationPipeline::setMaterials);
-    connect(m_binaryImportPipeline, &BinaryImportPipeline::organDataChanged, m_simulationPipeline, &SimulationPipeline::setOrganList);
-
-    //statusbar and progress indicator widget
-    auto statusBar = this->statusBar();
-    auto progressIndicator = new ProgressIndicator(this);
-    connect(m_importPipeline, &ImageImportPipeline::processingDataStarted, progressIndicator, &ProgressIndicator::startAnimation);
-    connect(m_importPipeline, &ImageImportPipeline::processingDataEnded, progressIndicator, &ProgressIndicator::stopAnimation);
-    connect(m_phantomImportPipeline, &PhantomImportPipeline::processingDataStarted, progressIndicator, &ProgressIndicator::startAnimation);
-    connect(m_phantomImportPipeline, &PhantomImportPipeline::processingDataEnded, progressIndicator, &ProgressIndicator::stopAnimation);
-    connect(m_binaryImportPipeline, &BinaryImportPipeline::processingDataStarted, progressIndicator, &ProgressIndicator::startAnimation);
-    connect(m_binaryImportPipeline, &BinaryImportPipeline::processingDataEnded, progressIndicator, &ProgressIndicator::stopAnimation);
-    connect(m_simulationPipeline, &SimulationPipeline::processingDataStarted, progressIndicator, &ProgressIndicator::startAnimation);
-    connect(m_simulationPipeline, &SimulationPipeline::processingDataEnded, progressIndicator, &ProgressIndicator::stopAnimation);
-    statusBar->addPermanentWidget(progressIndicator);
-
+    
     m_menuWidget = new QTabWidget(this);
     m_menuWidget->setTabPosition(QTabWidget::West);
 
@@ -92,63 +36,7 @@ MainWindow::MainWindow(QWidget* parent)
     auto importWidget = new QTabWidget(this);
     importWidget->setTabPosition(QTabWidget::North);
 
-    //dicom import widget
-    DicomImportWidget* dicomImportWidget = new DicomImportWidget(this);
-    importWidget->addTab(dicomImportWidget, tr("DiCOM CT images"));
-    connect(dicomImportWidget, &DicomImportWidget::dicomSeriesActivated, m_importPipeline, &ImageImportPipeline::setDicomData);
-    connect(dicomImportWidget, &DicomImportWidget::outputSpacingChanged, m_importPipeline, &ImageImportPipeline::setOutputSpacing);
-    connect(dicomImportWidget, &DicomImportWidget::useOutputSpacingChanged, m_importPipeline, &ImageImportPipeline::setUseOutputSpacing);
-    connect(dicomImportWidget, &DicomImportWidget::blurRadiusChanged, m_importPipeline, &ImageImportPipeline::setBlurRadius);
-    connect(dicomImportWidget, &DicomImportWidget::aqusitionVoltageChanged, m_importPipeline, &ImageImportPipeline::setCTImportAqusitionVoltage);
-    connect(dicomImportWidget, &DicomImportWidget::aqusitionAlFiltrationChanged, m_importPipeline, &ImageImportPipeline::setCTImportAqusitionAlFiltration);
-    connect(dicomImportWidget, &DicomImportWidget::aqusitionCuFiltrationChanged, m_importPipeline, &ImageImportPipeline::setCTImportAqusitionCuFiltration);
-    connect(dicomImportWidget, &DicomImportWidget::segmentationMaterialsChanged, m_importPipeline, &ImageImportPipeline::setCTImportMaterialMap);
-
-    //phantom import widget
-    PhantomSelectionWidget* phantomWidget = new PhantomSelectionWidget(this);
-    importWidget->addTab(phantomWidget, tr("Digital phantoms"));
-    connect(phantomWidget, &PhantomSelectionWidget::readIRCUPhantom, m_phantomImportPipeline, &PhantomImportPipeline::importICRUPhantom);
-    connect(phantomWidget, &PhantomSelectionWidget::readCTDIPhantom, m_phantomImportPipeline, &PhantomImportPipeline::importCTDIPhantom);
-    connect(phantomWidget, &PhantomSelectionWidget::readAWSPhantom, m_phantomImportPipeline, &PhantomImportPipeline::importAWSPhantom);
-
-    //binary import widget
-    BinaryImportWidget* binaryWidget = new BinaryImportWidget(this);
-    importWidget->addTab(binaryWidget, tr("Binary files"));
-    connect(binaryWidget, &BinaryImportWidget::dimensionChanged, m_binaryImportPipeline, QOverload<int, int>::of(&BinaryImportPipeline::setDimension));
-    connect(binaryWidget, &BinaryImportWidget::spacingChanged, m_binaryImportPipeline, QOverload<int, double>::of(&BinaryImportPipeline::setSpacing));
-    connect(binaryWidget, &BinaryImportWidget::materialArrayPathChanged, m_binaryImportPipeline, &BinaryImportPipeline::setMaterialArrayPath);
-    connect(binaryWidget, &BinaryImportWidget::densityArrayPathChanged, m_binaryImportPipeline, &BinaryImportPipeline::setDensityArrayPath);
-    connect(binaryWidget, &BinaryImportWidget::measurementArrayPathChanged, m_binaryImportPipeline, &BinaryImportPipeline::setMeasurementArrayPath);
-    connect(binaryWidget, &BinaryImportWidget::materialMapPathChanged, m_binaryImportPipeline, &BinaryImportPipeline::setMaterialMapPath);
-    connect(m_binaryImportPipeline, &BinaryImportPipeline::errorMessage, binaryWidget, &BinaryImportWidget::setErrorMessage);
-    m_menuWidget->addTab(importWidget, tr("Import data"));
-
-    //source edit widget
-    auto sourceEditWidget = new SourceEditWidget(this);
-    m_menuWidget->addTab(sourceEditWidget, tr("X-ray sources"));
-    auto sourceEditDelegate = sourceEditWidget->delegate();
-    connect(m_importPipeline, &ImageImportPipeline::aecFilterChanged, sourceEditDelegate, &SourceDelegate::addAecFilter);
-    connect(m_importPipeline, &ImageImportPipeline::imageDataChanged, sourceEditWidget->model(), &SourceModel::setImageData);
-    connect(m_binaryImportPipeline, &BinaryImportPipeline::imageDataChanged, sourceEditWidget->model(), &SourceModel::setImageData);
-
-
-    //dosereportWidget
-    auto doseReportWidget = new DoseReportWidget(this);
-    connect(m_simulationPipeline, &SimulationPipeline::doseDataChanged, doseReportWidget, &DoseReportWidget::setDoseData);
-    m_menuWidget->addTab(doseReportWidget, tr("Dose summary"));
-
-    //export Widget
-    auto exportWidget = new ExportWidget(this);
-    connect(m_simulationPipeline, &SimulationPipeline::imageDataChanged, exportWidget, &ExportWidget::registerImage);
-    connect(m_importPipeline, &ImageImportPipeline::imageDataChanged, exportWidget, &ExportWidget::registerImage);
-    connect(m_binaryImportPipeline, &BinaryImportPipeline::imageDataChanged, exportWidget, &ExportWidget::registerImage);
-    connect(exportWidget, &ExportWidget::processingDataStarted, this, &MainWindow::setDisableEditing);
-    connect(exportWidget, &ExportWidget::processingDataEnded, this, &MainWindow::setEnableEditing);
-    connect(exportWidget, &ExportWidget::processingDataStarted, progressIndicator, &ProgressIndicator::startAnimation);
-    connect(exportWidget, &ExportWidget::processingDataEnded, progressIndicator, &ProgressIndicator::stopAnimation);
-
-    m_menuWidget->addTab(exportWidget, tr("Export data"));
-
+    
     //simulation progress
     m_progressTimer = new QTimer(this);
     m_progressTimer->setTimerType(Qt::CoarseTimer);

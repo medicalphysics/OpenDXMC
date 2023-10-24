@@ -13,7 +13,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with OpenDXMC. If not, see < https://www.gnu.org/licenses/>.
 
-Copyright 2019 Erlend Andersen
+Copyright 2024 Erlend Andersen
 */
 
 #pragma once
@@ -23,23 +23,17 @@ Copyright 2019 Erlend Andersen
 #include <QString>
 #include <QStringList>
 #include <QWidget>
-#include <vtkDICOMDirectory.h>
-#include <vtkSmartPointer.h>
+
 
 #include <array>
 #include <vector>
 
-#include "opendxmc/dxmc_specialization.h"
+#include <basewidget.hpp>
 
-#ifndef Q_DECLARE_METATYPE_MATERIALVECTOR
-#define Q_DECLARE_METATYPE_MATERIALVECTOR
-Q_DECLARE_METATYPE(std::vector<Material>)
-#endif
-
-class DicomImportWidget : public QWidget {
+class CTDicomImportWidget : public BaseWidget {
     Q_OBJECT
 public:
-    DicomImportWidget(QWidget* parent = nullptr);
+    CTDicomImportWidget(QWidget* parent = nullptr);
 
 signals:
     void dicomFolderSelectedForBrowsing(QString folderPath);
@@ -59,7 +53,7 @@ private:
     void seriesActivated(int index);
 
     QLineEdit* m_browseLineEdit;
-    vtkSmartPointer<vtkDICOMDirectory> m_imageDirectorySnooper;
+    
     QComboBox* m_seriesSelector;
 
     std::array<double, 3> m_outputSpacing = { 1, 1, 4 };

@@ -4,9 +4,9 @@ qt_add_library(libopendxmc STATIC
 	)
 
 # We expose headers for all targets consuming libopendxmc
-target_include_directories(libopendxmc INTERFACE ${CMAKE_SOURCE_DIR}/include/libopendxmc)
+target_include_directories(libopendxmc INTERFACE ${CMAKE_SOURCE_DIR})
 # We expose headers internally for libopendxmc, maybe we should just use PUBLIC?
-target_include_directories(libopendxmc PRIVATE ${CMAKE_SOURCE_DIR}/include/libopendxmc)
+target_include_directories(libopendxmc PRIVATE ${CMAKE_SOURCE_DIR})
 # Adding HDF5 headers internally for libopendxmc, maybe move to its own library?
 target_include_directories(libopendxmc PRIVATE ${HDF5_INCLUDE_DIRS})
 target_compile_definitions(libopendxmc PRIVATE ${HDF5_DEFINITIONS})
@@ -22,8 +22,6 @@ target_link_libraries(libopendxmc PUBLIC
 	libdxmc	
 	)
 
-
-# Adding vtk modules (replaces include(${VTK_USE_FILE}) since vtk 8.90) 
 vtk_module_autoinit(
     TARGETS libopendxmc
     MODULES ${VTK_LIBRARIES}

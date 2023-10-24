@@ -22,13 +22,6 @@ Copyright 2019 Erlend Andersen
 #include <QThread>
 #include <QTimer>
 
-#include "opendxmc/binaryimportpipeline.h"
-#include "opendxmc/dxmc_specialization.h"
-#include "opendxmc/imageimportpipeline.h"
-#include "opendxmc/phantomimportpipeline.h"
-#include "opendxmc/progresswidget.h"
-#include "opendxmc/saveload.h"
-#include "opendxmc/simulationpipeline.h"
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -37,7 +30,7 @@ public:
     ~MainWindow();
     void setEnableEditing(void);
     void setDisableEditing(void);
-    void setProgressBar(ProgressBar* progressBar);
+    //void setProgressBar(ProgressBar* progressBar);
     void updateProgressBar();
 
 protected:
@@ -50,16 +43,5 @@ signals:
 
 private:
     QThread m_workerThread;
-    ImageImportPipeline* m_importPipeline = nullptr;
-    SimulationPipeline* m_simulationPipeline = nullptr;
-    BinaryImportPipeline* m_binaryImportPipeline = nullptr;
-    PhantomImportPipeline* m_phantomImportPipeline = nullptr;
 
-    QTabWidget* m_menuWidget = nullptr;
-
-    SaveLoad* m_saveLoad = nullptr;
-
-    ProgressBar* m_progressBar = nullptr;
-    ProgressWidget* m_progressWidget = nullptr;
-    QTimer* m_progressTimer = nullptr;
 };

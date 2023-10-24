@@ -16,9 +16,6 @@ along with OpenDXMC. If not, see < https://www.gnu.org/licenses/>.
 Copyright 2019 Erlend Andersen
 */
 
-#include "opendxmc/dicomimportwidget.h"
-#include "opendxmc/dxmc_specialization.h"
-#include "opendxmc/materialselectionwidget.h"
 
 #include <QCompleter>
 #include <QDir>
@@ -39,6 +36,10 @@ Copyright 2019 Erlend Andersen
 #include <vtkStringArray.h>
 
 #include <string>
+
+#include <ctdicomimportwidget.hpp>
+
+
 
 DicomImportWidget::DicomImportWidget(QWidget* parent)
     : QWidget(parent)

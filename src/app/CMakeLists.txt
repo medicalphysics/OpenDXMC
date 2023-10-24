@@ -1,11 +1,15 @@
 
-qt_add_executable(opendxmc opendxmc.cpp)
+
+qt_add_executable(opendxmc opendxmc.cpp
+	basewidget.cpp
+	mainwindow.cpp
+	ctdicomimportwidget.cpp
+)
+
+# We expose headers for all targets consuming opendxmc
+target_include_directories(opendxmc PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 
-vtk_module_autoinit(
-    TARGETS opendxmc
-    MODULES ${VTK_LIBRARIES}
-    )
 
 target_compile_definitions(opendxmc PRIVATE APP_VERSION="${PROJECT_VERSION}")
 
@@ -18,6 +22,10 @@ set_target_properties(opendxmc PROPERTIES
     MACOSX_BUNDLE ON
 )
 
+vtk_module_autoinit(
+    TARGETS opendxmc
+    MODULES ${VTK_LIBRARIES}
+    )
 
 # Install data folder
 install(DIRECTORY "${CMAKE_SOURCE_DIR}/data/" DESTINATION "bin/resources")

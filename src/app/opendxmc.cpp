@@ -23,7 +23,7 @@ Copyright 2019 Erlend Andersen
 #include <QVTKOpenGLNativeWidget.h>
 #include <vtkOpenGLRenderWindow.h>
 
-#include "opendxmc/mainwindow.h"
+#include <mainwindow.hpp>
 
 #include <thread>
 
@@ -36,9 +36,6 @@ int main(int argc, char* argv[])
     format.setProfile(QSurfaceFormat::CompatibilityProfile);
     QSurfaceFormat::setDefaultFormat(format);
 
-#ifdef Q_OS_WIN
-    SetProcessDPIAware(); // call before the main event loop
-#endif // Q_OS_WIN
 
     QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);

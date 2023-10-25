@@ -13,7 +13,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with OpenDXMC. If not, see < https://www.gnu.org/licenses/>.
 
-Copyright 2019 Erlend Andersen
+Copyright 2024 Erlend Andersen
 */
 
 #include <QAction>
@@ -25,33 +25,45 @@ Copyright 2019 Erlend Andersen
 #include <QStatusBar>
 #include <QTabWidget>
 
+#include <ctdicomimportwidget.hpp>
+#include <mainwindow.hpp>
+
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
 {
-    
-    m_menuWidget = new QTabWidget(this);
-    m_menuWidget->setTabPosition(QTabWidget::West);
+    QSplitter* splitter = new QSplitter(Qt::Horizontal);
+    setCentralWidget(splitter);
+    splitter->setOpaqueResize(false);
 
-    //import widgets share a tabbed widget
-    auto importWidget = new QTabWidget(this);
-    importWidget->setTabPosition(QTabWidget::North);
+    auto menuWidget = new QTabWidget(splitter);
+    menuWidget->setTabPosition(QTabWidget::West);
 
-    
-    //simulation progress
-    m_progressTimer = new QTimer(this);
+    // import widgets share a tabbed widget
+    auto importWidgets = new QTabWidget(this);
+    menuWidget->addTab(importWidgets, tr("Import data"));
+    importWidgets->setTabPosition(QTabWidget::North);
+
+    // adding ct dicom import widget
+    auto ctdicomimportwidget = new CTDicomImportWidget(importWidgets);
+    importWidgets->addTab(ctdicomimportwidget, tr("CT DiCOM import"));
+
+    // simulation progress
+    /* m_progressTimer = new QTimer(this);
     m_progressTimer->setTimerType(Qt::CoarseTimer);
     connect(m_simulationPipeline, &SimulationPipeline::progressBarChanged, this, &MainWindow::setProgressBar);
     connect(m_progressTimer, &QTimer::timeout, this, &MainWindow::updateProgressBar);
+    */
 
-    //Viewport
-    ViewPortWidget* viewPort = new ViewPortWidget(this);
+    // Viewport
+    /* ViewPortWidget* viewPort = new ViewPortWidget(this);
     connect(m_importPipeline, &ImageImportPipeline::imageDataChanged, viewPort, &ViewPortWidget::setImageData);
     connect(m_phantomImportPipeline, &PhantomImportPipeline::imageDataChanged, viewPort, &ViewPortWidget::setImageData);
     connect(m_simulationPipeline, &SimulationPipeline::imageDataChanged, viewPort, &ViewPortWidget::setImageData);
     connect(m_binaryImportPipeline, &BinaryImportPipeline::imageDataChanged, viewPort, &ViewPortWidget::setImageData);
+    */
 
-    //setting up source 3d actor connection to viewpoert from sourceeditwidget
-    auto sourceModel = sourceEditWidget->model();
+    // setting up source 3d actor connection to viewpoert from sourceeditwidget
+    /* auto sourceModel = sourceEditWidget->model();
     connect(sourceModel, &SourceModel::sourceActorAdded, viewPort, &ViewPortWidget::addActorContainer);
     connect(sourceModel, &SourceModel::actorsChanged, viewPort, &ViewPortWidget::render);
     connect(sourceModel, &SourceModel::sourceActorRemoved, viewPort, &ViewPortWidget::removeActorContainer);
@@ -96,32 +108,22 @@ MainWindow::MainWindow(QWidget* parent)
 
     //dose progress image widget
     m_progressWidget = new ProgressWidget(this);
-
+    */
     // setting up layout
-    QSplitter* splitter = new QSplitter(Qt::Horizontal);
-    QWidget* menuHolder = new QWidget(this);
-    QVBoxLayout* holderLayout = new QVBoxLayout;
-    holderLayout->setContentsMargins(0, 0, 0, 0);
-    holderLayout->addWidget(m_menuWidget);
-    holderLayout->addWidget(m_progressWidget);
-    menuHolder->setLayout(holderLayout);
 
-    splitter->addWidget(menuHolder);
-    splitter->addWidget(viewPort);
-    splitter->setStretchFactor(0, 1.0);
-    splitter->setStretchFactor(1, 10.0);
-    splitter->setOpaqueResize(false);
-    setCentralWidget(splitter);
-
-    //setting up window menu
+    // setting up window menu
     createMenu();
 
-    //no connections to pipeline after this point
+    // no connections to pipeline after this point
     m_workerThread.start();
 }
 
 MainWindow::~MainWindow()
 {
+    m_workerThread.quit();
+    m_workerThread.wait();
+
+    /*
     if (m_progressBar) {
         m_progressBar->setCancel(true);
     }
@@ -138,13 +140,14 @@ MainWindow::~MainWindow()
     m_binaryImportPipeline = nullptr;
     delete m_phantomImportPipeline;
     m_phantomImportPipeline = nullptr;
+    */
 }
 
 void MainWindow::createMenu()
 {
     auto fileMenu = menuBar()->addMenu(tr("&File"));
 
-    auto saveAction = new QAction(tr("Save as"), this);
+    /* auto saveAction = new QAction(tr("Save as"), this);
     saveAction->setShortcut(QKeySequence::SaveAs);
     saveAction->setStatusTip(tr("Save current simulation as"));
     connect(saveAction, &QAction::triggered, this, &MainWindow::saveFileAction);
@@ -157,72 +160,5 @@ void MainWindow::createMenu()
     connect(openAction, &QAction::triggered, this, &MainWindow::loadFileAction);
     fileMenu->addAction(openAction);
     connect(this, &MainWindow::requestOpenSaveFile, m_saveLoad, &SaveLoad::loadFromFile);
-}
-
-void MainWindow::saveFileAction()
-{
-    QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
-    auto dirname = directoryPath(settings.value("saveload/path", ".").value<QString>());
-
-    auto path = filePath(dirname, QString("savefile.h5"));
-    QWidget* parent = this;
-    path = QFileDialog::getSaveFileName(parent, tr("Save simulation"), path, tr("HDF5 (*.h5)"));
-    if (path.isNull())
-        return;
-    dirname = directoryPath(path);
-    settings.setValue("saveload/path", dirname);
-    emit requestSaveToFile(path);
-}
-
-void MainWindow::loadFileAction()
-{
-    //getting file
-    QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
-    auto dirname = directoryPath(settings.value("saveload/path", ".").value<QString>());
-
-    QWidget* parent = this;
-    auto path = QFileDialog::getOpenFileName(parent, tr("Open simulation"), dirname, tr("HDF5 (*.h5)"));
-    if (path.isNull())
-        return;
-    dirname = directoryPath(path);
-    settings.setValue("saveload/path", dirname);
-    emit requestOpenSaveFile(path);
-}
-
-void MainWindow::setEnableEditing(void)
-{
-    for (int i = 0; i < m_menuWidget->count(); ++i) {
-        auto wid = m_menuWidget->widget(i);
-        wid->setEnabled(true);
-    }
-}
-
-void MainWindow::setDisableEditing(void)
-{
-    for (int i = 0; i < m_menuWidget->count(); ++i) {
-        auto wid = m_menuWidget->widget(i);
-        wid->setDisabled(true);
-    }
-}
-
-void MainWindow::setProgressBar(ProgressBar* progressBar)
-{
-    m_progressBar = progressBar;
-    m_progressTimer->start(5000);
-}
-
-void MainWindow::updateProgressBar()
-{
-    m_progressWidget->show();
-    if (m_progressBar) {
-        const auto msg = m_progressBar->getETA();
-        this->statusBar()->showMessage(QString::fromStdString(msg), 6000);
-        if (m_progressWidget->showProgress())
-            m_progressWidget->setImageData(m_progressBar->computeDoseProgressImage());
-        if (m_progressWidget->cancelRun())
-            m_progressBar->setCancel(true);
-    } else {
-        m_progressWidget->hide();
-        m_progressTimer->stop();
-    }
+    */
 }

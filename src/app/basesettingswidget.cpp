@@ -16,14 +16,14 @@ along with OpenDXMC. If not, see < https://www.gnu.org/licenses/>.
 Copyright 2024 Erlend Andersen
 */
 
-#include <basewidget.hpp>
+#include <basesettingswidget.hpp>
 
-BaseWidget::BaseWidget(QWidget* parent)
+BaseSettingsWidget::BaseSettingsWidget(QWidget* parent)
     : QWidget(parent)
 {
 }
 
-void BaseWidget::lockEditing(bool lock)
+void BaseSettingsWidget::lockEditing(bool lock)
 {
     auto children = this->template findChildren<QWidget*>(Qt::FindChildrenRecursively);
     for (auto child : children)

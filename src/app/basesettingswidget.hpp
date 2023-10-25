@@ -20,13 +20,10 @@ Copyright 2024 Erlend Andersen
 
 #include <QWidget>
 
-class BaseWidget :public QWidget {
+class BaseSettingsWidget : public QWidget {
     Q_OBJECT
 public:
-    BaseWidget(QWidget* parent = nullptr);
+    BaseSettingsWidget(QWidget* parent = nullptr);
 
-void lockEditing(bool lock);
-
-
-
-}
+    void lockEditing(bool lock);
+};

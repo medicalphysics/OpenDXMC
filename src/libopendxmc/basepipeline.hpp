@@ -18,15 +18,12 @@ Copyright 2024 Erlend Andersen
 
 #pragma once
 
-#include <memory>
+#include <datacontainer.hpp>
 
+#include <memory>
 
 class BasePipeline {
 public:
 protected:
-
 private:
-
-
-
 };

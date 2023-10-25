@@ -23,16 +23,14 @@ Copyright 2024 Erlend Andersen
 
 class DataContainer {
 public:
+    DataContainer();
     void setSpacing(const std::array<double, 3>& cm);
     void setDimensions(const std::array<std::size_t, 3>&);
-
-    bool setCTdata();
+    std::size_t size() const;
+    
 
 private:
-    DataContainer() {
-        static 
-    }
-
-    std::array<double, 3> spacing = { 0, 0, 0 };
+    std::uint64_t m_uid = 0;
+    std::array<double, 3> m_spacing = { 0, 0, 0 };
     std::array<std::size_t, 3> m_dimensions = { 0, 0, 0 };
 };

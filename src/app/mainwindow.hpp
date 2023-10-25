@@ -18,7 +18,6 @@ Copyright 2024 Erlend Andersen
 #pragma once
 
 #include <QMainWindow>
-#include <QString>
 #include <QThread>
 
 class MainWindow : public QMainWindow {
@@ -26,17 +25,9 @@ class MainWindow : public QMainWindow {
 public:
     MainWindow(QWidget* parent = nullptr);
     ~MainWindow();
-    void setEnableEditing(void);
-    void setDisableEditing(void);
-    void updateProgressBar();
 
 protected:
     void createMenu();
-    void saveFileAction();
-    void loadFileAction();
-signals:
-    void requestOpenSaveFile(const QString& path);
-    void requestSaveToFile(const QString& path);
 
 private:
     QThread m_workerThread;

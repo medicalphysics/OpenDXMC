@@ -24,13 +24,15 @@ Copyright 2024 Erlend Andersen
 #include <QStringList>
 #include <QWidget>
 
+#include <vtkDICOMDirectory.h>
+#include <vtkSmartPointer.h>
 
 #include <array>
 #include <vector>
 
-#include <basewidget.hpp>
+#include <basesettingswidget.hpp>
 
-class CTDicomImportWidget : public BaseWidget {
+class CTDicomImportWidget : public BaseSettingsWidget {
     Q_OBJECT
 public:
     CTDicomImportWidget(QWidget* parent = nullptr);
@@ -44,7 +46,7 @@ signals:
     void aqusitionVoltageChanged(double voltage);
     void aqusitionAlFiltrationChanged(double mm);
     void aqusitionCuFiltrationChanged(double mm);
-    void segmentationMaterialsChanged(const std::vector<Material>& materials);
+    void segmentationMaterialsChanged();
 
 private:
     void browseForFolder(void);
@@ -53,9 +55,8 @@ private:
     void seriesActivated(int index);
 
     QLineEdit* m_browseLineEdit;
-    
+    vtkSmartPointer<vtkDICOMDirectory> m_imageDirectorySnooper = nullptr;
     QComboBox* m_seriesSelector;
-
     std::array<double, 3> m_outputSpacing = { 1, 1, 4 };
     std::array<double, 3> m_blurRadius = { 1, 1, 0 };
     bool m_useOutputSpacing = false;

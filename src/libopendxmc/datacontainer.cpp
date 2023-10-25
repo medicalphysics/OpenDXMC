@@ -16,15 +16,33 @@ along with OpenDXMC. If not, see < https://www.gnu.org/licenses/>.
 Copyright 2024 Erlend Andersen
 */
 
-
+#include <datacontainer.hpp>
 
 #include <chrono>
-
-#include <datacontainer.hpp>
 
 std::uint64_t generateID(void)
 {
     auto timepoint = std::chrono::system_clock::now();
     auto interval = timepoint.time_since_epoch();
     return std::chrono::duration_cast<std::chrono::nanoseconds>(interval).count();
+}
+
+DataContainer::DataContainer()
+{
+    m_uid = generateID();
+}
+
+void DataContainer::setSpacing(const std::array<double, 3>& cm)
+{
+    m_spacing = cm;
+}
+
+void DataContainer::setDimensions(const std::array<std::size_t, 3>& dim)
+{
+    m_dimensions = dim;
+}
+
+std::size_t DataContainer::size() const
+{
+    return m_dimensions[0] * m_dimensions[1] * m_dimensions[2];
 }

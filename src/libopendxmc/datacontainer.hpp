@@ -15,29 +15,24 @@ along with OpenDXMC. If not, see < https://www.gnu.org/licenses/>.
 
 Copyright 2024 Erlend Andersen
 */
+
 #pragma once
 
-#include <QMainWindow>
-#include <QString>
-#include <QThread>
+#include <array>
+#include <vector>
 
-class MainWindow : public QMainWindow {
-    Q_OBJECT
+class DataContainer {
 public:
-    MainWindow(QWidget* parent = nullptr);
-    ~MainWindow();
-    void setEnableEditing(void);
-    void setDisableEditing(void);
-    void updateProgressBar();
+    void setSpacing(const std::array<double, 3>& cm);
+    void setDimensions(const std::array<std::size_t, 3>&);
 
-protected:
-    void createMenu();
-    void saveFileAction();
-    void loadFileAction();
-signals:
-    void requestOpenSaveFile(const QString& path);
-    void requestSaveToFile(const QString& path);
+    bool setCTdata();
 
 private:
-    QThread m_workerThread;
+    DataContainer() {
+        static 
+    }
+
+    std::array<double, 3> spacing = { 0, 0, 0 };
+    std::array<std::size_t, 3> m_dimensions = { 0, 0, 0 };
 };

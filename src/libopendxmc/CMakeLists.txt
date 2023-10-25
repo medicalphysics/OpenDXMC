@@ -1,6 +1,8 @@
 
 qt_add_library(libopendxmc STATIC	
     viewportwidget.cpp    
+	basepipeline.cpp
+	datacontainer.cpp
 	)
 
 # We expose headers for all targets consuming libopendxmc

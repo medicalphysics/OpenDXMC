@@ -1,15 +1,14 @@
 
 
-qt_add_executable(opendxmc opendxmc.cpp
-	basewidget.cpp
+qt_add_executable(opendxmc 
+	opendxmc.cpp
+	basesettingswidget.cpp
 	mainwindow.cpp
 	ctdicomimportwidget.cpp
 )
 
 # We expose headers for all targets consuming opendxmc
 target_include_directories(opendxmc PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-
-
 
 target_compile_definitions(opendxmc PRIVATE APP_VERSION="${PROJECT_VERSION}")
 

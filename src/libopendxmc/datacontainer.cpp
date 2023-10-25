@@ -15,29 +15,16 @@ along with OpenDXMC. If not, see < https://www.gnu.org/licenses/>.
 
 Copyright 2024 Erlend Andersen
 */
-#pragma once
 
-#include <QMainWindow>
-#include <QString>
-#include <QThread>
 
-class MainWindow : public QMainWindow {
-    Q_OBJECT
-public:
-    MainWindow(QWidget* parent = nullptr);
-    ~MainWindow();
-    void setEnableEditing(void);
-    void setDisableEditing(void);
-    void updateProgressBar();
 
-protected:
-    void createMenu();
-    void saveFileAction();
-    void loadFileAction();
-signals:
-    void requestOpenSaveFile(const QString& path);
-    void requestSaveToFile(const QString& path);
+#include <chrono>
 
-private:
-    QThread m_workerThread;
-};
+#include <datacontainer.hpp>
+
+std::uint64_t generateID(void)
+{
+    auto timepoint = std::chrono::system_clock::now();
+    auto interval = timepoint.time_since_epoch();
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(interval).count();
+}

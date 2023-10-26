@@ -30,6 +30,16 @@ vtk_module_autoinit(
 # adding dxmc physicslist to binary folder
 dxmclib_add_physics_list(opendxmc)
 
+# Adding icons to binary resource
+qt_add_resources(opendxmc icons
+    PREFIX "/icons"
+    BASE "${CMAKE_SOURCE_DIR}/data/icons"
+    FILES 
+    "${CMAKE_SOURCE_DIR}/data/icons/icon.png" 
+    "${CMAKE_SOURCE_DIR}/data/icons/icon_fill.png"
+    "${CMAKE_SOURCE_DIR}/data/icons/settings.png"
+)
+
 # Install data folder
 install(DIRECTORY "${CMAKE_SOURCE_DIR}/data/" DESTINATION "bin/resources")
 

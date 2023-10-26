@@ -18,6 +18,9 @@ Copyright 2024 Erlend Andersen
 
 #include <datacontainer.hpp>
 
+#include <vtkImageExport.h>
+#include <vtkSmartPointer.h>
+
 #include <chrono>
 
 std::uint64_t generateID(void)
@@ -42,7 +45,179 @@ void DataContainer::setDimensions(const std::array<std::size_t, 3>& dim)
     m_dimensions = dim;
 }
 
+void DataContainer::setMaterials(const std::vector<DataContainer::Material>& materials)
+{
+    m_materials = materials;
+}
+
+bool DataContainer::setImageArray(ImageType type, const std::vector<double>& image)
+{
+    const auto N = size();
+    if (N != image.size())
+        return false;
+
+    switch (type) {
+    case DataContainer::ImageType::CT:
+        m_ct_array = image;
+        return true;
+    case DataContainer::ImageType::Density:
+        m_density_array = image;
+        return true;
+    case DataContainer::ImageType::Dose:
+        m_dose_array = image;
+        return true;
+    case DataContainer::ImageType::DoseVariance:
+        m_dose_variance_array = image;
+        return true;
+    default:
+        return false;
+    }
+    return false;
+}
+
+bool DataContainer::setImageArray(ImageType type, const std::vector<std::uint8_t>& image)
+{
+    const auto N = size();
+    if (N != image.size())
+        return false;
+
+    switch (type) {
+    case DataContainer::ImageType::Material:
+        m_material_array = image;
+        return true;
+    case DataContainer::ImageType::Organ:
+        m_organ_array = image;
+        return true;
+    default:
+        return false;
+    }
+    return false;
+}
+
+bool DataContainer::setImageArray(ImageType type, const std::vector<std::uint64_t>& image)
+{
+    const auto N = size();
+    if (N != image.size())
+        return false;
+    if (type == ImageType::DoseCount) {
+        m_dose_count_array = image;
+        return true;
+    }
+    return false;
+}
+
+bool DataContainer::setImageArray(ImageType type, vtkImageData* image)
+{
+    if (image == nullptr)
+        return false;
+
+    std::array<int, 3> image_dim;
+    image->GetDimensions(image_dim.data());
+    if (image_dim[0] != m_dimensions[0] || image_dim[1] != m_dimensions[1] || image_dim[2] != m_dimensions[2])
+        return false;
+
+    if (image->GetNumberOfScalarComponents() != 1)
+        return false;
+
+    // Checking for correct scalar type
+    if (type == ImageType::Material || type == ImageType::Organ) {
+        if (image->GetScalarType() != VTK_UNSIGNED_CHAR)
+            return false;
+    } else if (type == ImageType::DoseCount) {
+        if (image->GetScalarType() != VTK_UNSIGNED_LONG_LONG)
+            return false;
+    } else {
+        if (image->GetScalarType() != VTK_DOUBLE)
+            return false;
+    }
+
+    // Oh horrors, we must have a void pointer to copy data from vtkImageData
+    void* buffer = nullptr;
+    auto vtkexport = vtkSmartPointer<vtkImageExport>::New();
+    vtkexport->SetInputData(image);
+
+    switch (type) {
+    case DataContainer::ImageType::CT:
+        m_ct_array.resize(size());
+        buffer = static_cast<void*>(m_ct_array.data());
+        vtkexport->Export(buffer);
+        return true;
+    case DataContainer::ImageType::Density:
+        m_density_array.resize(size());
+        buffer = static_cast<void*>(m_density_array.data());
+        vtkexport->Export(buffer);
+        return true;
+    case DataContainer::ImageType::Material:
+        m_material_array.resize(size());
+        buffer = static_cast<void*>(m_material_array.data());
+        vtkexport->Export(buffer);
+        return true;
+    case DataContainer::ImageType::Organ:
+        m_organ_array.resize(size());
+        buffer = static_cast<void*>(m_organ_array.data());
+        vtkexport->Export(buffer);
+        return true;
+    case DataContainer::ImageType::Dose:
+        m_dose_array.resize(size());
+        buffer = static_cast<void*>(m_dose_array.data());
+        vtkexport->Export(buffer);
+        return true;
+    case DataContainer::ImageType::DoseVariance:
+        m_dose_variance_array.resize(size());
+        buffer = static_cast<void*>(m_dose_variance_array.data());
+        vtkexport->Export(buffer);
+        return true;
+    case DataContainer::ImageType::DoseCount:
+        m_dose_count_array.resize(size());
+        buffer = static_cast<void*>(m_dose_count_array.data());
+        vtkexport->Export(buffer);
+        return true;
+    default:
+        break;
+    }
+    return false;
+}
+
 std::size_t DataContainer::size() const
 {
     return m_dimensions[0] * m_dimensions[1] * m_dimensions[2];
+}
+
+bool DataContainer::hasImage(ImageType type)
+{
+    if (m_uid == 0)
+        return false;
+
+    const auto N = size();
+    std::size_t N_image = 0;
+    switch (type) {
+    case DataContainer::ImageType::CT:
+        N_image = m_ct_array.size();
+        break;
+    case DataContainer::ImageType::Density:
+        N_image = m_density_array.size();
+        break;
+    case DataContainer::ImageType::Material:
+        N_image = m_material_array.size();
+        break;
+    case DataContainer::ImageType::Organ:
+        N_image = m_organ_array.size();
+        break;
+    case DataContainer::ImageType::Dose:
+        N_image = m_dose_array.size();
+        break;
+    case DataContainer::ImageType::DoseVariance:
+        N_image = m_dose_variance_array.size();
+        break;
+    case DataContainer::ImageType::DoseCount:
+        N_image = m_dose_count_array.size();
+        break;
+    default:
+        N_image = 0;
+        break;
+    }
+
+    if (N == 0 || N != N_image)
+        return false;
+    return true;
 }

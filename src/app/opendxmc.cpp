@@ -20,6 +20,7 @@ Copyright 2019 Erlend Andersen
 #include <QDir>
 #include <QSplashScreen>
 #include <QSurfaceFormat>
+#include <QStyle>
 
 #include <QVTKOpenGLNativeWidget.h>
 
@@ -29,13 +30,6 @@ Copyright 2019 Erlend Andersen
 
 int main(int argc, char* argv[])
 {
-
-    // needed to ensure appropriate OpenGL context is created for VTK rendering.
-    /* vtkOpenGLRenderWindow::SetGlobalMaximumNumberOfMultiSamples(0);
-    auto format = QVTKOpenGLNativeWidget::defaultFormat();
-    format.setProfile(QSurfaceFormat::CompatibilityProfile);
-    QSurfaceFormat::setDefaultFormat(format);
-    */
 
     // before initializing QApplication, set the default surface format.
     QSurfaceFormat::setDefaultFormat(QVTKOpenGLNativeWidget::defaultFormat());
@@ -48,16 +42,17 @@ int main(int argc, char* argv[])
     const auto exeDirPath = QCoreApplication::applicationDirPath();
     QDir::setCurrent(exeDirPath);
 
-    QPixmap splashMap("resources/icons/icon_fill.png");
+    QPixmap splashMap(":icons/icon_fill.png");
     QSplashScreen splash(splashMap);
     splash.show();
+    app.setStyle("fusion");
     app.processEvents();
     splash.showMessage("Starting OpenDXMC", Qt::AlignCenter, Qt::white);
     app.processEvents();
 
     app.setApplicationName("OpenDXMC");
     app.setOrganizationName("SSHF");
-    app.setWindowIcon(QIcon("resources/icons/icon.png"));
+    app.setWindowIcon(QIcon(":icons/icon.png"));
 
     MainWindow win;
     QString title = "OpenDXMC v" + QString(APP_VERSION);

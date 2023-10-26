@@ -16,10 +16,10 @@ target_link_libraries(libopendxmc PUBLIC
 	Qt${QT_VERSION_MAJOR}::Widgets
 	Qt${QT_VERSION_MAJOR}::Core
 	Qt${QT_VERSION_MAJOR}::Gui
-	Qt${QT_VERSION_MAJOR}::Charts
+	Qt${QT_VERSION_MAJOR}::Charts	
+	libdxmc
 	PRIVATE
-	${HDF5_LIBRARIES}
-	libdxmc	
+	${HDF5_LIBRARIES}		
 	)
 
 vtk_module_autoinit(

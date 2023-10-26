@@ -17,3 +17,13 @@ Copyright 2024 Erlend Andersen
 */
 
 #include <basepipeline.hpp>
+
+BasePipeline::BasePipeline(QObject* parent)
+    : QObject(parent)
+{
+}
+
+void BasePipeline::updateImageData(std::shared_ptr<DataContainer> data)
+{
+    m_data = data;
+}

@@ -2,6 +2,7 @@
 qt_add_library(libopendxmc STATIC	
 	basepipeline.cpp
 	datacontainer.cpp
+	ctimageimportpipeline.cpp
 	)
 
 # We expose headers for all targets consuming libopendxmc

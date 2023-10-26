@@ -17,12 +17,14 @@ Copyright 2024 Erlend Andersen
 */
 
 #pragma once
+
+#include <QMetaType>
+
 #include <vtkImageData.h>
 
 #include <dxmc_specialization.hpp>
 
 #include <array>
-#include <map>
 #include <string>
 #include <vector>
 
@@ -54,6 +56,9 @@ public:
     bool setImageArray(ImageType type, vtkImageData* image);
     std::size_t size() const;
     bool hasImage(ImageType type);
+    std::uint64_t ID() const;
+
+    vtkImageData* vtkImage(ImageType);
 
 private:
     std::uint64_t m_uid = 0;
@@ -68,3 +73,6 @@ private:
     std::vector<std::uint64_t> m_dose_count_array;
     std::vector<DataContainer::Material> m_materials;
 };
+
+// Allow std::shared_ptr<DataContainer> to be used in signal/slots
+Q_DECLARE_METATYPE(std::shared_ptr<DataContainer>)

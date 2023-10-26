@@ -19,6 +19,7 @@ Copyright 2024 Erlend Andersen
 #include <datacontainer.hpp>
 
 #include <vtkImageExport.h>
+#include <vtkImageImport.h>
 #include <vtkSmartPointer.h>
 
 #include <chrono>
@@ -33,6 +34,75 @@ std::uint64_t generateID(void)
 DataContainer::DataContainer()
 {
     m_uid = generateID();
+}
+
+std::uint64_t DataContainer::ID() const { return m_uid; }
+
+vtkImageData* DataContainer::vtkImage(ImageType type)
+{
+    if (!hasImage(type))
+        return nullptr;
+
+    void* data = nullptr;
+
+    auto vtkimport = vtkSmartPointer<vtkImageImport>::New();
+
+    switch (type) {
+    case DataContainer::ImageType::CT:
+        data = static_cast<void*>(m_ct_array.data());
+        vtkimport->SetDataScalarTypeToDouble();
+        break;
+    case DataContainer::ImageType::Density:
+        data = static_cast<void*>(m_density_array.data());
+        vtkimport->SetDataScalarTypeToDouble();
+        break;
+    case DataContainer::ImageType::Material:
+        data = static_cast<void*>(m_material_array.data());
+        vtkimport->SetDataScalarTypeToUnsignedChar();
+        break;
+    case DataContainer::ImageType::Organ:
+        data = static_cast<void*>(m_organ_array.data());
+        vtkimport->SetDataScalarTypeToUnsignedChar();
+        break;
+    case DataContainer::ImageType::Dose:
+        data = static_cast<void*>(m_dose_array.data());
+        vtkimport->SetDataScalarTypeToDouble();
+        break;
+    case DataContainer::ImageType::DoseVariance:
+        data = static_cast<void*>(m_dose_variance_array.data());
+        vtkimport->SetDataScalarTypeToDouble();
+        break;
+    case DataContainer::ImageType::DoseCount:
+        data = static_cast<void*>(m_dose_count_array.data());
+        vtkimport->SetDataScalarType(VTK_UNSIGNED_LONG_LONG);
+        break;
+    default:
+        break;
+    }
+
+    if (!data)
+        return nullptr;
+
+    vtkimport->SetNumberOfScalarComponents(1);
+    std::array<int, 6> extent;
+    for (std::size_t i = 0; i < 3; ++i) {
+        extent[2 * i] = 0;
+        extent[2 * i + 1] = static_cast<int>(m_dimensions[i]);
+    }
+    vtkimport->SetDataExtent(extent.data());
+    vtkimport->SetDataExtentToWholeExtent();
+    vtkimport->SetDataSpacing(m_spacing.data());
+    // only a shallow reference
+    vtkimport->SetImportVoidPointer(data);
+    vtkimport->Update();
+    auto image = vtkimport->GetOutput();
+
+    // for returning vtksmart pointer of vtkimagedata
+    /* vtkimport->CopyImportVoidPointer(data, size());
+    vtkSmartPointer<vtkImageData> image;
+    image.TakeReference(vtkimport->GetOutput());
+    */
+    return image;
 }
 
 void DataContainer::setSpacing(const std::array<double, 3>& cm)

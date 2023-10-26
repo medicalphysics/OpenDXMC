@@ -18,25 +18,21 @@ Copyright 2024 Erlend Andersen
 
 #pragma once
 
-#include <datacontainer.hpp>
+#include <basepipeline.hpp>
 
-#include <QObject>
+#include <QStringList>
 
-#include <memory>
-
-class BasePipeline : public QObject {
-    Q_OBJECT
+class CTImageImportPipeline : public BasePipeline {
 public:
-    BasePipeline(QObject* parent = nullptr);
-    virtual void updateImageData(std::shared_ptr<DataContainer>);
-
-signals:
-    void imageDataChanged(std::shared_ptr<DataContainer>);
-    void dataProcessingStarted();
-    void dataProcessingFinished();
-
-protected:
-    std::shared_ptr<DataContainer> m_data = nullptr;
+    CTImageImportPipeline(QObject* parent = nullptr);
+    void updateImageData(std::shared_ptr<DataContainer>) override;
+    void readImages(const QStringList& images);
+    void setBlurRadius(double*);
+    void setOutputSpacing(double*);
+    void setUseOutputSpacing(bool);
 
 private:
+    std::array<double, 3> m_outputSpacing = { 0, 0, 0 };
+    std::array<double, 3> m_blurRadius = { 0, 0, 0 };
+    bool m_useOutputSpacing = false;
 };

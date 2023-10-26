@@ -39,7 +39,7 @@ public:
 
 signals:
     void dicomFolderSelectedForBrowsing(QString folderPath);
-    void dicomSeriesActivated(QStringList filePaths);
+    void dicomSeriesActivated(const QStringList& filePaths);
     void blurRadiusChanged(const double*);
     void outputSpacingChanged(const double*);
     void useOutputSpacingChanged(bool value);

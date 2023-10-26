@@ -175,6 +175,7 @@ CTDicomImportWidget::CTDicomImportWidget(QWidget* parent)
     QTimer::singleShot(0, [=](void) {
         emit this->blurRadiusChanged(m_blurRadius.data());
         emit this->outputSpacingChanged(m_outputSpacing.data());
+        emit useOutputSpacingChanged(outputSpacingBox->isChecked());
     });
 }
 
@@ -194,7 +195,6 @@ void CTDicomImportWidget::lookInFolder(void)
 }
 void CTDicomImportWidget::lookInFolder(const QString folderPath)
 {
-
     m_imageDirectorySnooper->SetScanDepth(8);
     m_imageDirectorySnooper->RequirePixelDataOn();
     m_imageDirectorySnooper->SetQueryFilesToAlways();

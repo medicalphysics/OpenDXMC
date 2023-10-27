@@ -18,21 +18,29 @@ Copyright 2024 Erlend Andersen
 
 #pragma once
 
-#include <basepipeline.hpp>
 
-#include <QStringList>
+#include <QWidget>
 
-class CTImageImportPipeline : public BasePipeline {
+#include "vtkImageReslice.h"
+#include <vtkSmartPointer.h>
+
+#include <datacontainer.hpp>
+
+class SliceRenderWidget : public QWidget {
+    Q_OBJECT
 public:
-    CTImageImportPipeline(QObject* parent = nullptr);
-    void updateImageData(std::shared_ptr<DataContainer>) override;
-    void readImages(const QStringList& images);
-    void setBlurRadius(const double*);
-    void setOutputSpacing(const double*);
-    void setUseOutputSpacing(bool);
+    enum class Orientation {
+        Axial,
+        Sagittal,
+        Coronal
+    };
 
+    SliceRenderWidget(QWidget* parent = nullptr, Orientation orientation = Orientation::Axial);
+    void updateImageData(std::shared_ptr<DataContainer>);
+
+protected:
 private:
-    std::array<double, 3> m_outputSpacing = { 0, 0, 0 };
-    std::array<double, 3> m_blurRadius = { 0, 0, 0 };
-    bool m_useOutputSpacing = false;
+    std::shared_ptr<DataContainer> m_data = nullptr;
+    vtkSmartPointer<vtkImageReslice> m_reslice = nullptr;
+   
 };

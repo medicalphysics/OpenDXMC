@@ -38,7 +38,7 @@ DataContainer::DataContainer()
 
 std::uint64_t DataContainer::ID() const { return m_uid; }
 
-vtkImageData* DataContainer::vtkImage(ImageType type)
+vtkSmartPointer<vtkImageData> DataContainer::vtkImage(ImageType type)
 {
     if (!hasImage(type))
         return nullptr;
@@ -46,6 +46,7 @@ vtkImageData* DataContainer::vtkImage(ImageType type)
     void* data = nullptr;
 
     auto vtkimport = vtkSmartPointer<vtkImageImport>::New();
+    vtkimport->ReleaseDataFlagOn();
 
     switch (type) {
     case DataContainer::ImageType::CT:
@@ -87,17 +88,20 @@ vtkImageData* DataContainer::vtkImage(ImageType type)
     std::array<int, 6> extent;
     for (std::size_t i = 0; i < 3; ++i) {
         extent[2 * i] = 0;
-        extent[2 * i + 1] = static_cast<int>(m_dimensions[i]);
+        extent[2 * i + 1] = static_cast<int>(m_dimensions[i] - 1);
     }
     vtkimport->SetDataExtent(extent.data());
+    vtkimport->SetWholeExtent(extent.data());
     vtkimport->SetDataExtentToWholeExtent();
+
     vtkimport->SetDataSpacing(m_spacing.data());
     // only a shallow reference
     vtkimport->SetImportVoidPointer(data);
     vtkimport->Update();
-    auto image = vtkimport->GetOutput();
 
-    // for returning vtksmart pointer of vtkimagedata
+    vtkSmartPointer<vtkImageData> image = vtkimport->GetOutput();
+
+    // for returning vtksmart pointer with copy of vtkimagedata
     /* vtkimport->CopyImportVoidPointer(data, size());
     vtkSmartPointer<vtkImageData> image;
     image.TakeReference(vtkimport->GetOutput());

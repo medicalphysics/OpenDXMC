@@ -113,12 +113,12 @@ void CTImageImportPipeline::readImages(const QStringList& dicomPaths)
     image->setSpacing(spacing);
 
     image->setImageArray(DataContainer::ImageType::CT, data);
-    
+
     emit imageDataChanged(image);
     emit dataProcessingFinished();
 }
 
-void CTImageImportPipeline::setBlurRadius(double* d)
+void CTImageImportPipeline::setBlurRadius(const double* d)
 {
     for (std::size_t i = 0; i < 3; ++i)
         m_blurRadius[i] = d[i];
@@ -129,7 +129,7 @@ void CTImageImportPipeline::setUseOutputSpacing(bool trigger)
     m_useOutputSpacing = trigger;
 }
 
-void CTImageImportPipeline::setOutputSpacing(double* d)
+void CTImageImportPipeline::setOutputSpacing(const double* d)
 {
     for (std::size_t i = 0; i < 3; ++i)
         m_outputSpacing[i] = d[i];

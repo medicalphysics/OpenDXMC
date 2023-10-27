@@ -26,7 +26,12 @@ Copyright 2024 Erlend Andersen
 #include <QTabWidget>
 
 #include <ctdicomimportwidget.hpp>
+#include <ctimageimportpipeline.hpp>
+#include <slicerenderwidget.hpp>
+
 #include <mainwindow.hpp>
+
+#include <vector>
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
@@ -36,16 +41,38 @@ MainWindow::MainWindow(QWidget* parent)
     splitter->setOpaqueResize(false);
 
     auto menuWidget = new QTabWidget(splitter);
+    splitter->addWidget(menuWidget);
     menuWidget->setTabPosition(QTabWidget::West);
+
 
     // import widgets share a tabbed widget
     auto importWidgets = new QTabWidget(this);
     menuWidget->addTab(importWidgets, tr("Import data"));
     importWidgets->setTabPosition(QTabWidget::North);
 
-    // adding ct dicom import widget
+    //vector for QObjects in pipeline
+    std::vector<QObject*> pipelineitems;
+
+
+    // adding ct dicom import widget and pipeline
+    auto ctimageimportpipeline = new CTImageImportPipeline();
+    ctimageimportpipeline->moveToThread(&m_workerThread);
+    pipelineitems.push_back(ctimageimportpipeline);
     auto ctdicomimportwidget = new CTDicomImportWidget(importWidgets);
     importWidgets->addTab(ctdicomimportwidget, tr("CT DiCOM import"));
+    //setting up signals for ct image import
+    connect(ctdicomimportwidget, &CTDicomImportWidget::dicomSeriesActivated, ctimageimportpipeline, &CTImageImportPipeline::readImages);
+    connect(ctdicomimportwidget, &CTDicomImportWidget::blurRadiusChanged, ctimageimportpipeline, &CTImageImportPipeline::setBlurRadius);
+    connect(ctdicomimportwidget, &CTDicomImportWidget::outputSpacingChanged, ctimageimportpipeline, &CTImageImportPipeline::setOutputSpacing);
+    connect(ctdicomimportwidget, &CTDicomImportWidget::useOutputSpacingChanged, ctimageimportpipeline, &CTImageImportPipeline::setUseOutputSpacing);
+
+
+
+    // adding an slice render widget
+    // TODO add multiple views
+    auto slicerender = new SliceRenderWidget(splitter);
+    splitter->addWidget(slicerender);
+    connect(ctimageimportpipeline, &CTImageImportPipeline::imageDataChanged, slicerender, &SliceRenderWidget::updateImageData);
 
     // simulation progress
     /* m_progressTimer = new QTimer(this);

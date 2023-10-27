@@ -18,6 +18,11 @@ Copyright 2019 Erlend Andersen
 
 #pragma once
 
+#include "opendxmc/imagecontainer.h"
+#include "opendxmc/imageimportpipeline.h"
+#include "opendxmc/slicerenderwidget.h"
+#include "opendxmc/volumeactorcontainer.h"
+#include "opendxmc/volumerenderwidget.h"
 
 #include <QComboBox>
 #include <QMap>
@@ -27,14 +32,7 @@ Copyright 2019 Erlend Andersen
 
 #include <memory>
 
-
-#include "opendxmc/imagecontainer.h"
-#include "opendxmc/imageimportpipeline.h"
-#include "opendxmc/slicerenderwidget.h"
-#include "opendxmc/volumeactorcontainer.h"
-#include "opendxmc/volumerenderwidget.h"
-
-//lage viewport og viewport object factory (til å generere grafikk items)
+// lage viewport og viewport object factory (til å generere grafikk items)
 class ViewPortWidget : public QWidget {
     Q_OBJECT
 public:
@@ -58,7 +56,7 @@ private:
     SliceRenderWidget* m_sliceRenderWidgetSagittal;
 
     QComboBox* m_volumeSelectorWidget;
-    QMap<int, std::shared_ptr<ImageContainer> > m_availableVolumes;
+    QMap<int, std::shared_ptr<ImageContainer>> m_availableVolumes;
 
     void updateVolumeSelectorWidget();
     QString imageDescriptionName(int imageDescription);

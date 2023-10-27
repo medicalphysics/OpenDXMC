@@ -21,6 +21,7 @@ Copyright 2024 Erlend Andersen
 #include <QMetaType>
 
 #include <vtkImageData.h>
+#include <vtkSmartPointer.h>
 
 #include <dxmc_specialization.hpp>
 
@@ -58,7 +59,7 @@ public:
     bool hasImage(ImageType type);
     std::uint64_t ID() const;
 
-    vtkImageData* vtkImage(ImageType);
+    vtkSmartPointer<vtkImageData> vtkImage(ImageType);
 
 private:
     std::uint64_t m_uid = 0;

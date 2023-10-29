@@ -18,29 +18,39 @@ Copyright 2024 Erlend Andersen
 
 #pragma once
 
+#include <datacontainer.hpp>
 
 #include <QWidget>
 
-#include "vtkImageReslice.h"
-#include <vtkSmartPointer.h>
+#include <QVTKOpenGLNativeWidget.h>
 
-#include <datacontainer.hpp>
+#include <vtkCornerAnnotation.h>
+#include <vtkDistanceWidget.h>
+#include <vtkImagePlaneWidget.h>
+#include <vtkResliceCursorWidget.h>
+#include <vtkResliceImageViewer.h>
+#include <vtkResliceImageViewerMeasurements.h>
+#include <vtkSmartPointer.h>
 
 class SliceRenderWidget : public QWidget {
     Q_OBJECT
 public:
-    enum class Orientation {
-        Axial,
-        Sagittal,
-        Coronal
-    };
-
-    SliceRenderWidget(QWidget* parent = nullptr, Orientation orientation = Orientation::Axial);
+    SliceRenderWidget(QWidget* parent = nullptr);
     void updateImageData(std::shared_ptr<DataContainer>);
+    void resetViews();
+    void Render();
 
 protected:
 private:
     std::shared_ptr<DataContainer> m_data = nullptr;
-    vtkSmartPointer<vtkImageReslice> m_reslice = nullptr;
-   
+
+    std::vector<vtkSmartPointer<vtkResliceImageViewer>> riw;
+    std::vector<vtkSmartPointer<vtkImagePlaneWidget>> planeWidget;
+    std::vector<QVTKOpenGLNativeWidget*> openGLWidgets;
+
+    vtkSmartPointer<vtkResliceCursorWidget> rcw = nullptr;
+    vtkSmartPointer<vtkCornerAnnotation> ca = nullptr;
+    vtkSmartPointer<vtkDistanceWidget> DistanceWidget = nullptr;
+
+    vtkSmartPointer<vtkResliceImageViewerMeasurements> ResliceMeasurements = nullptr;
 };

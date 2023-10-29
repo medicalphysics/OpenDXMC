@@ -90,8 +90,9 @@ vtkSmartPointer<vtkImageData> DataContainer::vtkImage(ImageType type)
         extent[2 * i] = 0;
         extent[2 * i + 1] = static_cast<int>(m_dimensions[i] - 1);
     }
-    vtkimport->SetDataExtent(extent.data());
+
     vtkimport->SetWholeExtent(extent.data());
+    vtkimport->SetDataExtent(extent.data());
     vtkimport->SetDataExtentToWholeExtent();
 
     vtkimport->SetDataSpacing(m_spacing.data());

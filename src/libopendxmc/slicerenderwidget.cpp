@@ -25,11 +25,14 @@ Copyright 2019 Erlend Andersen
 
 #include <vtkCamera.h>
 #include <vtkImageGaussianSmooth.h>
+#include <vtkImageProperty.h>
 #include <vtkImageResliceMapper.h>
 #include <vtkInteractorStyleImage.h>
 #include <vtkOpenGLImageSliceMapper.h>
 #include <vtkProperty.h>
 #include <vtkRenderWindow.h>
+
+#include <vtkImageResliceMapper.h>
 
 // #include <vtkRenderer.h>
 // #include <vtkResliceCursor.h>
@@ -203,6 +206,9 @@ void SliceRenderWidget::setupPipeline()
     imageSmoother->SetDimensionality(3);
     imageSmoother->SetStandardDeviations(0.0, 0.0, 0.0);
 
+    // lut
+    lut = vtkSmartPointer<vtkWindowLevelLookupTable>::New();
+
     for (int i = 0; i < 3; ++i) {
         openGLWidget[i] = new QVTKOpenGLNativeWidget(this);
 
@@ -214,12 +220,13 @@ void SliceRenderWidget::setupPipeline()
         renderer[i]->SetBackground(0, 0, 0);
 
         // interaction style
-        auto interactionStyle = vtkSmartPointer<vtkInteractorStyleImage>::New();
-        interactionStyle->SetCurrentRenderer(renderer[i]);
-        interactionStyle->SetInteractionModeToImageSlicing();
+        auto interactorStyle = vtkSmartPointer<vtkInteractorStyleImage>::New();
+        interactorStyle->SetDefaultRenderer(renderer[i]);
+        interactorStyle->SetInteractionModeToImageSlicing();
+        // interactionStyle->SetInteractionModeToImage3D();
 
         auto renderWindowInteractor = openGLWidget[i]->interactor();
-        renderWindowInteractor->SetInteractorStyle(interactionStyle);
+        renderWindowInteractor->SetInteractorStyle(interactorStyle);
         auto renWin = openGLWidget[i]->renderWindow();
         renWin->AddRenderer(renderer[i]);
 
@@ -234,7 +241,8 @@ void SliceRenderWidget::setupPipeline()
         // scalarColorBar->AnnotationTextScalingOff();
 
         // reslice mapper
-        auto imageMapper = vtkSmartPointer<vtkOpenGLImageSliceMapper>::New();
+        // auto imageMapper = vtkSmartPointer<vtkOpenGLImageSliceMapper>::New();
+        auto imageMapper = vtkSmartPointer<vtkImageResliceMapper>::New();
         imageMapper->SetInputConnection(imageSmoother->GetOutputPort());
         imageMapper->SliceFacesCameraOn();
         imageMapper->SetSliceAtFocalPoint(true);
@@ -257,6 +265,13 @@ void SliceRenderWidget::setupPipeline()
             cam->SetPosition(1, 0, 0);
             cam->SetViewUp(0, 0, 1);
         }
+
+        auto sliceProperty = imageSlice[i]->GetProperty();
+        sliceProperty->SetLookupTable(lut);
+        lut->SetMinimumTableValue(0, 0, 0, 1);
+        lut->SetMaximumTableValue(1, 1, 1, 1);
+        lut->Build();
+        sliceProperty->SetUseLookupTableScalarRange(false);
     }
 
     // setting dummy data to avoid pipeline errors
@@ -271,6 +286,14 @@ void SliceRenderWidget::Render()
         ren->ResetCamera();
     for (auto& w : openGLWidget)
         w->renderWindow()->Render();
+}
+
+void SliceRenderWidget::setInteractionStyleTo3D()
+{
+}
+
+void SliceRenderWidget::setInteractionStyleToSlicing()
+{
 }
 
 void SliceRenderWidget::useFXAA(bool use)

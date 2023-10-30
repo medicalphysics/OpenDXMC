@@ -28,6 +28,7 @@ Copyright 2024 Erlend Andersen
 #include <vtkImageSlice.h>
 #include <vtkRenderer.h>
 #include <vtkSmartPointer.h>
+#include <vtkWindowLevelLookupTable.h>
 
 class SliceRenderWidget : public QWidget {
     Q_OBJECT
@@ -36,6 +37,8 @@ public:
     void updateImageData(std::shared_ptr<DataContainer>);
     void useFXAA(bool on);
     void setMultisampleAA(int samples);
+    void setInteractionStyleToSlicing();
+    void setInteractionStyleTo3D();
 
 protected:
     void setNewImageData(vtkImageData* data);
@@ -48,4 +51,5 @@ private:
     std::array<vtkSmartPointer<vtkImageSlice>, 3> imageSlice = { nullptr, nullptr, nullptr };
     std::array<vtkSmartPointer<vtkRenderer>, 3> renderer = { nullptr, nullptr, nullptr };
     std::array<QVTKOpenGLNativeWidget*, 3> openGLWidget = { nullptr, nullptr, nullptr };
+    vtkSmartPointer<vtkWindowLevelLookupTable> lut = nullptr;
 };

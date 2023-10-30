@@ -16,6 +16,7 @@ along with OpenDXMC. If not, see < https://www.gnu.org/licenses/>.
 Copyright 2019 Erlend Andersen
 */
 
+#include <custominteractorstyleimage.hpp>
 #include <slicerenderwidget.hpp>
 
 #include <QTimer>
@@ -27,12 +28,9 @@ Copyright 2019 Erlend Andersen
 #include <vtkImageGaussianSmooth.h>
 #include <vtkImageProperty.h>
 #include <vtkImageResliceMapper.h>
-#include <vtkInteractorStyleImage.h>
 #include <vtkOpenGLImageSliceMapper.h>
 #include <vtkProperty.h>
 #include <vtkRenderWindow.h>
-
-#include <vtkImageResliceMapper.h>
 
 // #include <vtkRenderer.h>
 // #include <vtkResliceCursor.h>
@@ -220,7 +218,7 @@ void SliceRenderWidget::setupPipeline()
         renderer[i]->SetBackground(0, 0, 0);
 
         // interaction style
-        auto interactorStyle = vtkSmartPointer<vtkInteractorStyleImage>::New();
+        auto interactorStyle = vtkSmartPointer<CustomInteractorStyleImage>::New();
         interactorStyle->SetDefaultRenderer(renderer[i]);
         interactorStyle->SetInteractionModeToImageSlicing();
         // interactionStyle->SetInteractionModeToImage3D();

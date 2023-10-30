@@ -34,12 +34,13 @@ class SliceRenderWidget : public QWidget {
 public:
     SliceRenderWidget(QWidget* parent = nullptr);
     void updateImageData(std::shared_ptr<DataContainer>);
-    void setNewImageData(vtkImageData* data);
-
-    void Render();
+    void useFXAA(bool on);
+    void setMultisampleAA(int samples);
 
 protected:
+    void setNewImageData(vtkImageData* data);
     void setupPipeline();
+    void Render();
 
 private:
     std::shared_ptr<DataContainer> m_data = nullptr;

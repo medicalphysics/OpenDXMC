@@ -210,7 +210,6 @@ void SliceRenderWidget::setupPipeline()
 
         // renderers
         renderer[i] = vtkSmartPointer<vtkRenderer>::New();
-        // renderer->UseFXAAOn();
         renderer[i]->GetActiveCamera()->ParallelProjectionOn();
         renderer[i]->SetBackground(0, 0, 0);
 
@@ -259,6 +258,9 @@ void SliceRenderWidget::setupPipeline()
             cam->SetViewUp(0, 0, 1);
         }
     }
+
+    // setting dummy data to avoid pipeline errors
+    updateImageData(generateSampleData());
 }
 
 void SliceRenderWidget::Render()
@@ -269,6 +271,21 @@ void SliceRenderWidget::Render()
         ren->ResetCamera();
     for (auto& w : openGLWidget)
         w->renderWindow()->Render();
+}
+
+void SliceRenderWidget::useFXAA(bool use)
+{
+    for (auto& ren : renderer)
+        ren->SetUseFXAA(use);
+}
+
+void SliceRenderWidget::setMultisampleAA(int samples)
+{
+    int s = std::max(samples, int { 0 });
+    for (auto& wid : openGLWidget) {
+        auto renWin = wid->renderWindow();
+        renWin->SetMultiSamples(s);
+    }
 }
 
 void SliceRenderWidget::setNewImageData(vtkImageData* data)

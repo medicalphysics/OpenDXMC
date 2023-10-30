@@ -24,12 +24,9 @@ Copyright 2024 Erlend Andersen
 
 #include <QVTKOpenGLNativeWidget.h>
 
-#include <vtkCornerAnnotation.h>
-#include <vtkDistanceWidget.h>
-#include <vtkImagePlaneWidget.h>
-#include <vtkResliceCursorWidget.h>
-#include <vtkResliceImageViewer.h>
-#include <vtkResliceImageViewerMeasurements.h>
+#include <vtkImageGaussianSmooth.h>
+#include <vtkImageSlice.h>
+#include <vtkRenderer.h>
 #include <vtkSmartPointer.h>
 
 class SliceRenderWidget : public QWidget {
@@ -37,20 +34,17 @@ class SliceRenderWidget : public QWidget {
 public:
     SliceRenderWidget(QWidget* parent = nullptr);
     void updateImageData(std::shared_ptr<DataContainer>);
-    void resetViews();
+    void setNewImageData(vtkImageData* data);
+
     void Render();
 
 protected:
+    void setupPipeline();
+
 private:
     std::shared_ptr<DataContainer> m_data = nullptr;
-
-    std::vector<vtkSmartPointer<vtkResliceImageViewer>> riw;
-    std::vector<vtkSmartPointer<vtkImagePlaneWidget>> planeWidget;
-    std::vector<QVTKOpenGLNativeWidget*> openGLWidgets;
-
-    vtkSmartPointer<vtkResliceCursorWidget> rcw = nullptr;
-    vtkSmartPointer<vtkCornerAnnotation> ca = nullptr;
-    vtkSmartPointer<vtkDistanceWidget> DistanceWidget = nullptr;
-
-    vtkSmartPointer<vtkResliceImageViewerMeasurements> ResliceMeasurements = nullptr;
+    vtkSmartPointer<vtkImageGaussianSmooth> imageSmoother = nullptr;
+    std::array<vtkSmartPointer<vtkImageSlice>, 3> imageSlice = { nullptr, nullptr, nullptr };
+    std::array<vtkSmartPointer<vtkRenderer>, 3> renderer = { nullptr, nullptr, nullptr };
+    std::array<QVTKOpenGLNativeWidget*, 3> openGLWidget = { nullptr, nullptr, nullptr };
 };

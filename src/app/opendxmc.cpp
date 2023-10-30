@@ -16,17 +16,19 @@ along with OpenDXMC. If not, see < https://www.gnu.org/licenses/>.
 Copyright 2019 Erlend Andersen
 */
 
+#include <mainwindow.hpp>
+
 #include <QApplication>
 #include <QDir>
 #include <QSplashScreen>
-#include <QSurfaceFormat>
 #include <QStyle>
-
+#include <QSurfaceFormat>
 #include <QVTKOpenGLNativeWidget.h>
 
-#include <thread>
+// We need this include for some reason to avoid openGL errors
+#include <vtkOpenGLRenderWindow.h>
 
-#include <mainwindow.hpp>
+#include <thread>
 
 int main(int argc, char* argv[])
 {

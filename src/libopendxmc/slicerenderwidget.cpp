@@ -62,20 +62,34 @@ public:
     // Here we Create a vtkCallbackCommand and reimplement it.
     void Execute(vtkObject* caller, unsigned long evId, void*) override
     {
-        // Note the use of reinterpret_cast to cast the caller to the expected type.
-        // auto interactor = reinterpret_cast<QVTKInteractor*>(caller);
-        // auto style = reinterpret_cast<vtkInteractorStyleImage*>(interactor->GetInteractorStyle());
-        auto style = reinterpret_cast<vtkInteractorStyleImage*>(caller);
-
-        auto property = style->GetCurrentImageProperty();
-        if (property) {
-            for (auto& slice : imageSlices) {
-                auto p = slice->GetProperty();
-                p->SetColorWindow(property->GetColorWindow());
-                p->SetColorLevel(property->GetColorLevel());
+        if (evId == vtkCommand::EndWindowLevelEvent) {
+            // Note the use of reinterpret_cast to cast the caller to the expected type.
+            auto style = reinterpret_cast<vtkInteractorStyleImage*>(caller);
+            auto property = style->GetCurrentImageProperty();
+            if (property) {
+                for (auto& slice : imageSlices) {
+                    auto p = slice->GetProperty();
+                    p->SetColorWindow(property->GetColorWindow());
+                    p->SetColorLevel(property->GetColorLevel());
+                }
+                for (auto& wid : widgets)
+                    wid->renderWindow()->Render();
             }
-            for (auto& wid : widgets)
-                wid->renderWindow()->Render();
+        } else if (evId == vtkCommand::PickEvent) {
+            auto style = reinterpret_cast<vtkInteractorStyleImage*>(caller);
+            auto currentRenderer = style->GetCurrentRenderer();
+            auto currentCamera = currentRenderer->GetActiveCamera();
+            const auto currentFocalPoint = currentCamera->GetFocalPoint();
+
+            for (auto& wid : widgets) {
+                auto renderer = wid->renderWindow()->GetInteractor()->FindPokedRenderer(0, 0);
+                if (renderer) {
+                    auto camera = renderer->GetActiveCamera();
+                    //camera->SetFocalPoint(currentFocalPoint);
+                    //TODO set proper focal point to reslizing
+                    wid->renderWindow()->Render();
+                }
+            }
         }
     }
 
@@ -84,7 +98,7 @@ public:
     {
         std::vector<vtkCommand::EventIds> cmds;
         cmds.push_back(vtkCommand::EndWindowLevelEvent);
-        // cmds.push_back(vtkCommand::ResetWindowLevelEvent);
+        cmds.push_back(vtkCommand::PickEvent);
         return cmds;
     }
 
@@ -118,11 +132,13 @@ SliceRenderWidget::SliceRenderWidget(QWidget* parent)
 {
     setMinimumWidth(200);
 
-    setupPipeline();
-    // QTimer::singleShot(0, [=]() { this->setupPipeline(); });
+    setupSlicePipeline();
+
+    // setting dummy data to avoid pipeline errors
+    updateImageData(generateSampleData());
 }
 
-void SliceRenderWidget::setupPipeline()
+void SliceRenderWidget::setupSlicePipeline()
 {
     // https://github.com/sankhesh/FourPaneViewer/blob/master/QtVTKRenderWindows.cxx
 
@@ -228,9 +244,6 @@ void SliceRenderWidget::setupPipeline()
         for (auto ev : callback->eventTypes())
             style->AddObserver(ev, callback);
     }
-
-    // setting dummy data to avoid pipeline errors
-    updateImageData(generateSampleData());
 }
 
 void SliceRenderWidget::Render()

@@ -34,8 +34,7 @@ void CustomInteractorStyleImage::EndWindowLevel()
     vtkInteractorStyleImage::EndWindowLevel();
 }
 
-void CustomInteractorStyleImage::addImageSlice(vtkSmartPointer<vtkImageSlice> slice)
+void CustomInteractorStyleImage::StartSlice()
 {
-    if (slice)
-        m_imageSlices.push_back(slice);
+    vtkInteractorStyleImage::StartSlice();
 }

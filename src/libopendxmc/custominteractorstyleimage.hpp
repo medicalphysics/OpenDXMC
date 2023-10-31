@@ -18,19 +18,14 @@ Copyright 2024 Erlend Andersen
 
 #pragma once
 
-#include <vtkImageSlice.h>
 #include <vtkInteractorStyleImage.h>
-#include <vtkSmartPointer.h>
-
-#include <vector>
 
 class CustomInteractorStyleImage : public vtkInteractorStyleImage {
 public:
     static CustomInteractorStyleImage* New();
     vtkTypeMacro(CustomInteractorStyleImage, vtkInteractorStyleImage);
     virtual void EndWindowLevel() override;
-
-    void addImageSlice(vtkSmartPointer<vtkImageSlice>);
+    virtual void StartSlice() override;
 
 protected:
     CustomInteractorStyleImage();
@@ -39,5 +34,4 @@ protected:
 private:
     CustomInteractorStyleImage(const CustomInteractorStyleImage&) = delete;
     void operator=(const CustomInteractorStyleImage&) = delete;
-    std::vector<vtkSmartPointer<vtkImageSlice>> m_imageSlices;
 };

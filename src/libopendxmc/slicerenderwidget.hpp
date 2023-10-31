@@ -43,7 +43,7 @@ public:
 
 protected:
     void setNewImageData(vtkImageData* data);
-    void setupPipeline();
+    void setupSlicePipeline();
     void Render();
 
 private:

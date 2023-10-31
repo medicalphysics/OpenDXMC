@@ -16,7 +16,6 @@ along with OpenDXMC. If not, see < https://www.gnu.org/licenses/>.
 Copyright 2019 Erlend Andersen
 */
 
-#include <custominteractorstyleimage.hpp>
 #include <slicerenderwidget.hpp>
 
 #include <QTimer>
@@ -28,9 +27,9 @@ Copyright 2019 Erlend Andersen
 #include <vtkImageGaussianSmooth.h>
 #include <vtkImageProperty.h>
 #include <vtkImageResliceMapper.h>
-#include <vtkOpenGLImageSliceMapper.h>
 #include <vtkProperty.h>
 #include <vtkRenderWindow.h>
+// #include <vtkOpenGLImageSliceMapper.h>
 
 // #include <vtkRenderer.h>
 // #include <vtkResliceCursor.h>
@@ -203,6 +202,7 @@ void SliceRenderWidget::setupPipeline()
     imageSmoother = vtkSmartPointer<vtkImageGaussianSmooth>::New();
     imageSmoother->SetDimensionality(3);
     imageSmoother->SetStandardDeviations(0.0, 0.0, 0.0);
+    imageSmoother->ReleaseDataFlagOff();
 
     // lut
     lut = vtkSmartPointer<vtkWindowLevelLookupTable>::New();
@@ -218,13 +218,13 @@ void SliceRenderWidget::setupPipeline()
         renderer[i]->SetBackground(0, 0, 0);
 
         // interaction style
-        auto interactorStyle = vtkSmartPointer<CustomInteractorStyleImage>::New();
-        interactorStyle->SetDefaultRenderer(renderer[i]);
-        interactorStyle->SetInteractionModeToImageSlicing();
+        interactorStyle[i] = vtkSmartPointer<CustomInteractorStyleImage>::New();
+        interactorStyle[i]->SetDefaultRenderer(renderer[i]);
+        interactorStyle[i]->SetInteractionModeToImageSlicing();
         // interactionStyle->SetInteractionModeToImage3D();
 
         auto renderWindowInteractor = openGLWidget[i]->interactor();
-        renderWindowInteractor->SetInteractorStyle(interactorStyle);
+        renderWindowInteractor->SetInteractorStyle(interactorStyle[i]);
         auto renWin = openGLWidget[i]->renderWindow();
         renWin->AddRenderer(renderer[i]);
 
@@ -244,6 +244,7 @@ void SliceRenderWidget::setupPipeline()
         imageMapper->SetInputConnection(imageSmoother->GetOutputPort());
         imageMapper->SliceFacesCameraOn();
         imageMapper->SetSliceAtFocalPoint(true);
+        imageMapper->StreamingOn();
 
         // image slice
         imageSlice[i] = vtkSmartPointer<vtkImageSlice>::New();
@@ -288,10 +289,14 @@ void SliceRenderWidget::Render()
 
 void SliceRenderWidget::setInteractionStyleTo3D()
 {
+    for (auto& style : interactorStyle)
+        style->SetInteractionModeToImage3D();
 }
 
 void SliceRenderWidget::setInteractionStyleToSlicing()
 {
+    for (auto& style : interactorStyle)
+        style->SetInteractionModeToImageSlicing();
 }
 
 void SliceRenderWidget::useFXAA(bool use)
@@ -313,10 +318,6 @@ void SliceRenderWidget::setNewImageData(vtkImageData* data)
 {
     if (data) {
         imageSmoother->SetInputData(data);
-        // imageSmoother->Update();
-        // imageSlice[0]->Update();
-        // renderer[0]->ResetCamera();
-        // openGLWidget[0]->renderWindow()->Render();
         Render();
     }
 }

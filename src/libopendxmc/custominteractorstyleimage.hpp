@@ -20,13 +20,16 @@ Copyright 2024 Erlend Andersen
 
 #include <vtkInteractorStyleImage.h>
 
-#include <vtkPolyDataAlgorithm.h>
-
 class CustomInteractorStyleImage : public vtkInteractorStyleImage {
 public:
     static CustomInteractorStyleImage* New();
     vtkTypeMacro(CustomInteractorStyleImage, vtkInteractorStyleImage);
 
 protected:
+    CustomInteractorStyleImage();
+    ~CustomInteractorStyleImage();
+
+private:
+    CustomInteractorStyleImage(const CustomInteractorStyleImage&) = delete;
+    void operator=(const CustomInteractorStyleImage&) = delete;
 };
-vtkStandardNewMacro(CustomInteractorStyleImage);

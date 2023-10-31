@@ -18,6 +18,7 @@ Copyright 2024 Erlend Andersen
 
 #pragma once
 
+#include <custominteractorstyleimage.hpp>
 #include <datacontainer.hpp>
 
 #include <QWidget>
@@ -51,5 +52,6 @@ private:
     std::array<vtkSmartPointer<vtkImageSlice>, 3> imageSlice = { nullptr, nullptr, nullptr };
     std::array<vtkSmartPointer<vtkRenderer>, 3> renderer = { nullptr, nullptr, nullptr };
     std::array<QVTKOpenGLNativeWidget*, 3> openGLWidget = { nullptr, nullptr, nullptr };
+    std::array<vtkSmartPointer<CustomInteractorStyleImage>, 3> interactorStyle = { nullptr, nullptr, nullptr };
     vtkSmartPointer<vtkWindowLevelLookupTable> lut = nullptr;
 };

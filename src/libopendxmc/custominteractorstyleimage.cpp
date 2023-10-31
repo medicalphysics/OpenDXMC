@@ -17,3 +17,12 @@ Copyright 2024 Erlend Andersen
 */
 
 #include <custominteractorstyleimage.hpp>
+#include <vtkObjectFactory.h>
+
+vtkStandardNewMacro(CustomInteractorStyleImage);
+
+CustomInteractorStyleImage::CustomInteractorStyleImage()
+{
+}
+
+CustomInteractorStyleImage::~CustomInteractorStyleImage() { }

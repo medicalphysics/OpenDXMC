@@ -4,7 +4,7 @@ qt_add_library(libopendxmc STATIC
 	datacontainer.cpp
 	ctimageimportpipeline.cpp
 	slicerenderwidget.cpp
-	custominteractorstyleimage.hpp
+	custominteractorstyleimage.cpp
 	)
 
 # We expose headers for all targets consuming libopendxmc

@@ -1,3 +1,4 @@
+#include "custominteractorstyleimage.hpp"
 /*This file is part of OpenDXMC.
 
 OpenDXMC is free software : you can redistribute it and/or modify
@@ -17,6 +18,7 @@ Copyright 2024 Erlend Andersen
 */
 
 #include <custominteractorstyleimage.hpp>
+#include <vtkImageProperty.h>
 #include <vtkObjectFactory.h>
 
 vtkStandardNewMacro(CustomInteractorStyleImage);
@@ -26,3 +28,14 @@ CustomInteractorStyleImage::CustomInteractorStyleImage()
 }
 
 CustomInteractorStyleImage::~CustomInteractorStyleImage() { }
+
+void CustomInteractorStyleImage::EndWindowLevel()
+{
+    vtkInteractorStyleImage::EndWindowLevel();
+}
+
+void CustomInteractorStyleImage::addImageSlice(vtkSmartPointer<vtkImageSlice> slice)
+{
+    if (slice)
+        m_imageSlices.push_back(slice);
+}

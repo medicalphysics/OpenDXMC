@@ -23,13 +23,15 @@ Copyright 2019 Erlend Andersen
 
 #include <QVTKOpenGLNativeWidget.h>
 
+#include <vtkCallbackCommand.h>
 #include <vtkCamera.h>
 #include <vtkImageGaussianSmooth.h>
 #include <vtkImageProperty.h>
 #include <vtkImageResliceMapper.h>
+#include <vtkImageSincInterpolator.h>
+#include <vtkOpenGLImageSliceMapper.h>
 #include <vtkProperty.h>
 #include <vtkRenderWindow.h>
-// #include <vtkOpenGLImageSliceMapper.h>
 
 // #include <vtkRenderer.h>
 // #include <vtkResliceCursor.h>
@@ -51,124 +53,53 @@ Copyright 2019 Erlend Andersen
 //  #include <vtkImageMapper3D.h>
 //  #include <vtkImagePlaneWidget.h>
 
-/*
-class vtkResliceCursorCallback : public vtkCommand {
+class WindowLevelModifiedCallback : public vtkCallbackCommand {
 public:
-    static vtkResliceCursorCallback* New()
+    static WindowLevelModifiedCallback* New()
     {
-        return new vtkResliceCursorCallback;
+        return new WindowLevelModifiedCallback;
     }
-
-    void Execute(vtkObject* caller, unsigned long ev, void* callData)
+    // Here we Create a vtkCallbackCommand and reimplement it.
+    void Execute(vtkObject* caller, unsigned long evId, void*) override
     {
-        if (ev == vtkResliceCursorWidget::WindowLevelEvent || ev == vtkCommand::WindowLevelEvent || ev == vtkResliceCursorWidget::ResliceThicknessChangedEvent) {
-            // Render everything
-            for (int i = 0; i < RIW.size(); i++) {
-                auto RCW = RIW[i]->GetResliceCursorWidget();
-                RCW->Render();
+        // Note the use of reinterpret_cast to cast the caller to the expected type.
+        // auto interactor = reinterpret_cast<QVTKInteractor*>(caller);
+        // auto style = reinterpret_cast<vtkInteractorStyleImage*>(interactor->GetInteractorStyle());
+        auto style = reinterpret_cast<vtkInteractorStyleImage*>(caller);
+
+        auto property = style->GetCurrentImageProperty();
+        if (property) {
+            for (auto& slice : imageSlices) {
+                auto p = slice->GetProperty();
+                p->SetColorWindow(property->GetColorWindow());
+                p->SetColorLevel(property->GetColorLevel());
             }
-            // this->IPW[0]->GetInteractor()->GetRenderWindow()->Render();
-            // return;
-        }
-
-        for (int i = 0; i < RIW.size(); i++) {
-            vtkPlaneSource* ps = static_cast<vtkPlaneSource*>(this->IPW[i]->GetPolyDataAlgorithm());
-            auto RCW = RIW[i]->GetResliceCursorWidget();
-            ps->SetOrigin(RCW->GetResliceCursorRepresentation()->GetPlaneSource()->GetOrigin());
-            ps->SetPoint1(RCW->GetResliceCursorRepresentation()->GetPlaneSource()->GetPoint1());
-            ps->SetPoint2(RCW->GetResliceCursorRepresentation()->GetPlaneSource()->GetPoint2());
-
-            // If the reslice plane has modified, update it on the 3D widget
-            this->IPW[i]->UpdatePlacement();
-        }
-
-        // Render everything
-        for (int i = 0; i < RIW.size(); i++) {
-            auto RCW = RIW[i]->GetResliceCursorWidget();
-            RCW->Render();
-        }
-        // this->IPW[0]->GetInteractor()->GetRenderWindow()->Render();
-
-        if (ev == vtkCommand::MouseMoveEvent) {
-            // Get the event position from the interactor
-            vtkInteractorStyleImage* style = dynamic_cast<vtkInteractorStyleImage*>(caller);
-            vtkResliceImageViewer* riw = nullptr;
-            if (style) {
-                // Figure out the current viewer
-                vtkCornerAnnotation* ca = nullptr;
-                for (int i = 0; i < RIW.size(); ++i) {
-                    if (RIW[i]->GetInteractorStyle() == style) {
-                        riw = RIW[i];
-                        ca = CA[i];
-                        break;
-                    }
-                }
-
-                if (riw) {
-                    // Get event position in display coordinates
-                    int* eventPos = style->GetInteractor()->GetEventPosition();
-                    vtkRenderer* curRen = style->GetInteractor()->FindPokedRenderer(eventPos[0], eventPos[1]);
-
-                    vtkNew<vtkCellPicker> cellPicker;
-                    cellPicker->SetTolerance(0.005);
-                    cellPicker->AddPickList(riw->GetImageActor());
-                    cellPicker->PickFromListOn();
-                    cellPicker->Pick(eventPos[0], eventPos[1], 0, curRen);
-                    double* worldPtReslice = cellPicker->GetPickPosition();
-
-                    // Get the (i,j,k) indices of the point in the original data
-                    double origin[3], spacing[3];
-                    data->GetOrigin(origin);
-                    data->GetSpacing(spacing);
-                    int pt[3];
-                    int extent[6];
-                    data->GetExtent(extent);
-
-                    int iq[3];
-                    int iqtemp;
-                    for (int i = 0; i < 3; i++) {
-                        // compute world to image coords
-                        iqtemp = vtkMath::Round((worldPtReslice[i] - origin[i]) / spacing[i]);
-
-                        // we have a valid pick already, just enforce bounds check
-                        iq[i] = (iqtemp < extent[2 * i]) ? extent[2 * i] : ((iqtemp > extent[2 * i + 1]) ? extent[2 * i + 1] : iqtemp);
-
-                        pt[i] = iq[i];
-                    }
-
-                    short* val = static_cast<short*>(data->GetScalarPointer(pt));
-                    if (ca) {
-                        auto wl = riw->GetColorLevel();
-                        auto ww = riw->GetColorWindow();
-                        std::string msg = "WL: " + std::to_string(wl) + "\nWL: " + std::to_string(ww);
-
-                        ca->SetText(0, msg.c_str());
-                    }
-                    riw->Render();
-                }
-
-                style->OnMouseMove();
-            }
-        }
-
-        vtkImagePlaneWidget* ipw = dynamic_cast<vtkImagePlaneWidget*>(caller);
-        if (ipw) {
-            double* wl = static_cast<double*>(callData);
-            for (auto& ipw_cand : IPW) {
-                if (ipw != ipw_cand) {
-                    ipw_cand->SetWindowLevel(wl[0], wl[1], 1);
-                }
-            }
+            for (auto& wid : widgets)
+                wid->renderWindow()->Render();
         }
     }
 
-    vtkResliceCursorCallback() { }
-    std::vector<vtkSmartPointer<vtkImagePlaneWidget>> IPW;
-    std::vector<vtkSmartPointer<vtkResliceImageViewer>> RIW;
-    std::vector<vtkSmartPointer<vtkCornerAnnotation>> CA;
-    vtkImageData* data = nullptr;
+    // Convinietn function to get commands this callback is intended for
+    constexpr static std::vector<vtkCommand::EventIds> eventTypes()
+    {
+        std::vector<vtkCommand::EventIds> cmds;
+        cmds.push_back(vtkCommand::EndWindowLevelEvent);
+        // cmds.push_back(vtkCommand::ResetWindowLevelEvent);
+        return cmds;
+    }
+
+    WindowLevelModifiedCallback()
+    {
+    }
+
+    // Set pointers to any clientData or callData here.
+    std::vector<vtkSmartPointer<vtkImageSlice>> imageSlices;
+    std::vector<QVTKOpenGLNativeWidget*> widgets;
+
+private:
+    WindowLevelModifiedCallback(const WindowLevelModifiedCallback&) = delete;
+    void operator=(const WindowLevelModifiedCallback&) = delete;
 };
-*/
 
 std::shared_ptr<DataContainer> generateSampleData()
 {
@@ -187,7 +118,8 @@ SliceRenderWidget::SliceRenderWidget(QWidget* parent)
 {
     setMinimumWidth(200);
 
-    QTimer::singleShot(0, [=]() { this->setupPipeline(); });
+    setupPipeline();
+    // QTimer::singleShot(0, [=]() { this->setupPipeline(); });
 }
 
 void SliceRenderWidget::setupPipeline()
@@ -239,12 +171,21 @@ void SliceRenderWidget::setupPipeline()
         // scalarColorBar->AnnotationTextScalingOff();
 
         // reslice mapper
-        // auto imageMapper = vtkSmartPointer<vtkOpenGLImageSliceMapper>::New();
+        auto imageMapper = vtkSmartPointer<vtkOpenGLImageSliceMapper>::New();
+        imageMapper->SetInputConnection(imageSmoother->GetOutputPort());
+        imageMapper->SliceFacesCameraOn();
+        imageMapper->SetSliceAtFocalPoint(true);
+        /*
         auto imageMapper = vtkSmartPointer<vtkImageResliceMapper>::New();
         imageMapper->SetInputConnection(imageSmoother->GetOutputPort());
         imageMapper->SliceFacesCameraOn();
         imageMapper->SetSliceAtFocalPoint(true);
         imageMapper->StreamingOn();
+        imageMapper->SetJumpToNearestSlice(false);
+        imageMapper->ResampleToScreenPixelsOff(); // to use custom interpolator
+        auto interpolator = vtkSmartPointer<vtkImageSincInterpolator>::New();
+        imageMapper->SetInterpolator(interpolator);
+        */
 
         // image slice
         imageSlice[i] = vtkSmartPointer<vtkImageSlice>::New();
@@ -271,6 +212,21 @@ void SliceRenderWidget::setupPipeline()
         lut->SetMaximumTableValue(1, 1, 1, 1);
         lut->Build();
         sliceProperty->SetUseLookupTableScalarRange(false);
+    }
+
+    // adding callbacks to share windowlevel
+
+    for (std::size_t i = 0; i < 3; ++i) {
+        auto callback = vtkSmartPointer<WindowLevelModifiedCallback>::New();
+        auto style = interactorStyle[i];
+        for (std::size_t j = 0; j < 3; ++j) {
+            if (i != j) {
+                callback->imageSlices.push_back(imageSlice[j]);
+                callback->widgets.push_back(openGLWidget[j]);
+            }
+        }
+        for (auto ev : callback->eventTypes())
+            style->AddObserver(ev, callback);
     }
 
     // setting dummy data to avoid pipeline errors
@@ -337,18 +293,8 @@ void SliceRenderWidget::updateImageData(std::shared_ptr<DataContainer> data)
     // updating images before replacing old buffer
     if (data) {
         if (data->hasImage(DataContainer::ImageType::CT) && uid_is_new) {
-            setNewImageData(data->vtkImage(DataContainer::ImageType::CT));
-
-            /* auto ps = riw->GetRenderer()->GetActiveCamera()->GetParallelScale();
-            riw->SetInputData(m_data->vtkImage(DataContainer::ImageType::CT));
-            // planeWidget->SetInputData(m_data->vtkImage(DataContainer::ImageType::CT));
-            planeWidget->SetSliceIndex(0);
-
-            riw->SetSlice(0);
-            riw->GetRenderer()->ResetCamera();
-            riw->GetRenderer()->GetActiveCamera()->SetParallelScale(ps);
-            riw->Render();
-            */
+            auto vtkimage = data->vtkImage(DataContainer::ImageType::CT);
+            setNewImageData(vtkimage);
         }
     }
     m_data = data;

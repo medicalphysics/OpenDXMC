@@ -65,6 +65,7 @@ public:
         if (evId == vtkCommand::EndWindowLevelEvent) {
             // Note the use of reinterpret_cast to cast the caller to the expected type.
             auto style = reinterpret_cast<vtkInteractorStyleImage*>(caller);
+
             auto property = style->GetCurrentImageProperty();
             if (property) {
                 for (auto& slice : imageSlices) {
@@ -85,8 +86,8 @@ public:
                 auto renderer = wid->renderWindow()->GetInteractor()->FindPokedRenderer(0, 0);
                 if (renderer) {
                     auto camera = renderer->GetActiveCamera();
-                    //camera->SetFocalPoint(currentFocalPoint);
-                    //TODO set proper focal point to reslizing
+                    // camera->SetFocalPoint(currentFocalPoint);
+                    // TODO set proper focal point to reslizing
                     wid->renderWindow()->Render();
                 }
             }
@@ -131,6 +132,18 @@ SliceRenderWidget::SliceRenderWidget(QWidget* parent)
     : QWidget(parent)
 {
     setMinimumWidth(200);
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    auto layout = new QGridLayout(this);
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setSpacing(0);
+
+    for (std::size_t i = 0; i < 3; ++i)
+        openGLWidget[i] = new QVTKOpenGLNativeWidget(this);
+    layout->addWidget(openGLWidget[0], 0, 0);
+    layout->addWidget(openGLWidget[1], 1, 0);
+    layout->addWidget(openGLWidget[2], 1, 1);
+
+    this->setLayout(layout);
 
     setupSlicePipeline();
 
@@ -142,10 +155,6 @@ void SliceRenderWidget::setupSlicePipeline()
 {
     // https://github.com/sankhesh/FourPaneViewer/blob/master/QtVTKRenderWindows.cxx
 
-    auto layout = new QVBoxLayout(this);
-    layout->setContentsMargins(0, 0, 0, 0);
-    setLayout(layout);
-
     // gaussian smooth mapper
     imageSmoother = vtkSmartPointer<vtkImageGaussianSmooth>::New();
     imageSmoother->SetDimensionality(3);
@@ -156,9 +165,6 @@ void SliceRenderWidget::setupSlicePipeline()
     lut = vtkSmartPointer<vtkWindowLevelLookupTable>::New();
 
     for (int i = 0; i < 3; ++i) {
-        openGLWidget[i] = new QVTKOpenGLNativeWidget(this);
-
-        layout->addWidget(openGLWidget[i]);
 
         // renderers
         renderer[i] = vtkSmartPointer<vtkRenderer>::New();

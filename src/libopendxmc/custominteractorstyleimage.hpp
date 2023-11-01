@@ -24,8 +24,16 @@ class CustomInteractorStyleImage : public vtkInteractorStyleImage {
 public:
     static CustomInteractorStyleImage* New();
     vtkTypeMacro(CustomInteractorStyleImage, vtkInteractorStyleImage);
-    virtual void EndWindowLevel() override;
-    virtual void StartSlice() override;
+    void EndWindowLevel() override;
+    void StartSlice() override;
+    void OnMouseMove() override;
+    void OnLeftButtonDown() override;
+    void OnLeftButtonUp() override;
+    void OnMiddleButtonDown() override;
+    void OnMiddleButtonUp() override;
+    void OnRightButtonDown() override;
+    void OnRightButtonUp() override;
+    void OnChar() override;
 
 protected:
     CustomInteractorStyleImage();

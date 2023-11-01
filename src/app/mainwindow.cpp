@@ -42,17 +42,17 @@ MainWindow::MainWindow(QWidget* parent)
 
     auto menuWidget = new QTabWidget(splitter);
     splitter->addWidget(menuWidget);
+    splitter->setStretchFactor(0, 1);
     menuWidget->setTabPosition(QTabWidget::West);
-
+    menuWidget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Preferred);
 
     // import widgets share a tabbed widget
     auto importWidgets = new QTabWidget(this);
     menuWidget->addTab(importWidgets, tr("Import data"));
     importWidgets->setTabPosition(QTabWidget::North);
 
-    //vector for QObjects in pipeline
+    // vector for QObjects in pipeline
     std::vector<QObject*> pipelineitems;
-
 
     // adding ct dicom import widget and pipeline
     auto ctimageimportpipeline = new CTImageImportPipeline();
@@ -60,18 +60,17 @@ MainWindow::MainWindow(QWidget* parent)
     pipelineitems.push_back(ctimageimportpipeline);
     auto ctdicomimportwidget = new CTDicomImportWidget(importWidgets);
     importWidgets->addTab(ctdicomimportwidget, tr("CT DiCOM import"));
-    //setting up signals for ct image import
+    // setting up signals for ct image import
     connect(ctdicomimportwidget, &CTDicomImportWidget::dicomSeriesActivated, ctimageimportpipeline, &CTImageImportPipeline::readImages);
     connect(ctdicomimportwidget, &CTDicomImportWidget::blurRadiusChanged, ctimageimportpipeline, &CTImageImportPipeline::setBlurRadius);
     connect(ctdicomimportwidget, &CTDicomImportWidget::outputSpacingChanged, ctimageimportpipeline, &CTImageImportPipeline::setOutputSpacing);
     connect(ctdicomimportwidget, &CTDicomImportWidget::useOutputSpacingChanged, ctimageimportpipeline, &CTImageImportPipeline::setUseOutputSpacing);
 
-
-
     // adding an slice render widget
     // TODO add multiple views
     auto slicerender = new SliceRenderWidget(splitter);
     splitter->addWidget(slicerender);
+    splitter->setStretchFactor(1, 10);
     connect(ctimageimportpipeline, &CTImageImportPipeline::imageDataChanged, slicerender, &SliceRenderWidget::updateImageData);
 
     // simulation progress

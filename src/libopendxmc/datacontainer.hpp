@@ -26,6 +26,7 @@ Copyright 2024 Erlend Andersen
 #include <dxmc_specialization.hpp>
 
 #include <array>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -61,6 +62,9 @@ public:
 
     vtkSmartPointer<vtkImageData> vtkImage(ImageType);
 
+protected:
+    vtkSmartPointer<vtkImageData> generate_vtkImage(ImageType);
+
 private:
     std::uint64_t m_uid = 0;
     std::array<double, 3> m_spacing = { 0, 0, 0 };
@@ -73,6 +77,7 @@ private:
     std::vector<double> m_dose_variance_array;
     std::vector<std::uint64_t> m_dose_count_array;
     std::vector<DataContainer::Material> m_materials;
+    std::map<ImageType, vtkSmartPointer<vtkImageData>> m_vtk_shallow_buffer;
 };
 
 // Allow std::shared_ptr<DataContainer> to be used in signal/slots

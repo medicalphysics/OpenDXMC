@@ -27,7 +27,7 @@ Copyright 2024 Erlend Andersen
 
 #include <ctdicomimportwidget.hpp>
 #include <ctimageimportpipeline.hpp>
-#include <slicerenderwidget.hpp>
+#include <renderwidgetscollection.hpp>
 
 #include <mainwindow.hpp>
 
@@ -68,10 +68,10 @@ MainWindow::MainWindow(QWidget* parent)
 
     // adding an slice render widget
     // TODO add multiple views
-    auto slicerender = new SliceRenderWidget(splitter);
+    auto slicerender = new RenderWidgetsCollection(splitter);
     splitter->addWidget(slicerender);
     splitter->setStretchFactor(1, 10);
-    connect(ctimageimportpipeline, &CTImageImportPipeline::imageDataChanged, slicerender, &SliceRenderWidget::updateImageData);
+    connect(ctimageimportpipeline, &CTImageImportPipeline::imageDataChanged, slicerender, &RenderWidgetsCollection::updateImageData);
 
     // simulation progress
     /* m_progressTimer = new QTimer(this);

@@ -40,6 +40,14 @@ std::uint64_t DataContainer::ID() const { return m_uid; }
 
 vtkSmartPointer<vtkImageData> DataContainer::vtkImage(ImageType type)
 {
+    if (!m_vtk_shallow_buffer.contains(type)) {
+        m_vtk_shallow_buffer[type] = generate_vtkImage(type);
+    }
+    return m_vtk_shallow_buffer[type];
+}
+
+vtkSmartPointer<vtkImageData> DataContainer::generate_vtkImage(ImageType type)
+{
     if (!hasImage(type))
         return nullptr;
 
@@ -113,11 +121,13 @@ vtkSmartPointer<vtkImageData> DataContainer::vtkImage(ImageType type)
 void DataContainer::setSpacing(const std::array<double, 3>& cm)
 {
     m_spacing = cm;
+    m_vtk_shallow_buffer.clear();
 }
 
 void DataContainer::setDimensions(const std::array<std::size_t, 3>& dim)
 {
     m_dimensions = dim;
+    m_vtk_shallow_buffer.clear();
 }
 
 void DataContainer::setMaterials(const std::vector<DataContainer::Material>& materials)
@@ -130,6 +140,8 @@ bool DataContainer::setImageArray(ImageType type, const std::vector<double>& ima
     const auto N = size();
     if (N != image.size())
         return false;
+
+    m_vtk_shallow_buffer.erase(type);
 
     switch (type) {
     case DataContainer::ImageType::CT:
@@ -156,6 +168,8 @@ bool DataContainer::setImageArray(ImageType type, const std::vector<std::uint8_t
     if (N != image.size())
         return false;
 
+    m_vtk_shallow_buffer.erase(type);
+
     switch (type) {
     case DataContainer::ImageType::Material:
         m_material_array = image;
@@ -174,6 +188,9 @@ bool DataContainer::setImageArray(ImageType type, const std::vector<std::uint64_
     const auto N = size();
     if (N != image.size())
         return false;
+
+    m_vtk_shallow_buffer.erase(type);
+
     if (type == ImageType::DoseCount) {
         m_dose_count_array = image;
         return true;
@@ -185,6 +202,8 @@ bool DataContainer::setImageArray(ImageType type, vtkImageData* image)
 {
     if (image == nullptr)
         return false;
+
+    m_vtk_shallow_buffer.erase(type);
 
     std::array<int, 3> image_dim;
     image->GetDimensions(image_dim.data());

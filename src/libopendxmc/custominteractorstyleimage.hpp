@@ -34,6 +34,7 @@ public:
     void OnRightButtonDown() override;
     void OnRightButtonUp() override;
     void OnChar() override;
+    void WindowLevel() override;
 
 protected:
     CustomInteractorStyleImage();

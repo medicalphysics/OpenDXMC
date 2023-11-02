@@ -25,6 +25,8 @@ Copyright 2019 Erlend Andersen
 
 #include <vtkCallbackCommand.h>
 #include <vtkCamera.h>
+#include <vtkCellPicker.h>
+#include <vtkCornerAnnotation.h>
 #include <vtkImageGaussianSmooth.h>
 #include <vtkImageProperty.h>
 #include <vtkImageResliceMapper.h>
@@ -32,37 +34,22 @@ Copyright 2019 Erlend Andersen
 #include <vtkOpenGLImageSliceMapper.h>
 #include <vtkProperty.h>
 #include <vtkRenderWindow.h>
+#include <vtkRendererCollection.h>
+#include <vtkTextProperty.h>
 
-// #include <vtkRenderer.h>
-// #include <vtkResliceCursor.h>
-// #include <vtkResliceCursorActor.h>
-// #include <vtkResliceCursorLineRepresentation.h>
-// #include <vtkResliceCursorPolyDataAlgorithm.h>
-// #include <vtkResliceCursorWidget.h>
-//  #include <vtkResliceImageViewer.h>
-// #include <vtkScalarBarActor.h>
-// #include <vtkTextProperty.h>
-//  #include <vtkCellPicker.h>
-//  #include <vtkCornerAnnotation.h>
-//  #include <vtkImageActor.h>
-//  #include <vtkPlane.h>
-//  #include <vtkPlaneSource.h>
-//  #include <vtkLookupTable.h>
-//  #include <vtkMatrix4x4.h>
-//  #include <vtkImageMapToColors.h>
-//  #include <vtkImageMapper3D.h>
-//  #include <vtkImagePlaneWidget.h>
+#include <charconv>
+#include <string>
 
-class WindowLevelModifiedCallback : public vtkCallbackCommand {
+class WindowLevelSlicingModifiedCallback : public vtkCallbackCommand {
 public:
-    static WindowLevelModifiedCallback* New()
+    static WindowLevelSlicingModifiedCallback* New()
     {
-        return new WindowLevelModifiedCallback;
+        return new WindowLevelSlicingModifiedCallback;
     }
     // Here we Create a vtkCallbackCommand and reimplement it.
     void Execute(vtkObject* caller, unsigned long evId, void*) override
     {
-        if (evId == vtkCommand::EndWindowLevelEvent) {
+        if (evId == vtkCommand::EndWindowLevelEvent || evId == vtkCommand::WindowLevelEvent) {
             // Note the use of reinterpret_cast to cast the caller to the expected type.
             auto style = reinterpret_cast<vtkInteractorStyleImage*>(caller);
 
@@ -79,15 +66,22 @@ public:
         } else if (evId == vtkCommand::PickEvent) {
             auto style = reinterpret_cast<vtkInteractorStyleImage*>(caller);
             auto currentRenderer = style->GetCurrentRenderer();
-            auto currentCamera = currentRenderer->GetActiveCamera();
-            const auto currentFocalPoint = currentCamera->GetFocalPoint();
 
-            for (auto& wid : widgets) {
-                auto renderer = wid->renderWindow()->GetInteractor()->FindPokedRenderer(0, 0);
-                if (renderer) {
+            std::array<int, 2> eventPos;
+            style->GetInteractor()->GetLastEventPosition(eventPos.data());
+            if (this->picker->Pick(eventPos[0], eventPos[1], 0, currentRenderer) > 0) {
+                std::array<double, 3> pos;
+                picker->GetPickPosition(pos.data());
+                for (auto& wid : widgets) {
+                    auto renderer = wid->renderWindow()->GetRenderers()->GetFirstRenderer();
                     auto camera = renderer->GetActiveCamera();
-                    // camera->SetFocalPoint(currentFocalPoint);
-                    // TODO set proper focal point to reslizing
+                    std::array<double, 3> normal;
+                    camera->GetViewPlaneNormal(normal.data());
+                    auto posIdx = argmax(normal);
+                    std::array<double, 3> focalPoint;
+                    camera->GetFocalPoint(focalPoint.data());
+                    focalPoint[posIdx] = pos[posIdx];
+                    camera->SetFocalPoint(focalPoint.data());
                     wid->renderWindow()->Render();
                 }
             }
@@ -99,21 +93,92 @@ public:
     {
         std::vector<vtkCommand::EventIds> cmds;
         cmds.push_back(vtkCommand::EndWindowLevelEvent);
+        cmds.push_back(vtkCommand::WindowLevelEvent);
         cmds.push_back(vtkCommand::PickEvent);
         return cmds;
-    }
-
-    WindowLevelModifiedCallback()
-    {
     }
 
     // Set pointers to any clientData or callData here.
     std::vector<vtkSmartPointer<vtkImageSlice>> imageSlices;
     std::vector<QVTKOpenGLNativeWidget*> widgets;
 
+protected:
+    int argmax(const std::array<double, 3>& v)
+    {
+        if (std::abs(v[0]) > std::abs(v[1])) {
+            return std::abs(v[0]) > std::abs(v[2]) ? 0 : 2;
+        } else {
+            return std::abs(v[1]) > std::abs(v[2]) ? 1 : 2;
+        }
+    }
+
 private:
-    WindowLevelModifiedCallback(const WindowLevelModifiedCallback&) = delete;
-    void operator=(const WindowLevelModifiedCallback&) = delete;
+    WindowLevelSlicingModifiedCallback()
+    {
+        picker = vtkSmartPointer<vtkCellPicker>::New();
+    }
+
+    vtkSmartPointer<vtkCellPicker> picker = nullptr;
+    WindowLevelSlicingModifiedCallback(const WindowLevelSlicingModifiedCallback&) = delete;
+    void operator=(const WindowLevelSlicingModifiedCallback&) = delete;
+};
+
+class TextModifiedCallback : public vtkCallbackCommand {
+public:
+    static TextModifiedCallback* New()
+    {
+        return new TextModifiedCallback;
+    }
+    // Here we Create a vtkCallbackCommand and reimplement it.
+    void Execute(vtkObject* caller, unsigned long evId, void*) override
+    {
+        if (vtkCommand::WindowLevelEvent) {
+            // Note the use of reinterpret_cast to cast the caller to the expected type.
+            auto style = reinterpret_cast<vtkInteractorStyleImage*>(caller);
+            auto property = style->GetCurrentImageProperty();
+            if (property) {
+                auto ww = property->GetColorWindow();
+                auto wl = property->GetColorLevel();
+
+                std::array<char, 10> buffer;
+                std::string txt = "WL: ";
+                if (auto [ptr, ec] = std::to_chars(buffer.data(), buffer.data() + buffer.size(), wl, std::chars_format::general, 3); ec == std::errc()) {
+                    txt += std::string_view(buffer.data(), ptr);
+                }
+                txt += " WW: ";
+                if (auto [ptr, ec] = std::to_chars(buffer.data(), buffer.data() + buffer.size(), ww, std::chars_format::general, 3); ec == std::errc()) {
+                    txt += std::string_view(buffer.data(), ptr);
+                }
+                textActorCorner->SetText(1, txt.c_str());
+            }
+        }
+    }
+
+    // Convinietn function to get commands this callback is intended for
+    constexpr static std::vector<vtkCommand::EventIds> eventTypes()
+    {
+        std::vector<vtkCommand::EventIds> cmds;
+        cmds.push_back(vtkCommand::WindowLevelEvent);
+        return cmds;
+    }
+
+    // Set pointers to any clientData or callData here.
+    vtkSmartPointer<vtkCornerAnnotation> textActorCorner = nullptr;
+
+    std::vector<vtkSmartPointer<vtkImageSlice>> imageSlices;
+    std::vector<QVTKOpenGLNativeWidget*> widgets;
+
+protected:
+private:
+    TextModifiedCallback()
+    {
+        textActorCorner = vtkSmartPointer<vtkCornerAnnotation>::New();
+        textActorCorner->GetTextProperty()->SetColor(1.0, 1.0, 1.0);
+    }
+
+    vtkSmartPointer<vtkCellPicker> picker = nullptr;
+    TextModifiedCallback(const TextModifiedCallback&) = delete;
+    void operator=(const TextModifiedCallback&) = delete;
 };
 
 std::shared_ptr<DataContainer> generateSampleData()
@@ -182,11 +247,6 @@ void SliceRenderWidget::setupSlicePipeline()
         auto renWin = openGLWidget[i]->renderWindow();
         renWin->AddRenderer(renderer[i]);
 
-        // auto textActorCorners = vtkSmartPointer<vtkCornerAnnotation>::New();
-        // textActorCorners->SetText(1, "");
-        // textActorCorners->GetTextProperty()->SetColor(1.0, 1.0, 1.0);
-        //  interactionStyle->setCornerAnnotation(textActorCorners);
-
         // colorbar
         // auto scalarColorBar = vtkSmartPointer<vtkScalarBarActor>::New();
         // scalarColorBar->SetMaximumWidthInPixels(200);
@@ -197,8 +257,8 @@ void SliceRenderWidget::setupSlicePipeline()
         imageMapper->SetInputConnection(imageSmoother->GetOutputPort());
         imageMapper->SliceFacesCameraOn();
         imageMapper->SetSliceAtFocalPoint(true);
-        /*
-        auto imageMapper = vtkSmartPointer<vtkImageResliceMapper>::New();
+
+        /* auto imageMapper = vtkSmartPointer<vtkImageResliceMapper>::New();
         imageMapper->SetInputConnection(imageSmoother->GetOutputPort());
         imageMapper->SliceFacesCameraOn();
         imageMapper->SetSliceAtFocalPoint(true);
@@ -237,9 +297,9 @@ void SliceRenderWidget::setupSlicePipeline()
     }
 
     // adding callbacks to share windowlevel
-
+    // windowing and slicing
     for (std::size_t i = 0; i < 3; ++i) {
-        auto callback = vtkSmartPointer<WindowLevelModifiedCallback>::New();
+        auto callback = vtkSmartPointer<WindowLevelSlicingModifiedCallback>::New();
         auto style = interactorStyle[i];
         for (std::size_t j = 0; j < 3; ++j) {
             if (i != j) {
@@ -250,14 +310,28 @@ void SliceRenderWidget::setupSlicePipeline()
         for (auto ev : callback->eventTypes())
             style->AddObserver(ev, callback);
     }
+    // windowlevel text
+    {
+        auto callback = vtkSmartPointer<TextModifiedCallback>::New();
+        callback->textActorCorner->GetTextProperty()->SetColor(0.6, 0.5, 0.1);
+        for (std::size_t i = 0; i < 3; ++i) {
+            auto style = interactorStyle[i];
+            for (auto ev : callback->eventTypes())
+                style->AddObserver(ev, callback);
+            if (i == 0)
+                renderer[i]->AddViewProp(callback->textActorCorner);
+        }
+    }
 }
 
-void SliceRenderWidget::Render()
+void SliceRenderWidget::Render(bool rezoom_camera)
 {
-    for (auto& slic : imageSlice)
-        slic->Update();
-    for (auto& ren : renderer)
+    for (auto& ren : renderer) {
+        auto ps = ren->GetActiveCamera()->GetParallelScale();
         ren->ResetCamera();
+        if (!rezoom_camera)
+            ren->GetActiveCamera()->SetParallelScale(ps);
+    }
     for (auto& w : openGLWidget)
         w->renderWindow()->Render();
 }
@@ -289,11 +363,11 @@ void SliceRenderWidget::setMultisampleAA(int samples)
     }
 }
 
-void SliceRenderWidget::setNewImageData(vtkImageData* data)
+void SliceRenderWidget::setNewImageData(vtkImageData* data, bool rezoom_camera)
 {
     if (data) {
         imageSmoother->SetInputData(data);
-        Render();
+        Render(rezoom_camera);
     }
 }
 
@@ -313,8 +387,9 @@ void SliceRenderWidget::updateImageData(std::shared_ptr<DataContainer> data)
     if (data) {
         if (data->hasImage(DataContainer::ImageType::CT) && uid_is_new) {
             auto vtkimage = data->vtkImage(DataContainer::ImageType::CT);
-            setNewImageData(vtkimage);
+            setNewImageData(vtkimage, true);
         }
     }
+
     m_data = data;
 }

@@ -51,8 +51,6 @@ void CustomInteractorStyleImage::OnMouseMove()
 }
 void CustomInteractorStyleImage::OnLeftButtonDown()
 {
-    // vtkInteractorStyleImage::OnLeftButtonDown();
-    // edit
 
     int x = this->Interactor->GetEventPosition()[0];
     int y = this->Interactor->GetEventPosition()[1];
@@ -70,6 +68,10 @@ void CustomInteractorStyleImage::OnLeftButtonDown()
 
     else if (this->InteractionMode == VTKIS_IMAGE_SLICING && this->Interactor->GetShiftKey()) {
         this->StartDolly();
+    }
+
+    else if (this->InteractionMode == VTKIS_IMAGE_SLICING && this->Interactor->GetControlKey()) {
+        this->StartPick();
     }
 
     // If shift is held down, do a rotation
@@ -99,6 +101,13 @@ void CustomInteractorStyleImage::OnLeftButtonUp()
     switch (this->State) {
     case VTKIS_WINDOW_LEVEL:
         this->EndWindowLevel();
+        if (this->Interactor) {
+            this->ReleaseFocus();
+        }
+        break;
+
+    case VTKIS_PICK:
+        this->EndPick();
         if (this->Interactor) {
             this->ReleaseFocus();
         }
@@ -244,4 +253,68 @@ void CustomInteractorStyleImage::OnRightButtonUp()
 void CustomInteractorStyleImage::OnChar()
 {
     vtkInteractorStyleImage::OnChar();
+}
+
+void CustomInteractorStyleImage::WindowLevel()
+{
+    // for allowing windowlevel observers while windowing
+    vtkRenderWindowInteractor* rwi = this->Interactor;
+
+    this->WindowLevelCurrentPosition[0] = rwi->GetEventPosition()[0];
+    this->WindowLevelCurrentPosition[1] = rwi->GetEventPosition()[1];
+
+    if (this->CurrentImageProperty) {
+        const int* size = this->CurrentRenderer->GetSize();
+
+        double window = this->WindowLevelInitial[0];
+        double level = this->WindowLevelInitial[1];
+
+        // Compute normalized delta
+
+        double dx = (this->WindowLevelCurrentPosition[0] - this->WindowLevelStartPosition[0]) * 4.0 / size[0];
+        double dy = (this->WindowLevelStartPosition[1] - this->WindowLevelCurrentPosition[1]) * 4.0 / size[1];
+
+        // Scale by current values
+
+        if (fabs(window) > 0.01) {
+            dx = dx * window;
+        } else {
+            dx = dx * (window < 0 ? -0.01 : 0.01);
+        }
+        if (fabs(level) > 0.01) {
+            dy = dy * level;
+        } else {
+            dy = dy * (level < 0 ? -0.01 : 0.01);
+        }
+
+        // Abs so that direction does not flip
+
+        if (window < 0.0) {
+            dx = -1 * dx;
+        }
+        if (level < 0.0) {
+            dy = -1 * dy;
+        }
+
+        // Compute new window level
+
+        double newWindow = dx + window;
+        double newLevel = level - dy;
+
+        if (newWindow < 0.01) {
+            newWindow = 0.01;
+        }
+
+        this->CurrentImageProperty->SetColorWindow(newWindow);
+        this->CurrentImageProperty->SetColorLevel(newLevel);
+
+        this->Interactor->Render();
+
+        if (this->HandleObservers && this->HasObserver(vtkCommand::WindowLevelEvent)) {
+            this->InvokeEvent(vtkCommand::WindowLevelEvent, this);
+        }
+    }
+    if (this->HandleObservers && this->HasObserver(vtkCommand::WindowLevelEvent)) {
+        this->InvokeEvent(vtkCommand::WindowLevelEvent, this);
+    }
 }

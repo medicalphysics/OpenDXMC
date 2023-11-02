@@ -42,9 +42,9 @@ public:
     void setInteractionStyleTo3D();
 
 protected:
-    void setNewImageData(vtkImageData* data);
+    void setNewImageData(vtkImageData* data, bool rezoom_camera = false);
     void setupSlicePipeline();
-    void Render();
+    void Render(bool rezoom_camera = false);
 
 private:
     std::shared_ptr<DataContainer> m_data = nullptr;

@@ -49,7 +49,6 @@ protected:
 
 private:
     std::shared_ptr<DataContainer> m_data = nullptr;
-    vtkSmartPointer<vtkImageGaussianSmooth> imageSmoother = nullptr;
     vtkSmartPointer<vtkImageSlice> imageSlice = nullptr;
     vtkSmartPointer<vtkRenderer> renderer = nullptr;
     QVTKOpenGLNativeWidget* openGLWidget = nullptr;

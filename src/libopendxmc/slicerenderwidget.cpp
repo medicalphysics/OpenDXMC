@@ -26,13 +26,10 @@ Copyright 2023 Erlend Andersen
 #include <vtkCamera.h>
 #include <vtkCellPicker.h>
 #include <vtkCornerAnnotation.h>
-#include <vtkDiscretizableColorTransferFunction.h>
-#include <vtkImageGaussianSmooth.h>
 #include <vtkImageProperty.h>
 #include <vtkImageResliceMapper.h>
 #include <vtkImageSincInterpolator.h>
 #include <vtkOpenGLImageSliceMapper.h>
-#include <vtkPiecewiseFunction.h>
 #include <vtkProperty.h>
 #include <vtkRenderWindow.h>
 #include <vtkRendererCollection.h>
@@ -197,12 +194,6 @@ SliceRenderWidget::SliceRenderWidget(int orientation, QWidget* parent)
 
     this->setLayout(layout);
 
-    // gaussian smooth mapper
-    imageSmoother = vtkSmartPointer<vtkImageGaussianSmooth>::New();
-    imageSmoother->SetDimensionality(3);
-    imageSmoother->SetStandardDeviations(0.0, 0.0, 0.0);
-    imageSmoother->ReleaseDataFlagOff();
-
     // lut
     lut = vtkSmartPointer<vtkWindowLevelLookupTable>::New();
 
@@ -238,12 +229,10 @@ void SliceRenderWidget::setupSlicePipeline(int orientation)
 
     // reslice mapper
     auto imageMapper = vtkSmartPointer<vtkOpenGLImageSliceMapper>::New();
-    imageMapper->SetInputConnection(imageSmoother->GetOutputPort());
     imageMapper->SliceFacesCameraOn();
     imageMapper->SetSliceAtFocalPoint(true);
 
     /* auto imageMapper = vtkSmartPointer<vtkImageResliceMapper>::New();
-    imageMapper->SetInputConnection(imageSmoother->GetOutputPort());
     imageMapper->SliceFacesCameraOn();
     imageMapper->SetSliceAtFocalPoint(true);
     imageMapper->StreamingOn();
@@ -405,8 +394,7 @@ void SliceRenderWidget::setMultisampleAA(int samples)
 void SliceRenderWidget::setNewImageData(vtkImageData* data, bool rezoom_camera)
 {
     if (data) {
-        imageSmoother->SetInputData(data);
-        imageSmoother->Update();
+        imageSlice->GetMapper()->SetInputData(data);
         Render(rezoom_camera);
     }
 }

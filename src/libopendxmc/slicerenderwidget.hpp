@@ -25,9 +25,8 @@ Copyright 2023 Erlend Andersen
 
 #include <QVTKOpenGLNativeWidget.h>
 
-#include <vtkImageGaussianSmooth.h>
-// #include<vtkImageSlice.h>
 #include <vtkImageActor.h>
+#include <vtkImageGaussianSmooth.h>
 #include <vtkOpenGLRenderer.h>
 #include <vtkSmartPointer.h>
 #include <vtkWindowLevelLookupTable.h>
@@ -39,6 +38,7 @@ public:
     void updateImageData(std::shared_ptr<DataContainer>);
     void useFXAA(bool on);
     void setMultisampleAA(int samples);
+    void setInterpolationType(int type = 1);
     void setInteractionStyleToSlicing();
     void setInteractionStyleTo3D();
 

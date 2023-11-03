@@ -25,11 +25,9 @@ Copyright 2023 Erlend Andersen
 #include <vtkCallbackCommand.h>
 #include <vtkCamera.h>
 #include <vtkCellPicker.h>
-#include <vtkCornerAnnotation.h>
 #include <vtkImageProperty.h>
-#include <vtkImageResliceMapper.h>
-#include <vtkImageSincInterpolator.h>
 #include <vtkOpenGLImageSliceMapper.h>
+#include <vtkOpenGLTextActor.h>
 #include <vtkProperty.h>
 #include <vtkRenderWindow.h>
 #include <vtkRendererCollection.h>
@@ -147,7 +145,7 @@ public:
                 if (auto [ptr, ec] = std::to_chars(buffer.data(), buffer.data() + buffer.size(), ww, std::chars_format::general, 3); ec == std::errc()) {
                     txt += std::string_view(buffer.data(), ptr);
                 }
-                textActorCorner->SetText(vtkCornerAnnotation::TextPosition::LowerLeft, txt.c_str());
+                textActorCorner->SetInput(txt.c_str());
             }
         }
     }
@@ -161,16 +159,13 @@ public:
     }
 
     // Set pointers to any clientData or callData here.
-    vtkSmartPointer<vtkCornerAnnotation> textActorCorner = nullptr;
-
-    std::vector<vtkSmartPointer<vtkImageSlice>> imageSlices;
-    std::vector<QVTKOpenGLNativeWidget*> widgets;
+    vtkSmartPointer<vtkOpenGLTextActor> textActorCorner = nullptr;
 
 protected:
 private:
     TextModifiedCallback()
     {
-        textActorCorner = vtkSmartPointer<vtkCornerAnnotation>::New();
+        textActorCorner = vtkSmartPointer<vtkOpenGLTextActor>::New();
         textActorCorner->GetTextProperty()->SetColor(1.0, 1.0, 1.0);
     }
 
@@ -210,7 +205,7 @@ void SliceRenderWidget::setupSlicePipeline(int orientation)
     interactorStyle = vtkSmartPointer<CustomInteractorStyleImage>::New();
     interactorStyle->SetDefaultRenderer(renderer);
     interactorStyle->SetInteractionModeToImageSlicing();
-    // interactionStyle->SetInteractionModeToImage3D();
+    interactorStyle->AutoAdjustCameraClippingRangeOn();
 
     auto renderWindowInteractor = openGLWidget->interactor();
     renderWindowInteractor->SetInteractorStyle(interactorStyle);
@@ -225,17 +220,8 @@ void SliceRenderWidget::setupSlicePipeline(int orientation)
     // reslice mapper
     auto imageMapper = vtkSmartPointer<vtkOpenGLImageSliceMapper>::New();
     imageMapper->SliceFacesCameraOn();
-    imageMapper->SetSliceAtFocalPoint(true);
-
-    /* auto imageMapper = vtkSmartPointer<vtkImageResliceMapper>::New();
-    imageMapper->SliceFacesCameraOn();
-    imageMapper->SetSliceAtFocalPoint(true);
+    imageMapper->SliceAtFocalPointOn();
     imageMapper->StreamingOn();
-    imageMapper->SetJumpToNearestSlice(false);
-    imageMapper->ResampleToScreenPixelsOff(); // to use custom interpolator
-    auto interpolator = vtkSmartPointer<vtkImageSincInterpolator>::New();
-    imageMapper->SetInterpolator(interpolator);
-    */
 
     // image slice
     imageSlice = vtkSmartPointer<vtkImageActor>::New();
@@ -304,42 +290,6 @@ void SliceRenderWidget::sharedViews(SliceRenderWidget* other1, SliceRenderWidget
     w.push_back(other1);
     w.push_back(other2);
     sharedViews(w);
-    /*
-    // adding callbacks to share windowlevel
-    // windowing and slicing
-    std::array<SliceRenderWidget*, 3> wids = { this, other1, other2 };
-
-    // setting same lut
-    for (auto& w : wids)
-        w->lut = this->lut;
-
-    for (std::size_t i = 0; i < 3; ++i) {
-        auto w = wids[i];
-        auto callback = vtkSmartPointer<WindowLevelSlicingModifiedCallback>::New();
-        auto style = w->interactorStyle;
-        for (std::size_t j = 0; j < 3; ++j) {
-            if (i != j) {
-                callback->imageSlices.push_back(wids[j]->imageSlice);
-                callback->widgets.push_back(wids[j]->openGLWidget);
-            }
-        }
-        for (auto ev : callback->eventTypes())
-            style->AddObserver(ev, callback);
-    }
-
-    // windowlevel text
-    {
-        auto callback = vtkSmartPointer<TextModifiedCallback>::New();
-        callback->textActorCorner->GetTextProperty()->SetColor(0.6, 0.5, 0.1);
-        for (std::size_t i = 0; i < 3; ++i) {
-            auto style = wids[i]->interactorStyle;
-            for (auto ev : callback->eventTypes())
-                style->AddObserver(ev, callback);
-            if (i == 0)
-                wids[i]->renderer->AddViewProp(callback->textActorCorner);
-        }
-    }
-    */
 }
 
 void SliceRenderWidget::setInteractionStyleTo3D()
@@ -361,6 +311,11 @@ void SliceRenderWidget::setMultisampleAA(int samples)
 {
     int s = std::max(samples, int { 0 });
     openGLWidget->renderWindow()->SetMultiSamples(s);
+}
+
+void SliceRenderWidget::setInterpolationType(int type)
+{
+    imageSlice->GetProperty()->SetInterpolationType(type);
 }
 
 void SliceRenderWidget::Render(bool rezoom_camera)

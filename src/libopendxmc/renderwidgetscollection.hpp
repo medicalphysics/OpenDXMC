@@ -27,6 +27,8 @@ Copyright 2023 Erlend Andersen
 #include <array>
 
 class RenderWidgetsCollection : public QWidget {
+    using SliceWidget = SliceRenderWidget;
+
 public:
     RenderWidgetsCollection(QWidget* parent = nullptr);
     void updateImageData(std::shared_ptr<DataContainer>);
@@ -34,8 +36,9 @@ public:
     void setMultisampleAA(int samples);
     void setInteractionStyleToSlicing();
     void setInteractionStyleTo3D();
+    void setInterpolationType(int type = 1);
 
 private:
-    std::array<SliceRenderWidget*, 3> m_slice_widgets = { nullptr, nullptr, nullptr };
+    std::array<SliceWidget*, 3> m_slice_widgets = { nullptr, nullptr, nullptr };
     VolumerenderWidget* m_volume_widget = nullptr;
 };

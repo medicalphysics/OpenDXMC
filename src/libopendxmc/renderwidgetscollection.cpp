@@ -43,7 +43,7 @@ RenderWidgetsCollection::RenderWidgetsCollection(QWidget* parent)
     layout->setSpacing(0);
 
     for (std::size_t i = 0; i < 3; ++i)
-        m_slice_widgets[i] = new SliceRenderWidget(i, this);
+        m_slice_widgets[i] = new SliceWidget(i, this);
 
     layout->addWidget(m_slice_widgets[0], 0, 0);
     layout->addWidget(m_slice_widgets[1], 1, 0);
@@ -69,6 +69,12 @@ void RenderWidgetsCollection::useFXAA(bool on)
 {
     for (auto& w : m_slice_widgets)
         w->useFXAA(on);
+}
+
+void RenderWidgetsCollection::setInterpolationType(int type)
+{
+    for (auto& w : m_slice_widgets)
+        w->setInterpolationType(type);
 }
 
 void RenderWidgetsCollection::setMultisampleAA(int samples)

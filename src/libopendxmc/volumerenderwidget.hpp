@@ -18,43 +18,32 @@ Copyright 2023 Erlend Andersen
 
 #pragma once
 
-#include <custominteractorstyleimage.hpp>
 #include <datacontainer.hpp>
 
 #include <QWidget>
 
 #include <QVTKOpenGLNativeWidget.h>
 
-#include <vtkImageGaussianSmooth.h>
-// #include<vtkImageSlice.h>
-#include <vtkImageActor.h>
+#include <vtkOpenGLGPUVolumeRayCastMapper.h>
 #include <vtkOpenGLRenderer.h>
 #include <vtkSmartPointer.h>
-#include <vtkWindowLevelLookupTable.h>
+#include <vtkVolume.h>
 
-class SliceRenderWidget : public QWidget {
+class VolumerenderWidget : public QWidget {
     Q_OBJECT
 public:
-    SliceRenderWidget(int orientation = 0, QWidget* parent = nullptr);
+    VolumerenderWidget(QWidget* parent = nullptr);
     void updateImageData(std::shared_ptr<DataContainer>);
-    void useFXAA(bool on);
-    void setMultisampleAA(int samples);
-    void setInteractionStyleToSlicing();
-    void setInteractionStyleTo3D();
-
-    void sharedViews(SliceRenderWidget* other1, SliceRenderWidget* other2);
-    void sharedViews(std::vector<SliceRenderWidget*> others);
 
 protected:
-    void setNewImageData(vtkSmartPointer<vtkImageData> data, bool rezoom_camera = false);
-    void setupSlicePipeline(int orientation);
-    void Render(bool rezoom_camera = false);
+    void setupRenderingPipeline();
+    void Render();
+    void setNewImageData(vtkSmartPointer<vtkImageData> data);
 
 private:
     std::shared_ptr<DataContainer> m_data = nullptr;
-    vtkSmartPointer<vtkImageActor> imageSlice = nullptr;
-    vtkSmartPointer<vtkOpenGLRenderer> renderer = nullptr;
     QVTKOpenGLNativeWidget* openGLWidget = nullptr;
-    vtkSmartPointer<CustomInteractorStyleImage> interactorStyle = nullptr;
-    vtkSmartPointer<vtkWindowLevelLookupTable> lut = nullptr;
+    vtkSmartPointer<vtkVolume> volume = nullptr;
+    vtkSmartPointer<vtkOpenGLRenderer> renderer = nullptr;
+    vtkSmartPointer<vtkOpenGLGPUVolumeRayCastMapper> mapper = nullptr;
 };

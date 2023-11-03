@@ -18,8 +18,9 @@ Copyright 2023 Erlend Andersen
 
 #pragma once
 
-#include <slicerenderwidget.hpp>
 #include <datacontainer.hpp>
+#include <slicerenderwidget.hpp>
+#include <volumerenderwidget.hpp>
 
 #include <QWidget>
 
@@ -36,4 +37,5 @@ public:
 
 private:
     std::array<SliceRenderWidget*, 3> m_slice_widgets = { nullptr, nullptr, nullptr };
+    VolumerenderWidget* m_volume_widget = nullptr;
 };

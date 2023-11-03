@@ -147,7 +147,7 @@ public:
                 if (auto [ptr, ec] = std::to_chars(buffer.data(), buffer.data() + buffer.size(), ww, std::chars_format::general, 3); ec == std::errc()) {
                     txt += std::string_view(buffer.data(), ptr);
                 }
-                textActorCorner->SetText(1, txt.c_str());
+                textActorCorner->SetText(vtkCornerAnnotation::TextPosition::LowerLeft, txt.c_str());
             }
         }
     }
@@ -182,14 +182,12 @@ private:
 SliceRenderWidget::SliceRenderWidget(int orientation, QWidget* parent)
     : QWidget(parent)
 {
-    setMinimumWidth(200);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     auto layout = new QVBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
 
-    for (std::size_t i = 0; i < 4; ++i)
-        openGLWidget = new QVTKOpenGLNativeWidget(this);
+    openGLWidget = new QVTKOpenGLNativeWidget(this);
     layout->addWidget(openGLWidget);
 
     this->setLayout(layout);
@@ -202,12 +200,9 @@ SliceRenderWidget::SliceRenderWidget(int orientation, QWidget* parent)
 
 void SliceRenderWidget::setupSlicePipeline(int orientation)
 {
-    // https://github.com/sankhesh/FourPaneViewer/blob/master/QtVTKRenderWindows.cxx
-
-    // for (int i = 0; i < 3; ++i) {
 
     // renderers
-    renderer = vtkSmartPointer<vtkRenderer>::New();
+    renderer = vtkSmartPointer<vtkOpenGLRenderer>::New();
     renderer->GetActiveCamera()->ParallelProjectionOn();
     renderer->SetBackground(0, 0, 0);
 
@@ -243,7 +238,7 @@ void SliceRenderWidget::setupSlicePipeline(int orientation)
     */
 
     // image slice
-    imageSlice = vtkSmartPointer<vtkImageSlice>::New();
+    imageSlice = vtkSmartPointer<vtkImageActor>::New();
     imageSlice->SetMapper(imageMapper);
     renderer->AddActor(imageSlice);
 
@@ -263,15 +258,53 @@ void SliceRenderWidget::setupSlicePipeline(int orientation)
 
     auto sliceProperty = imageSlice->GetProperty();
     sliceProperty->SetLookupTable(lut);
+    sliceProperty->SetUseLookupTableScalarRange(false);
     lut->SetMinimumTableValue(0, 0, 0, 1);
     lut->SetMaximumTableValue(1, 1, 1, 1);
     lut->Build();
-    sliceProperty->SetUseLookupTableScalarRange(false);
 }
 
+void SliceRenderWidget::sharedViews(std::vector<SliceRenderWidget*> wids)
+{
+    wids.insert(wids.begin(), this);
+    // setting same lut
+    for (auto& w : wids)
+        w->lut = this->lut;
+
+    for (std::size_t i = 0; i < wids.size(); ++i) {
+        auto w = wids[i];
+        auto callback = vtkSmartPointer<WindowLevelSlicingModifiedCallback>::New();
+        auto style = w->interactorStyle;
+        for (std::size_t j = 0; j < 3; ++j) {
+            if (i != j) {
+                callback->imageSlices.push_back(wids[j]->imageSlice);
+                callback->widgets.push_back(wids[j]->openGLWidget);
+            }
+        }
+        for (auto ev : callback->eventTypes())
+            style->AddObserver(ev, callback);
+    }
+
+    // windowlevel text
+    {
+        auto callback = vtkSmartPointer<TextModifiedCallback>::New();
+        callback->textActorCorner->GetTextProperty()->SetColor(0.6, 0.5, 0.1);
+        for (std::size_t i = 0; i < 3; ++i) {
+            auto style = wids[i]->interactorStyle;
+            for (auto ev : callback->eventTypes())
+                style->AddObserver(ev, callback);
+            if (i == 0)
+                wids[i]->renderer->AddViewProp(callback->textActorCorner);
+        }
+    }
+}
 void SliceRenderWidget::sharedViews(SliceRenderWidget* other1, SliceRenderWidget* other2)
 {
-
+    std::vector<SliceRenderWidget*> w = { other1, other2 };
+    w.push_back(other1);
+    w.push_back(other2);
+    sharedViews(w);
+    /*
     // adding callbacks to share windowlevel
     // windowing and slicing
     std::array<SliceRenderWidget*, 3> wids = { this, other1, other2 };
@@ -306,68 +339,7 @@ void SliceRenderWidget::sharedViews(SliceRenderWidget* other1, SliceRenderWidget
                 wids[i]->renderer->AddViewProp(callback->textActorCorner);
         }
     }
-}
-/*
-void SliceRenderWidget::setupVolumePipeline()
-{
-
-    auto widget = openGLWidget[3];
-
-    auto ren = vtkSmartPointer<vtkRenderer>::New();
-    widget->renderWindow()->AddRenderer(ren);
-
-    auto renderWindowInteractor = widget->interactor();
-    auto interactorStyle = vtkSmartPointer<vtkInteractorStyleTrackballCamera>::New();
-    renderWindowInteractor->SetInteractorStyle(interactorStyle);
-
-    // create tables
-    auto ctf = vtkSmartPointer<vtkDiscretizableColorTransferFunction>::New();
-    ctf->SetIndexedLookup(false); // true for indexed lookup
-    ctf->SetDiscretize(false);
-    auto otf = vtkSmartPointer<vtkPiecewiseFunction>::New();
-
-    // create volume and mapper
-    auto mapper = vtkSmartPointer<vtkOpenGLGPUVolumeRayCastMapper>::New();
-    mapper->SetInputConnection(imageSmoother->GetOutputPort());
-    auto volume = vtkSmartPointer<vtkVolume>::New();
-    volume->SetMapper(mapper);
-    auto volumeProperty = vtkSmartPointer<vtkVolumeProperty>::New();
-    volumeProperty->SetIndependentComponents(true);
-    volumeProperty->SetColor(ctf);
-    volumeProperty->SetScalarOpacity(otf);
-    volumeProperty->SetInterpolationTypeToLinear();
-    volume->SetProperty(volumeProperty);
-
-    ctf->AddRGBPoint(-3024, 0, 0, 0, 0.5, 0.0);
-    ctf->AddRGBPoint(-1000, .62, .36, .18, 0.5, 0.0);
-    ctf->AddRGBPoint(-500, .88, .60, .29, 0.33, 0.45);
-    ctf->AddRGBPoint(3071, .83, .66, 1, 0.5, 0.0);
-
-    otf->AddPoint(-3024, 0, 0.5, 0.0);
-    otf->AddPoint(-1000, 0, 0.5, 0.0);
-    otf->AddPoint(-500, 1.0, 0.33, 0.45);
-    otf->AddPoint(3071, 1.0, 0.5, 0.0);
-
-    ren->AddVolume(volume);
-    ren->ResetCamera();
-
-    auto camera = ren->GetActiveCamera();
-    camera->SetPosition(56.8656, -297.084, 78.913);
-    camera->SetFocalPoint(109.139, 120.604, 63.5486);
-    camera->SetViewUp(-0.00782421, -0.0357807, -0.999329);
-    camera->SetDistance(421.227);
-    camera->SetClippingRange(146.564, 767.987);
-}
-*/
-
-void SliceRenderWidget::Render(bool rezoom_camera)
-{
-    auto ps = renderer->GetActiveCamera()->GetParallelScale();
-    renderer->ResetCamera();
-    if (!rezoom_camera)
-        renderer->GetActiveCamera()->SetParallelScale(ps);
-
-    openGLWidget->renderWindow()->Render();
+    */
 }
 
 void SliceRenderWidget::setInteractionStyleTo3D()
@@ -391,10 +363,21 @@ void SliceRenderWidget::setMultisampleAA(int samples)
     openGLWidget->renderWindow()->SetMultiSamples(s);
 }
 
-void SliceRenderWidget::setNewImageData(vtkImageData* data, bool rezoom_camera)
+void SliceRenderWidget::Render(bool rezoom_camera)
+{
+    auto ps = renderer->GetActiveCamera()->GetParallelScale();
+    renderer->ResetCamera();
+    if (!rezoom_camera)
+        renderer->GetActiveCamera()->SetParallelScale(ps);
+
+    openGLWidget->renderWindow()->Render();
+}
+
+void SliceRenderWidget::setNewImageData(vtkSmartPointer<vtkImageData> data, bool rezoom_camera)
 {
     if (data) {
         imageSlice->GetMapper()->SetInputData(data);
+        imageSlice->SetDisplayExtent(data->GetExtent());
         Render(rezoom_camera);
     }
 }

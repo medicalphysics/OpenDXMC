@@ -13,12 +13,164 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with OpenDXMC. If not, see < https://www.gnu.org/licenses/>.
 
-Copyright 2019 Erlend Andersen
+Copyright 2023 Erlend Andersen
 */
 
-#include "opendxmc/volumerenderwidget.h"
+#include <volumerenderwidget.hpp>
+
+#include <QVBoxLayout>
+
+#include <vtkCamera.h>
+#include <vtkDiscretizableColorTransferFunction.h>
+#include <vtkInteractorStyleTrackballCamera.h>
+#include <vtkPiecewiseFunction.h>
+#include <vtkRenderWindow.h>
+#include <vtkRenderWindowInteractor.h>
+#include <vtkVolumeProperty.h>
+
+VolumerenderWidget::VolumerenderWidget(QWidget* parent)
+    : QWidget(parent)
+{
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    auto layout = new QVBoxLayout(this);
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setSpacing(0);
+
+    openGLWidget = new QVTKOpenGLNativeWidget(this);
+    layout->addWidget(openGLWidget);
+
+    this->setLayout(layout);
+
+    setupRenderingPipeline();
+}
+
+void VolumerenderWidget::setupRenderingPipeline()
+{
+    renderer = vtkSmartPointer<vtkOpenGLRenderer>::New();
+
+    openGLWidget->renderWindow()->AddRenderer(renderer);
+
+    auto renderWindowInteractor = openGLWidget->interactor();
+    auto interactorStyle = vtkSmartPointer<vtkInteractorStyleTrackballCamera>::New();
+    interactorStyle->SetDefaultRenderer(renderer);
+    renderWindowInteractor->SetInteractorStyle(interactorStyle);
+
+    // create tables
+    auto ctf = vtkSmartPointer<vtkDiscretizableColorTransferFunction>::New();
+    ctf->SetIndexedLookup(false); // true for indexed lookup
+    ctf->SetDiscretize(false);
+    auto otf = vtkSmartPointer<vtkPiecewiseFunction>::New();
+
+    // create volume and mapper
+    mapper = vtkSmartPointer<vtkOpenGLGPUVolumeRayCastMapper>::New();
+    volume = vtkSmartPointer<vtkVolume>::New();
+    volume->SetMapper(mapper);
+
+    auto volumeProperty = vtkSmartPointer<vtkVolumeProperty>::New();
+    volumeProperty->SetIndependentComponents(true);
+    volumeProperty->SetColor(ctf);
+    volumeProperty->SetScalarOpacity(otf);
+    volumeProperty->SetInterpolationTypeToLinear();
+    volume->SetProperty(volumeProperty);
+
+    renderer->AddVolume(volume);
+    renderer->ResetCamera();
+
+    auto camera = renderer->GetActiveCamera();
+    camera->SetPosition(56.8656, -297.084, 78.913);
+    camera->SetFocalPoint(109.139, 120.604, 63.5486);
+    camera->SetViewUp(-0.00782421, -0.0357807, -0.999329);
+    camera->SetDistance(421.227);
+    camera->SetClippingRange(146.564, 767.987);
+
+    ctf->AddRGBPoint(-3024, 0, 0, 0, 0.5, 0.0);
+    ctf->AddRGBPoint(-1000, .62, .36, .18, 0.5, 0.0);
+    ctf->AddRGBPoint(-500, .88, .60, .29, 0.33, 0.45);
+    ctf->AddRGBPoint(3071, .83, .66, 1, 0.5, 0.0);
+
+    otf->AddPoint(-3024, 0, 0.5, 0.0);
+    otf->AddPoint(-1000, 0, 0.5, 0.0);
+    otf->AddPoint(-500, 1.0, 0.33, 0.45);
+    otf->AddPoint(3071, 1.0, 0.5, 0.0);
+
+    /*
+
+    // create volume and mapper
+    auto mapper = vtkSmartPointer<vtkOpenGLGPUVolumeRayCastMapper>::New();
+    mapper->SetInputConnection(imageSmoother->GetOutputPort());
+    auto volume = vtkSmartPointer<vtkVolume>::New();
+    volume->SetMapper(mapper);
+    auto volumeProperty = vtkSmartPointer<vtkVolumeProperty>::New();
+    volumeProperty->SetIndependentComponents(true);
+    volumeProperty->SetColor(ctf);
+    volumeProperty->SetScalarOpacity(otf);
+    volumeProperty->SetInterpolationTypeToLinear();
+    volume->SetProperty(volumeProperty);
+
+    ctf->AddRGBPoint(-3024, 0, 0, 0, 0.5, 0.0);
+    ctf->AddRGBPoint(-1000, .62, .36, .18, 0.5, 0.0);
+    ctf->AddRGBPoint(-500, .88, .60, .29, 0.33, 0.45);
+    ctf->AddRGBPoint(3071, .83, .66, 1, 0.5, 0.0);
+
+    otf->AddPoint(-3024, 0, 0.5, 0.0);
+    otf->AddPoint(-1000, 0, 0.5, 0.0);
+    otf->AddPoint(-500, 1.0, 0.33, 0.45);
+    otf->AddPoint(3071, 1.0, 0.5, 0.0);
+
+    ren->AddVolume(volume);
+    ren->ResetCamera();
+
+    auto camera = ren->GetActiveCamera();
+    camera->SetPosition(56.8656, -297.084, 78.913);
+    camera->SetFocalPoint(109.139, 120.604, 63.5486);
+    camera->SetViewUp(-0.00782421, -0.0357807, -0.999329);
+    camera->SetDistance(421.227);
+    camera->SetClippingRange(146.564, 767.987);
+}
+*/
+}
+
+void VolumerenderWidget::Render()
+{
+    openGLWidget->renderWindow()->Render();
+}
+
+void VolumerenderWidget::setNewImageData(vtkSmartPointer<vtkImageData> data)
+{
+    if (data) {
+        mapper->SetInputData(data);
+        mapper->Update();
+        Render();
+    }
+}
+
+void VolumerenderWidget::updateImageData(std::shared_ptr<DataContainer> data)
+{
+    if (data && m_data) {
+        if (data->ID() == m_data->ID()) {
+            // no changes
+            return;
+        }
+    }
+    bool uid_is_new = true;
+    if (m_data && data)
+        uid_is_new = data->ID() != m_data->ID();
+
+    // updating images before replacing old buffer
+    if (data) {
+        if (data->hasImage(DataContainer::ImageType::CT) && uid_is_new) {
+            auto vtkimage = data->vtkImage(DataContainer::ImageType::CT);
+            setNewImageData(vtkimage);
+        }
+    }
+
+    m_data = data;
+}
+
+/*
 #include "opendxmc/dxmc_specialization.h"
 #include "opendxmc/qpathmanipulation.h"
+#include "opendxmc/volumerenderwidget.h"
 
 #include <QColorDialog>
 #include <QFileDialog>
@@ -306,3 +458,4 @@ void VolumeRenderWidget::setActorsVisible(int visible)
     }
     updateRendering();
 }
+*/

@@ -49,6 +49,9 @@ RenderWidgetsCollection::RenderWidgetsCollection(QWidget* parent)
     layout->addWidget(m_slice_widgets[1], 1, 0);
     layout->addWidget(m_slice_widgets[2], 1, 1);
 
+    m_volume_widget = new VolumerenderWidget(this);
+    layout->addWidget(m_volume_widget, 0, 1);
+
     m_slice_widgets[0]->sharedViews(m_slice_widgets[1], m_slice_widgets[2]);
 
     this->setLayout(layout);
@@ -57,8 +60,9 @@ RenderWidgetsCollection::RenderWidgetsCollection(QWidget* parent)
 
 void RenderWidgetsCollection::updateImageData(std::shared_ptr<DataContainer> data)
 {
-    for (auto& wid : m_slice_widgets)
-        wid->updateImageData(data);
+    for (auto& w : m_slice_widgets)
+        w->updateImageData(data);
+    m_volume_widget->updateImageData(data);
 }
 
 void RenderWidgetsCollection::useFXAA(bool on)

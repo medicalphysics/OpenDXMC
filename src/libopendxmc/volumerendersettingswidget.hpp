@@ -15,34 +15,28 @@ along with OpenDXMC. If not, see < https://www.gnu.org/licenses/>.
 
 Copyright 2023 Erlend Andersen
 */
-
 #pragma once
 
 #include <datacontainer.hpp>
-#include <slicerenderwidget.hpp>
-#include <volumerenderwidget.hpp>
 
 #include <QWidget>
 
-#include <array>
+#include <vtkOpenGLGPUVolumeRayCastMapper.h>
+#include <vtkVolumeProperty.h>
 
-class VolumerenderSettingsWidget;
-
-class RenderWidgetsCollection : public QWidget {
+class VolumerenderSettingsWidget : public QWidget {
     Q_OBJECT
-
 public:
-    RenderWidgetsCollection(QWidget* parent = nullptr);
-    void updateImageData(std::shared_ptr<DataContainer>);
-    void useFXAA(bool on);
-    void setMultisampleAA(int samples);
-    void setInteractionStyleToSlicing();
-    void setInteractionStyleTo3D();
-    void setInterpolationType(int type = 1);
+    VolumerenderSettingsWidget(vtkOpenGLGPUVolumeRayCastMapper*, vtkVolumeProperty*, QWidget* parent = nullptr);
 
-    VolumerenderSettingsWidget* volumerenderSettingsWidget(QWidget* parent = nullptr);
+    void setMapper(vtkOpenGLGPUVolumeRayCastMapper* mapper);
+    void setVolumeProperty(vtkVolumeProperty* prop);
+    void dataChanged();
+
+signals:
+    void renderSettingsChanged();
 
 private:
-    std::array<SliceRenderWidget*, 3> m_slice_widgets = { nullptr, nullptr, nullptr };
-    VolumerenderWidget* m_volume_widget = nullptr;
+    vtkVolumeProperty* m_property = nullptr; // this is the volumeproperty
+    vtkOpenGLGPUVolumeRayCastMapper* m_mapper = nullptr;
 };

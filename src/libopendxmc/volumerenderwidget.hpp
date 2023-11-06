@@ -29,11 +29,17 @@ Copyright 2023 Erlend Andersen
 #include <vtkSmartPointer.h>
 #include <vtkVolume.h>
 
+class VolumerenderSettingsWidget;
+
 class VolumerenderWidget : public QWidget {
     Q_OBJECT
 public:
     VolumerenderWidget(QWidget* parent = nullptr);
     void updateImageData(std::shared_ptr<DataContainer>);
+    VolumerenderSettingsWidget* createSettingsWidget(QWidget* parent = nullptr);
+
+signals:
+    void imageDataChanged();
 
 protected:
     void setupRenderingPipeline();

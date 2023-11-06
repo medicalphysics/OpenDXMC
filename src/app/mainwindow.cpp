@@ -17,6 +17,7 @@ Copyright 2024 Erlend Andersen
 */
 
 #include <QAction>
+#include <QDockWidget>
 #include <QFileDialog>
 #include <QHBoxLayout>
 #include <QMenuBar>
@@ -28,6 +29,7 @@ Copyright 2024 Erlend Andersen
 #include <ctdicomimportwidget.hpp>
 #include <ctimageimportpipeline.hpp>
 #include <renderwidgetscollection.hpp>
+#include <volumerendersettingswidget.hpp>
 
 #include <mainwindow.hpp>
 
@@ -72,6 +74,13 @@ MainWindow::MainWindow(QWidget* parent)
     splitter->addWidget(slicerender);
     splitter->setStretchFactor(1, 10);
     connect(ctimageimportpipeline, &CTImageImportPipeline::imageDataChanged, slicerender, &RenderWidgetsCollection::updateImageData);
+
+    auto rightDock = new QDockWidget(this);
+    // auto dockLayout = new QVBoxLayout(rightDock);
+    // rightDock->setLayout(dockLayout);
+    rightDock->setAllowedAreas(Qt::DockWidgetArea::RightDockWidgetArea);
+    rightDock->setWidget(slicerender->volumerenderSettingsWidget(rightDock));
+    addDockWidget(Qt::DockWidgetArea::RightDockWidgetArea, rightDock);
 
     // simulation progress
     /* m_progressTimer = new QTimer(this);

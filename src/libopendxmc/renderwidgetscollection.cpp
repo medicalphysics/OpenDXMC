@@ -17,6 +17,7 @@ Copyright 2023 Erlend Andersen
 */
 
 #include <renderwidgetscollection.hpp>
+#include <volumerendersettingswidget.hpp>
 
 #include <QGridLayout>
 #include <QSizePolicy>
@@ -43,7 +44,7 @@ RenderWidgetsCollection::RenderWidgetsCollection(QWidget* parent)
     layout->setSpacing(0);
 
     for (std::size_t i = 0; i < 3; ++i)
-        m_slice_widgets[i] = new SliceWidget(i, this);
+        m_slice_widgets[i] = new SliceRenderWidget(i, this);
 
     layout->addWidget(m_slice_widgets[0], 0, 0);
     layout->addWidget(m_slice_widgets[1], 1, 0);
@@ -93,4 +94,14 @@ void RenderWidgetsCollection::setInteractionStyleTo3D()
 {
     for (auto& w : m_slice_widgets)
         w->setInteractionStyleTo3D();
+}
+
+VolumerenderSettingsWidget* RenderWidgetsCollection::volumerenderSettingsWidget(QWidget* parent)
+{
+    if (!parent)
+        parent = this;
+
+    auto wid = m_volume_widget->createSettingsWidget(parent);
+
+    return wid;
 }

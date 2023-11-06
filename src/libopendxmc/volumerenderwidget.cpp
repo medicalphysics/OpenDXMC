@@ -16,6 +16,7 @@ along with OpenDXMC. If not, see < https://www.gnu.org/licenses/>.
 Copyright 2023 Erlend Andersen
 */
 
+#include <volumerendersettingswidget.hpp>
 #include <volumerenderwidget.hpp>
 
 #include <QVBoxLayout>
@@ -63,6 +64,8 @@ void VolumerenderWidget::setupRenderingPipeline()
 
     // create volume and mapper
     mapper = vtkSmartPointer<vtkOpenGLGPUVolumeRayCastMapper>::New();
+    mapper->LockSampleDistanceToInputSpacingOn();
+    mapper->AutoAdjustSampleDistancesOn();
     volume = vtkSmartPointer<vtkVolume>::New();
     volume->SetMapper(mapper);
 
@@ -72,7 +75,6 @@ void VolumerenderWidget::setupRenderingPipeline()
     volumeProperty->SetScalarOpacity(otf);
     volumeProperty->SetInterpolationTypeToLinear();
     volume->SetProperty(volumeProperty);
-
     renderer->AddVolume(volume);
     renderer->ResetCamera();
 
@@ -140,6 +142,7 @@ void VolumerenderWidget::setNewImageData(vtkSmartPointer<vtkImageData> data)
     if (data) {
         mapper->SetInputData(data);
         mapper->Update();
+        emit imageDataChanged();
         Render();
     }
 }
@@ -165,6 +168,16 @@ void VolumerenderWidget::updateImageData(std::shared_ptr<DataContainer> data)
     }
 
     m_data = data;
+}
+
+VolumerenderSettingsWidget* VolumerenderWidget::createSettingsWidget(QWidget* parent)
+{
+    if (!parent)
+        parent = this;
+    auto wid = new VolumerenderSettingsWidget(mapper, volume->GetProperty(), parent);
+    connect(this, &VolumerenderWidget::imageDataChanged, wid, &VolumerenderSettingsWidget::dataChanged);
+    connect(wid, &VolumerenderSettingsWidget::renderSettingsChanged, this, &VolumerenderWidget::Render);
+    return wid;
 }
 
 /*

@@ -19,6 +19,7 @@ Copyright 2023 Erlend Andersen
 #include <volumerendersettingswidget.hpp>
 #include <volumerenderwidget.hpp>
 
+#include <QChartView>
 #include <QVBoxLayout>
 
 #include <vtkCamera.h>
@@ -48,7 +49,6 @@ VolumerenderWidget::VolumerenderWidget(QWidget* parent)
 void VolumerenderWidget::setupRenderingPipeline()
 {
     renderer = vtkSmartPointer<vtkOpenGLRenderer>::New();
-
     openGLWidget->renderWindow()->AddRenderer(renderer);
 
     auto renderWindowInteractor = openGLWidget->interactor();
@@ -57,9 +57,6 @@ void VolumerenderWidget::setupRenderingPipeline()
     renderWindowInteractor->SetInteractorStyle(interactorStyle);
 
     // create tables
-    auto ctf = vtkSmartPointer<vtkDiscretizableColorTransferFunction>::New();
-    ctf->SetIndexedLookup(false); // true for indexed lookup
-    ctf->SetDiscretize(false);
     auto otf = vtkSmartPointer<vtkPiecewiseFunction>::New();
 
     // create volume and mapper
@@ -69,11 +66,16 @@ void VolumerenderWidget::setupRenderingPipeline()
     volume = vtkSmartPointer<vtkVolume>::New();
     volume->SetMapper(mapper);
 
+    lut = vtkSmartPointer<vtkDiscretizableColorTransferFunction>::New();
+    lut->SetIndexedLookup(false); // true for indexed lookup
+    lut->SetDiscretize(false);
+    lut->SetClamping(true); // map values outside range to closest value not black
+
     auto volumeProperty = vtkSmartPointer<vtkVolumeProperty>::New();
     volumeProperty->SetIndependentComponents(true);
-    volumeProperty->SetColor(ctf);
     volumeProperty->SetScalarOpacity(otf);
     volumeProperty->SetInterpolationTypeToLinear();
+    volumeProperty->SetColor(lut);
     volume->SetProperty(volumeProperty);
     renderer->AddVolume(volume);
     renderer->ResetCamera();
@@ -85,10 +87,10 @@ void VolumerenderWidget::setupRenderingPipeline()
     camera->SetDistance(421.227);
     camera->SetClippingRange(146.564, 767.987);
 
-    ctf->AddRGBPoint(-3024, 0, 0, 0, 0.5, 0.0);
-    ctf->AddRGBPoint(-1000, .62, .36, .18, 0.5, 0.0);
-    ctf->AddRGBPoint(-500, .88, .60, .29, 0.33, 0.45);
-    ctf->AddRGBPoint(3071, .83, .66, 1, 0.5, 0.0);
+    lut->AddRGBPoint(-3024, 0, 0, 0, 0.5, 0.0);
+    lut->AddRGBPoint(-1000, .62, .36, .18, 0.5, 0.0);
+    lut->AddRGBPoint(-500, .88, .60, .29, 0.33, 0.45);
+    lut->AddRGBPoint(3071, .83, .66, 1, 0.5, 0.0);
 
     otf->AddPoint(-3024, 0, 0.5, 0.0);
     otf->AddPoint(-1000, 0, 0.5, 0.0);
@@ -142,7 +144,8 @@ void VolumerenderWidget::setNewImageData(vtkSmartPointer<vtkImageData> data)
     if (data) {
         mapper->SetInputData(data);
         mapper->Update();
-        emit imageDataChanged();
+        double* scalar_range = data->GetScalarRange();
+        emit imageDataChanged(data.Get());
         Render();
     }
 }
@@ -174,8 +177,8 @@ VolumerenderSettingsWidget* VolumerenderWidget::createSettingsWidget(QWidget* pa
 {
     if (!parent)
         parent = this;
-    auto wid = new VolumerenderSettingsWidget(mapper, volume->GetProperty(), parent);
-    connect(this, &VolumerenderWidget::imageDataChanged, wid, &VolumerenderSettingsWidget::dataChanged);
+    auto wid = new VolumerenderSettingsWidget(mapper, volume->GetProperty(), lut, parent);
+    connect(this, &VolumerenderWidget::imageDataChanged, [=](vtkImageData* data) { wid->setImageData(data); });
     connect(wid, &VolumerenderSettingsWidget::renderSettingsChanged, this, &VolumerenderWidget::Render);
     return wid;
 }

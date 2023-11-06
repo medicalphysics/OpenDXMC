@@ -13,19 +13,16 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with OpenDXMC. If not, see < https://www.gnu.org/licenses/>.
 
-Copyright 2019 Erlend Andersen
+Copyright 2023 Erlend Andersen
 */
 
 #pragma once
 
-#include <QColor>
-#include <QRgb>
-#include <QVector>
+#include <map>
+#include <string>
+#include <vector>
 
-#include <array>
-#include <cmath>
-
-const QVector<double> MAGMA = {
+const std::vector<double> MAGMA = {
     0.001462,
     0.000466,
     0.013866,
@@ -75,7 +72,7 @@ const QVector<double> MAGMA = {
     0.991438,
     0.749504,
 };
-const QVector<double> SPRING = {
+const std::vector<double> SPRING = {
     1.0,
     0.0,
     1.0,
@@ -125,7 +122,7 @@ const QVector<double> SPRING = {
     1.0,
     0.0,
 };
-const QVector<double> SUMMER = {
+const std::vector<double> SUMMER = {
     0.0,
     0.5,
     0.4,
@@ -175,7 +172,7 @@ const QVector<double> SUMMER = {
     1.0,
     0.4,
 };
-const QVector<double> COOL = {
+const std::vector<double> COOL = {
     0.0,
     1.0,
     1.0,
@@ -225,7 +222,7 @@ const QVector<double> COOL = {
     0.0,
     1.0,
 };
-const QVector<double> TERRAIN = {
+const std::vector<double> TERRAIN = {
     0.2,
     0.2,
     0.6,
@@ -275,7 +272,7 @@ const QVector<double> TERRAIN = {
     1.0,
     1.0,
 };
-const QVector<double> BRG = {
+const std::vector<double> BRG = {
     0.0,
     0.0,
     1.0,
@@ -325,7 +322,7 @@ const QVector<double> BRG = {
     1.0,
     0.0,
 };
-const QVector<double> HSV = {
+const std::vector<double> HSV = {
     1.0,
     0.0,
     0.0,
@@ -375,7 +372,7 @@ const QVector<double> HSV = {
     0.0,
     0.09375,
 };
-const QVector<double> BONE = {
+const std::vector<double> BONE = {
     0.0,
     0.0,
     0.0,
@@ -425,15 +422,22 @@ const QVector<double> BONE = {
     1.0,
     1.0,
 };
-const QVector<double> SIMPLE = { 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0 };
-const QVector<double> GRAY = { 0.0, 0.0, 0.0, 1.0, 1.0, 1.0 };
-const QVector<double> CT = { 0, 0, 0, .55, .25, .15, .88, .60, .29, 1, .94, .95, .83, .66, 1 };
-const QVector<double> HOT_IRON = { 0, 0, 0, 0.5, 0, 0, 1, 0, 0, 1, .5, 0, 1, 1, 1 };
-const QVector<double> PET = { 0, 0, 0, 0, .5, .5, .5, 0, 1, 1, .5, 0, 1, 1, 1 };
-const QVector<double> JET = { 0, 0, .5, 0, 0, 1, 0, 0.5, 1, 0, 1, 1, 0.5, 1, 0.5, 1, 1, 0, 1, 0.5, 0, 1, 0, 0, 0.5, 0, 0 };
-const QVector<double> TURBO = { 0.18995, 0.07176, 0.23217, 0.225, 0.16354, 0.45096, 0.25107, 0.25237, 0.63374, 0.26816, 0.33825, 0.7805, 0.27628, 0.42118, 0.89123, 0.27543, 0.50115, 0.96594, 0.25862, 0.57958, 0.99876, 0.21382, 0.65886, 0.97959, 0.15844, 0.73551, 0.92305, 0.11167, 0.80569, 0.84525, 0.09267, 0.86554, 0.7623, 0.12014, 0.91193, 0.6866, 0.19659, 0.94901, 0.59466, 0.30513, 0.97697, 0.48987, 0.42778, 0.99419, 0.38575, 0.54658, 0.99907, 0.29581, 0.64362, 0.98999, 0.23356, 0.72596, 0.9647, 0.2064, 0.80473, 0.92452, 0.20459, 0.8753, 0.87267, 0.21555, 0.93301, 0.81236, 0.22667, 0.97323, 0.74682, 0.22536, 0.99314, 0.67408, 0.20348, 0.99593, 0.58703, 0.16899, 0.9836, 0.49291, 0.12849, 0.95801, 0.39958, 0.08831, 0.92105, 0.31489, 0.05475, 0.87422, 0.24526, 0.03297, 0.81608, 0.18462, 0.01809, 0.74617, 0.13098, 0.00851, 0.66449, 0.08436, 0.00424, 0.57103, 0.04474, 0.00529 };
+const std::vector<double> SIMPLE = { 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0 };
+const std::vector<double> GRAY = { 0.0, 0.0, 0.0, 1.0, 1.0, 1.0 };
+const std::vector<double> CT = { 0, 0, 0, .55, .25, .15, .88, .60, .29, 1, .94, .95, .83, .66, 1 };
+const std::vector<double> HOT_IRON = { 0, 0, 0, 0.5, 0, 0, 1, 0, 0, 1, .5, 0, 1, 1, 1 };
+const std::vector<double> PET = { 0, 0, 0, 0, .5, .5, .5, 0, 1, 1, .5, 0, 1, 1, 1 };
+const std::vector<double> JET = { 0, 0, .5, 0, 0, 1, 0, 0.5, 1, 0, 1, 1, 0.5, 1, 0.5, 1, 1, 0, 1, 0.5, 0, 1, 0, 0, 0.5, 0, 0 };
+const std::vector<double> TURBO = { 0.18995, 0.07176, 0.23217, 0.225, 0.16354, 0.45096, 0.25107, 0.25237, 0.63374, 0.26816, 0.33825, 0.7805, 0.27628, 0.42118, 0.89123, 0.27543, 0.50115, 0.96594, 0.25862, 0.57958, 0.99876, 0.21382, 0.65886, 0.97959, 0.15844, 0.73551, 0.92305, 0.11167, 0.80569, 0.84525, 0.09267, 0.86554, 0.7623, 0.12014, 0.91193, 0.6866, 0.19659, 0.94901, 0.59466, 0.30513, 0.97697, 0.48987, 0.42778, 0.99419, 0.38575, 0.54658, 0.99907, 0.29581, 0.64362, 0.98999, 0.23356, 0.72596, 0.9647, 0.2064, 0.80473, 0.92452, 0.20459, 0.8753, 0.87267, 0.21555, 0.93301, 0.81236, 0.22667, 0.97323, 0.74682, 0.22536, 0.99314, 0.67408, 0.20348, 0.99593, 0.58703, 0.16899, 0.9836, 0.49291, 0.12849, 0.95801, 0.39958, 0.08831, 0.92105, 0.31489, 0.05475, 0.87422, 0.24526, 0.03297, 0.81608, 0.18462, 0.01809, 0.74617, 0.13098, 0.00851, 0.66449, 0.08436, 0.00424, 0.57103, 0.04474, 0.00529 };
 
-QColor getQColor(int index);
-std::array<double, 3> getColor(int index);
-std::array<double, 768> generateStandardColorTable(const QVector<double>& colorTable);
-QVector<QRgb> generateStandardQTColorTable(const QVector<double>& colorTable);
+const std::map<std::string, std::vector<double>> COLORMAPS = {
+    { "SIMPLE", SIMPLE },
+    { "GRAY", GRAY },
+    { "TURBO", TURBO },
+    { "CT", CT },
+    { "PET", PET },
+    { "BONE", BONE },
+    { "HOT_IRON", HOT_IRON },
+    { "MAGMA", MAGMA },
+    { "COOL", COOL }
+};

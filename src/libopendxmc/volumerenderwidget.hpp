@@ -24,6 +24,8 @@ Copyright 2023 Erlend Andersen
 
 #include <QVTKOpenGLNativeWidget.h>
 
+#include <vtkDiscretizableColorTransferFunction.h>
+#include <vtkImageData.h>
 #include <vtkOpenGLGPUVolumeRayCastMapper.h>
 #include <vtkOpenGLRenderer.h>
 #include <vtkSmartPointer.h>
@@ -39,7 +41,7 @@ public:
     VolumerenderSettingsWidget* createSettingsWidget(QWidget* parent = nullptr);
 
 signals:
-    void imageDataChanged();
+    void imageDataChanged(vtkImageData*);
 
 protected:
     void setupRenderingPipeline();
@@ -52,4 +54,5 @@ private:
     vtkSmartPointer<vtkVolume> volume = nullptr;
     vtkSmartPointer<vtkOpenGLRenderer> renderer = nullptr;
     vtkSmartPointer<vtkOpenGLGPUVolumeRayCastMapper> mapper = nullptr;
+    vtkSmartPointer<vtkDiscretizableColorTransferFunction> lut = nullptr;
 };

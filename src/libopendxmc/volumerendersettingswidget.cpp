@@ -16,9 +16,11 @@ along with OpenDXMC. If not, see < https://www.gnu.org/licenses/>.
 Copyright 2023 Erlend Andersen
 */
 
+#include <colormaps.hpp>
 #include <volumerendersettingswidget.hpp>
 
 #include <QCheckBox>
+#include <QComboBox>
 #include <QGridLayout>
 #include <QGroupBox>
 #include <QLabel>
@@ -58,9 +60,10 @@ SettingsCollection<T> getSettingsWidget(const QString& label, QWidget* parent)
     return s;
 }
 
-VolumerenderSettingsWidget::VolumerenderSettingsWidget(vtkOpenGLGPUVolumeRayCastMapper* mapper, vtkVolumeProperty* prop, QWidget* parent)
+VolumerenderSettingsWidget::VolumerenderSettingsWidget(vtkOpenGLGPUVolumeRayCastMapper* mapper, vtkVolumeProperty* prop, vtkDiscretizableColorTransferFunction* lut, QWidget* parent)
     : m_mapper(mapper)
     , m_property(prop)
+    , m_lut(lut)
     , QWidget(parent)
 {
     if (!mapper || !prop)
@@ -96,7 +99,7 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(vtkOpenGLGPUVolumeRayCast
     gir.widget->setValue(static_cast<int>(m_mapper->GetGlobalIlluminationReach() * 100));
     connect(gir.widget, &QSlider::valueChanged, [=](int value) {
         const float g = value / float { 100 };
-        m_mapper->SetGlobalIlluminationReach(g);
+        m_mapper->SetGlobalIlluminationReach(std::clamp(g, 0.f, 1.f));
         emit this->renderSettingsChanged();
     });
     shade_layout->addLayout(gir.layout);
@@ -106,7 +109,7 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(vtkOpenGLGPUVolumeRayCast
     vsb.widget->setValue(static_cast<int>(m_mapper->GetGlobalIlluminationReach() * 50));
     connect(vsb.widget, &QSlider::valueChanged, [=](int value) {
         const float g = value / float { 50 };
-        m_mapper->SetVolumetricScatteringBlending(g);
+        m_mapper->SetVolumetricScatteringBlending(std::clamp(g, 0.f, 2.f));
         emit this->renderSettingsChanged();
     });
     shade_layout->addLayout(vsb.layout);
@@ -116,7 +119,7 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(vtkOpenGLGPUVolumeRayCast
     ambient.widget->setValue(static_cast<int>(m_property->GetAmbient() * 100));
     connect(ambient.widget, &QSlider::valueChanged, [=](int value) {
         const float g = value / float { 100 };
-        m_property->SetAmbient(g);
+        m_property->SetAmbient(std::clamp(g, 0.f, 1.f));
         emit this->renderSettingsChanged();
     });
     shade_layout->addLayout(ambient.layout);
@@ -126,7 +129,7 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(vtkOpenGLGPUVolumeRayCast
     diffuse.widget->setValue(static_cast<int>(m_property->GetDiffuse() * 100));
     connect(diffuse.widget, &QSlider::valueChanged, [=](int value) {
         const float g = value / float { 100 };
-        m_property->SetDiffuse(g);
+        m_property->SetDiffuse(std::clamp(g, 0.f, 1.f));
         emit this->renderSettingsChanged();
     });
     shade_layout->addLayout(diffuse.layout);
@@ -136,7 +139,7 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(vtkOpenGLGPUVolumeRayCast
     specular.widget->setValue(static_cast<int>(m_property->GetSpecular() * 100));
     connect(specular.widget, &QSlider::valueChanged, [=](int value) {
         const float g = value / float { 100 };
-        m_property->SetSpecular(g);
+        m_property->SetSpecular(std::clamp(g, 0.f, 1.f));
         emit this->renderSettingsChanged();
     });
     shade_layout->addLayout(specular.layout);
@@ -145,7 +148,7 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(vtkOpenGLGPUVolumeRayCast
     auto specularpower = getSettingsWidget<QSlider>(tr("Specular power"), this);
     specularpower.widget->setValue(static_cast<int>(m_property->GetSpecularPower()));
     connect(specularpower.widget, &QSlider::valueChanged, [=](int value) {
-        const float g = value / float { 1 };
+        const float g = value;
         m_property->SetSpecularPower(g);
         emit this->renderSettingsChanged();
     });
@@ -156,31 +159,47 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(vtkOpenGLGPUVolumeRayCast
     sa.widget->setValue(static_cast<int>(m_property->GetScatteringAnisotropy() * 50) + 50);
     connect(sa.widget, &QSlider::valueChanged, [=](int value) {
         const float g = value / float { 50 } - 1;
-        m_property->SetScatteringAnisotropy(g);
+        m_property->SetScatteringAnisotropy(std::clamp(g, -1.f, 1.f));
         emit this->renderSettingsChanged();
     });
     shade_layout->addLayout(sa.layout);
 
-    auto slider = getSettingsWidget<QSlider>(tr("Slider1"), this);
-    layout->addLayout(slider.layout);
-
-    auto slider2 = getSettingsWidget<QSlider>(tr("Slider2"), this);
-    layout->addLayout(slider2.layout);
+    // colortable selector
+    auto color = getSettingsWidget<QComboBox>(tr("Color table"), this);
+    for (const auto& [name, ct] : COLORMAPS) {
+        color.widget->addItem(QString::fromStdString(name));
+    }
+    auto color_gray_index = color.widget->findText(QString::fromStdString("GRAY"));
+    color.widget->setCurrentIndex(color_gray_index);
+    setColorTable("GRAY");
+    connect(color.widget, &QComboBox::currentTextChanged, [=](const QString& cname) {
+        this->setColorTable(cname.toStdString());
+    });
+    layout->addLayout(color.layout);
 
     layout->addStretch();
     setLayout(layout);
 }
 
-void VolumerenderSettingsWidget::setMapper(vtkOpenGLGPUVolumeRayCastMapper* mapper)
+void VolumerenderSettingsWidget::setColorTable(const std::string& ct)
 {
-    m_mapper = mapper;
+    if (!COLORMAPS.contains(ct)) {
+        return;
+    }
+    if (m_lut->GetDiscretize()) {
+        // discreete
+    } else {
+
+        /*m_lut->RemoveAllPoints();
+        const auto& vec = COLORMAPS.at(ct);
+        for (std::size_t i = 0; i < vec.size(); i += 3) {
+            m_lut->add
+        }
+        */
+    }
 }
 
-void VolumerenderSettingsWidget::setVolumeProperty(vtkVolumeProperty* prop)
+void VolumerenderSettingsWidget::setImageData(vtkImageData* data)
 {
-    m_property = prop;
-}
-
-void VolumerenderSettingsWidget::dataChanged()
-{
+    data->GetScalarRange(m_data_range.data());
 }

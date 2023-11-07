@@ -95,3 +95,4 @@ ipch/
 /build
 /apps/out/*
 /.vscode
+/cpp.hint

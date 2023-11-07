@@ -177,7 +177,8 @@ VolumerenderSettingsWidget* VolumerenderWidget::createSettingsWidget(QWidget* pa
 {
     if (!parent)
         parent = this;
-    auto wid = new VolumerenderSettingsWidget(mapper, volume->GetProperty(), lut, parent);
+    auto prop = volume->GetProperty();
+    auto wid = new VolumerenderSettingsWidget(mapper, prop, prop->GetScalarOpacity(), lut, parent);
     connect(this, &VolumerenderWidget::imageDataChanged, [=](vtkImageData* data) { wid->setImageData(data); });
     connect(wid, &VolumerenderSettingsWidget::renderSettingsChanged, this, &VolumerenderWidget::Render);
     return wid;

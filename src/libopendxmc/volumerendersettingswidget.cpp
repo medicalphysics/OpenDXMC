@@ -60,10 +60,9 @@ SettingsCollection<T> getSettingsWidget(const QString& label, QWidget* parent)
     return s;
 }
 
-VolumerenderSettingsWidget::VolumerenderSettingsWidget(vtkOpenGLGPUVolumeRayCastMapper* mapper, vtkVolumeProperty* prop, vtkDiscretizableColorTransferFunction* lut, QWidget* parent)
+VolumerenderSettingsWidget::VolumerenderSettingsWidget(vtkOpenGLGPUVolumeRayCastMapper* mapper, vtkVolumeProperty* prop, vtkPiecewiseFunction* opacitylut, vtkDiscretizableColorTransferFunction* colorlut, QWidget* parent)
     : m_mapper(mapper)
     , m_property(prop)
-    , m_lut(lut)
     , QWidget(parent)
 {
     if (!mapper || !prop)
@@ -177,6 +176,10 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(vtkOpenGLGPUVolumeRayCast
     });
     layout->addLayout(color.layout);
 
+    // lutWidget
+    m_lut_widget = new VolumeLUTWidget(opacitylut, colorlut, this);
+    layout->addWidget(m_lut_widget);
+
     layout->addStretch();
     setLayout(layout);
 }
@@ -186,20 +189,12 @@ void VolumerenderSettingsWidget::setColorTable(const std::string& ct)
     if (!COLORMAPS.contains(ct)) {
         return;
     }
-    if (m_lut->GetDiscretize()) {
-        // discreete
-    } else {
 
-        /*m_lut->RemoveAllPoints();
-        const auto& vec = COLORMAPS.at(ct);
-        for (std::size_t i = 0; i < vec.size(); i += 3) {
-            m_lut->add
-        }
-        */
-    }
+    m_lut_widget->setColorData(COLORMAPS.at(ct));
 }
 
 void VolumerenderSettingsWidget::setImageData(vtkImageData* data)
 {
-    data->GetScalarRange(m_data_range.data());
+    if (data)
+        m_lut_widget->setImageData(data);
 }

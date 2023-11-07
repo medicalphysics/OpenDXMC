@@ -15,35 +15,32 @@ along with OpenDXMC. If not, see < https://www.gnu.org/licenses/>.
 
 Copyright 2023 Erlend Andersen
 */
+
 #pragma once
 
-#include <datacontainer.hpp>
-#include <volumelutwidget.hpp>
+#include <vtkDiscretizableColorTransferFunction.h>
+#include <vtkPiecewiseFunction.h>
 
 #include <QWidget>
 
-#include <vtkOpenGLGPUVolumeRayCastMapper.h>
-#include <vtkVolumeProperty.h>
+#include <array>
+#include <vector>
 
-#include <string>
-
-class vtkImageData;
 class vtkDiscretizableColorTransferFunction;
 class vtkPiecewiseFunction;
+class vtkImageData;
 
-class VolumerenderSettingsWidget : public QWidget {
+class VolumeLUTWidget : public QWidget {
     Q_OBJECT
 public:
-    VolumerenderSettingsWidget(vtkOpenGLGPUVolumeRayCastMapper*, vtkVolumeProperty*, vtkPiecewiseFunction* opacity_lut, vtkDiscretizableColorTransferFunction* colorlut, QWidget* parent = nullptr);
-
-    void setImageData(vtkImageData*);
-    void setColorTable(const std::string&);
+    VolumeLUTWidget(vtkPiecewiseFunction* lut, vtkDiscretizableColorTransferFunction* colorlut, QWidget* parent = nullptr);
+    void setColorData(const std::vector<double>& data);
+    void setImageData(vtkImageData* data);
 
 signals:
-    void renderSettingsChanged();
+    void scalarRangeChanged(double min, double max);
 
+protected:
 private:
-    vtkVolumeProperty* m_property = nullptr; // this is the volumeproperty
-    vtkOpenGLGPUVolumeRayCastMapper* m_mapper = nullptr;
-    VolumeLUTWidget* m_lut_widget = nullptr;
+    std::array<double, 2> m_value_range = { 0, 0 };
 };

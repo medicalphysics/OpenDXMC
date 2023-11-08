@@ -24,7 +24,6 @@ Copyright 2023 Erlend Andersen
 #include <QChartView>
 #include <QGraphicsLayout>
 #include <QLabel>
-// #include <QLineSeries>
 #include <QPointF>
 #include <QScatterSeries>
 #include <QVBoxLayout>

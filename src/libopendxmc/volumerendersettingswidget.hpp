@@ -25,22 +25,24 @@ Copyright 2023 Erlend Andersen
 #include <vtkOpenGLGPUVolumeRayCastMapper.h>
 #include <vtkVolumeProperty.h>
 
+
 #include <string>
 
 class vtkImageData;
 class vtkDiscretizableColorTransferFunction;
 class vtkPiecewiseFunction;
+class vtkVolume;
 
 class VolumerenderSettingsWidget : public QWidget {
     Q_OBJECT
 public:
-    VolumerenderSettingsWidget(vtkOpenGLGPUVolumeRayCastMapper*, vtkVolumeProperty*, vtkPiecewiseFunction* opacity_lut, vtkDiscretizableColorTransferFunction* colorlut, QWidget* parent = nullptr);
+    VolumerenderSettingsWidget(vtkOpenGLGPUVolumeRayCastMapper*, vtkVolume*, vtkPiecewiseFunction* opacity_lut, vtkDiscretizableColorTransferFunction* colorlut, QWidget* parent = nullptr);
 
     void setImageData(vtkImageData*);
     void setColorTable(const std::string&);
 
 signals:
-    void renderSettingsChanged();
+    void requestRender();
 
 private:
     vtkVolumeProperty* m_property = nullptr; // this is the volumeproperty

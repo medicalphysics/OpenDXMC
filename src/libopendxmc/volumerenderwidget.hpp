@@ -19,19 +19,15 @@ Copyright 2023 Erlend Andersen
 #pragma once
 
 #include <datacontainer.hpp>
+#include <volumerendersettings.hpp>
 
 #include <QWidget>
 
 #include <QVTKOpenGLNativeWidget.h>
-
-#include <vtkDiscretizableColorTransferFunction.h>
-#include <vtkImageData.h>
-#include <vtkOpenGLGPUVolumeRayCastMapper.h>
-#include <vtkOpenGLRenderer.h>
-#include <vtkSmartPointer.h>
 #include <vtkVolume.h>
 
 class VolumerenderSettingsWidget;
+class vtkImageData;
 
 class VolumerenderWidget : public QWidget {
     Q_OBJECT
@@ -45,14 +41,11 @@ signals:
 
 protected:
     void setupRenderingPipeline();
-    void Render();
-    void setNewImageData(vtkSmartPointer<vtkImageData> data);
+    void Render(bool rezoom_camera = false);
+    void setNewImageData(vtkSmartPointer<vtkImageData> data, bool rezoom_camera = false);
 
 private:
     std::shared_ptr<DataContainer> m_data = nullptr;
     QVTKOpenGLNativeWidget* openGLWidget = nullptr;
-    vtkSmartPointer<vtkVolume> volume = nullptr;
-    vtkSmartPointer<vtkOpenGLRenderer> renderer = nullptr;
-    vtkSmartPointer<vtkOpenGLGPUVolumeRayCastMapper> mapper = nullptr;
-    vtkSmartPointer<vtkDiscretizableColorTransferFunction> lut = nullptr;
+    VolumeRenderSettings m_settings;
 };

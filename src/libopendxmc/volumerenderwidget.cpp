@@ -48,54 +48,50 @@ VolumerenderWidget::VolumerenderWidget(QWidget* parent)
 
 void VolumerenderWidget::setupRenderingPipeline()
 {
-    renderer = vtkSmartPointer<vtkOpenGLRenderer>::New();
-    openGLWidget->renderWindow()->AddRenderer(renderer);
+    m_settings.renderer = vtkSmartPointer<vtkOpenGLRenderer>::New();
+    openGLWidget->renderWindow()->AddRenderer(m_settings.renderer);
 
     auto renderWindowInteractor = openGLWidget->interactor();
     auto interactorStyle = vtkSmartPointer<vtkInteractorStyleTrackballCamera>::New();
-    interactorStyle->SetDefaultRenderer(renderer);
+    interactorStyle->SetDefaultRenderer(m_settings.renderer);
     renderWindowInteractor->SetInteractorStyle(interactorStyle);
 
     // create tables
     auto otf = vtkSmartPointer<vtkPiecewiseFunction>::New();
 
     // create volume and mapper
-    mapper = vtkSmartPointer<vtkOpenGLGPUVolumeRayCastMapper>::New();
-    mapper->LockSampleDistanceToInputSpacingOn();
-    mapper->AutoAdjustSampleDistancesOn();
-    volume = vtkSmartPointer<vtkVolume>::New();
-    volume->SetMapper(mapper);
+    m_settings.mapper = vtkSmartPointer<vtkOpenGLGPUVolumeRayCastMapper>::New();
+    m_settings.mapper->LockSampleDistanceToInputSpacingOn();
+    m_settings.mapper->AutoAdjustSampleDistancesOn();
+    m_settings.volume = vtkSmartPointer<vtkVolume>::New();
+    m_settings.volume->SetMapper(m_settings.mapper);
 
-    lut = vtkSmartPointer<vtkDiscretizableColorTransferFunction>::New();
-    lut->SetIndexedLookup(false); // true for indexed lookup
-    lut->SetDiscretize(false);
-    lut->SetClamping(true); // map values outside range to closest value not black
+    m_settings.color_lut = vtkSmartPointer<vtkDiscretizableColorTransferFunction>::New();
+    m_settings.color_lut->SetIndexedLookup(false); // true for indexed lookup
+    m_settings.color_lut->SetDiscretize(false);
+    m_settings.color_lut->SetClamping(true); // map values outside range to closest value not black
 
     auto volumeProperty = vtkSmartPointer<vtkVolumeProperty>::New();
     volumeProperty->SetIndependentComponents(true);
     volumeProperty->SetScalarOpacity(otf);
     volumeProperty->SetInterpolationTypeToLinear();
-    volumeProperty->SetColor(lut);
-    volume->SetProperty(volumeProperty);
-    renderer->AddVolume(volume);
-    renderer->ResetCamera();
+    volumeProperty->SetColor(m_settings.color_lut);
+    m_settings.volume->SetProperty(volumeProperty);
+    m_settings.renderer->AddVolume(m_settings.volume);
+    m_settings.renderer->ResetCamera();
 
-    auto camera = renderer->GetActiveCamera();
-    camera->SetPosition(56.8656, -297.084, 78.913);
-    camera->SetFocalPoint(109.139, 120.604, 63.5486);
-    camera->SetViewUp(-0.00782421, -0.0357807, -0.999329);
-    camera->SetDistance(421.227);
-    camera->SetClippingRange(146.564, 767.987);
+    auto camera = m_settings.renderer->GetActiveCamera();
 
-    lut->AddRGBPoint(-3024, 0, 0, 0, 0.5, 0.0);
-    lut->AddRGBPoint(-1000, .62, .36, .18, 0.5, 0.0);
-    lut->AddRGBPoint(-500, .88, .60, .29, 0.33, 0.45);
-    lut->AddRGBPoint(3071, .83, .66, 1, 0.5, 0.0);
+    m_settings.color_lut->AddRGBPoint(-3024, 0, 0, 0, 0.5, 0.0);
+    m_settings.color_lut->AddRGBPoint(-1000, .62, .36, .18, 0.5, 0.0);
+    m_settings.color_lut->AddRGBPoint(-500, .88, .60, .29, 0.33, 0.45);
+    m_settings.color_lut->AddRGBPoint(3071, .83, .66, 1, 0.5, 0.0);
 
-    otf->AddPoint(-3024, 0, 0.5, 0.0);
-    otf->AddPoint(-1000, 0, 0.5, 0.0);
-    otf->AddPoint(-500, 1.0, 0.33, 0.45);
-    otf->AddPoint(3071, 1.0, 0.5, 0.0);
+    otf->AddPoint(-1.0, 0.0, 0.0, 0.0);
+    otf->AddPoint(-0.5, 0.0, 0.0, 0.0);
+    otf->AddPoint(0.0, 1.0, 0.0, 0.0);
+    otf->AddPoint(0.5, 0.0, 0.0, 0.0);
+    otf->AddPoint(1.0, 0.0, 0.0, 0.0);
 
     /*
 
@@ -134,19 +130,20 @@ void VolumerenderWidget::setupRenderingPipeline()
 */
 }
 
-void VolumerenderWidget::Render()
+void VolumerenderWidget::Render(bool rezoom_camera)
 {
+    if (rezoom_camera)
+        m_settings.renderer->ResetCamera();
     openGLWidget->renderWindow()->Render();
 }
 
-void VolumerenderWidget::setNewImageData(vtkSmartPointer<vtkImageData> data)
+void VolumerenderWidget::setNewImageData(vtkSmartPointer<vtkImageData> data, bool rezoom_camera)
 {
     if (data) {
-        mapper->SetInputData(data);
-        mapper->Update();
-        double* scalar_range = data->GetScalarRange();
+        m_settings.mapper->SetInputData(data);
+        m_settings.mapper->Update();
         emit imageDataChanged(data.Get());
-        Render();
+        Render(rezoom_camera);
     }
 }
 
@@ -166,7 +163,7 @@ void VolumerenderWidget::updateImageData(std::shared_ptr<DataContainer> data)
     if (data) {
         if (data->hasImage(DataContainer::ImageType::CT) && uid_is_new) {
             auto vtkimage = data->vtkImage(DataContainer::ImageType::CT);
-            setNewImageData(vtkimage);
+            setNewImageData(vtkimage, uid_is_new);
         }
     }
 
@@ -177,10 +174,9 @@ VolumerenderSettingsWidget* VolumerenderWidget::createSettingsWidget(QWidget* pa
 {
     if (!parent)
         parent = this;
-    auto prop = volume->GetProperty();
-    auto wid = new VolumerenderSettingsWidget(mapper, volume, prop->GetScalarOpacity(), lut, parent);
+
+    auto wid = new VolumerenderSettingsWidget(m_settings, parent);
     connect(this, &VolumerenderWidget::imageDataChanged, [=](vtkImageData* data) { wid->setImageData(data); });
-    connect(wid, &VolumerenderSettingsWidget::requestRender, this, &VolumerenderWidget::Render);
     return wid;
 }
 

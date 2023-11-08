@@ -18,31 +18,27 @@ Copyright 2023 Erlend Andersen
 
 #pragma once
 
-#include <vtkDiscretizableColorTransferFunction.h>
-#include <vtkPiecewiseFunction.h>
+#include <volumerendersettings.hpp>
 
 #include <QWidget>
 
 #include <array>
 #include <vector>
 
-class vtkDiscretizableColorTransferFunction;
-class vtkPiecewiseFunction;
 class vtkImageData;
-class vtkVolume;
 
 class VolumeLUTWidget : public QWidget {
     Q_OBJECT
 public:
-    VolumeLUTWidget(vtkVolume* volume, vtkPiecewiseFunction* lut, vtkDiscretizableColorTransferFunction* colorlut, QWidget* parent = nullptr);
+    VolumeLUTWidget(const VolumeRenderSettings& settings, QWidget* parent = nullptr);
     void setColorData(const std::vector<double>& data);
     void setImageData(vtkImageData* data);
 
 signals:
     void scalarRangeChanged(double min, double max);
-    void requestRender();
 
 protected:
 private:
+    VolumeRenderSettings m_settings;
     std::array<double, 2> m_value_range = { 0, 0 };
 };

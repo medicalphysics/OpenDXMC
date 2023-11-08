@@ -19,7 +19,6 @@ Copyright 2023 Erlend Andersen
 #include <colormaps.hpp>
 #include <volumerendersettingswidget.hpp>
 
-
 #include <QCheckBox>
 #include <QComboBox>
 #include <QGridLayout>
@@ -63,12 +62,11 @@ SettingsCollection<T> getSettingsWidget(const QString& label, QWidget* parent)
     return s;
 }
 
-VolumerenderSettingsWidget::VolumerenderSettingsWidget(vtkOpenGLGPUVolumeRayCastMapper* mapper, vtkVolume* volume, vtkPiecewiseFunction* opacitylut, vtkDiscretizableColorTransferFunction* colorlut, QWidget* parent)
-    : m_mapper(mapper)
-    , m_property(volume->GetProperty())
+VolumerenderSettingsWidget::VolumerenderSettingsWidget(const VolumeRenderSettings& settings, QWidget* parent)
+    : m_settings(settings)
     , QWidget(parent)
 {
-    if (!mapper || !volume || !m_property)
+    if (!m_settings.valid())
         return;
 
     // Main layout
@@ -76,93 +74,94 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(vtkOpenGLGPUVolumeRayCast
 
     // jittering
     auto jittering = getSettingsWidget<QCheckBox>(tr("Use jittering"), this);
-    jittering.widget->setChecked(m_mapper->GetUseJittering());
+    jittering.widget->setChecked(m_settings.mapper->GetUseJittering());
     connect(jittering.widget, &QCheckBox::stateChanged, [=](int state) {
-        m_mapper->SetUseJittering(state != 0);
-        emit this->requestRender();
+        m_settings.mapper->SetUseJittering(state != 0);
+        m_settings.render();
     });
     layout->addLayout(jittering.layout);
 
+    auto vprop = m_settings.getVolumeProperty();
     // shadebox
     auto shadebox = new QGroupBox(tr("Shading"), this);
     auto shade_layout = new QVBoxLayout(this);
     shade_layout->setContentsMargins(0, 0, 0, 0);
     shadebox->setLayout(shade_layout);
     shadebox->setCheckable(true);
-    shadebox->setChecked(m_property->GetShade() == 1);
+    shadebox->setChecked(vprop->GetShade() == 1);
     connect(shadebox, &QGroupBox::toggled, [=](bool toggle) {
-        m_property->SetShade(toggle ? 1 : 0);
-        emit this->requestRender();
+        vprop->SetShade(toggle ? 1 : 0);
+        m_settings.render();
     });
     layout->addWidget(shadebox);
 
     // Global illumination reach
     auto gir = getSettingsWidget<QSlider>(tr("Global illumination reach"), shadebox);
-    gir.widget->setValue(static_cast<int>(m_mapper->GetGlobalIlluminationReach() * 100));
+    gir.widget->setValue(static_cast<int>(m_settings.mapper->GetGlobalIlluminationReach() * 100));
     connect(gir.widget, &QSlider::valueChanged, [=](int value) {
         const float g = value / float { 100 };
-        m_mapper->SetGlobalIlluminationReach(std::clamp(g, 0.f, 1.f));
-        emit this->requestRender();
+        m_settings.mapper->SetGlobalIlluminationReach(std::clamp(g, 0.f, 1.f));
+        m_settings.render();
     });
     shade_layout->addLayout(gir.layout);
 
     // Volumetric Scattering blending
     auto vsb = getSettingsWidget<QSlider>(tr("Volumetric scattering blending"), this);
-    vsb.widget->setValue(static_cast<int>(m_mapper->GetGlobalIlluminationReach() * 50));
+    vsb.widget->setValue(static_cast<int>(m_settings.mapper->GetGlobalIlluminationReach() * 50));
     connect(vsb.widget, &QSlider::valueChanged, [=](int value) {
         const float g = value / float { 50 };
-        m_mapper->SetVolumetricScatteringBlending(std::clamp(g, 0.f, 2.f));
-        emit this->requestRender();
+        m_settings.mapper->SetVolumetricScatteringBlending(std::clamp(g, 0.f, 2.f));
+        m_settings.render();
     });
     shade_layout->addLayout(vsb.layout);
 
     // Ambient
     auto ambient = getSettingsWidget<QSlider>(tr("Ambient"), this);
-    ambient.widget->setValue(static_cast<int>(m_property->GetAmbient() * 100));
+    ambient.widget->setValue(static_cast<int>(vprop->GetAmbient() * 100));
     connect(ambient.widget, &QSlider::valueChanged, [=](int value) {
         const float g = value / float { 100 };
-        m_property->SetAmbient(std::clamp(g, 0.f, 1.f));
-        emit this->requestRender();
+        vprop->SetAmbient(std::clamp(g, 0.f, 1.f));
+        m_settings.render();
     });
     shade_layout->addLayout(ambient.layout);
 
     // Diffuse
     auto diffuse = getSettingsWidget<QSlider>(tr("Diffuse"), this);
-    diffuse.widget->setValue(static_cast<int>(m_property->GetDiffuse() * 100));
+    diffuse.widget->setValue(static_cast<int>(vprop->GetDiffuse() * 100));
     connect(diffuse.widget, &QSlider::valueChanged, [=](int value) {
         const float g = value / float { 100 };
-        m_property->SetDiffuse(std::clamp(g, 0.f, 1.f));
-        emit this->requestRender();
+        vprop->SetDiffuse(std::clamp(g, 0.f, 1.f));
+        m_settings.render();
     });
     shade_layout->addLayout(diffuse.layout);
 
     // Specular
     auto specular = getSettingsWidget<QSlider>(tr("Specular"), this);
-    specular.widget->setValue(static_cast<int>(m_property->GetSpecular() * 100));
+    specular.widget->setValue(static_cast<int>(vprop->GetSpecular() * 100));
     connect(specular.widget, &QSlider::valueChanged, [=](int value) {
         const float g = value / float { 100 };
-        m_property->SetSpecular(std::clamp(g, 0.f, 1.f));
-        emit this->requestRender();
+        vprop->SetSpecular(std::clamp(g, 0.f, 1.f));
+        m_settings.render();
     });
     shade_layout->addLayout(specular.layout);
 
     // Specular power
     auto specularpower = getSettingsWidget<QSlider>(tr("Specular power"), this);
-    specularpower.widget->setValue(static_cast<int>(m_property->GetSpecularPower()));
+    specularpower.widget->setValue(static_cast<int>(vprop->GetSpecularPower()));
     connect(specularpower.widget, &QSlider::valueChanged, [=](int value) {
         const float g = value;
-        m_property->SetSpecularPower(g);
-        emit this->requestRender();
+        vprop->SetSpecularPower(g);
+        m_settings.render();
     });
     shade_layout->addLayout(specularpower.layout);
 
-    // Scattering anisotropy  -1
+    // Scattering anisotropy
     auto sa = getSettingsWidget<QSlider>(tr("Scattering anisotropy"), this);
-    sa.widget->setValue(static_cast<int>(m_property->GetScatteringAnisotropy() * 50) + 50);
+    sa.widget->setValue(static_cast<int>(vprop->GetScatteringAnisotropy() * 50) + 50);
     connect(sa.widget, &QSlider::valueChanged, [=](int value) {
         const float g = value / float { 50 } - 1;
-        m_property->SetScatteringAnisotropy(std::clamp(g, -1.f, 1.f));
-        emit this->requestRender();
+        vprop->SetScatteringAnisotropy(std::clamp(g, -1.f, 1.f));
+        m_settings.render();
     });
     shade_layout->addLayout(sa.layout);
 
@@ -180,9 +179,9 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(vtkOpenGLGPUVolumeRayCast
     layout->addLayout(color.layout);
 
     // lutWidget
-    m_lut_widget = new VolumeLUTWidget(volume, opacitylut, colorlut, this);
+    m_lut_widget = new VolumeLUTWidget(m_settings, this);
     layout->addWidget(m_lut_widget);
-    connect(m_lut_widget, &VolumeLUTWidget::requestRender, this, &VolumerenderSettingsWidget::requestRender);
+
     layout->addStretch();
     setLayout(layout);
 }

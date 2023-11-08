@@ -37,5 +37,6 @@ public:
 
 private:
     VolumeRenderSettings m_settings;
-    VolumeLUTWidget* m_lut_widget = nullptr;
+    VolumeLUTWidget* m_lut_opacity_widget = nullptr;
+    VolumeLUTWidget* m_lut_gradient_widget = nullptr;
 };

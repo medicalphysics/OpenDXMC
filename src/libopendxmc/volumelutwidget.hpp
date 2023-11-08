@@ -30,15 +30,18 @@ class vtkImageData;
 class VolumeLUTWidget : public QWidget {
     Q_OBJECT
 public:
-    VolumeLUTWidget(const VolumeRenderSettings& settings, QWidget* parent = nullptr);
+    enum class LUTType {
+        Opacity,
+        Gradient
+    };
+    VolumeLUTWidget(const VolumeRenderSettings& settings, LUTType type = LUTType::Opacity, QWidget* parent = nullptr);
     void setColorData(const std::vector<double>& data);
     void setImageData(vtkImageData* data);
 
 signals:
-    void scalarRangeChanged(double min, double max);
+    void imageDataChanged(vtkImageData*);
 
 protected:
 private:
     VolumeRenderSettings m_settings;
-    std::array<double, 2> m_value_range = { 0, 0 };
 };

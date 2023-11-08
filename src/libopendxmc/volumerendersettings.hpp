@@ -33,15 +33,24 @@ struct VolumeRenderSettings {
     vtkSmartPointer<vtkVolume> volume = nullptr;
 
     vtkVolumeProperty* getVolumeProperty() { return volume ? volume->GetProperty() : nullptr; }
+
     vtkPiecewiseFunction* getOpacityLut()
     {
         auto prop = getVolumeProperty();
         return prop ? prop->GetScalarOpacity() : nullptr;
     }
+
+    vtkPiecewiseFunction* getGradientLut()
+    {
+        auto prop = getVolumeProperty();
+        return prop ? prop->GetGradientOpacity() : nullptr;
+    }
+
     bool valid()
     {
         return renderer && mapper && color_lut && volume && getVolumeProperty();
     }
+
     void render()
     {
         auto renwin = renderer ? renderer->GetRenderWindow() : nullptr;

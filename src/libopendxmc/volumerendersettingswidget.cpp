@@ -179,8 +179,12 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(const VolumeRenderSetting
     layout->addLayout(color.layout);
 
     // lutWidget
-    m_lut_widget = new VolumeLUTWidget(m_settings, this);
-    layout->addWidget(m_lut_widget);
+    m_lut_opacity_widget = new VolumeLUTWidget(m_settings, VolumeLUTWidget::LUTType::Opacity, this);
+    layout->addWidget(m_lut_opacity_widget);
+
+    // lutWidget
+    m_lut_gradient_widget = new VolumeLUTWidget(m_settings, VolumeLUTWidget::LUTType::Gradient, this);
+    layout->addWidget(m_lut_gradient_widget);
 
     layout->addStretch();
     setLayout(layout);
@@ -191,12 +195,13 @@ void VolumerenderSettingsWidget::setColorTable(const std::string& ct)
     if (!COLORMAPS.contains(ct)) {
         return;
     }
-
-    m_lut_widget->setColorData(COLORMAPS.at(ct));
+    m_lut_opacity_widget->setColorData(COLORMAPS.at(ct));
 }
 
 void VolumerenderSettingsWidget::setImageData(vtkImageData* data)
 {
-    if (data)
-        m_lut_widget->setImageData(data);
+    if (data) {
+        m_lut_opacity_widget->setImageData(data);
+        m_lut_gradient_widget->setImageData(data);
+    }
 }

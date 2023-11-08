@@ -20,8 +20,10 @@ Copyright 2023 Erlend Andersen
 #include <volumerendersettings.hpp>
 
 #include <vtkImageData.h>
+#include <vtkImageGradientMagnitude.h>
 
 #include <QChartView>
+#include <QCheckBox>
 #include <QGraphicsLayout>
 #include <QLabel>
 #include <QPointF>
@@ -34,10 +36,16 @@ Copyright 2023 Erlend Andersen
 
 class LUTSeries : public QScatterSeries {
 public:
-    LUTSeries(const VolumeRenderSettings& settings, QObject* parent = nullptr)
-        : m_settings(settings)
+    LUTSeries(const VolumeRenderSettings& settings, VolumeLUTWidget::LUTType type, QObject* parent = nullptr)
+        : m_type(type)
+        , m_settings(settings)
         , QScatterSeries(parent)
     {
+        if (type == VolumeLUTWidget::LUTType::Opacity)
+            m_lut = m_settings.getOpacityLut();
+        else if (type == VolumeLUTWidget::LUTType::Gradient)
+            m_lut = m_settings.getGradientLut();
+
         setMarkerSize(7);
         setPointsVisible(true);
         setPointLabelsFormat("@xPoint");
@@ -57,11 +65,11 @@ public:
                 updateLUT();
             }
         });
-        auto olut = m_settings.getOpacityLut();
-        olut->GetRange(m_scalar_range.data());
-        for (int i = 0; i < olut->GetSize(); ++i) {
+
+        m_lut->GetRange(m_scalar_range.data());
+        for (int i = 0; i < m_lut->GetSize(); ++i) {
             std::array<double, 4> data;
-            olut->GetNodeValue(i, data.data());
+            m_lut->GetNodeValue(i, data.data());
             append(data[0], data[1]);
         }
     }
@@ -81,34 +89,29 @@ public:
         return idx;
     }
 
-    void setScalarRange(double min, double max)
+    void setImageData(vtkImageData* data)
     {
-        auto olut = m_settings.getOpacityLut();
-        if (olut->GetSize() != this->count()) {
-            auto valid_adjust = olut->AdjustRange(m_scalar_range.data());
-            this->clear();
-            for (int i = 0; i < olut->GetSize(); ++i) {
-                std::array<double, 4> buf;
-                olut->GetNodeValue(i, buf.data());
-                append(buf[0], buf[1]);
-            }
+        if (!data)
             return;
-        }
 
-        for (int i = 0; i < count(); ++i) {
-            auto point = this->at(i);
-            auto f = (point.x() - m_scalar_range[0]) / (m_scalar_range[1] - m_scalar_range[0]);
-            point.setX(min + f * (max - min));
-            this->replace(i, point);
+        if (m_type == VolumeLUTWidget::LUTType::Opacity) {
+            double range[2];
+            data->GetScalarRange(range);
+            setScalarRange(range[0], range[1]);
+        } else if (m_type == VolumeLUTWidget::LUTType::Gradient) {
+            auto grad_pipe = vtkSmartPointer<vtkImageGradientMagnitude>::New();
+            grad_pipe->SetDimensionality(3);
+            grad_pipe->SetInputData(data);
+            grad_pipe->Update();
+            double range[2];
+            grad_pipe->GetOutput()->GetScalarRange(range);
+            setScalarRange(range[0], range[1]);
         }
-
-        m_scalar_range = { min, max };
-        updateLUT();
     }
 
     int currentClickedPoint() const { return m_pIdx_edit; }
     void setCurrentClickedPoint(int d) { m_pIdx_edit = d; }
-    const std::array<double, 2> scalarRange() const { return m_scalar_range; }
+    const std::array<double, 2>& scalarRange() const { return m_scalar_range; }
 
     void swapPointsX(int idx1, int idx2)
     {
@@ -136,25 +139,52 @@ public:
 
     void updateLUT()
     {
-        auto olut = m_settings.getOpacityLut();
-        olut->RemoveAllPoints();
+
+        m_lut->RemoveAllPoints();
         for (int i = 0; i < count(); ++i) {
             const auto& p = at(i);
-            olut->AddPoint(p.x(), p.y());
+            m_lut->AddPoint(p.x(), p.y());
         }
         m_settings.volume->Update();
         m_settings.render();
     }
 
+protected:
+    void setScalarRange(double min, double max)
+    {
+        if (m_lut->GetSize() != this->count()) {
+            auto valid_adjust = m_lut->AdjustRange(m_scalar_range.data());
+            this->clear();
+            for (int i = 0; i < m_lut->GetSize(); ++i) {
+                std::array<double, 4> buf;
+                m_lut->GetNodeValue(i, buf.data());
+                append(buf[0], buf[1]);
+            }
+            return;
+        }
+
+        for (int i = 0; i < count(); ++i) {
+            auto point = this->at(i);
+            auto f = (point.x() - m_scalar_range[0]) / (m_scalar_range[1] - m_scalar_range[0]);
+            point.setX(min + f * (max - min));
+            this->replace(i, point);
+        }
+
+        m_scalar_range = { min, max };
+        updateLUT();
+    }
+
 private:
+    VolumeLUTWidget::LUTType m_type = VolumeLUTWidget::LUTType::Opacity;
     int m_pIdx_edit = -1;
     std::array<double, 2> m_scalar_range = { 0, 0 };
     VolumeRenderSettings m_settings;
+    vtkPiecewiseFunction* m_lut = nullptr;
 };
 
 class LUTChartView : public QChartView {
 public:
-    LUTChartView(const VolumeRenderSettings& settings, QWidget* parent = nullptr)
+    LUTChartView(const VolumeRenderSettings& settings, VolumeLUTWidget::LUTType type, QWidget* parent = nullptr)
         : QChartView(parent)
     {
         setContentsMargins(0, 0, 0, 0);
@@ -169,7 +199,7 @@ public:
         // chart->setBackgroundRoundness(0);
         chart()->setTheme(QChart::ChartThemeDark);
         chart()->setBackgroundVisible(false);
-        chart()->setMargins(QMargins { 0, 0, 0, 0 });
+        // chart()->setMargins(QMargins { 0, 0, 0, 0 });
         chart()->legend()->setVisible(false);
 
         m_axisx = new QValueAxis(chart());
@@ -186,7 +216,7 @@ public:
         axisy->setTickCount(2);
         // axisy->hide();
 
-        m_lut_series = new LUTSeries(settings, chart());
+        m_lut_series = new LUTSeries(settings, type, chart());
         connect(m_lut_series, &LUTSeries::pressed, [=](const auto& unused) { this->chart()->setAnimationOptions(QChart::AnimationOption::NoAnimation); });
         connect(m_lut_series, &LUTSeries::released, [=](const auto& unused) { this->chart()->setAnimationOptions(QChart::AnimationOption::SeriesAnimations); });
         chart()->addSeries(m_lut_series);
@@ -194,22 +224,26 @@ public:
         m_lut_series->attachAxis(axisy);
     }
 
-    void setScalarRange(double min, double max)
+    void setImageData(vtkImageData* data)
     {
-        m_lut_series->setScalarRange(min, max);
-        m_axisx->setMin(min);
-        m_axisx->setMax(max);
+        m_lut_series->setImageData(data);
+        auto range = m_lut_series->scalarRange();
+        m_axisx->setMin(range[0]);
+        m_axisx->setMax(range[1]);
     }
 
     void mouseMoveEvent(QMouseEvent* event)
     {
         QChartView::mouseMoveEvent(event);
         if (const int pIdx = m_lut_series->currentClickedPoint(); (pIdx >= 0) && (event->buttons() == Qt::LeftButton)) {
+
             QPointF pos_scene = this->mapToScene(event->pos());
             QPointF pos = chart()->mapToValue(pos_scene, m_lut_series);
+
             const auto& scalar_range = m_lut_series->scalarRange();
             pos.setX(std::clamp(pos.x(), scalar_range[0], scalar_range[1]));
             pos.setY(std::clamp(pos.y(), 0.0, 1.0));
+
             m_lut_series->replace(pIdx, pos);
 
             // are we still sorted?
@@ -242,22 +276,43 @@ private:
     QValueAxis* m_axisx = nullptr;
 };
 
-VolumeLUTWidget::VolumeLUTWidget(const VolumeRenderSettings& settings, QWidget* parent)
+VolumeLUTWidget::VolumeLUTWidget(const VolumeRenderSettings& settings, VolumeLUTWidget::LUTType type, QWidget* parent)
     : m_settings(settings)
     , QWidget(parent)
 {
     auto layout = new QVBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
 
-    auto view = new LUTChartView(m_settings, this);
-    connect(this, &VolumeLUTWidget::scalarRangeChanged, [=](double min, double max) { view->setScalarRange(min, max); });
-    auto view_label = new QLabel("Opacity LUT", this);
-    view_label->setAlignment(Qt::AlignHCenter);
-    layout->addWidget(view_label);
+    auto view = new LUTChartView(m_settings, type, this);
+    connect(this, &VolumeLUTWidget::imageDataChanged, [=](vtkImageData* data) { view->setImageData(data); });
+
+    if (type == LUTType::Opacity) {
+        auto view_label = new QLabel("Opacity LUT", this);
+        view_label->setAlignment(Qt::AlignHCenter);
+        layout->addWidget(view_label);
+
+    } else if (type == LUTType::Gradient) {
+        auto checkbox = new QCheckBox("Gradient LUT");
+        checkbox->setCheckState(Qt::CheckState::Unchecked);
+        this->m_settings.getVolumeProperty()->SetDisableGradientOpacity(true);
+        connect(checkbox, &QCheckBox::stateChanged, [=](int state) {
+            if (state == 0) {
+                view->setEnabled(false);
+                this->m_settings.getVolumeProperty()->SetDisableGradientOpacity(true);
+            } else {
+                view->setEnabled(true);
+                this->m_settings.getVolumeProperty()->SetDisableGradientOpacity(false);
+            }
+            m_settings.render();
+        });
+
+        layout->addWidget(checkbox);
+        view->setDisabled(true);
+    }
+
     layout->addWidget(view);
 
     setLayout(layout);
-    layout->addStretch();
 }
 
 void VolumeLUTWidget::setColorData(const std::vector<double>& data)
@@ -266,7 +321,6 @@ void VolumeLUTWidget::setColorData(const std::vector<double>& data)
 
 void VolumeLUTWidget::setImageData(vtkImageData* data)
 {
-    // set data range
-    data->GetScalarRange(m_value_range.data());
-    emit scalarRangeChanged(m_value_range[0], m_value_range[1]);
+
+    emit imageDataChanged(data);
 }

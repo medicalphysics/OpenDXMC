@@ -58,6 +58,7 @@ find_package(VTK COMPONENTS
       ImagingCore
       ImagingMath
       ImagingGeneral
+      ImagingStatistics
       ImagingHybrid
       ImagingFourier
       InteractionStyle

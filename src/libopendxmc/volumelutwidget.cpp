@@ -19,13 +19,16 @@ Copyright 2023 Erlend Andersen
 #include <volumelutwidget.hpp>
 #include <volumerendersettings.hpp>
 
+#include <vtkIdTypeArray.h>
 #include <vtkImageData.h>
 #include <vtkImageGradientMagnitude.h>
+#include <vtkImageHistogram.h>
 
 #include <QChartView>
 #include <QCheckBox>
 #include <QGraphicsLayout>
 #include <QLabel>
+#include <QLineSeries>
 #include <QPointF>
 #include <QScatterSeries>
 #include <QVBoxLayout>
@@ -33,6 +36,7 @@ Copyright 2023 Erlend Andersen
 
 #include <algorithm>
 #include <limits>
+#include <vector>
 
 class LUTSeries : public QScatterSeries {
 public:
@@ -98,6 +102,33 @@ public:
             double range[2];
             data->GetScalarRange(range);
             setScalarRange(range[0], range[1]);
+
+            for (auto series : chart()->series())
+                if (series != this)
+                    chart()->removeSeries(series);
+
+            auto hseries = new QLineSeries(chart());
+            chart()->addSeries(hseries);
+            hseries->setOpacity(0.4);
+            hseries->setPointsVisible(false);
+            for (auto axis : chart()->axes())
+                hseries->attachAxis(axis);
+
+            auto hist_pipe = vtkSmartPointer<vtkImageHistogram>::New();
+            hist_pipe->SetMaximumNumberOfBins(128);
+            hist_pipe->AutomaticBinningOn();
+            hist_pipe->SetInputData(data);
+            hist_pipe->Update();
+
+            const auto start = hist_pipe->GetBinOrigin();
+            const auto step = hist_pipe->GetBinSpacing();
+            auto hist = hist_pipe->GetHistogram();
+            const auto norm = 10 * static_cast<double>(hist_pipe->GetTotal()) / (hist_pipe->GetNumberOfBins());
+            for (int i = 0; i < hist_pipe->GetNumberOfBins(); ++i) {
+                auto y = hist->GetTuple(i);
+                const auto x = start + step * i;
+                hseries->append(x, y[0] / norm);
+            }
         } else if (m_type == VolumeLUTWidget::LUTType::Gradient) {
             auto grad_pipe = vtkSmartPointer<vtkImageGradientMagnitude>::New();
             grad_pipe->SetDimensionality(3);

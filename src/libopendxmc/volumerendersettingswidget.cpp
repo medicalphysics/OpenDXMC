@@ -195,7 +195,8 @@ void VolumerenderSettingsWidget::setColorTable(const std::string& ct)
     if (!COLORMAPS.contains(ct)) {
         return;
     }
-    m_lut_opacity_widget->setColorData(COLORMAPS.at(ct));
+    const auto& map = COLORMAPS.at(ct);
+
 }
 
 void VolumerenderSettingsWidget::setImageData(vtkImageData* data)

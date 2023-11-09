@@ -27,7 +27,6 @@ Copyright 2023 Erlend Andersen
 #include <vtkVolume.h>
 
 class VolumerenderSettingsWidget;
-class vtkImageData;
 
 class VolumerenderWidget : public QWidget {
     Q_OBJECT
@@ -37,7 +36,7 @@ public:
     VolumerenderSettingsWidget* createSettingsWidget(QWidget* parent = nullptr);
 
 signals:
-    void imageDataChanged(vtkImageData*);
+    void imageDataChanged();
 
 protected:
     void setupRenderingPipeline();

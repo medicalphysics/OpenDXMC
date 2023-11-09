@@ -30,13 +30,13 @@ class vtkImageData;
 class VolumerenderSettingsWidget : public QWidget {
     Q_OBJECT
 public:
-    VolumerenderSettingsWidget(const VolumeRenderSettings& settings, QWidget* parent = nullptr);
+    VolumerenderSettingsWidget(VolumeRenderSettings* settings, QWidget* parent = nullptr);
 
-    void setImageData(vtkImageData*);
+    void imageDataUpdated();
     void setColorTable(const std::string&);
 
 private:
-    VolumeRenderSettings m_settings;
+    VolumeRenderSettings* m_settings = nullptr;
     VolumeLUTWidget* m_lut_opacity_widget = nullptr;
     VolumeLUTWidget* m_lut_gradient_widget = nullptr;
 };

@@ -18,6 +18,7 @@ Copyright 2023 Erlend Andersen
 #pragma once
 
 #include <vtkDiscretizableColorTransferFunction.h>
+#include <vtkImageData.h>
 #include <vtkOpenGLGPUVolumeRayCastMapper.h>
 #include <vtkOpenGLRenderer.h>
 #include <vtkPiecewiseFunction.h>
@@ -32,7 +33,15 @@ struct VolumeRenderSettings {
     vtkSmartPointer<vtkDiscretizableColorTransferFunction> color_lut = nullptr;
     vtkSmartPointer<vtkVolume> volume = nullptr;
 
-    vtkVolumeProperty* getVolumeProperty() { return volume ? volume->GetProperty() : nullptr; }
+    vtkSmartPointer<vtkImageData> currentImageData = nullptr;
+
+    std::array<double, 2> currentImageDataScalarRange = { 0, 0 };
+    std::array<double, 2> viewScalarRange = { -1, 1 };
+
+    vtkVolumeProperty* getVolumeProperty()
+    {
+        return volume ? volume->GetProperty() : nullptr;
+    }
 
     vtkPiecewiseFunction* getOpacityLut()
     {

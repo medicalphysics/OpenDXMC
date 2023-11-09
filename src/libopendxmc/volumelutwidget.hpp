@@ -25,8 +25,6 @@ Copyright 2023 Erlend Andersen
 #include <array>
 #include <vector>
 
-class vtkImageData;
-
 class VolumeLUTWidget : public QWidget {
     Q_OBJECT
 public:
@@ -34,14 +32,15 @@ public:
         Opacity,
         Gradient
     };
-    VolumeLUTWidget(const VolumeRenderSettings& settings, LUTType type = LUTType::Opacity, QWidget* parent = nullptr);
+    VolumeLUTWidget(VolumeRenderSettings* settings, LUTType type = LUTType::Opacity, QWidget* parent = nullptr);
     void setColorData(const std::vector<double>& data);
-    void setImageData(vtkImageData* data);
+    void imageDataUpdated();
 
 signals:
-    void imageDataChanged(vtkImageData*);
+    void imageDataChanged();
+    void colorDataChanged();
 
 protected:
 private:
-    VolumeRenderSettings m_settings;
+    VolumeRenderSettings* m_settings;
 };

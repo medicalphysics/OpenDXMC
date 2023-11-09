@@ -62,11 +62,13 @@ SettingsCollection<T> getSettingsWidget(const QString& label, QWidget* parent)
     return s;
 }
 
-VolumerenderSettingsWidget::VolumerenderSettingsWidget(const VolumeRenderSettings& settings, QWidget* parent)
+VolumerenderSettingsWidget::VolumerenderSettingsWidget(VolumeRenderSettings* settings, QWidget* parent)
     : m_settings(settings)
     , QWidget(parent)
 {
-    if (!m_settings.valid())
+    if (!m_settings)
+        return;
+    if (!m_settings->valid())
         return;
 
     // Main layout
@@ -74,14 +76,14 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(const VolumeRenderSetting
 
     // jittering
     auto jittering = getSettingsWidget<QCheckBox>(tr("Use jittering"), this);
-    jittering.widget->setChecked(m_settings.mapper->GetUseJittering());
+    jittering.widget->setChecked(m_settings->mapper->GetUseJittering());
     connect(jittering.widget, &QCheckBox::stateChanged, [=](int state) {
-        m_settings.mapper->SetUseJittering(state != 0);
-        m_settings.render();
+        m_settings->mapper->SetUseJittering(state != 0);
+        m_settings->render();
     });
     layout->addLayout(jittering.layout);
 
-    auto vprop = m_settings.getVolumeProperty();
+    auto vprop = m_settings->getVolumeProperty();
     // shadebox
     auto shadebox = new QGroupBox(tr("Shading"), this);
     auto shade_layout = new QVBoxLayout(this);
@@ -91,27 +93,27 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(const VolumeRenderSetting
     shadebox->setChecked(vprop->GetShade() == 1);
     connect(shadebox, &QGroupBox::toggled, [=](bool toggle) {
         vprop->SetShade(toggle ? 1 : 0);
-        m_settings.render();
+        m_settings->render();
     });
     layout->addWidget(shadebox);
 
     // Global illumination reach
     auto gir = getSettingsWidget<QSlider>(tr("Global illumination reach"), shadebox);
-    gir.widget->setValue(static_cast<int>(m_settings.mapper->GetGlobalIlluminationReach() * 100));
+    gir.widget->setValue(static_cast<int>(m_settings->mapper->GetGlobalIlluminationReach() * 100));
     connect(gir.widget, &QSlider::valueChanged, [=](int value) {
         const float g = value / float { 100 };
-        m_settings.mapper->SetGlobalIlluminationReach(std::clamp(g, 0.f, 1.f));
-        m_settings.render();
+        m_settings->mapper->SetGlobalIlluminationReach(std::clamp(g, 0.f, 1.f));
+        m_settings->render();
     });
     shade_layout->addLayout(gir.layout);
 
     // Volumetric Scattering blending
     auto vsb = getSettingsWidget<QSlider>(tr("Volumetric scattering blending"), this);
-    vsb.widget->setValue(static_cast<int>(m_settings.mapper->GetGlobalIlluminationReach() * 50));
+    vsb.widget->setValue(static_cast<int>(m_settings->mapper->GetGlobalIlluminationReach() * 50));
     connect(vsb.widget, &QSlider::valueChanged, [=](int value) {
         const float g = value / float { 50 };
-        m_settings.mapper->SetVolumetricScatteringBlending(std::clamp(g, 0.f, 2.f));
-        m_settings.render();
+        m_settings->mapper->SetVolumetricScatteringBlending(std::clamp(g, 0.f, 2.f));
+        m_settings->render();
     });
     shade_layout->addLayout(vsb.layout);
 
@@ -121,7 +123,7 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(const VolumeRenderSetting
     connect(ambient.widget, &QSlider::valueChanged, [=](int value) {
         const float g = value / float { 100 };
         vprop->SetAmbient(std::clamp(g, 0.f, 1.f));
-        m_settings.render();
+        m_settings->render();
     });
     shade_layout->addLayout(ambient.layout);
 
@@ -131,7 +133,7 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(const VolumeRenderSetting
     connect(diffuse.widget, &QSlider::valueChanged, [=](int value) {
         const float g = value / float { 100 };
         vprop->SetDiffuse(std::clamp(g, 0.f, 1.f));
-        m_settings.render();
+        m_settings->render();
     });
     shade_layout->addLayout(diffuse.layout);
 
@@ -141,7 +143,7 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(const VolumeRenderSetting
     connect(specular.widget, &QSlider::valueChanged, [=](int value) {
         const float g = value / float { 100 };
         vprop->SetSpecular(std::clamp(g, 0.f, 1.f));
-        m_settings.render();
+        m_settings->render();
     });
     shade_layout->addLayout(specular.layout);
 
@@ -151,7 +153,7 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(const VolumeRenderSetting
     connect(specularpower.widget, &QSlider::valueChanged, [=](int value) {
         const float g = value;
         vprop->SetSpecularPower(g);
-        m_settings.render();
+        m_settings->render();
     });
     shade_layout->addLayout(specularpower.layout);
 
@@ -161,7 +163,7 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(const VolumeRenderSetting
     connect(sa.widget, &QSlider::valueChanged, [=](int value) {
         const float g = value / float { 50 } - 1;
         vprop->SetScatteringAnisotropy(std::clamp(g, -1.f, 1.f));
-        m_settings.render();
+        m_settings->render();
     });
     shade_layout->addLayout(sa.layout);
 
@@ -172,7 +174,6 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(const VolumeRenderSetting
     }
     auto color_gray_index = color.widget->findText(QString::fromStdString("GRAY"));
     color.widget->setCurrentIndex(color_gray_index);
-    setColorTable("GRAY");
     connect(color.widget, &QComboBox::currentTextChanged, [=](const QString& cname) {
         this->setColorTable(cname.toStdString());
     });
@@ -181,6 +182,7 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(const VolumeRenderSetting
     // lutWidget
     m_lut_opacity_widget = new VolumeLUTWidget(m_settings, VolumeLUTWidget::LUTType::Opacity, this);
     layout->addWidget(m_lut_opacity_widget);
+    setColorTable("GRAY");
 
     // lutWidget
     m_lut_gradient_widget = new VolumeLUTWidget(m_settings, VolumeLUTWidget::LUTType::Gradient, this);
@@ -196,13 +198,14 @@ void VolumerenderSettingsWidget::setColorTable(const std::string& ct)
         return;
     }
     const auto& map = COLORMAPS.at(ct);
-
+    m_lut_opacity_widget->setColorData(map);
 }
 
-void VolumerenderSettingsWidget::setImageData(vtkImageData* data)
+void VolumerenderSettingsWidget::imageDataUpdated()
 {
+    auto data = m_settings->currentImageData;
     if (data) {
-        m_lut_opacity_widget->setImageData(data);
-        m_lut_gradient_widget->setImageData(data);
+        m_lut_opacity_widget->imageDataUpdated();
+        m_lut_gradient_widget->imageDataUpdated();
     }
 }

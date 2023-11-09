@@ -106,7 +106,9 @@ void VolumerenderWidget::setNewImageData(vtkSmartPointer<vtkImageData> data, boo
     if (data) {
         m_settings.mapper->SetInputData(data);
         m_settings.mapper->Update();
-        emit imageDataChanged(data.Get());
+        m_settings.currentImageData = data;
+        data->GetScalarRange(m_settings.currentImageDataScalarRange.data());
+        emit imageDataChanged();
         Render(rezoom_camera);
     }
 }
@@ -130,7 +132,6 @@ void VolumerenderWidget::updateImageData(std::shared_ptr<DataContainer> data)
             setNewImageData(vtkimage, uid_is_new);
         }
     }
-
     m_data = data;
 }
 
@@ -139,7 +140,7 @@ VolumerenderSettingsWidget* VolumerenderWidget::createSettingsWidget(QWidget* pa
     if (!parent)
         parent = this;
 
-    auto wid = new VolumerenderSettingsWidget(m_settings, parent);
-    connect(this, &VolumerenderWidget::imageDataChanged, [=](vtkImageData* data) { wid->setImageData(data); });
+    auto wid = new VolumerenderSettingsWidget(&m_settings, parent);
+    connect(this, &VolumerenderWidget::imageDataChanged, [=]() { wid->imageDataUpdated(); });
     return wid;
 }

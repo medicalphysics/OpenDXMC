@@ -437,7 +437,7 @@ const std::map<std::string, std::vector<double>> COLORMAPS = {
     { "CT", CT },
     { "PET", PET },
     { "BONE", BONE },
-    { "HOT_IRON", HOT_IRON },
+    { "HOT IRON", HOT_IRON },
     { "MAGMA", MAGMA },
     { "COOL", COOL }
 };

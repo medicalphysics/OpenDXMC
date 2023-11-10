@@ -35,8 +35,8 @@ struct VolumeRenderSettings {
 
     vtkSmartPointer<vtkImageData> currentImageData = nullptr;
 
-    std::array<double, 2> currentImageDataScalarRange = { 0, 0 };
-    std::array<double, 2> viewScalarRange = { -1, 1 };
+    std::array<double, 2> currentImageDataScalarRange = { -1, 1 };
+    std::array<double, 2> viewScalarRangeFraction = { 0, 1 };
 
     vtkVolumeProperty* getVolumeProperty()
     {

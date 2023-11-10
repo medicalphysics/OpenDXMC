@@ -40,6 +40,12 @@ Copyright 2023 Erlend Andersen
 #include <limits>
 #include <vector>
 
+double shiftScale(double old_value, double old_min, double old_max, double min, double max)
+{
+    const auto t = (old_value - old_min) / (old_max - old_min);
+    return min + t * (max - min);
+}
+
 class LUTSeries : public QScatterSeries {
 public:
     LUTSeries(VolumeRenderSettings* settings, VolumeLUTWidget::LUTType type, QObject* parent = nullptr)
@@ -54,7 +60,7 @@ public:
         else if (type == VolumeLUTWidget::LUTType::Gradient)
             m_lut = m_settings->getGradientLut();
 
-        setMarkerSize(7);
+        setMarkerSize(8);
         setPointsVisible(true);
         setPointLabelsFormat("@xPoint");
         setPointLabelsVisible(true);
@@ -65,13 +71,13 @@ public:
         });
         connect(this, &QXYSeries::released, [=](const QPointF& point) {
             m_pIdx_edit = -1;
-            updateLUT();
+            updateLUTfromPoints();
             m_settings->render();
         });
         connect(this, &QXYSeries::doubleClicked, [=](const QPointF& point) {
             if (this->count() > 2) {
                 this->remove(point);
-                updateLUT();
+                updateLUTfromPoints();
                 m_settings->render();
             }
         });
@@ -100,12 +106,15 @@ public:
 
     void imageDataUpdated()
     {
+        // New image data, we want to adjust current lut to fit new scalar range
         auto data = m_settings->currentImageData;
         if (!data)
             return;
 
         if (m_type == VolumeLUTWidget::LUTType::Opacity) {
-            updatePlotScalarRange();
+            newScalarRange();
+
+            // we add histogram of data
             for (auto series : chart()->series())
                 if (series != this)
                     chart()->removeSeries(series);
@@ -134,7 +143,7 @@ public:
             }
 
         } else if (m_type == VolumeLUTWidget::LUTType::Gradient) {
-            updatePlotScalarRange();
+            newScalarRange();
         }
     }
 
@@ -163,35 +172,41 @@ public:
             const auto& point = at(i);
             if (p.x() < point.x()) {
                 insert(i, p);
-                updateLUT();
-                return;
+                break;
             }
         }
         insert(count(), p);
-        updateLUT();
+        updateLUTfromPoints();
         m_settings->render();
     }
 
-    void updateLUT()
+    void updateLUTfromPoints()
     {
         m_lut->RemoveAllPoints();
         for (int i = 0; i < count(); ++i) {
             const auto& p = at(i);
             m_lut->AddPoint(p.x(), p.y());
         }
+
+        // updating view range
+        const auto start = at(0).x();
+        const auto stop = at(count() - 1).x();
+        const auto& r = m_settings->currentImageDataScalarRange;
+        m_settings->viewScalarRangeFraction[0] = (start - r[0]) / (r[1] - r[0]);
+        m_settings->viewScalarRangeFraction[1] = (stop - r[0]) / (r[1] - r[0]);
+
+        updateColorfomPoints();
+
         m_settings->volume->Update();
     }
 
-    void colorDataUpdated()
-    {
-    }
-
 protected:
-    void updatePlotScalarRange()
+    void newScalarRange()
     {
-
+        // We adjust current lut to new scalar range from images
         if (m_lut->GetSize() != this->count()) {
-            auto valid_adjust = m_lut->AdjustRange(m_settings->viewScalarRange.data());
+            // something is off, we reset (should not happend)
+            auto valid_adjust = m_lut->AdjustRange(m_settings->currentImageDataScalarRange.data());
             this->clear();
             for (int i = 0; i < m_lut->GetSize(); ++i) {
                 std::array<double, 4> buf;
@@ -202,13 +217,19 @@ protected:
             return;
         }
         if (m_type == VolumeLUTWidget::LUTType::Opacity) {
-            auto old_range = m_lut->GetRange();
-            const auto min = m_settings->viewScalarRange[0];
-            const auto max = m_settings->viewScalarRange[1];
+            auto old_pos = m_lut->GetRange();
+            auto old_range = (old_pos[0] - old_pos[1]) / (m_settings->viewScalarRangeFraction[0] - m_settings->viewScalarRangeFraction[1]);
+            auto old_min = old_pos[0] - m_settings->viewScalarRangeFraction[0] * old_range;
+            const auto min = m_settings->currentImageDataScalarRange[0];
+            const auto max = m_settings->currentImageDataScalarRange[1];
+            const auto range = max - min;
+
             for (int i = 0; i < count(); ++i) {
                 auto point = this->at(i);
-                auto f = (point.x() - old_range[0]) / (old_range[1] - old_range[0]);
-                point.setX(std::clamp(min + f * (max - min), min, max));
+                const auto old_x = point.x();
+                const auto t = (old_x - old_min) / old_range;
+                const auto x = min + t * range;
+                point.setX(std::clamp(x, min, max));
                 this->replace(i, point);
             }
         } else {
@@ -217,7 +238,31 @@ protected:
             m_lut->AdjustRange(range.data());
         }
 
-        updateLUT();
+        updateLUTfromPoints();
+    }
+
+    void updateColorfomPoints()
+    {
+        const auto& vr = m_settings->currentImageDataScalarRange;
+        const auto range = vr[1] - vr[0];
+        const auto min = vr[0] + m_settings->viewScalarRangeFraction[0] * range;
+        const auto max = vr[0] + m_settings->viewScalarRangeFraction[1] * range;
+
+        auto clut = m_settings->color_lut;
+
+        std::array<double, 6> buffer;
+        clut->GetNodeValue(0, buffer.data());
+        const auto old_min = buffer[0];
+        clut->GetNodeValue(clut->GetSize() - 1, buffer.data());
+        const auto old_max = buffer[0];
+        const auto old_range = old_max - old_min;
+        for (int i = 0; i < clut->GetSize(); ++i) {
+            clut->GetNodeValue(i, buffer.data());
+            auto old_x = buffer[0];
+            const auto t = (old_x - old_min) / old_range;
+            buffer[0] = min + t * range;
+            clut->SetNodeValue(i, buffer.data());
+        }
     }
 
 private:
@@ -246,7 +291,7 @@ public:
         chart()->setTheme(QChart::ChartThemeDark);
         chart()->setBackgroundVisible(false);
         // if (type == VolumeLUTWidget::LUTType::Opacity)
-        //   chart()->setPlotAreaBackgroundVisible(true);
+        chart()->setPlotAreaBackgroundVisible(true);
         // chart()->setMargins(QMargins { 0, 0, 0, 0 });
         chart()->legend()->setVisible(false);
 
@@ -274,7 +319,6 @@ public:
 
     void imageDataUpdated()
     {
-        chart()->setPlotAreaBackgroundVisible(true);
         m_lut_series->imageDataUpdated();
         const auto& range = m_settings->currentImageDataScalarRange;
         m_axisx->setMin(range[0]);
@@ -289,12 +333,12 @@ public:
 
         auto view_rect = chart()->plotArea();
         QLinearGradient g(view_rect.bottomLeft(), view_rect.bottomRight());
-
         auto lut = m_settings->color_lut;
         double min, max;
         if (m_settings->currentImageData) {
-            min = m_settings->currentImageDataScalarRange[0];
-            max = m_settings->currentImageDataScalarRange[1];
+            const auto& r = m_settings->currentImageDataScalarRange;
+            min = r[0] + (r[1] - r[0]) * m_settings->viewScalarRangeFraction[0];
+            max = r[0] + (r[1] - r[0]) * m_settings->viewScalarRangeFraction[1];
         } else {
             lut->GetRange(min, max);
         }
@@ -362,7 +406,13 @@ public:
             QPointF pos_scene = this->mapToScene(event->pos());
             QPointF pos = chart()->mapToValue(pos_scene, m_lut_series);
             m_lut_series->insertPoint(pos);
+            updatechartColorBackground();
         }
+    }
+    void resizeEvent(QResizeEvent* event)
+    {
+        QChartView::resizeEvent(event);
+        updatechartColorBackground();
     }
 
 private:
@@ -414,13 +464,15 @@ VolumeLUTWidget::VolumeLUTWidget(VolumeRenderSettings* settings, VolumeLUTWidget
 void VolumeLUTWidget::setColorData(const std::vector<double>& data)
 {
     auto lut = m_settings->color_lut;
-    auto range = lut->GetRange();
+    const auto& range = m_settings->currentImageDataScalarRange;
+    const auto min = range[0] + m_settings->viewScalarRangeFraction[0] * (range[1] - range[0]);
+    const auto max = range[0] + m_settings->viewScalarRangeFraction[1] * (range[1] - range[0]);
     const auto N = data.size() / 3;
-    const auto step = (range[1] - range[0]) / (N - 1);
+    const auto step = (max - min) / (N - 1);
     lut->RemoveAllPoints();
     for (int i = 0; i < N; ++i) {
         auto cIdx = i * 3;
-        const auto x = range[0] + step * i;
+        const auto x = min + step * i;
         lut->AddRGBPoint(x, data[cIdx], data[cIdx + 1], data[cIdx + 2]);
     }
     emit colorDataChanged();

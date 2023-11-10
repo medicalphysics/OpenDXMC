@@ -183,11 +183,11 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(VolumeRenderSettings* set
     m_lut_opacity_widget = new VolumeLUTWidget(m_settings, VolumeLUTWidget::LUTType::Opacity, this);
     layout->addWidget(m_lut_opacity_widget);
     setColorTable("GRAY");
-
+    /*
     // lutWidget
     m_lut_gradient_widget = new VolumeLUTWidget(m_settings, VolumeLUTWidget::LUTType::Gradient, this);
     layout->addWidget(m_lut_gradient_widget);
-
+    */
     layout->addStretch();
     setLayout(layout);
 }
@@ -206,6 +206,6 @@ void VolumerenderSettingsWidget::imageDataUpdated()
     auto data = m_settings->currentImageData;
     if (data) {
         m_lut_opacity_widget->imageDataUpdated();
-        m_lut_gradient_widget->imageDataUpdated();
+        //m_lut_gradient_widget->imageDataUpdated();
     }
 }

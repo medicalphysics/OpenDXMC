@@ -221,7 +221,7 @@ void SliceRenderWidget::setupSlicePipeline(int orientation)
     auto imageMapper = vtkSmartPointer<vtkOpenGLImageSliceMapper>::New();
     imageMapper->SliceFacesCameraOn();
     imageMapper->SliceAtFocalPointOn();
-    imageMapper->StreamingOn();
+    imageMapper->ReleaseDataFlagOn();
 
     // image slice
     imageSlice = vtkSmartPointer<vtkImageActor>::New();

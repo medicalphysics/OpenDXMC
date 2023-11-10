@@ -22,6 +22,8 @@ Copyright 2023 Erlend Andersen
 #include <string>
 #include <vector>
 
+namespace Colormaps {
+
 const std::vector<double> MAGMA = {
     0.001462,
     0.000466,
@@ -441,3 +443,4 @@ const std::map<std::string, std::vector<double>> COLORMAPS = {
     { "MAGMA", MAGMA },
     { "COOL", COOL }
 };
+}

@@ -21,49 +21,75 @@ Copyright 2023 Erlend Andersen
 #include <vtkImageData.h>
 #include <vtkOpenGLGPUVolumeRayCastMapper.h>
 #include <vtkOpenGLRenderer.h>
-#include <vtkPiecewiseFunction.h>
 #include <vtkRenderWindow.h>
 #include <vtkSmartPointer.h>
 #include <vtkVolume.h>
-#include <vtkVolumeProperty.h>
 
-struct VolumeRenderSettings {
-    vtkSmartPointer<vtkOpenGLRenderer> renderer = nullptr;
-    vtkSmartPointer<vtkOpenGLGPUVolumeRayCastMapper> mapper = nullptr;
-    vtkSmartPointer<vtkDiscretizableColorTransferFunction> color_lut = nullptr;
-    vtkSmartPointer<vtkVolume> volume = nullptr;
+#include <QObject>
 
-    vtkSmartPointer<vtkImageData> currentImageData = nullptr;
+#include <array>
+#include <string>
+#include <vector>
 
-    std::array<double, 2> currentImageDataScalarRange = { -1, 1 };
-    std::array<double, 2> viewScalarRangeFraction = { 0, 1 };
+class vtkPiecewiseFunction;
+class vtkVolumeProperty;
 
-    vtkVolumeProperty* getVolumeProperty()
-    {
-        return volume ? volume->GetProperty() : nullptr;
-    }
+class VolumeRenderSettings : public QObject {
+    Q_OBJECT
+public:
+    VolumeRenderSettings(vtkSmartPointer<vtkOpenGLRenderer> renderer,
+        vtkSmartPointer<vtkOpenGLGPUVolumeRayCastMapper> mapper,
+        vtkSmartPointer<vtkVolume> volume,
+        vtkSmartPointer<vtkDiscretizableColorTransferFunction> colorlut,
+        QObject* parent = nullptr);
 
-    vtkPiecewiseFunction* getOpacityLut()
-    {
-        auto prop = getVolumeProperty();
-        return prop ? prop->GetScalarOpacity() : nullptr;
-    }
+    vtkOpenGLRenderer* renderer() { return m_renderer.Get(); }
+    vtkOpenGLGPUVolumeRayCastMapper* mapper() { return m_mapper.Get(); }
+    vtkVolume* volume() { return m_volume.Get(); }
+    vtkVolumeProperty* volumeProperty();
+    vtkRenderWindow* renderWindow() { return m_renderer ? m_renderer->GetRenderWindow() : nullptr; }
 
-    vtkPiecewiseFunction* getGradientLut()
-    {
-        auto prop = getVolumeProperty();
-        return prop ? prop->GetGradientOpacity() : nullptr;
-    }
+    vtkDiscretizableColorTransferFunction* colorLut() { return m_color_lut.Get(); }
+    vtkPiecewiseFunction* opacityLut();
+    vtkPiecewiseFunction* gradientLut();
 
-    bool valid()
-    {
-        return renderer && mapper && color_lut && volume && getVolumeProperty();
-    }
+    void setCurrentImageData(vtkSmartPointer<vtkImageData> data, bool resetCamera = false);
+    vtkImageData* currentImageData();
+    const std::array<double, 2>& currentImageDataScalarRange() const { return m_currentImageDataScalarRange; }
+    void setColorMap(const std::string& name, bool render = true);
 
-    void render()
-    {
-        auto renwin = renderer ? renderer->GetRenderWindow() : nullptr;
-        if (renwin)
-            renwin->Render();
-    }
+    void render();
+    bool valid();
+
+    const std::vector<std::array<double, 2>>& opacityDataNormalized() const { return m_opacityDataNormalizedRange; }
+    const std::vector<std::array<double, 2>>& gradientDataNormalized() const { return m_gradientDataNormalizedRange; }
+    const std::vector<std::array<double, 4>>& colorDataNormalized() const { return m_colorDataNormalizedRange; }
+    std::vector<std::array<double, 4>> colorDataNormalizedCroppedToOpacity() const;
+    void setOpacityDataNormalized(const std::vector<std::array<double, 2>>&);
+    void setGradientDataNormalized(const std::vector<std::array<double, 2>>&);
+    void setColorDataNormalized(const std::vector<std::array<double, 4>>&);
+
+signals:
+    void imageDataChanged();
+    void opacityLutChanged();
+    void gradientLutChanged();
+    void colorLutChanged();
+
+protected:
+    void updateOpacityLutFromNormalizedRange(bool render = true);
+    void updateGradientLutFromNormalizedRange(bool render = true);
+    void updateColorLutFromNormalizedRange(bool render = true);
+
+private:
+    vtkSmartPointer<vtkOpenGLRenderer> m_renderer = nullptr;
+    vtkSmartPointer<vtkOpenGLGPUVolumeRayCastMapper> m_mapper = nullptr;
+    vtkSmartPointer<vtkDiscretizableColorTransferFunction> m_color_lut = nullptr;
+    vtkSmartPointer<vtkVolume> m_volume = nullptr;
+    vtkSmartPointer<vtkImageData> m_currentImageData = nullptr;
+    std::array<double, 2> m_currentImageDataScalarRange = { -1, 1 };
+
+    std::vector<std::array<double, 2>> m_opacityDataNormalizedRange;
+    std::vector<std::array<double, 2>> m_gradientDataNormalizedRange;
+    std::vector<std::array<double, 4>> m_colorDataNormalizedRange;
+    bool m_cropColorToOpacityRange = true;
 };

@@ -198,7 +198,7 @@ bool DataContainer::setImageArray(ImageType type, const std::vector<std::uint64_
     return false;
 }
 
-bool DataContainer::setImageArray(ImageType type, vtkImageData* image)
+bool DataContainer::setImageArray(ImageType type, vtkSmartPointer<vtkImageData> image)
 {
     if (image == nullptr)
         return false;
@@ -228,43 +228,37 @@ bool DataContainer::setImageArray(ImageType type, vtkImageData* image)
     // Oh horrors, we must have a void pointer to copy data from vtkImageData
     void* buffer = nullptr;
     auto vtkexport = vtkSmartPointer<vtkImageExport>::New();
+    vtkexport->ReleaseDataFlagOn();
     vtkexport->SetInputData(image);
 
     switch (type) {
     case DataContainer::ImageType::CT:
-        m_ct_array.resize(size());
-        buffer = static_cast<void*>(m_ct_array.data());
-        vtkexport->Export(buffer);
+        buffer = vtkexport->GetPointerToData();
+        m_ct_array = std::vector<double>(static_cast<double*>(buffer), static_cast<double*>(buffer) + size());
         return true;
     case DataContainer::ImageType::Density:
-        m_density_array.resize(size());
-        buffer = static_cast<void*>(m_density_array.data());
-        vtkexport->Export(buffer);
+        buffer = vtkexport->GetPointerToData();
+        m_density_array = std::vector<double>(static_cast<double*>(buffer), static_cast<double*>(buffer) + size());
         return true;
     case DataContainer::ImageType::Material:
-        m_material_array.resize(size());
-        buffer = static_cast<void*>(m_material_array.data());
-        vtkexport->Export(buffer);
+        buffer = vtkexport->GetPointerToData();
+        m_material_array = std::vector<std::uint8_t>(static_cast<std::uint8_t*>(buffer), static_cast<std::uint8_t*>(buffer) + size());
         return true;
     case DataContainer::ImageType::Organ:
-        m_organ_array.resize(size());
-        buffer = static_cast<void*>(m_organ_array.data());
-        vtkexport->Export(buffer);
+        buffer = vtkexport->GetPointerToData();
+        m_organ_array = std::vector<std::uint8_t>(static_cast<std::uint8_t*>(buffer), static_cast<std::uint8_t*>(buffer) + size());
         return true;
     case DataContainer::ImageType::Dose:
-        m_dose_array.resize(size());
-        buffer = static_cast<void*>(m_dose_array.data());
-        vtkexport->Export(buffer);
+        buffer = vtkexport->GetPointerToData();
+        m_dose_array = std::vector<double>(static_cast<double*>(buffer), static_cast<double*>(buffer) + size());
         return true;
     case DataContainer::ImageType::DoseVariance:
-        m_dose_variance_array.resize(size());
-        buffer = static_cast<void*>(m_dose_variance_array.data());
-        vtkexport->Export(buffer);
+        buffer = vtkexport->GetPointerToData();
+        m_dose_variance_array = std::vector<double>(static_cast<double*>(buffer), static_cast<double*>(buffer) + size());
         return true;
     case DataContainer::ImageType::DoseCount:
-        m_dose_count_array.resize(size());
-        buffer = static_cast<void*>(m_dose_count_array.data());
-        vtkexport->Export(buffer);
+        buffer = vtkexport->GetPointerToData();
+        m_dose_count_array = std::vector<std::uint64_t>(static_cast<std::uint64_t*>(buffer), static_cast<std::uint64_t*>(buffer) + size());
         return true;
     default:
         break;

@@ -23,6 +23,7 @@ Copyright 2023 Erlend Andersen
 #include <vtkImageData.h>
 #include <vtkImageGradientMagnitude.h>
 #include <vtkImageHistogram.h>
+#include <vtkVolumeProperty.h>
 
 #include <QBrush>
 #include <QChartView>
@@ -55,16 +56,12 @@ public:
     {
         if (!m_settings)
             return;
-        if (type == VolumeLUTWidget::LUTType::Opacity)
-            m_lut = m_settings->getOpacityLut();
-        else if (type == VolumeLUTWidget::LUTType::Gradient)
-            m_lut = m_settings->getGradientLut();
 
         setMarkerSize(8);
         setPointsVisible(true);
         setPointLabelsFormat("@xPoint");
-        setPointLabelsVisible(true);
-        setPointLabelsClipping(true);
+        // setPointLabelsVisible(true);
+        // setPointLabelsClipping(true);
 
         connect(this, &QXYSeries::pressed, [=](const QPointF& point) {
             m_pIdx_edit = this->closestPointIndex(point);
@@ -72,20 +69,23 @@ public:
         connect(this, &QXYSeries::released, [=](const QPointF& point) {
             m_pIdx_edit = -1;
             updateLUTfromPoints();
-            m_settings->render();
         });
         connect(this, &QXYSeries::doubleClicked, [=](const QPointF& point) {
             if (this->count() > 2) {
                 this->remove(point);
                 updateLUTfromPoints();
-                m_settings->render();
             }
         });
 
-        for (int i = 0; i < m_lut->GetSize(); ++i) {
-            std::array<double, 4> data;
-            m_lut->GetNodeValue(i, data.data());
-            append(data[0], data[1]);
+        if (type == VolumeLUTWidget::LUTType::Opacity) {
+            connect(m_settings, &VolumeRenderSettings::imageDataChanged, [=]() { this->imageDataUpdated(); });
+            for (const auto& p : m_settings->opacityDataNormalized()) {
+                append(p[0], p[1]);
+            }
+        } else if (type == VolumeLUTWidget::LUTType::Gradient) {
+            for (const auto& p : m_settings->gradientDataNormalized()) {
+                append(p[0], p[1]);
+            }
         }
     }
 
@@ -102,49 +102,6 @@ public:
             }
         }
         return idx;
-    }
-
-    void imageDataUpdated()
-    {
-        // New image data, we want to adjust current lut to fit new scalar range
-        auto data = m_settings->currentImageData;
-        if (!data)
-            return;
-
-        if (m_type == VolumeLUTWidget::LUTType::Opacity) {
-            newScalarRange();
-
-            // we add histogram of data
-            for (auto series : chart()->series())
-                if (series != this)
-                    chart()->removeSeries(series);
-
-            auto hseries = new QLineSeries(chart());
-            chart()->addSeries(hseries);
-            hseries->setOpacity(0.4);
-            hseries->setPointsVisible(false);
-            for (auto axis : chart()->axes())
-                hseries->attachAxis(axis);
-
-            auto hist_pipe = vtkSmartPointer<vtkImageHistogram>::New();
-            hist_pipe->SetMaximumNumberOfBins(128);
-            hist_pipe->AutomaticBinningOn();
-            hist_pipe->SetInputData(data);
-            hist_pipe->Update();
-
-            const auto start = hist_pipe->GetBinOrigin();
-            const auto step = hist_pipe->GetBinSpacing();
-            auto hist = hist_pipe->GetHistogram();
-            const auto norm = 10 * static_cast<double>(hist_pipe->GetTotal()) / (hist_pipe->GetNumberOfBins());
-            for (int i = 0; i < hist_pipe->GetNumberOfBins(); ++i) {
-                auto y = hist->GetTuple(i);
-                const auto x = start + step * i;
-                hseries->append(x, y[0] / norm);
-            }
-
-        } else if (m_type == VolumeLUTWidget::LUTType::Gradient) {
-            newScalarRange();
-        }
     }
 
     int currentClickedPoint() const
@@ -166,102 +123,80 @@ public:
         replace(idx2, p1);
     }
 
-    void insertPoint(const QPointF& p)
+    void insertPoint(QPointF p)
     {
+        p.setX(std::clamp(p.x(), 0.0, 1.0));
+        p.setY(std::clamp(p.y(), 0.0, 1.0));
+
         for (int i = 0; i < count(); ++i) {
             const auto& point = at(i);
             if (p.x() < point.x()) {
                 insert(i, p);
-                break;
+                updateLUTfromPoints();
+                return;
             }
         }
         insert(count(), p);
         updateLUTfromPoints();
-        m_settings->render();
     }
 
     void updateLUTfromPoints()
     {
-        m_lut->RemoveAllPoints();
+        std::vector<std::array<double, 2>> d(count());
         for (int i = 0; i < count(); ++i) {
-            const auto& p = at(i);
-            m_lut->AddPoint(p.x(), p.y());
+            const auto& p = this->at(i);
+            d[i] = { p.x(), p.y() };
         }
 
-        // updating view range
-        const auto start = at(0).x();
-        const auto stop = at(count() - 1).x();
-        const auto& r = m_settings->currentImageDataScalarRange;
-        m_settings->viewScalarRangeFraction[0] = (start - r[0]) / (r[1] - r[0]);
-        m_settings->viewScalarRangeFraction[1] = (stop - r[0]) / (r[1] - r[0]);
-
-        updateColorfomPoints();
-
-        m_settings->volume->Update();
+        if (m_type == VolumeLUTWidget::LUTType::Opacity) {
+            m_settings->setOpacityDataNormalized(d);
+        } else if (m_type == VolumeLUTWidget::LUTType::Gradient) {
+            m_settings->setGradientDataNormalized(d);
+        }
     }
 
 protected:
-    void newScalarRange()
+    void imageDataUpdated()
     {
-        // We adjust current lut to new scalar range from images
-        if (m_lut->GetSize() != this->count()) {
-            // something is off, we reset (should not happend)
-            auto valid_adjust = m_lut->AdjustRange(m_settings->currentImageDataScalarRange.data());
-            this->clear();
-            for (int i = 0; i < m_lut->GetSize(); ++i) {
-                std::array<double, 4> buf;
-                m_lut->GetNodeValue(i, buf.data());
-                append(buf[0], buf[1]);
-            }
-            m_settings->volume->Update();
+        auto data = m_settings->currentImageData();
+        if (!data)
             return;
-        }
+
         if (m_type == VolumeLUTWidget::LUTType::Opacity) {
-            auto old_pos = m_lut->GetRange();
-            auto old_range = (old_pos[0] - old_pos[1]) / (m_settings->viewScalarRangeFraction[0] - m_settings->viewScalarRangeFraction[1]);
-            auto old_min = old_pos[0] - m_settings->viewScalarRangeFraction[0] * old_range;
-            const auto min = m_settings->currentImageDataScalarRange[0];
-            const auto max = m_settings->currentImageDataScalarRange[1];
-            const auto range = max - min;
 
-            for (int i = 0; i < count(); ++i) {
-                auto point = this->at(i);
-                const auto old_x = point.x();
-                const auto t = (old_x - old_min) / old_range;
-                const auto x = min + t * range;
-                point.setX(std::clamp(x, min, max));
-                this->replace(i, point);
+            // we add histogram of data
+            auto chart_ptr = chart();
+
+            for (auto serie : chart_ptr->series())
+                if (serie != this)
+                    chart_ptr->removeSeries(serie);
+
+            auto hseries = new QLineSeries(chart_ptr);
+            chart_ptr->addSeries(hseries);
+            hseries->setOpacity(0.4);
+            hseries->setPointsVisible(false);
+            for (auto axis : chart_ptr->axes())
+                hseries->attachAxis(axis);
+
+            auto hist_pipe = vtkSmartPointer<vtkImageHistogram>::New();
+            hist_pipe->SetMaximumNumberOfBins(128);
+            hist_pipe->AutomaticBinningOn();
+            hist_pipe->SetInputData(data);
+            hist_pipe->ReleaseDataFlagOn();
+            hist_pipe->Update();
+
+            const auto start = hist_pipe->GetBinOrigin();
+            const auto step = hist_pipe->GetBinSpacing();
+            const auto N = hist_pipe->GetNumberOfBins();
+            const auto range = N * step;
+            auto hist = hist_pipe->GetHistogram();
+            const auto norm = 10 * static_cast<double>(hist_pipe->GetTotal()) / (hist_pipe->GetNumberOfBins());
+            for (int i = 0; i < N; ++i) {
+                auto y = hist->GetTuple(i);
+                const auto x_orig = start + step * i;
+                const auto x = (x_orig - start) / range;
+                hseries->append(x, y[0] / norm);
             }
-        } else {
-            const auto& r = m_settings->currentImageDataScalarRange;
-            std::array<double, 2> range = { 0, (r[1] - r[0]) / 10 };
-            m_lut->AdjustRange(range.data());
-        }
-
-        updateLUTfromPoints();
-    }
-
-    void updateColorfomPoints()
-    {
-        const auto& vr = m_settings->currentImageDataScalarRange;
-        const auto range = vr[1] - vr[0];
-        const auto min = vr[0] + m_settings->viewScalarRangeFraction[0] * range;
-        const auto max = vr[0] + m_settings->viewScalarRangeFraction[1] * range;
-
-        auto clut = m_settings->color_lut;
-
-        std::array<double, 6> buffer;
-        clut->GetNodeValue(0, buffer.data());
-        const auto old_min = buffer[0];
-        clut->GetNodeValue(clut->GetSize() - 1, buffer.data());
-        const auto old_max = buffer[0];
-        const auto old_range = old_max - old_min;
-        for (int i = 0; i < clut->GetSize(); ++i) {
-            clut->GetNodeValue(i, buffer.data());
-            auto old_x = buffer[0];
-            const auto t = (old_x - old_min) / old_range;
-            buffer[0] = min + t * range;
-            clut->SetNodeValue(i, buffer.data());
         }
     }
 
@@ -269,7 +204,6 @@ private:
     VolumeLUTWidget::LUTType m_type = VolumeLUTWidget::LUTType::Opacity;
     int m_pIdx_edit = -1;
     VolumeRenderSettings* m_settings = nullptr;
-    vtkPiecewiseFunction* m_lut = nullptr;
 };
 
 class LUTChartView : public QChartView {
@@ -285,44 +219,49 @@ public:
         setMouseTracking(true);
 
         // chart and axis
-        chart()->setAnimationOptions(QChart::AnimationOption::SeriesAnimations);
+        // chart()->setAnimationOptions(QChart::AnimationOption::SeriesAnimations);
         chart()->layout()->setContentsMargins(0, 0, 0, 0);
         // chart->setBackgroundRoundness(0);
         chart()->setTheme(QChart::ChartThemeDark);
         chart()->setBackgroundVisible(false);
-        // if (type == VolumeLUTWidget::LUTType::Opacity)
-        chart()->setPlotAreaBackgroundVisible(true);
-        // chart()->setMargins(QMargins { 0, 0, 0, 0 });
+        if (type == VolumeLUTWidget::LUTType::Opacity)
+            chart()->setPlotAreaBackgroundVisible(true);
+        chart()->setMargins(QMargins { 0, 0, 0, 0 });
         chart()->legend()->setVisible(false);
 
         m_axisx = new QValueAxis(chart());
         m_axisx->setMinorGridLineVisible(false);
         m_axisx->setGridLineVisible(false);
         m_axisx->setTickCount(3);
+        m_axisx->setLabelsVisible(false);
         chart()->setAxisX(m_axisx);
         auto axisy = new QValueAxis(chart());
         axisy->setGridLineVisible(false);
-        axisy->setRange(0, 1);
+        axisy->setRange(-.1, 1.1);
         chart()->setAxisY(axisy);
         axisy->setLabelsVisible(false);
         axisy->setMinorGridLineVisible(false);
         axisy->setTickCount(2);
+        axisy->setLabelsVisible(false);
         // axisy->hide();
+        connect(m_settings, &VolumeRenderSettings::imageDataChanged, [=](void) { this->updateAxisScalarRange(); });
 
         m_lut_series = new LUTSeries(settings, type, chart());
-        connect(m_lut_series, &LUTSeries::pressed, [=](const auto& unused) { this->chart()->setAnimationOptions(QChart::AnimationOption::NoAnimation); });
-        connect(m_lut_series, &LUTSeries::released, [=](const auto& unused) { this->chart()->setAnimationOptions(QChart::AnimationOption::SeriesAnimations); });
         chart()->addSeries(m_lut_series);
         m_lut_series->attachAxis(m_axisx);
         m_lut_series->attachAxis(axisy);
+        updateAxisScalarRange();
+        connect(m_settings, &VolumeRenderSettings::colorLutChanged, [=](void) { this->updatechartColorBackground(); });
     }
 
-    void imageDataUpdated()
+    void updateAxisScalarRange()
     {
-        m_lut_series->imageDataUpdated();
-        const auto& range = m_settings->currentImageDataScalarRange;
+        /* const auto& range = m_settings->currentImageDataScalarRange();
         m_axisx->setMin(range[0]);
         m_axisx->setMax(range[1]);
+        */
+        m_axisx->setMin(-.1);
+        m_axisx->setMax(1.1);
     }
 
     void updatechartColorBackground()
@@ -330,28 +269,13 @@ public:
         auto q = chart();
         if (!q->isPlotAreaBackgroundVisible())
             return;
-
         auto view_rect = chart()->plotArea();
         QLinearGradient g(view_rect.bottomLeft(), view_rect.bottomRight());
-        auto lut = m_settings->color_lut;
-        double min, max;
-        if (m_settings->currentImageData) {
-            const auto& r = m_settings->currentImageDataScalarRange;
-            min = r[0] + (r[1] - r[0]) * m_settings->viewScalarRangeFraction[0];
-            max = r[0] + (r[1] - r[0]) * m_settings->viewScalarRangeFraction[1];
-        } else {
-            lut->GetRange(min, max);
-        }
-        const auto inv_drange = 1.0 / (max - min);
-        const auto N = lut->GetSize();
 
-        auto data = lut->GetDataPointer();
-        std::vector<double> test;
-        for (int i = 0; i < N; ++i) {
-            const auto dx = i * 4;
-            auto frac = (data[dx] - min) * inv_drange;
-            auto c = QColor::fromRgbF(data[dx + 1], data[dx + 2], data[dx + 3], 0.5);
-            g.setColorAt(frac, c);
+        const auto cdata = m_settings->colorDataNormalizedCroppedToOpacity();
+        for (const auto& node : cdata) {
+            auto c = QColor::fromRgbF(node[1], node[2], node[3], 0.5);
+            g.setColorAt(node[0], c);
         }
         QBrush brush(g);
         q->setPlotAreaBackgroundBrush(brush);
@@ -365,15 +289,13 @@ public:
     void mouseMoveEvent(QMouseEvent* event)
     {
         QChartView::mouseMoveEvent(event);
-
         // to move a point
         if (const int pIdx = m_lut_series->currentClickedPoint(); (pIdx >= 0) && (event->buttons() == Qt::LeftButton)) {
 
             QPointF pos_scene = this->mapToScene(event->pos());
             QPointF pos = chart()->mapToValue(pos_scene, m_lut_series);
 
-            const auto& scalar_range = m_settings->currentImageDataScalarRange;
-            pos.setX(std::clamp(pos.x(), scalar_range[0], scalar_range[1]));
+            pos.setX(std::clamp(pos.x(), 0.0, 1.0));
             pos.setY(std::clamp(pos.y(), 0.0, 1.0));
 
             m_lut_series->replace(pIdx, pos);
@@ -391,11 +313,10 @@ public:
             }
         }
     }
+
     void mouseReleaseEvent(QMouseEvent* event)
     {
         QChartView::mouseReleaseEvent(event);
-        if (event->buttons() == Qt::LeftButton)
-            updatechartColorBackground();
     }
 
     void mouseDoubleClickEvent(QMouseEvent* event)
@@ -406,9 +327,9 @@ public:
             QPointF pos_scene = this->mapToScene(event->pos());
             QPointF pos = chart()->mapToValue(pos_scene, m_lut_series);
             m_lut_series->insertPoint(pos);
-            updatechartColorBackground();
         }
     }
+
     void resizeEvent(QResizeEvent* event)
     {
         QChartView::resizeEvent(event);
@@ -429,8 +350,6 @@ VolumeLUTWidget::VolumeLUTWidget(VolumeRenderSettings* settings, VolumeLUTWidget
     layout->setContentsMargins(0, 0, 0, 0);
 
     auto view = new LUTChartView(m_settings, type, this);
-    connect(this, &VolumeLUTWidget::imageDataChanged, [=]() { view->imageDataUpdated(); });
-    connect(this, &VolumeLUTWidget::colorDataChanged, [=]() { view->colorDataUpdated(); });
 
     if (type == LUTType::Opacity) {
         auto view_label = new QLabel("Opacity LUT", this);
@@ -440,47 +359,20 @@ VolumeLUTWidget::VolumeLUTWidget(VolumeRenderSettings* settings, VolumeLUTWidget
     } else if (type == LUTType::Gradient) {
         auto checkbox = new QCheckBox("Gradient LUT");
         checkbox->setCheckState(Qt::CheckState::Unchecked);
-        this->m_settings->getVolumeProperty()->SetDisableGradientOpacity(true);
+        this->m_settings->volumeProperty()->SetDisableGradientOpacity(true);
         connect(checkbox, &QCheckBox::stateChanged, [=](int state) {
             if (state == 0) {
                 view->setEnabled(false);
-                this->m_settings->getVolumeProperty()->SetDisableGradientOpacity(true);
+                this->m_settings->volumeProperty()->SetDisableGradientOpacity(true);
             } else {
                 view->setEnabled(true);
-                this->m_settings->getVolumeProperty()->SetDisableGradientOpacity(false);
+                this->m_settings->volumeProperty()->SetDisableGradientOpacity(false);
             }
             m_settings->render();
         });
-
         layout->addWidget(checkbox);
         view->setDisabled(true);
     }
-
     layout->addWidget(view);
-
     setLayout(layout);
-}
-
-void VolumeLUTWidget::setColorData(const std::vector<double>& data)
-{
-    auto lut = m_settings->color_lut;
-    const auto& range = m_settings->currentImageDataScalarRange;
-    const auto min = range[0] + m_settings->viewScalarRangeFraction[0] * (range[1] - range[0]);
-    const auto max = range[0] + m_settings->viewScalarRangeFraction[1] * (range[1] - range[0]);
-    const auto N = data.size() / 3;
-    const auto step = (max - min) / (N - 1);
-    lut->RemoveAllPoints();
-    for (int i = 0; i < N; ++i) {
-        auto cIdx = i * 3;
-        const auto x = min + step * i;
-        lut->AddRGBPoint(x, data[cIdx], data[cIdx + 1], data[cIdx + 2]);
-    }
-    emit colorDataChanged();
-    m_settings->volume->Update();
-    m_settings->render();
-}
-
-void VolumeLUTWidget::imageDataUpdated()
-{
-    emit imageDataChanged();
 }

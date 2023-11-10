@@ -40,79 +40,81 @@ void CTImageImportPipeline::readImages(const QStringList& dicomPaths)
 {
     emit dataProcessingStarted();
 
-    vtkSmartPointer<vtkStringArray> fileNameArray = vtkSmartPointer<vtkStringArray>::New();
-    fileNameArray->SetNumberOfValues(dicomPaths.size());
-    for (int i = 0; i < dicomPaths.size(); ++i) {
-        auto path = dicomPaths[i].toStdString();
-        fileNameArray->SetValue(i, path);
-    }
-
-    // Dicom file reader
-    vtkSmartPointer<vtkDICOMReader> dicomReader = vtkSmartPointer<vtkDICOMReader>::New();
-    dicomReader->SetMemoryRowOrderToFileNative();
-    dicomReader->AutoRescaleOff();
-    dicomReader->SetReleaseDataFlag(1);
-
-    // apply scaling to Hounfield units
-    vtkSmartPointer<vtkDICOMApplyRescale> dicomRescaler = vtkSmartPointer<vtkDICOMApplyRescale>::New();
-    dicomRescaler->SetInputConnection(dicomReader->GetOutputPort());
-    dicomRescaler->SetOutputScalarType(VTK_DOUBLE);
-    dicomRescaler->SetReleaseDataFlag(1);
-
-    // if images aquired with gantry tilt we correct it
-    vtkSmartPointer<vtkDICOMCTRectifier> dicomRectifier = vtkSmartPointer<vtkDICOMCTRectifier>::New();
-    dicomRectifier->SetInputConnection(dicomRescaler->GetOutputPort());
-    dicomRectifier->SetReleaseDataFlag(1);
-
-    // image smoothing filter for volume rendering and segmentation
-    vtkSmartPointer<vtkImageGaussianSmooth> smoother = vtkSmartPointer<vtkImageGaussianSmooth>::New();
-    smoother->SetDimensionality(3);
-    smoother->SetStandardDeviations(m_blurRadius[0], m_blurRadius[1], m_blurRadius[2]);
-    smoother->SetRadiusFactors(m_blurRadius[0] * 2, m_blurRadius[1] * 2, m_blurRadius[2] * 2);
-    smoother->SetReleaseDataFlag(1);
-    smoother->SetInputConnection(dicomRectifier->GetOutputPort());
-
-    // rescale if we want to
-    vtkSmartPointer<vtkImageResize> rescaler = vtkSmartPointer<vtkImageResize>::New();
-    rescaler->SetInputConnection(smoother->GetOutputPort());
-    rescaler->SetResizeMethodToOutputSpacing();
-    rescaler->SetOutputSpacing(m_outputSpacing.data());
-    rescaler->SetReleaseDataFlag(1);
-
-    dicomReader->SetFileNames(fileNameArray);
-    dicomReader->SortingOn();
-    dicomReader->Update();
-
-    auto orientationMatrix = dicomReader->GetPatientMatrix();
-    dicomRectifier->SetVolumeMatrix(orientationMatrix);
-
-    dicomRectifier->Update();
-    auto rectifiedMatrix = dicomRectifier->GetVolumeMatrix();
-
-    // selecting image data i.e are we rescaling or not
-    vtkSmartPointer<vtkImageData> data;
-    if (!m_useOutputSpacing) {
-        smoother->Update();
-        data = smoother->GetOutput();
-    } else {
-        rescaler->Update();
-        data = rescaler->GetOutput();
-    }
-
     auto image = std::make_shared<DataContainer>();
 
-    std::array<int, 3> dims_int;
-    data->GetDimensions(dims_int.data());
-    std::array<std::size_t, 3> dims;
-    for (std::size_t i = 0; i < 3; ++i)
-        dims[i] = static_cast<std::size_t>(dims_int[i]);
-    image->setDimensions(dims);
+    { // scope to clean up smart pointers before rendering (we need the memory)
+        vtkSmartPointer<vtkStringArray> fileNameArray = vtkSmartPointer<vtkStringArray>::New();
+        fileNameArray->SetNumberOfValues(dicomPaths.size());
+        for (int i = 0; i < dicomPaths.size(); ++i) {
+            auto path = dicomPaths[i].toStdString();
+            fileNameArray->SetValue(i, path);
+        }
 
-    std::array<double, 3> spacing;
-    data->GetSpacing(spacing.data());
-    image->setSpacing(spacing);
+        // Dicom file reader
+        vtkSmartPointer<vtkDICOMReader> dicomReader = vtkSmartPointer<vtkDICOMReader>::New();
+        dicomReader->SetMemoryRowOrderToFileNative();
+        dicomReader->AutoRescaleOff();
+        dicomReader->ReleaseDataFlagOn();
 
-    image->setImageArray(DataContainer::ImageType::CT, data);
+        // apply scaling to Hounfield units
+        vtkSmartPointer<vtkDICOMApplyRescale> dicomRescaler = vtkSmartPointer<vtkDICOMApplyRescale>::New();
+        dicomRescaler->SetInputConnection(dicomReader->GetOutputPort());
+        dicomRescaler->SetOutputScalarType(VTK_DOUBLE);
+        dicomRescaler->ReleaseDataFlagOn();
+
+        // if images aquired with gantry tilt we correct it
+        vtkSmartPointer<vtkDICOMCTRectifier> dicomRectifier = vtkSmartPointer<vtkDICOMCTRectifier>::New();
+        dicomRectifier->SetInputConnection(dicomRescaler->GetOutputPort());
+        dicomRectifier->ReleaseDataFlagOn();
+
+        // image smoothing filter for volume rendering and segmentation
+        vtkSmartPointer<vtkImageGaussianSmooth> smoother = vtkSmartPointer<vtkImageGaussianSmooth>::New();
+        smoother->SetDimensionality(3);
+        smoother->SetStandardDeviations(m_blurRadius[0], m_blurRadius[1], m_blurRadius[2]);
+        smoother->SetRadiusFactors(m_blurRadius[0] * 2, m_blurRadius[1] * 2, m_blurRadius[2] * 2);
+        smoother->ReleaseDataFlagOn();
+        smoother->SetInputConnection(dicomRectifier->GetOutputPort());
+
+        // rescale if we want to
+        vtkSmartPointer<vtkImageResize> rescaler = vtkSmartPointer<vtkImageResize>::New();
+        rescaler->SetInputConnection(smoother->GetOutputPort());
+        rescaler->SetResizeMethodToOutputSpacing();
+        rescaler->SetOutputSpacing(m_outputSpacing.data());
+        rescaler->ReleaseDataFlagOn();
+
+        dicomReader->SetFileNames(fileNameArray);
+        dicomReader->SortingOn();
+        dicomReader->Update();
+
+        auto orientationMatrix = dicomReader->GetPatientMatrix();
+        dicomRectifier->SetVolumeMatrix(orientationMatrix);
+
+        dicomRectifier->Update();
+        auto rectifiedMatrix = dicomRectifier->GetVolumeMatrix();
+
+        // selecting image data i.e are we rescaling or not
+        vtkSmartPointer<vtkImageData> data;
+        if (!m_useOutputSpacing) {
+            smoother->Update();
+            data = smoother->GetOutput();
+        } else {
+            rescaler->Update();
+            data = rescaler->GetOutput();
+        }
+
+        std::array<int, 3> dims_int;
+        data->GetDimensions(dims_int.data());
+        std::array<std::size_t, 3> dims;
+        for (std::size_t i = 0; i < 3; ++i)
+            dims[i] = static_cast<std::size_t>(dims_int[i]);
+        image->setDimensions(dims);
+
+        std::array<double, 3> spacing;
+        data->GetSpacing(spacing.data());
+        image->setSpacing(spacing);
+
+        image->setImageArray(DataContainer::ImageType::CT, data);
+    }
 
     emit imageDataChanged(image);
     emit dataProcessingFinished();

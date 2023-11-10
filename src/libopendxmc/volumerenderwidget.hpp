@@ -35,16 +35,12 @@ public:
     void updateImageData(std::shared_ptr<DataContainer>);
     VolumerenderSettingsWidget* createSettingsWidget(QWidget* parent = nullptr);
 
-signals:
-    void imageDataChanged();
-
 protected:
     void setupRenderingPipeline();
-    void Render(bool rezoom_camera = false);
     void setNewImageData(vtkSmartPointer<vtkImageData> data, bool rezoom_camera = false);
 
 private:
     std::shared_ptr<DataContainer> m_data = nullptr;
     QVTKOpenGLNativeWidget* openGLWidget = nullptr;
-    VolumeRenderSettings m_settings;
+    VolumeRenderSettings* m_settings = nullptr;
 };

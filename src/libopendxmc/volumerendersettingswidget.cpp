@@ -25,9 +25,11 @@ Copyright 2023 Erlend Andersen
 #include <QGroupBox>
 #include <QLabel>
 #include <QSlider>
+#include <QSpinBox>
 #include <QVBoxLayout>
 
 #include <vtkVolume.h>
+#include <vtkVolumeProperty.h>
 
 template <typename T>
 struct SettingsCollection {
@@ -56,6 +58,7 @@ SettingsCollection<T> getSettingsWidget(const QString& label, QWidget* parent)
     }
 
     layout->setStretch(1, 10);
+
     SettingsCollection<T> s;
     s.widget = w;
     s.layout = layout;
@@ -76,14 +79,32 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(VolumeRenderSettings* set
 
     // jittering
     auto jittering = getSettingsWidget<QCheckBox>(tr("Use jittering"), this);
-    jittering.widget->setChecked(m_settings->mapper->GetUseJittering());
+    jittering.widget->setChecked(m_settings->mapper()->GetUseJittering());
     connect(jittering.widget, &QCheckBox::stateChanged, [=](int state) {
-        m_settings->mapper->SetUseJittering(state != 0);
+        m_settings->mapper()->SetUseJittering(state != 0);
         m_settings->render();
     });
     layout->addLayout(jittering.layout);
 
-    auto vprop = m_settings->getVolumeProperty();
+    auto multisampling = getSettingsWidget<QSpinBox>(tr("Multi sampling"), this);
+    multisampling.widget->setValue(m_settings->renderWindow()->GetMultiSamples());
+    multisampling.widget->setMinimum(1);
+    connect(multisampling.widget, &QSpinBox::valueChanged, [=](int value) {
+        m_settings->renderWindow()->SetMultiSamples(value);
+        m_settings->render();
+    });
+    layout->addLayout(multisampling.layout);
+
+    // jittering
+    auto fxaa = getSettingsWidget<QCheckBox>(tr("Use FXAA"), this);
+    fxaa.widget->setChecked(m_settings->renderer()->GetUseFXAA());
+    connect(fxaa.widget, &QCheckBox::stateChanged, [=](int state) {
+        m_settings->renderer()->SetUseFXAA(state != 0);
+        m_settings->render();
+    });
+    layout->addLayout(fxaa.layout);
+
+    auto vprop = m_settings->volumeProperty();
     // shadebox
     auto shadebox = new QGroupBox(tr("Shading"), this);
     auto shade_layout = new QVBoxLayout(this);
@@ -99,20 +120,20 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(VolumeRenderSettings* set
 
     // Global illumination reach
     auto gir = getSettingsWidget<QSlider>(tr("Global illumination reach"), shadebox);
-    gir.widget->setValue(static_cast<int>(m_settings->mapper->GetGlobalIlluminationReach() * 100));
+    gir.widget->setValue(static_cast<int>(m_settings->mapper()->GetGlobalIlluminationReach() * 100));
     connect(gir.widget, &QSlider::valueChanged, [=](int value) {
         const float g = value / float { 100 };
-        m_settings->mapper->SetGlobalIlluminationReach(std::clamp(g, 0.f, 1.f));
+        m_settings->mapper()->SetGlobalIlluminationReach(std::clamp(g, 0.f, 1.f));
         m_settings->render();
     });
     shade_layout->addLayout(gir.layout);
 
     // Volumetric Scattering blending
     auto vsb = getSettingsWidget<QSlider>(tr("Volumetric scattering blending"), this);
-    vsb.widget->setValue(static_cast<int>(m_settings->mapper->GetGlobalIlluminationReach() * 50));
+    vsb.widget->setValue(static_cast<int>(m_settings->mapper()->GetGlobalIlluminationReach() * 50));
     connect(vsb.widget, &QSlider::valueChanged, [=](int value) {
         const float g = value / float { 50 };
-        m_settings->mapper->SetVolumetricScatteringBlending(std::clamp(g, 0.f, 2.f));
+        m_settings->mapper()->SetVolumetricScatteringBlending(std::clamp(g, 0.f, 2.f));
         m_settings->render();
     });
     shade_layout->addLayout(vsb.layout);
@@ -169,43 +190,24 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(VolumeRenderSettings* set
 
     // colortable selector
     auto color = getSettingsWidget<QComboBox>(tr("Color table"), this);
-    for (const auto& [name, ct] : COLORMAPS) {
+    for (const auto& [name, ct] : Colormaps::COLORMAPS) {
         color.widget->addItem(QString::fromStdString(name));
     }
-    auto color_gray_index = color.widget->findText(QString::fromStdString("GRAY"));
+    auto color_gray_index = color.widget->findText(QString::fromStdString("CT"));
     color.widget->setCurrentIndex(color_gray_index);
     connect(color.widget, &QComboBox::currentTextChanged, [=](const QString& cname) {
-        this->setColorTable(cname.toStdString());
+        m_settings->setColorMap(cname.toStdString());
     });
     layout->addLayout(color.layout);
 
     // lutWidget
     m_lut_opacity_widget = new VolumeLUTWidget(m_settings, VolumeLUTWidget::LUTType::Opacity, this);
     layout->addWidget(m_lut_opacity_widget);
-    setColorTable("GRAY");
-    /*
+
     // lutWidget
     m_lut_gradient_widget = new VolumeLUTWidget(m_settings, VolumeLUTWidget::LUTType::Gradient, this);
     layout->addWidget(m_lut_gradient_widget);
-    */
+
     layout->addStretch();
     setLayout(layout);
-}
-
-void VolumerenderSettingsWidget::setColorTable(const std::string& ct)
-{
-    if (!COLORMAPS.contains(ct)) {
-        return;
-    }
-    const auto& map = COLORMAPS.at(ct);
-    m_lut_opacity_widget->setColorData(map);
-}
-
-void VolumerenderSettingsWidget::imageDataUpdated()
-{
-    auto data = m_settings->currentImageData;
-    if (data) {
-        m_lut_opacity_widget->imageDataUpdated();
-        //m_lut_gradient_widget->imageDataUpdated();
-    }
 }

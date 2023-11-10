@@ -33,14 +33,8 @@ public:
         Gradient
     };
     VolumeLUTWidget(VolumeRenderSettings* settings, LUTType type = LUTType::Opacity, QWidget* parent = nullptr);
-    void setColorData(const std::vector<double>& data);
-    void imageDataUpdated();
+    void updateAxisScalarRange();
 
-signals:
-    void imageDataChanged();
-    void colorDataChanged();
-
-protected:
 private:
     VolumeRenderSettings* m_settings;
 };

@@ -32,9 +32,6 @@ class VolumerenderSettingsWidget : public QWidget {
 public:
     VolumerenderSettingsWidget(VolumeRenderSettings* settings, QWidget* parent = nullptr);
 
-    void imageDataUpdated();
-    void setColorTable(const std::string&);
-
 private:
     VolumeRenderSettings* m_settings = nullptr;
     VolumeLUTWidget* m_lut_opacity_widget = nullptr;

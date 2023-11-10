@@ -55,7 +55,7 @@ public:
     bool setImageArray(ImageType type, const std::vector<double>& image);
     bool setImageArray(ImageType type, const std::vector<std::uint8_t>& image);
     bool setImageArray(ImageType type, const std::vector<std::uint64_t>& image);
-    bool setImageArray(ImageType type, vtkImageData* image);
+    bool setImageArray(ImageType type, vtkSmartPointer<vtkImageData> image);
     std::size_t size() const;
     bool hasImage(ImageType type);
     std::uint64_t ID() const;

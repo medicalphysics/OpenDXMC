@@ -56,14 +56,38 @@ RenderWidgetsCollection::RenderWidgetsCollection(QWidget* parent)
     m_slice_widgets[0]->sharedViews(m_slice_widgets[1], m_slice_widgets[2]);
 
     this->setLayout(layout);
+
+    // data type selector
+    m_data_type_selector = new QComboBox(this);
+    connect(m_data_type_selector, &QComboBox::currentIndexChanged, [=](int idx) {
+        auto type = static_cast<DataContainer::ImageType>(m_data_type_selector->currentData().toInt());
+        this->showData(type);
+    });
+
     updateImageData(generateSampleData());
 }
 
 void RenderWidgetsCollection::updateImageData(std::shared_ptr<DataContainer> data)
 {
+    m_data_type_selector->clear();
+    if (data) {
+        auto types = data->getAvailableImages();
+        for (auto t : types) {
+            auto d = QVariant(static_cast<int>(t));
+            auto name = QString::fromStdString(data->getImageAsString(t));
+            m_data_type_selector->addItem(name, d);
+        }
+    }
     for (auto& w : m_slice_widgets)
         w->updateImageData(data);
     m_volume_widget->updateImageData(data);
+}
+
+void RenderWidgetsCollection::showData(DataContainer::ImageType type)
+{
+    for (auto& w : m_slice_widgets)
+        w->showData(type);
+    m_volume_widget->showData(type);
 }
 
 void RenderWidgetsCollection::useFXAA(bool on)
@@ -94,6 +118,11 @@ void RenderWidgetsCollection::setInteractionStyleTo3D()
 {
     for (auto& w : m_slice_widgets)
         w->setInteractionStyleTo3D();
+}
+
+QComboBox* RenderWidgetsCollection::getVolumeSelector()
+{
+    return m_data_type_selector;
 }
 
 VolumerenderSettingsWidget* RenderWidgetsCollection::volumerenderSettingsWidget(QWidget* parent)

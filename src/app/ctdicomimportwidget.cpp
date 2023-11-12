@@ -257,11 +257,15 @@ void CTDicomImportWidget::lookInFolder(const QString folderPath)
 void CTDicomImportWidget::seriesActivated(int index)
 {
     int n_series = m_imageDirectorySnooper->GetNumberOfSeries();
-    if (index >= n_series || index < 0) {
+    if (index > n_series || index < 1) {
         m_seriesSelector->clear();
         m_seriesSelector->setDisabled(true);
         return;
     }
+
+    // subtract dummy series;
+    index--;
+
     auto fileNameArray = m_imageDirectorySnooper->GetFileNamesForSeries(index);
     int n = fileNameArray->GetNumberOfValues();
     QStringList fileNames;

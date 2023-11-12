@@ -189,8 +189,54 @@ SliceRenderWidget::SliceRenderWidget(int orientation, QWidget* parent)
 
     // lut
     lut = vtkSmartPointer<vtkWindowLevelLookupTable>::New();
+    lut_discrete = vtkSmartPointer<vtkDiscretizableColorTransferFunction>::New();
 
     setupSlicePipeline(orientation);
+}
+
+std::array<double, 3> HSVtoRGB(double H, double S, double V)
+{
+    if (S == 0) {
+        std::array res = { V, V, V };
+        return res;
+    } else {
+        auto var_h = H * 6;
+        if (var_h == 6)
+            var_h = 0; // H must be < 1
+        auto var_i = int(var_h); // Or ... var_i = floor( var_h )
+        auto var_1 = V * (1 - S);
+        auto var_2 = V * (1 - S * (var_h - var_i));
+        auto var_3 = V * (1 - S * (1 - (var_h - var_i)));
+        double var_r, var_g, var_b;
+        if (var_i == 0) {
+            var_r = V;
+            var_g = var_3;
+            var_b = var_1;
+        } else if (var_i == 1) {
+            var_r = var_2;
+            var_g = V;
+            var_b = var_1;
+        } else if (var_i == 2) {
+            var_r = var_1;
+            var_g = V;
+            var_b = var_3;
+        } else if (var_i == 3) {
+            var_r = var_1;
+            var_g = var_2;
+            var_b = V;
+        } else if (var_i == 4) {
+            var_r = var_3;
+            var_g = var_1;
+            var_b = V;
+        } else {
+            var_r = V;
+            var_g = var_1;
+            var_b = var_2;
+        }
+
+        std::array res = { var_r, var_g, var_b };
+        return res;
+    }
 }
 
 void SliceRenderWidget::setupSlicePipeline(int orientation)
@@ -248,14 +294,26 @@ void SliceRenderWidget::setupSlicePipeline(int orientation)
     lut->SetMinimumTableValue(0, 0, 0, 1);
     lut->SetMaximumTableValue(1, 1, 1, 1);
     lut->Build();
+
+    lut_discrete->DiscretizeOn();
+    for (int i = 0; i < 256; ++i) {
+        int h = i * 29;
+        int frac = h % 360;
+        auto H = frac / 360.0;
+        auto rgb = HSVtoRGB(H, 1.0, 1.0);
+        lut_discrete->SetIndexedColorRGB(i, rgb.data());
+    }
+    lut_discrete->Build();
 }
 
 void SliceRenderWidget::sharedViews(std::vector<SliceRenderWidget*> wids)
 {
     wids.insert(wids.begin(), this);
     // setting same lut
-    for (auto& w : wids)
+    for (auto& w : wids) {
         w->lut = this->lut;
+        w->lut_discrete = this->lut_discrete;
+    }
 
     for (std::size_t i = 0; i < wids.size(); ++i) {
         auto w = wids[i];
@@ -318,6 +376,38 @@ void SliceRenderWidget::setInterpolationType(int type)
     imageSlice->GetProperty()->SetInterpolationType(type);
 }
 
+void SliceRenderWidget::switchLUTtable(bool discrete)
+{
+    auto prop = imageSlice->GetProperty();
+    if (discrete) {
+        if (prop->GetLookupTable() != lut_discrete) {
+            prop->SetLookupTable(lut_discrete);
+            prop->UseLookupTableScalarRangeOn();
+        }
+    } else {
+        if (prop->GetLookupTable() != lut) {
+            prop->SetLookupTable(lut);
+            prop->UseLookupTableScalarRangeOff();
+        }
+    }
+}
+
+void SliceRenderWidget::showData(DataContainer::ImageType type)
+{
+    if (!m_data)
+        return;
+    if (m_data->hasImage(type)) {
+        auto vtkimage = m_data->vtkImage(type);
+        if (type == DataContainer::ImageType::Material) {
+
+            switchLUTtable(true);
+        } else {
+            switchLUTtable(false);
+        }
+        setNewImageData(vtkimage, false);
+    }
+}
+
 void SliceRenderWidget::Render(bool rezoom_camera)
 {
     auto ps = renderer->GetActiveCamera()->GetParallelScale();
@@ -353,6 +443,9 @@ void SliceRenderWidget::updateImageData(std::shared_ptr<DataContainer> data)
     if (data) {
         if (data->hasImage(DataContainer::ImageType::CT) && uid_is_new) {
             auto vtkimage = data->vtkImage(DataContainer::ImageType::CT);
+            setNewImageData(vtkimage, true);
+        } else if (data->hasImage(DataContainer::ImageType::Density) && uid_is_new) {
+            auto vtkimage = data->vtkImage(DataContainer::ImageType::Density);
             setNewImageData(vtkimage, true);
         }
     }

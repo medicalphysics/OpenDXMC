@@ -64,7 +64,13 @@ MainWindow::MainWindow(QWidget* parent)
 
     auto rightDock = new QDockWidget(this);
     rightDock->setAllowedAreas(Qt::DockWidgetArea::RightDockWidgetArea);
-    rightDock->setWidget(slicerender->volumerenderSettingsWidget(rightDock));
+    auto dockWidget = new QWidget(rightDock);
+    dockWidget->setContentsMargins(0, 0, 0, 0);
+    auto dockWidget_layout = new QVBoxLayout;
+    dockWidget->setLayout(dockWidget_layout);
+    dockWidget_layout->addWidget(slicerender->getVolumeSelector());
+    dockWidget_layout->addWidget(slicerender->volumerenderSettingsWidget(dockWidget));
+    rightDock->setWidget(dockWidget);
     addDockWidget(Qt::DockWidgetArea::RightDockWidgetArea, rightDock);
 
     // adding ct dicom import widget and pipeline
@@ -88,6 +94,8 @@ MainWindow::MainWindow(QWidget* parent)
     connect(ctdicomimportwidget, &CTDicomImportWidget::aqusitionSnFiltrationChanged, ctsegmentationpipelie, &CTSegmentationPipeline::setSnFiltration);
     connect(ctdicomimportwidget, &CTDicomImportWidget::aqusitionVoltageChanged, ctsegmentationpipelie, &CTSegmentationPipeline::setAqusitionVoltage);
     connect(ctsegmentationpipelie, &CTSegmentationPipeline::imageDataChanged, slicerender, &RenderWidgetsCollection::updateImageData);
+    connect(ctimageimportpipeline, &CTImageImportPipeline::imageDataChanged, ctsegmentationpipelie, &CTSegmentationPipeline::updateImageData);
+
 
     // simulation progress
     /* m_progressTimer = new QTimer(this);

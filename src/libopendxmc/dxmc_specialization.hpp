@@ -19,9 +19,12 @@ Copyright 2024 Erlend Andersen
 #pragma once
 
 #include "dxmc/material/material.hpp"
-
+#include "dxmc/material/nistmaterials.hpp"
+#include "dxmc/beams/tube/tube.hpp"
 //Here we specialize types from the dxmc template library.
 
 using Material = dxmc::Material<double, 5>;
+using Tube = dxmc::Tube<double>;
+using NISTMaterials = dxmc::NISTMaterials<double>;
 
 

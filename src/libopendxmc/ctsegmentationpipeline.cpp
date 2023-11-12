@@ -17,6 +17,7 @@ Copyright 2024 Erlend Andersen
 */
 
 #include <ctsegmentationpipeline.hpp>
+#include <dxmc_specialization.hpp>
 
 #include "dxmc/beams/tube/tube.hpp"
 #include "dxmc/material/nistmaterials.hpp"
@@ -38,15 +39,15 @@ void CTSegmentationPipeline::setAqusitionVoltage(double kv)
 
 void CTSegmentationPipeline::setAlFiltration(double f)
 {
-    m_Al_filt_cm = std::max(0.0, f * 0.1);
+    m_Al_filt_mm = std::max(0.0, f);
 }
 
 void CTSegmentationPipeline::setSnFiltration(double f)
 {
-    m_Sn_filt_cm = std::max(0.0, f * 0.1);
+    m_Sn_filt_mm = std::max(0.0, f);
 }
 
-using MatDens = std::pair<dxmc::Material<double>, double>;
+using MatDens = std::pair<Material, double>;
 
 struct CTNumberData {
     std::vector<double> HU;
@@ -62,17 +63,17 @@ CTNumberData getMeanCTNumbers(const std::vector<MatDens>& materials, double al_f
 
     CTNumberData data;
 
-    dxmc::Tube<double> tube(tube_kvp);
+    Tube tube(tube_kvp);
     tube.setAlFiltration(al_filtration);
     tube.setSnFiltration(sn_filtration);
 
     const auto spec_en = tube.getEnergy();
     const auto spec_w = tube.getSpecter(spec_en, true);
 
-    const auto air = dxmc::Material<double>::byNistName("Air, Dry(near sea level)").value();
-    const auto air_dens = dxmc::NISTMaterials<double>::density("Air, Dry(near sea level)");
-    const auto water = dxmc::Material<double>::byNistName("Water, Liquid").value();
-    const auto water_dens = dxmc::NISTMaterials<double>::density("Water, Liquid");
+    const auto air = Material::byNistName("Air, Dry (near sea level)").value();
+    const auto air_dens = NISTMaterials::density("Air, Dry (near sea level)");
+    const auto water = Material::byNistName("Water, Liquid").value();
+    const auto water_dens = NISTMaterials::density("Water, Liquid");
 
     data.HU.resize(materials.size());
     for (int i = 0; i < materials.size(); ++i) {
@@ -111,23 +112,22 @@ CTNumberData getMeanCTNumbers(const std::vector<MatDens>& materials, double al_f
 
 void CTSegmentationPipeline::updateImageData(std::shared_ptr<DataContainer> data)
 {
-
     if (!data)
         return;
     if (!data->hasImage(DataContainer::ImageType::CT))
         return;
     emit dataProcessingStarted();
-    std::vector<std::string> mat_names = { "Air, Dry(near sea level)", "Adipose Tissue(ICRP)", "Tissue, Soft (ICRP)", "Muscle, Skeletal", "Bone, Cortical (ICRP)" };
+    std::vector<std::string> mat_names = { "Air, Dry (near sea level)", "Adipose Tissue (ICRP)", "Tissue, Soft (ICRP)", "Muscle, Skeletal", "Bone, Cortical (ICRP)" };
 
     std::vector<MatDens> materials;
     for (const auto& n : mat_names)
-        materials.push_back(std::make_pair(dxmc::Material<double>::byNistName(n).value(), dxmc::NISTMaterials<double>::density(n)));
+        materials.push_back(std::make_pair(Material::byNistName(n).value(), NISTMaterials::density(n)));
 
-    const auto mat_data = getMeanCTNumbers(materials, m_Al_filt_cm, m_Sn_filt_cm, m_kv);
+    const auto mat_data = getMeanCTNumbers(materials, m_Al_filt_mm, m_Sn_filt_mm, m_kv);
     const auto& mat_HU = mat_data.HU;
     std::vector<double> mat_HU_sep;
     for (std::size_t i = 0; i < mat_HU.size() - 1; ++i) {
-        mat_HU_sep[i] = (mat_HU[i] + mat_HU[i + 1]) / 2;
+        mat_HU_sep.push_back((mat_HU[i] + mat_HU[i + 1]) / 2);
     }
 
     std::vector<std::uint8_t> mat_array(data->size());

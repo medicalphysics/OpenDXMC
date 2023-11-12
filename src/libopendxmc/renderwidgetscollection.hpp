@@ -23,6 +23,7 @@ Copyright 2023 Erlend Andersen
 #include <volumerenderwidget.hpp>
 
 #include <QWidget>
+#include <QComboBox>
 
 #include <array>
 
@@ -41,8 +42,12 @@ public:
     void setInterpolationType(int type = 1);
 
     VolumerenderSettingsWidget* volumerenderSettingsWidget(QWidget* parent = nullptr);
+    QComboBox* getVolumeSelector();
+
+    void showData(DataContainer::ImageType type);
 
 private:
     std::array<SliceRenderWidget*, 3> m_slice_widgets = { nullptr, nullptr, nullptr };
     VolumerenderWidget* m_volume_widget = nullptr;
+    QComboBox* m_data_type_selector = nullptr;
 };

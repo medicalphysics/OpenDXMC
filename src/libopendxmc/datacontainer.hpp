@@ -32,7 +32,7 @@ Copyright 2024 Erlend Andersen
 
 class DataContainer {
 public:
-    enum class ImageType {
+    enum class ImageType : int {
         CT,
         Density,
         Material,
@@ -58,7 +58,7 @@ public:
     bool setImageArray(ImageType type, vtkSmartPointer<vtkImageData> image);
 
     std::size_t size() const;
-    bool hasImage(ImageType type);
+    bool hasImage(ImageType type) const;
     std::uint64_t ID() const;
 
     vtkSmartPointer<vtkImageData> vtkImage(ImageType);
@@ -66,6 +66,9 @@ public:
     const std::vector<double>& getCTArray() const { return m_ct_array; }
     const std::vector<double>& getDensityArray() const { return m_density_array; }
     const std::vector<std::uint8_t>& getMaterialArray() const { return m_material_array; }
+
+    static std::string getImageAsString(ImageType type);
+    std::vector<ImageType> getAvailableImages() const;
 
 protected:
     vtkSmartPointer<vtkImageData> generate_vtkImage(ImageType);

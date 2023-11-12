@@ -34,6 +34,8 @@ public:
     VolumerenderWidget(QWidget* parent = nullptr);
     void updateImageData(std::shared_ptr<DataContainer>);
     VolumerenderSettingsWidget* createSettingsWidget(QWidget* parent = nullptr);
+    void showData(DataContainer::ImageType type);
+
 
 protected:
     void setupRenderingPipeline();

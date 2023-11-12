@@ -32,6 +32,6 @@ public:
 
 private:
     double m_kv = 120;
-    double m_Al_filt_cm = 0.9;
-    double m_Sn_filt_cm = 0;
+    double m_Al_filt_mm = 0.9;
+    double m_Sn_filt_mm = 0;
 };

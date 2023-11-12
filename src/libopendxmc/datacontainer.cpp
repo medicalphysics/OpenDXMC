@@ -118,6 +118,58 @@ vtkSmartPointer<vtkImageData> DataContainer::generate_vtkImage(ImageType type)
     return image;
 }
 
+std::vector<DataContainer::ImageType> DataContainer::getAvailableImages() const
+{
+    
+    std::array types = {
+        ImageType::CT,
+        ImageType::Density,
+        ImageType::Organ,
+        ImageType::Material,
+        ImageType::Dose,
+        ImageType::DoseVariance,
+        ImageType::DoseCount
+    };
+    std::vector<ImageType> type_avail;
+    for (const auto t : types)
+        if (hasImage(t))
+            type_avail.push_back(t);
+
+    return type_avail;
+}
+
+std::string DataContainer::getImageAsString(ImageType type)
+{
+
+    std::string name = "Unknown";
+    switch (type) {
+    case DataContainer::ImageType::CT:
+        name = "CT";
+        break;
+    case DataContainer::ImageType::Density:
+        name = "Density";
+        break;
+    case DataContainer::ImageType::Material:
+        name = "Material";
+        break;
+    case DataContainer::ImageType::Organ:
+        name = "Organ";
+        break;
+    case DataContainer::ImageType::Dose:
+        name = "Dose";
+        break;
+    case DataContainer::ImageType::DoseVariance:
+        name = "Dose variance";
+        break;
+    case DataContainer::ImageType::DoseCount:
+        name = "Dose tally";
+        break;
+    default:
+        break;
+    }
+    return name;
+}
+
 void DataContainer::setSpacing(const std::array<double, 3>& cm)
 {
     m_spacing = cm;
@@ -271,7 +323,7 @@ std::size_t DataContainer::size() const
     return m_dimensions[0] * m_dimensions[1] * m_dimensions[2];
 }
 
-bool DataContainer::hasImage(ImageType type)
+bool DataContainer::hasImage(ImageType type) const
 {
     if (m_uid == 0)
         return false;

@@ -91,6 +91,16 @@ void VolumerenderWidget::setNewImageData(vtkSmartPointer<vtkImageData> data, boo
     }
 }
 
+void VolumerenderWidget::showData(DataContainer::ImageType type)
+{
+    if (!m_data)
+        return;
+    if (m_data->hasImage(type)) {
+        auto vtkimage = m_data->vtkImage(type);
+        setNewImageData(vtkimage, false);
+    }
+}
+
 void VolumerenderWidget::updateImageData(std::shared_ptr<DataContainer> data)
 {
     if (data && m_data) {
@@ -107,6 +117,9 @@ void VolumerenderWidget::updateImageData(std::shared_ptr<DataContainer> data)
     if (data) {
         if (data->hasImage(DataContainer::ImageType::CT) && uid_is_new) {
             auto vtkimage = data->vtkImage(DataContainer::ImageType::CT);
+            setNewImageData(vtkimage, uid_is_new);
+        } else if (data->hasImage(DataContainer::ImageType::Density)) {
+            auto vtkimage = data->vtkImage(DataContainer::ImageType::Density);
             setNewImageData(vtkimage, uid_is_new);
         }
     }

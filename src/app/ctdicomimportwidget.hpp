@@ -45,7 +45,7 @@ signals:
     void useOutputSpacingChanged(bool value);
     void aqusitionVoltageChanged(double voltage);
     void aqusitionAlFiltrationChanged(double mm);
-    void aqusitionCuFiltrationChanged(double mm);
+    void aqusitionSnFiltrationChanged(double mm);
     void segmentationMaterialsChanged();
 
 private:

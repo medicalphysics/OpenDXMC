@@ -28,6 +28,7 @@ Copyright 2024 Erlend Andersen
 
 #include <ctdicomimportwidget.hpp>
 #include <ctimageimportpipeline.hpp>
+#include <ctsegmentationpipeline.hpp>
 #include <renderwidgetscollection.hpp>
 #include <volumerendersettingswidget.hpp>
 
@@ -56,8 +57,18 @@ MainWindow::MainWindow(QWidget* parent)
     // vector for QObjects in pipeline
     std::vector<QObject*> pipelineitems;
 
+    // adding an slice render widget
+    auto slicerender = new RenderWidgetsCollection(splitter);
+    splitter->addWidget(slicerender);
+    splitter->setStretchFactor(1, 10);
+
+    auto rightDock = new QDockWidget(this);
+    rightDock->setAllowedAreas(Qt::DockWidgetArea::RightDockWidgetArea);
+    rightDock->setWidget(slicerender->volumerenderSettingsWidget(rightDock));
+    addDockWidget(Qt::DockWidgetArea::RightDockWidgetArea, rightDock);
+
     // adding ct dicom import widget and pipeline
-    auto ctimageimportpipeline = new CTImageImportPipeline();
+    auto ctimageimportpipeline = new CTImageImportPipeline;
     ctimageimportpipeline->moveToThread(&m_workerThread);
     pipelineitems.push_back(ctimageimportpipeline);
     auto ctdicomimportwidget = new CTDicomImportWidget(importWidgets);
@@ -67,20 +78,16 @@ MainWindow::MainWindow(QWidget* parent)
     connect(ctdicomimportwidget, &CTDicomImportWidget::blurRadiusChanged, ctimageimportpipeline, &CTImageImportPipeline::setBlurRadius);
     connect(ctdicomimportwidget, &CTDicomImportWidget::outputSpacingChanged, ctimageimportpipeline, &CTImageImportPipeline::setOutputSpacing);
     connect(ctdicomimportwidget, &CTDicomImportWidget::useOutputSpacingChanged, ctimageimportpipeline, &CTImageImportPipeline::setUseOutputSpacing);
-
-    // adding an slice render widget
-    // TODO add multiple views
-    auto slicerender = new RenderWidgetsCollection(splitter);
-    splitter->addWidget(slicerender);
-    splitter->setStretchFactor(1, 10);
     connect(ctimageimportpipeline, &CTImageImportPipeline::imageDataChanged, slicerender, &RenderWidgetsCollection::updateImageData);
 
-    auto rightDock = new QDockWidget(this);
-    // auto dockLayout = new QVBoxLayout(rightDock);
-    // rightDock->setLayout(dockLayout);
-    rightDock->setAllowedAreas(Qt::DockWidgetArea::RightDockWidgetArea);
-    rightDock->setWidget(slicerender->volumerenderSettingsWidget(rightDock));
-    addDockWidget(Qt::DockWidgetArea::RightDockWidgetArea, rightDock);
+    // adding ct segmentation pipeline
+    auto ctsegmentationpipelie = new CTSegmentationPipeline;
+    ctsegmentationpipelie->moveToThread(&m_workerThread);
+    pipelineitems.push_back(ctsegmentationpipelie);
+    connect(ctdicomimportwidget, &CTDicomImportWidget::aqusitionAlFiltrationChanged, ctsegmentationpipelie, &CTSegmentationPipeline::setAlFiltration);
+    connect(ctdicomimportwidget, &CTDicomImportWidget::aqusitionSnFiltrationChanged, ctsegmentationpipelie, &CTSegmentationPipeline::setSnFiltration);
+    connect(ctdicomimportwidget, &CTDicomImportWidget::aqusitionVoltageChanged, ctsegmentationpipelie, &CTSegmentationPipeline::setAqusitionVoltage);
+    connect(ctsegmentationpipelie, &CTSegmentationPipeline::imageDataChanged, slicerender, &RenderWidgetsCollection::updateImageData);
 
     // simulation progress
     /* m_progressTimer = new QTimer(this);

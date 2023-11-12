@@ -28,15 +28,10 @@ class BasePipeline : public QObject {
     Q_OBJECT
 public:
     BasePipeline(QObject* parent = nullptr);
-    virtual void updateImageData(std::shared_ptr<DataContainer>);
+    virtual void updateImageData(std::shared_ptr<DataContainer>) = 0;
 
 signals:
     void imageDataChanged(std::shared_ptr<DataContainer>);
     void dataProcessingStarted();
     void dataProcessingFinished();
-
-protected:
-    std::shared_ptr<DataContainer> m_data = nullptr;
-
-private:
 };

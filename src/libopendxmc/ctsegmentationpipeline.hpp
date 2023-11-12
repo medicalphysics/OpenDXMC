@@ -16,9 +16,22 @@ along with OpenDXMC. If not, see < https://www.gnu.org/licenses/>.
 Copyright 2024 Erlend Andersen
 */
 
+#pragma once
+
 #include <basepipeline.hpp>
 
-BasePipeline::BasePipeline(QObject* parent)
-    : QObject(parent)
-{
-}
+class CTSegmentationPipeline : public BasePipeline {
+    Q_OBJECT
+public:
+    CTSegmentationPipeline(QObject* parent = nullptr);
+
+    void setAqusitionVoltage(double kv);
+    void setAlFiltration(double mm);
+    void setSnFiltration(double mm);
+    void updateImageData(std::shared_ptr<DataContainer>) override;
+
+private:
+    double m_kv = 120;
+    double m_Al_filt_cm = 0.9;
+    double m_Sn_filt_cm = 0;
+};

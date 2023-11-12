@@ -132,25 +132,25 @@ CTDicomImportWidget::CTDicomImportWidget(QWidget* parent)
     tubeAlFiltrationSpinBox->setMinimum(0.0);
     tubeAlFiltrationSpinBox->setMaximum(100.0);
     tubeAlFiltrationSpinBox->setSuffix(" mm");
-    tubeAlFiltrationSpinBox->setValue(7.0);
+    tubeAlFiltrationSpinBox->setValue(9.0);
     tubeAlFiltrationSpinBox->setDecimals(1);
     connect(tubeAlFiltrationSpinBox, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [=](double val) { emit aqusitionAlFiltrationChanged(val); });
     auto tubeAlFiltrationLabel = new QLabel(tr("Al filtration"), this);
     tubeAlFiltrationLayout->addWidget(tubeAlFiltrationLabel);
     tubeAlFiltrationLayout->addWidget(tubeAlFiltrationSpinBox);
     tubeLayout->addLayout(tubeAlFiltrationLayout);
-    auto tubeCuFiltrationLayout = new QVBoxLayout;
-    auto tubeCuFiltrationSpinBox = new QDoubleSpinBox(this);
-    tubeCuFiltrationSpinBox->setMinimum(0.0);
-    tubeCuFiltrationSpinBox->setMaximum(100.0);
-    tubeCuFiltrationSpinBox->setValue(0.0);
-    tubeCuFiltrationSpinBox->setSuffix(" mm");
-    tubeCuFiltrationSpinBox->setDecimals(1);
-    connect(tubeCuFiltrationSpinBox, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [=](double val) { emit aqusitionCuFiltrationChanged(val); });
-    auto tubeCuFiltrationLabel = new QLabel(tr("Cu filtration"), this);
-    tubeCuFiltrationLayout->addWidget(tubeCuFiltrationLabel);
-    tubeCuFiltrationLayout->addWidget(tubeCuFiltrationSpinBox);
-    tubeLayout->addLayout(tubeCuFiltrationLayout);
+    auto tubeSnFiltrationLayout = new QVBoxLayout;
+    auto tubeSnFiltrationSpinBox = new QDoubleSpinBox(this);
+    tubeSnFiltrationSpinBox->setMinimum(0.0);
+    tubeSnFiltrationSpinBox->setMaximum(100.0);
+    tubeSnFiltrationSpinBox->setValue(0.0);
+    tubeSnFiltrationSpinBox->setSuffix(" mm");
+    tubeSnFiltrationSpinBox->setDecimals(1);
+    connect(tubeSnFiltrationSpinBox, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [=](double val) { emit aqusitionSnFiltrationChanged(val); });
+    auto tubeSnFiltrationLabel = new QLabel(tr("Sn filtration"), this);
+    tubeSnFiltrationLayout->addWidget(tubeSnFiltrationLabel);
+    tubeSnFiltrationLayout->addWidget(tubeSnFiltrationSpinBox);
+    tubeLayout->addLayout(tubeSnFiltrationLayout);
     tubeBox->setLayout(tubeLayout);
 
     // setting up layout
@@ -171,11 +171,14 @@ CTDicomImportWidget::CTDicomImportWidget(QWidget* parent)
         emit dicomFolderSelectedForBrowsing(path.absolutePath());
     }
 
-    // signal for updating blur and spacing setting to dicomimporter
+    // signal for updating blur, spacing and aqusition settings
     QTimer::singleShot(0, [=](void) {
         emit this->blurRadiusChanged(m_blurRadius.data());
         emit this->outputSpacingChanged(m_outputSpacing.data());
         emit useOutputSpacingChanged(outputSpacingBox->isChecked());
+        emit aqusitionAlFiltrationChanged(tubeAlFiltrationSpinBox->value());
+        emit aqusitionSnFiltrationChanged(tubeSnFiltrationSpinBox->value());
+        emit aqusitionVoltageChanged(tubeVoltageSpinBox->value());
     });
 }
 
@@ -209,6 +212,7 @@ void CTDicomImportWidget::lookInFolder(const QString folderPath)
 
     // resetting series selector
     m_seriesSelector->clear();
+    m_seriesSelector->addItem(tr("Select series to import"));
     m_seriesSelector->setEnabled(false);
 
     // restricts images to axial CT images

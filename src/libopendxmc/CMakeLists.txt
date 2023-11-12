@@ -3,6 +3,7 @@ qt_add_library(libopendxmc STATIC
 	basepipeline.cpp
 	datacontainer.cpp
 	ctimageimportpipeline.cpp
+	ctsegmentationpipeline.cpp
 	slicerenderwidget.cpp
 	custominteractorstyleimage.cpp
 	renderwidgetscollection.cpp

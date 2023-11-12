@@ -56,11 +56,16 @@ public:
     bool setImageArray(ImageType type, const std::vector<std::uint8_t>& image);
     bool setImageArray(ImageType type, const std::vector<std::uint64_t>& image);
     bool setImageArray(ImageType type, vtkSmartPointer<vtkImageData> image);
+
     std::size_t size() const;
     bool hasImage(ImageType type);
     std::uint64_t ID() const;
 
     vtkSmartPointer<vtkImageData> vtkImage(ImageType);
+
+    const std::vector<double>& getCTArray() const { return m_ct_array; }
+    const std::vector<double>& getDensityArray() const { return m_density_array; }
+    const std::vector<std::uint8_t>& getMaterialArray() const { return m_material_array; }
 
 protected:
     vtkSmartPointer<vtkImageData> generate_vtkImage(ImageType);

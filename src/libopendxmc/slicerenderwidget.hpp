@@ -30,7 +30,6 @@ Copyright 2023 Erlend Andersen
 #include <vtkOpenGLRenderer.h>
 #include <vtkSmartPointer.h>
 #include <vtkWindowLevelLookupTable.h>
-#include <vtkDiscretizableColorTransferFunction.h>
 
 class SliceRenderWidget : public QWidget {
     Q_OBJECT
@@ -52,7 +51,7 @@ protected:
     void setNewImageData(vtkSmartPointer<vtkImageData> data, bool rezoom_camera = false);
     void setupSlicePipeline(int orientation);
     void Render(bool rezoom_camera = false);
-    void switchLUTtable(bool discrete = false);
+    void switchLUTtable(bool discrete = false, int n_colors = -1);
 
 private:
     std::shared_ptr<DataContainer> m_data = nullptr;
@@ -61,5 +60,5 @@ private:
     QVTKOpenGLNativeWidget* openGLWidget = nullptr;
     vtkSmartPointer<CustomInteractorStyleImage> interactorStyle = nullptr;
     vtkSmartPointer<vtkWindowLevelLookupTable> lut = nullptr;
-    vtkSmartPointer<vtkDiscretizableColorTransferFunction> lut_discrete = nullptr;
+    vtkSmartPointer<vtkLookupTable> lut_discrete = nullptr;
 };

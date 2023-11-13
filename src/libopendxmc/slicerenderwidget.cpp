@@ -189,15 +189,15 @@ SliceRenderWidget::SliceRenderWidget(int orientation, QWidget* parent)
 
     // lut
     lut = vtkSmartPointer<vtkWindowLevelLookupTable>::New();
-    lut_discrete = vtkSmartPointer<vtkDiscretizableColorTransferFunction>::New();
+    lut_discrete = vtkSmartPointer<vtkLookupTable>::New();
 
     setupSlicePipeline(orientation);
 }
 
-std::array<double, 3> HSVtoRGB(double H, double S, double V)
+std::array<double, 4> HSVtoRGB(double H, double S, double V, double alpha = 1.0)
 {
     if (S == 0) {
-        std::array res = { V, V, V };
+        std::array res = { V, V, V, alpha };
         return res;
     } else {
         auto var_h = H * 6;
@@ -234,7 +234,7 @@ std::array<double, 3> HSVtoRGB(double H, double S, double V)
             var_b = var_2;
         }
 
-        std::array res = { var_r, var_g, var_b };
+        std::array res = { var_r, var_g, var_b, alpha };
         return res;
     }
 }
@@ -290,19 +290,22 @@ void SliceRenderWidget::setupSlicePipeline(int orientation)
 
     auto sliceProperty = imageSlice->GetProperty();
     sliceProperty->SetLookupTable(lut);
-    sliceProperty->SetUseLookupTableScalarRange(false);
+    sliceProperty->UseLookupTableScalarRangeOff();
     lut->SetMinimumTableValue(0, 0, 0, 1);
     lut->SetMaximumTableValue(1, 1, 1, 1);
     lut->Build();
 
-    lut_discrete->DiscretizeOn();
-    for (int i = 0; i < 256; ++i) {
+    // lut_discrete->SetNumberOfTableValues(256);
+    lut_discrete->SetNumberOfTableValues(5);
+    // for (int i = 0; i < 256; ++i) {
+    for (int i = 0; i < 5; ++i) {
         int h = i * 29;
         int frac = h % 360;
         auto H = frac / 360.0;
-        auto rgb = HSVtoRGB(H, 1.0, 1.0);
-        lut_discrete->SetIndexedColorRGB(i, rgb.data());
+        auto rgba = HSVtoRGB(H, 1.0, 1.0);
+        lut_discrete->SetTableValue(i, rgba.data());
     }
+    lut_discrete->IndexedLookupOn();
     lut_discrete->Build();
 }
 
@@ -312,6 +315,7 @@ void SliceRenderWidget::sharedViews(std::vector<SliceRenderWidget*> wids)
     // setting same lut
     for (auto& w : wids) {
         w->lut = this->lut;
+        w->imageSlice->GetProperty()->SetLookupTable(lut);
         w->lut_discrete = this->lut_discrete;
     }
 
@@ -376,20 +380,44 @@ void SliceRenderWidget::setInterpolationType(int type)
     imageSlice->GetProperty()->SetInterpolationType(type);
 }
 
-void SliceRenderWidget::switchLUTtable(bool discrete)
+void SliceRenderWidget::switchLUTtable(bool discrete, int n_descreet)
 {
     auto prop = imageSlice->GetProperty();
+
     if (discrete) {
-        if (prop->GetLookupTable() != lut_discrete) {
-            prop->SetLookupTable(lut_discrete);
+        if (n_descreet > 1 && lut->GetNumberOfColors() != n_descreet) {
+            lut->SetNumberOfTableValues(n_descreet);
+            lut->SetTableValue(0, 0, 0, 0, 0);
+            for (int i = 1; i < n_descreet; ++i) {
+                int h = i * 29;
+                int frac = h % 360;
+                auto H = frac / 360.0;
+                auto rgba = HSVtoRGB(H, 0.8, 0.8);
+                lut->SetTableValue(i, rgba.data());
+            }
+            lut->SetTableRange(0, n_descreet - 1);
+            lut->Build();
+        }
+        if (!prop->GetUseLookupTableScalarRange()) {
             prop->UseLookupTableScalarRangeOn();
         }
     } else {
-        if (prop->GetLookupTable() != lut) {
-            prop->SetLookupTable(lut);
+        if (lut->GetNumberOfColors() != 256) {
+            lut->IndexedLookupOff();
+            lut->SetNumberOfTableValues(256);
+            // lut->SetTableValue(0, 0, 0, 0, <1);
+            // lut->SetTableValue(1, 1, 1, 1, 1);
+            lut->SetValueRange(0, 1);
+            // lut->SetTableRange(0, 255);
+            lut->SetMinimumTableValue(0, 0, 0, 1);
+            lut->SetMaximumTableValue(1, 1, 1, 1);
+            lut->ForceBuild();
+        }
+        if (prop->GetUseLookupTableScalarRange()) {
             prop->UseLookupTableScalarRangeOff();
         }
     }
+    imageSlice->Update();
 }
 
 void SliceRenderWidget::showData(DataContainer::ImageType type)
@@ -399,8 +427,8 @@ void SliceRenderWidget::showData(DataContainer::ImageType type)
     if (m_data->hasImage(type)) {
         auto vtkimage = m_data->vtkImage(type);
         if (type == DataContainer::ImageType::Material) {
-
-            switchLUTtable(true);
+            auto max_val = static_cast<int>(vtkimage->GetScalarRange()[1]);
+            switchLUTtable(true, max_val + 1);
         } else {
             switchLUTtable(false);
         }

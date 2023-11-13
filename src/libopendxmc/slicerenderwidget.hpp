@@ -60,5 +60,4 @@ private:
     QVTKOpenGLNativeWidget* openGLWidget = nullptr;
     vtkSmartPointer<CustomInteractorStyleImage> interactorStyle = nullptr;
     vtkSmartPointer<vtkWindowLevelLookupTable> lut = nullptr;
-    vtkSmartPointer<vtkLookupTable> lut_discrete = nullptr;
 };

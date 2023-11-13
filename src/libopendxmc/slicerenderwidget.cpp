@@ -28,9 +28,9 @@ Copyright 2023 Erlend Andersen
 #include <vtkImageProperty.h>
 #include <vtkOpenGLImageSliceMapper.h>
 #include <vtkOpenGLTextActor.h>
-#include <vtkProperty.h>
 #include <vtkRenderWindow.h>
 #include <vtkRendererCollection.h>
+#include <vtkScalarBarActor.h>
 #include <vtkTextProperty.h>
 
 #include <charconv>
@@ -189,7 +189,6 @@ SliceRenderWidget::SliceRenderWidget(int orientation, QWidget* parent)
 
     // lut
     lut = vtkSmartPointer<vtkWindowLevelLookupTable>::New();
-    lut_discrete = vtkSmartPointer<vtkLookupTable>::New();
 
     setupSlicePipeline(orientation);
 }
@@ -259,9 +258,12 @@ void SliceRenderWidget::setupSlicePipeline(int orientation)
     renWin->AddRenderer(renderer);
 
     // colorbar
-    // auto scalarColorBar = vtkSmartPointer<vtkScalarBarActor>::New();
-    // scalarColorBar->SetMaximumWidthInPixels(200);
-    // scalarColorBar->AnnotationTextScalingOff();
+    /* if (orientation == 0) {
+        auto scalarColorBar = vtkSmartPointer<vtkScalarBarActor>::New();
+        scalarColorBar->SetMaximumWidthInPixels(200);
+        scalarColorBar->AnnotationTextScalingOff();
+        renderer->AddActor(scalarColorBar);
+    }*/
 
     // reslice mapper
     auto imageMapper = vtkSmartPointer<vtkOpenGLImageSliceMapper>::New();
@@ -294,19 +296,6 @@ void SliceRenderWidget::setupSlicePipeline(int orientation)
     lut->SetMinimumTableValue(0, 0, 0, 1);
     lut->SetMaximumTableValue(1, 1, 1, 1);
     lut->Build();
-
-    // lut_discrete->SetNumberOfTableValues(256);
-    lut_discrete->SetNumberOfTableValues(5);
-    // for (int i = 0; i < 256; ++i) {
-    for (int i = 0; i < 5; ++i) {
-        int h = i * 29;
-        int frac = h % 360;
-        auto H = frac / 360.0;
-        auto rgba = HSVtoRGB(H, 1.0, 1.0);
-        lut_discrete->SetTableValue(i, rgba.data());
-    }
-    lut_discrete->IndexedLookupOn();
-    lut_discrete->Build();
 }
 
 void SliceRenderWidget::sharedViews(std::vector<SliceRenderWidget*> wids)
@@ -316,7 +305,6 @@ void SliceRenderWidget::sharedViews(std::vector<SliceRenderWidget*> wids)
     for (auto& w : wids) {
         w->lut = this->lut;
         w->imageSlice->GetProperty()->SetLookupTable(lut);
-        w->lut_discrete = this->lut_discrete;
     }
 
     for (std::size_t i = 0; i < wids.size(); ++i) {

@@ -190,7 +190,7 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(VolumeRenderSettings* set
 
     // colortable selector
     auto color = getSettingsWidget<QComboBox>(tr("Color table"), this);
-    for (const auto& [name, ct] : Colormaps::COLORMAPS) {
+    for (const auto& name : Colormaps::availableColormaps()) {
         color.widget->addItem(QString::fromStdString(name));
     }
     auto color_gray_index = color.widget->findText(QString::fromStdString("CT"));

@@ -123,6 +123,9 @@ void CTSegmentationPipeline::updateImageData(std::shared_ptr<DataContainer> data
     for (const auto& n : mat_names)
         materials.push_back(std::make_pair(Material::byNistName(n).value(), NISTMaterials::density(n)));
 
+    // Density for bone is to high
+    materials.back().second = 1.09;
+
     const auto mat_data = getMeanCTNumbers(materials, m_Al_filt_mm, m_Sn_filt_mm, m_kv);
     const auto& mat_HU = mat_data.HU;
     std::vector<double> mat_HU_sep;

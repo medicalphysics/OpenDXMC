@@ -17,6 +17,7 @@ Copyright 2023 Erlend Andersen
 */
 
 #include <slicerenderwidget.hpp>
+#include <colormaps.hpp>
 
 #include <QVBoxLayout>
 
@@ -193,50 +194,7 @@ SliceRenderWidget::SliceRenderWidget(int orientation, QWidget* parent)
     setupSlicePipeline(orientation);
 }
 
-std::array<double, 4> HSVtoRGB(double H, double S, double V, double alpha = 1.0)
-{
-    if (S == 0) {
-        std::array res = { V, V, V, alpha };
-        return res;
-    } else {
-        auto var_h = H * 6;
-        if (var_h == 6)
-            var_h = 0; // H must be < 1
-        auto var_i = int(var_h); // Or ... var_i = floor( var_h )
-        auto var_1 = V * (1 - S);
-        auto var_2 = V * (1 - S * (var_h - var_i));
-        auto var_3 = V * (1 - S * (1 - (var_h - var_i)));
-        double var_r, var_g, var_b;
-        if (var_i == 0) {
-            var_r = V;
-            var_g = var_3;
-            var_b = var_1;
-        } else if (var_i == 1) {
-            var_r = var_2;
-            var_g = V;
-            var_b = var_1;
-        } else if (var_i == 2) {
-            var_r = var_1;
-            var_g = V;
-            var_b = var_3;
-        } else if (var_i == 3) {
-            var_r = var_1;
-            var_g = var_2;
-            var_b = V;
-        } else if (var_i == 4) {
-            var_r = var_3;
-            var_g = var_1;
-            var_b = V;
-        } else {
-            var_r = V;
-            var_g = var_1;
-            var_b = var_2;
-        }
 
-        std::array res = { var_r, var_g, var_b, alpha };
-        return res;
-    }
-}
 
 void SliceRenderWidget::setupSlicePipeline(int orientation)
 {
@@ -256,14 +214,6 @@ void SliceRenderWidget::setupSlicePipeline(int orientation)
     renderWindowInteractor->SetInteractorStyle(interactorStyle);
     auto renWin = openGLWidget->renderWindow();
     renWin->AddRenderer(renderer);
-
-    // colorbar
-    /* if (orientation == 0) {
-        auto scalarColorBar = vtkSmartPointer<vtkScalarBarActor>::New();
-        scalarColorBar->SetMaximumWidthInPixels(200);
-        scalarColorBar->AnnotationTextScalingOff();
-        renderer->AddActor(scalarColorBar);
-    }*/
 
     // reslice mapper
     auto imageMapper = vtkSmartPointer<vtkOpenGLImageSliceMapper>::New();
@@ -321,17 +271,37 @@ void SliceRenderWidget::sharedViews(std::vector<SliceRenderWidget*> wids)
             style->AddObserver(ev, callback);
     }
 
+    auto txtStyle = vtkSmartPointer<vtkTextProperty>::New();
+    txtStyle->SetColor(0.6, 0.5, 0.1);
+    txtStyle->BoldOn();
+    //txtStyle->ShadowOn();
+
     // windowlevel text
     {
-        auto callback = vtkSmartPointer<TextModifiedCallback>::New();
-        callback->textActorCorner->GetTextProperty()->SetColor(0.6, 0.5, 0.1);
-        for (std::size_t i = 0; i < 3; ++i) {
+        auto callback = vtkSmartPointer<TextModifiedCallback>::New();      
+        callback->textActorCorner->SetTextProperty(txtStyle);
+        for (std::size_t i = 0; i < wids.size(); ++i) {
             auto style = wids[i]->interactorStyle;
             for (auto ev : callback->eventTypes())
                 style->AddObserver(ev, callback);
             if (i == 0)
-                wids[i]->renderer->AddViewProp(callback->textActorCorner);
+                wids[i]->renderer->AddActor(callback->textActorCorner);
         }
+    }
+
+    // colorbar
+    {
+         auto scalarColorBar = vtkSmartPointer<vtkScalarBarActor>::New();
+        scalarColorBar->SetNumberOfLabels(2);        
+        scalarColorBar->SetLookupTable(wids[0]->lut);
+        scalarColorBar->SetUnconstrainedFontSize(true);
+        scalarColorBar->SetBarRatio(0.1);
+        //scalarColorBar->SetMaximumWidthInPixels(150);
+        scalarColorBar->SetLabelTextProperty(txtStyle);
+        scalarColorBar->SetTextPositionToPrecedeScalarBar();
+        scalarColorBar->AnnotationTextScalingOff();
+        wids[0]->renderer->AddActor(scalarColorBar);
+        
     }
 }
 void SliceRenderWidget::sharedViews(SliceRenderWidget* other1, SliceRenderWidget* other2)
@@ -377,10 +347,7 @@ void SliceRenderWidget::switchLUTtable(bool discrete, int n_descreet)
             lut->SetNumberOfTableValues(n_descreet);
             lut->SetTableValue(0, 0, 0, 0, 0);
             for (int i = 1; i < n_descreet; ++i) {
-                int h = i * 29;
-                int frac = h % 360;
-                auto H = frac / 360.0;
-                auto rgba = HSVtoRGB(H, 0.8, 0.8);
+                auto rgba = Colormaps::discreetColor(i);
                 lut->SetTableValue(i, rgba.data());
             }
             lut->SetTableRange(0, n_descreet - 1);

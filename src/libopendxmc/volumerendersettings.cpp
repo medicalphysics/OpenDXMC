@@ -93,10 +93,10 @@ vtkImageData* VolumeRenderSettings::currentImageData()
 
 void VolumeRenderSettings::setColorMap(const std::string& name, bool render)
 {
-    if (!Colormaps::COLORMAPS.contains(name)) {
+    if (!Colormaps::haveColormap(name)) {
         return;
     }
-    const auto& map = Colormaps::COLORMAPS.at(name);
+    const auto& map = Colormaps::colormap(name);
     const auto N = map.size();
     m_colorDataNormalizedRange.clear();
     m_colorDataNormalizedRange.reserve(N / 3);

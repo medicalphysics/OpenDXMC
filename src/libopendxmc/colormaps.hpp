@@ -25,6 +25,7 @@ Copyright 2023 Erlend Andersen
 class Colormaps {
 public:
     static const std::vector<double>& colormap(const std::string&);
+    static std::vector<double> colormapLongForm(const std::string&);
     static std::vector<std::string> availableColormaps();
     static bool haveColormap(const std::string&);
     static std::array<double, 4> discreetColor(int index, double alpha = 1);

@@ -453,12 +453,48 @@ std::vector<std::string> Colormaps::availableColormaps()
     return n;
 }
 
+double interpolate(double x, double x0, double x1, double y0, double y1)
+{
+    return y0 + (x - x0) * (y1 - y0) / (x1 - x0);
+}
+
+std::vector<double> interpolateColormap(const std::vector<double>& map)
+{
+    const auto N = map.size() / 3;
+    const double mstep = 1.0 / (N - 1);
+    const double step = 1.0 / 255.0;
+    std::vector<double> res;
+    res.reserve(256 * 3);
+    double x0 = 0;
+    double x1 = mstep;
+    int y0_ind = 0;
+    for (int i = 0; i < 256; ++i) {
+        const auto x = step * i;
+        while (x1 <= x && y0_ind < N - 2) {
+            x0 = x1;
+            x1 += mstep;
+            y0_ind++;
+        }
+        for (int j = 0; j < 3; ++j) {
+            res.push_back(interpolate(x, x0, x1, map[y0_ind * 3 + j], map[(y0_ind + 1) * 3 + j]));
+        }
+    }
+    return res;
+}
+
 const std::vector<double>& Colormaps::colormap(const std::string& name)
 {
     if (!COLORMAPS.contains(name)) {
         return colormap("GRAY");
     }
     return COLORMAPS.at(name);
+}
+std::vector<double> Colormaps::colormapLongForm(const std::string& name)
+{
+    if (!COLORMAPS.contains(name)) {
+        return interpolateColormap(colormap("GRAY"));
+    }
+    return interpolateColormap(COLORMAPS.at(name));
 }
 
 bool Colormaps::haveColormap(const std::string& name)

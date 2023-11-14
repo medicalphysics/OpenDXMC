@@ -16,8 +16,8 @@ along with OpenDXMC. If not, see < https://www.gnu.org/licenses/>.
 Copyright 2023 Erlend Andersen
 */
 
-#include <slicerenderwidget.hpp>
 #include <colormaps.hpp>
+#include <slicerenderwidget.hpp>
 
 #include <QVBoxLayout>
 
@@ -191,10 +191,11 @@ SliceRenderWidget::SliceRenderWidget(int orientation, QWidget* parent)
     // lut
     lut = vtkSmartPointer<vtkWindowLevelLookupTable>::New();
 
+    lut_windowing[DataContainer::ImageType::CT] = std::make_pair(100.0, 300.0);
+    lut_windowing[DataContainer::ImageType::Density] = std::make_pair(1.0, 0.5);
+
     setupSlicePipeline(orientation);
 }
-
-
 
 void SliceRenderWidget::setupSlicePipeline(int orientation)
 {
@@ -245,6 +246,8 @@ void SliceRenderWidget::setupSlicePipeline(int orientation)
     sliceProperty->UseLookupTableScalarRangeOff();
     lut->SetMinimumTableValue(0, 0, 0, 1);
     lut->SetMaximumTableValue(1, 1, 1, 1);
+    lut->UseBelowRangeColorOn();
+    lut->SetBelowRangeColor(0, 0, 0, 0);
     lut->Build();
 }
 
@@ -274,11 +277,10 @@ void SliceRenderWidget::sharedViews(std::vector<SliceRenderWidget*> wids)
     auto txtStyle = vtkSmartPointer<vtkTextProperty>::New();
     txtStyle->SetColor(0.6, 0.5, 0.1);
     txtStyle->BoldOn();
-    //txtStyle->ShadowOn();
 
     // windowlevel text
     {
-        auto callback = vtkSmartPointer<TextModifiedCallback>::New();      
+        auto callback = vtkSmartPointer<TextModifiedCallback>::New();
         callback->textActorCorner->SetTextProperty(txtStyle);
         for (std::size_t i = 0; i < wids.size(); ++i) {
             auto style = wids[i]->interactorStyle;
@@ -291,17 +293,15 @@ void SliceRenderWidget::sharedViews(std::vector<SliceRenderWidget*> wids)
 
     // colorbar
     {
-         auto scalarColorBar = vtkSmartPointer<vtkScalarBarActor>::New();
-        scalarColorBar->SetNumberOfLabels(2);        
+        auto scalarColorBar = vtkSmartPointer<vtkScalarBarActor>::New();
+        scalarColorBar->SetNumberOfLabels(2);
         scalarColorBar->SetLookupTable(wids[0]->lut);
         scalarColorBar->SetUnconstrainedFontSize(true);
         scalarColorBar->SetBarRatio(0.1);
-        //scalarColorBar->SetMaximumWidthInPixels(150);
         scalarColorBar->SetLabelTextProperty(txtStyle);
         scalarColorBar->SetTextPositionToPrecedeScalarBar();
         scalarColorBar->AnnotationTextScalingOff();
         wids[0]->renderer->AddActor(scalarColorBar);
-        
     }
 }
 void SliceRenderWidget::sharedViews(SliceRenderWidget* other1, SliceRenderWidget* other2)
@@ -338,40 +338,51 @@ void SliceRenderWidget::setInterpolationType(int type)
     imageSlice->GetProperty()->SetInterpolationType(type);
 }
 
-void SliceRenderWidget::switchLUTtable(bool discrete, int n_descreet)
+void SliceRenderWidget::switchLUTtable(DataContainer::ImageType type, int n_colors)
 {
     auto prop = imageSlice->GetProperty();
+    lut_windowing[lut_current_type] = std::make_pair(prop->GetColorLevel(), prop->GetColorWindow());
 
-    if (discrete) {
-        if (n_descreet > 1 && lut->GetNumberOfColors() != n_descreet) {
-            lut->SetNumberOfTableValues(n_descreet);
+    if (type == DataContainer::ImageType::Material || type == DataContainer::ImageType::Organ) {
+        if (n_colors > 1 && lut->GetNumberOfColors() != n_colors) {
+            lut->SetNumberOfTableValues(n_colors);
             lut->SetTableValue(0, 0, 0, 0, 0);
-            for (int i = 1; i < n_descreet; ++i) {
+            for (int i = 1; i < n_colors; ++i) {
                 auto rgba = Colormaps::discreetColor(i);
                 lut->SetTableValue(i, rgba.data());
             }
-            lut->SetTableRange(0, n_descreet - 1);
+            lut->SetTableRange(0, n_colors - 1);
             lut->Build();
         }
-        if (!prop->GetUseLookupTableScalarRange()) {
-            prop->UseLookupTableScalarRangeOn();
-        }
+
+        prop->UseLookupTableScalarRangeOn();
+
     } else {
         if (lut->GetNumberOfColors() != 256) {
             lut->IndexedLookupOff();
             lut->SetNumberOfTableValues(256);
-            // lut->SetTableValue(0, 0, 0, 0, <1);
-            // lut->SetTableValue(1, 1, 1, 1, 1);
             lut->SetValueRange(0, 1);
-            // lut->SetTableRange(0, 255);
             lut->SetMinimumTableValue(0, 0, 0, 1);
             lut->SetMaximumTableValue(1, 1, 1, 1);
             lut->ForceBuild();
         }
-        if (prop->GetUseLookupTableScalarRange()) {
-            prop->UseLookupTableScalarRangeOff();
+        if (type == DataContainer::ImageType::Density) {
+            // replacing with turbo cmap
+            const auto map = Colormaps::colormapLongForm("TURBO");
+            for (int i = 0; i < map.size() / 3; ++i) {
+                const auto ii = i * 3;
+                lut->SetTableValue(i, map[ii], map[ii + 1], map[ii + 2], 1.0);
+            }
+        }
+
+        prop->UseLookupTableScalarRangeOff();
+
+        if (lut_windowing.contains(type)) {
+            prop->SetColorLevel(lut_windowing[type].first);
+            prop->SetColorWindow(lut_windowing[type].second);
         }
     }
+    lut_current_type = type;
     imageSlice->Update();
 }
 
@@ -383,9 +394,9 @@ void SliceRenderWidget::showData(DataContainer::ImageType type)
         auto vtkimage = m_data->vtkImage(type);
         if (type == DataContainer::ImageType::Material) {
             auto max_val = static_cast<int>(vtkimage->GetScalarRange()[1]);
-            switchLUTtable(true, max_val + 1);
+            switchLUTtable(type, max_val + 1);
         } else {
-            switchLUTtable(false);
+            switchLUTtable(type);
         }
         setNewImageData(vtkimage, false);
     }

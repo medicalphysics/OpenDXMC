@@ -31,6 +31,8 @@ Copyright 2023 Erlend Andersen
 #include <vtkSmartPointer.h>
 #include <vtkWindowLevelLookupTable.h>
 
+#include <map>
+
 class SliceRenderWidget : public QWidget {
     Q_OBJECT
 public:
@@ -51,7 +53,7 @@ protected:
     void setNewImageData(vtkSmartPointer<vtkImageData> data, bool rezoom_camera = false);
     void setupSlicePipeline(int orientation);
     void Render(bool rezoom_camera = false);
-    void switchLUTtable(bool discrete = false, int n_colors = -1);
+    void switchLUTtable(DataContainer::ImageType type, int n_colors = -1);
 
 private:
     std::shared_ptr<DataContainer> m_data = nullptr;
@@ -60,4 +62,6 @@ private:
     QVTKOpenGLNativeWidget* openGLWidget = nullptr;
     vtkSmartPointer<CustomInteractorStyleImage> interactorStyle = nullptr;
     vtkSmartPointer<vtkWindowLevelLookupTable> lut = nullptr;
+    std::map<DataContainer::ImageType, std::pair<double, double>> lut_windowing;
+    DataContainer::ImageType lut_current_type = DataContainer::ImageType::CT;
 };

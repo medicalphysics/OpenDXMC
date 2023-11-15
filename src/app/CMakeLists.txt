@@ -1,6 +1,7 @@
 
 
 qt_add_executable(opendxmc 
+    beamsettingswidget.cpp
 	opendxmc.cpp
 	basesettingswidget.cpp
 	mainwindow.cpp

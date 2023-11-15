@@ -31,6 +31,7 @@ Copyright 2024 Erlend Andersen
 #include <ctsegmentationpipeline.hpp>
 #include <renderwidgetscollection.hpp>
 #include <volumerendersettingswidget.hpp>
+#include <beamsettingswidget.hpp>
 
 #include <mainwindow.hpp>
 
@@ -96,6 +97,11 @@ MainWindow::MainWindow(QWidget* parent)
     connect(ctsegmentationpipelie, &CTSegmentationPipeline::imageDataChanged, slicerender, &RenderWidgetsCollection::updateImageData);
     connect(ctimageimportpipeline, &CTImageImportPipeline::imageDataChanged, ctsegmentationpipelie, &CTSegmentationPipeline::updateImageData);
 
+
+
+    //beam settings widget
+    auto beamsettingswidget = new BeamSettingsWidget(this);
+    menuWidget->addTab(beamsettingswidget, tr("Configure X-ray beams"));
 
     // simulation progress
     /* m_progressTimer = new QTimer(this);

@@ -86,23 +86,15 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(VolumeRenderSettings* set
     });
     layout->addLayout(jittering.layout);
 
+    // Multi samples
     auto multisampling = getSettingsWidget<QSpinBox>(tr("Multi sampling"), this);
     multisampling.widget->setValue(m_settings->renderWindow()->GetMultiSamples());
-    multisampling.widget->setMinimum(1);
+    multisampling.widget->setMinimum(0);
     connect(multisampling.widget, &QSpinBox::valueChanged, [=](int value) {
         m_settings->renderWindow()->SetMultiSamples(value);
         m_settings->render();
     });
     layout->addLayout(multisampling.layout);
-
-    // jittering
-    auto fxaa = getSettingsWidget<QCheckBox>(tr("Use FXAA"), this);
-    fxaa.widget->setChecked(m_settings->renderer()->GetUseFXAA());
-    connect(fxaa.widget, &QCheckBox::stateChanged, [=](int state) {
-        m_settings->renderer()->SetUseFXAA(state != 0);
-        m_settings->render();
-    });
-    layout->addLayout(fxaa.layout);
 
     auto vprop = m_settings->volumeProperty();
     // shadebox
@@ -117,6 +109,15 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(VolumeRenderSettings* set
         m_settings->render();
     });
     layout->addWidget(shadebox);
+
+    // two sided lightning
+    auto tsl = getSettingsWidget<QCheckBox>(tr("Two sided lightning"), this);
+    tsl.widget->setChecked(m_settings->renderer()->GetTwoSidedLighting());
+    connect(tsl.widget, &QCheckBox::stateChanged, [=](int state) {
+        m_settings->renderer()->SetTwoSidedLighting(state != 0);
+        m_settings->render();
+    });
+    shade_layout->addLayout(tsl.layout);
 
     // Global illumination reach
     auto gir = getSettingsWidget<QSlider>(tr("Global illumination reach"), shadebox);
@@ -198,13 +199,28 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(VolumeRenderSettings* set
     connect(color.widget, &QComboBox::currentTextChanged, [=](const QString& cname) {
         m_settings->setColorMap(cname.toStdString());
     });
+
     layout->addLayout(color.layout);
 
-    // lutWidget
+    // option for power opacity transfer;
+    auto uselog10 = new QCheckBox(tr("Power opacity"), this);
+    uselog10->setChecked(false);
+    connect(uselog10, &QCheckBox::stateChanged, [=](int state) { m_settings->setUsePowerOpacityLUT(state != 0); });   
+    //  option for color crop;
+    auto colorcrop = new QCheckBox(tr("Crop colors to opacity"), this);
+    colorcrop->setChecked(true);
+    connect(colorcrop, &QCheckBox::stateChanged, [=](int state) { m_settings->setCropColorToOpacityRange(state != 0); });
+    auto color_opt_layout = new QHBoxLayout(this);
+    color_opt_layout->setContentsMargins(0, 0, 0, 0);
+    color_opt_layout->addWidget(colorcrop);
+    color_opt_layout->addWidget(uselog10);
+    layout->addLayout(color_opt_layout);
+
+    // lutWidget opacity
     m_lut_opacity_widget = new VolumeLUTWidget(m_settings, VolumeLUTWidget::LUTType::Opacity, this);
     layout->addWidget(m_lut_opacity_widget);
 
-    // lutWidget
+    // lutWidget gradient
     m_lut_gradient_widget = new VolumeLUTWidget(m_settings, VolumeLUTWidget::LUTType::Gradient, this);
     layout->addWidget(m_lut_gradient_widget);
 

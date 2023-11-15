@@ -19,6 +19,7 @@ Copyright 2023 Erlend Andersen
 #include <volumerendersettings.hpp>
 #include <vtkPiecewiseFunction.h>
 #include <vtkRenderWindow.h>
+#include <vtkRenderWindowInteractor.h>
 #include <vtkVolumeProperty.h>
 
 #include <colormaps.hpp>
@@ -35,6 +36,10 @@ VolumeRenderSettings::VolumeRenderSettings(
     , m_color_lut(colorlut)
     , QObject(parent)
 {
+
+    // Follow new light settings
+    m_renderer->SetLightFollowCamera(true);
+    m_renderer->GetRenderWindow()->GetInteractor()->SetLightFollowCamera(false);
 
     auto olut = opacityLut();
     olut->SetClamping(true);
@@ -175,6 +180,25 @@ void VolumeRenderSettings::setColorDataNormalized(const std::vector<std::array<d
     updateColorLutFromNormalizedRange();
 }
 
+void VolumeRenderSettings::setUsePowerOpacityLUT(bool on)
+{
+    m_use_opacity_power_lut = on;
+    updateOpacityLutFromNormalizedRange(true);
+}
+
+
+void VolumeRenderSettings::setCropColorToOpacityRange(bool on)
+{
+    m_cropColorToOpacityRange = on;
+    updateColorLutFromNormalizedRange(true);
+    emit colorLutChanged();
+}
+
+bool VolumeRenderSettings::getCropColorToOpacityRange()
+{
+    return m_cropColorToOpacityRange;
+}
+
 void VolumeRenderSettings::updateOpacityLutFromNormalizedRange(bool rnd)
 {
     auto lut = opacityLut();
@@ -183,7 +207,11 @@ void VolumeRenderSettings::updateOpacityLutFromNormalizedRange(bool rnd)
     lut->RemoveAllPoints();
     for (const auto& [xnorm, y] : m_opacityDataNormalizedRange) {
         const auto x = shiftscale(xnorm, range);
-        lut->AddPoint(x, y);
+        if (m_use_opacity_power_lut) {
+            lut->AddPoint(x, y * y * y);
+        } else {
+            lut->AddPoint(x, y);
+        }
     }
     if (rnd) {
         m_volume->Update();

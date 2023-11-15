@@ -68,6 +68,9 @@ public:
     void setOpacityDataNormalized(const std::vector<std::array<double, 2>>&);
     void setGradientDataNormalized(const std::vector<std::array<double, 2>>&);
     void setColorDataNormalized(const std::vector<std::array<double, 4>>&);
+    void setUsePowerOpacityLUT(bool on);
+    void setCropColorToOpacityRange(bool);
+    bool getCropColorToOpacityRange();
 
 signals:
     void imageDataChanged();
@@ -92,4 +95,5 @@ private:
     std::vector<std::array<double, 2>> m_gradientDataNormalizedRange;
     std::vector<std::array<double, 4>> m_colorDataNormalizedRange;
     bool m_cropColorToOpacityRange = true;
+    bool m_use_opacity_power_lut = false;
 };

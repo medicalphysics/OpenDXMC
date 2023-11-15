@@ -202,8 +202,8 @@ protected:
 
 private:
     VolumeLUTWidget::LUTType m_type = VolumeLUTWidget::LUTType::Opacity;
-    int m_pIdx_edit = -1;
     VolumeRenderSettings* m_settings = nullptr;
+    int m_pIdx_edit = -1;
 };
 
 class LUTChartView : public QChartView {
@@ -272,7 +272,7 @@ public:
         auto view_rect = chart()->plotArea();
         QLinearGradient g(view_rect.bottomLeft(), view_rect.bottomRight());
 
-        const auto cdata = m_settings->colorDataNormalizedCroppedToOpacity();
+        const auto cdata = m_settings->getCropColorToOpacityRange() ? m_settings->colorDataNormalizedCroppedToOpacity() : m_settings->colorDataNormalized();
         for (const auto& node : cdata) {
             auto c = QColor::fromRgbF(node[1], node[2], node[3], 0.5);
             g.setColorAt(node[0], c);

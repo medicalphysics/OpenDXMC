@@ -22,11 +22,6 @@ Copyright 2024 Erlend Andersen
 
 #include <QStandardItemModel>
 
-
-
-
-
-
 class BeamSettingsModel : public QStandardItemModel {
     Q_OBJECT
 public:

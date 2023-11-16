@@ -18,8 +18,10 @@ Copyright 2024 Erlend Andersen
 
 #include <beamsettingsmodel.hpp>
 
-#include <functional>
 #include <array>
+#include <charconv>
+#include <concepts>
+#include <functional>
 
 class LabelItem : public QStandardItem {
 public:
@@ -30,21 +32,90 @@ public:
     }
 };
 
-template<typename Getter, typename Setter> 
+QString arrayToString(const std::array<double, 3>& arr)
+{
+    auto str = QString::number(arr[0]) + ", " + QString::number(arr[1]) + ", " + QString::number(arr[2]);
+    return str;
+}
+
+template <std::size_t N>
+std::optional<std::array<double, N>> stringToArray(const QString& str)
+{
+    std::array<double, N> r;
+    auto list = str.split(',');
+    if (list.size() < N)
+        return std::nullopt;
+
+    for (std::size_t i = 0; i < N; ++i) {
+        const auto& s = list[i].trimmed().toStdString();
+
+        auto res = std::from_chars(s.data(), s.data() + s.size(), r[i]);
+        if (res.ec != std::errc {})
+            return std::nullopt;
+    }
+    return std::make_optional(r);
+}
+
+template <typename G, typename T>
+concept Getter = requires(G func, T val) {
+    {
+        func()
+    } -> std::convertible_to<T>;
+};
+
+template <typename G, typename T>
+concept Setter = requires(G func, T val) {
+    func(val);
+};
+
+template <typename T, Setter<T> S, Getter<T> G>
 class VectorItem : public QStandardItem {
 public:
-    LabelItem(std::function<void(std::array<double, 3>)> setter, std::function<std::array<double, 3>(void)> getter)
-        : QStandardItem()
+    VectorItem(T data, S setter, G getter, bool editable = true)
+        : m_setter(setter)
+        , m_getter(getter)
+        , QStandardItem()
     {
+        emitDataChanged();
+        setEditable(editable);
     }
-    QVariant data(Qt::DataRole role = Qt::UserRole+1) {
-        if (role )
+
+    QVariant data(int role = Qt::UserRole + 1) const override
+    {
+        if (role == Qt::DisplayRole || role == Qt::EditRole) {
+            if constexpr (std::is_convertible_v<T, std::array<double, 3>>) {
+                return arrayToString(m_getter());
+            } else {
+                return QVariant(m_getter());
+            }
+        }
+        return QStandardItem::data(role);
+    }
+
+    void setData(const QVariant& value, int role = Qt::UserRole + 1) override
+    {
+        if (role == Qt::DisplayRole || role == Qt::EditRole) {
+            if constexpr (std::is_convertible_v<T, std::array<double, 3>>) {
+                auto str = value.toString();
+                auto r = stringToArray<3>(str);
+                if (r) {
+                    m_setter(r.value());
+                    QStandardItem::setData(value, role);
+                }
+            } else {
+                auto val = get<T>(value);
+                m_setter(val);
+                QStandardItem::setData(value, role);
+            }
+        } else {
+            QStandardItem::setData(value, role);
+        }
     }
 
 protected:
-    QString arrayToString(const std::array<double, 3>& arr) {
-        return QString()
-    }
+private:
+    S m_setter;
+    G m_getter;
 };
 
 BeamSettingsModel::BeamSettingsModel(QObject* parent)
@@ -56,14 +127,26 @@ BeamSettingsModel::BeamSettingsModel(QObject* parent)
     setHorizontalHeaderLabels(header);
 }
 
+void addItem(QStandardItem* parent, QString label, auto setter, auto getter, bool editable = true)
+{
+    QList<QStandardItem*> row(2);
+    row[0] = new LabelItem(label);
+    auto value = getter();
+    row[1] = new VectorItem(value, setter, getter, editable);
+    parent->appendRow(row);
+}
+
 void BeamSettingsModel::addDXBeam()
 {
+    auto parent = invisibleRootItem();
 
     auto root = new LabelItem(tr("DX Beam"));
     appendRow(root);
 
-    QList<QStandardItem*> row(2);
-    row[0] = new LabelItem("Test");
-    row[1] = new LabelItem("Test2");
-    root->appendRow(row);
+    auto beam = std::make_shared<DXBeam>();
+    auto setter = [=](std::array<double, 3> d) { beam->setPosition(d); };
+    auto getter = [=]() -> std::array<double, 3> { return beam->position(); };
+    auto t = beam->position();
+
+    addItem(root, "Test 1", setter, getter);
 }

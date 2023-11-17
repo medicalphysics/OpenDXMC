@@ -18,16 +18,18 @@ Copyright 2024 Erlend Andersen
 
 #pragma once
 
-#include "dxmc/material/material.hpp"
-#include "dxmc/material/nistmaterials.hpp"
-#include "dxmc/beams/tube/tube.hpp"
-#include "dxmc/beams/dxbeam.hpp"
+#include "dxmc/beams/beamtype.hpp"
 #include "dxmc/beams/ctspiralbeam.hpp"
 #include "dxmc/beams/ctspiraldualenergybeam.hpp"
+#include "dxmc/beams/dxbeam.hpp"
+#include "dxmc/beams/tube/tube.hpp"
+#include "dxmc/material/material.hpp"
+#include "dxmc/material/nistmaterials.hpp"
 
+#include <memory>
 #include <variant>
 
-//Here we specialize types from the dxmc template library.
+// Here we specialize types from the dxmc template library.
 
 using Material = dxmc::Material<double, 5>;
 using Tube = dxmc::Tube<double>;
@@ -38,4 +40,3 @@ using CTSpiralDualEnergyBeam = dxmc::CTSpiralDualEnergyBeam<double>;
 using DXBeam = dxmc::DXBeam<double>;
 
 using Beam = std::variant<DXBeam, CTSpiralBeam, CTSpiralDualEnergyBeam>;
-

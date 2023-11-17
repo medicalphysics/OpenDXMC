@@ -16,7 +16,6 @@ along with OpenDXMC. If not, see < https://www.gnu.org/licenses/>.
 Copyright 2024 Erlend Andersen
 */
 
-
 #include <beamsettingsview.hpp>
 
 BeamSettingsView::BeamSettingsView(QWidget* parent)

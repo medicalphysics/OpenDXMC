@@ -22,12 +22,16 @@ Copyright 2024 Erlend Andersen
 
 #include <QStandardItemModel>
 
+#include <memory>
+
 class BeamSettingsModel : public QStandardItemModel {
     Q_OBJECT
 public:
     BeamSettingsModel(QObject* parent = nullptr);
     void addDXBeam();
+    void addCTSpiralBeam();
+    void addCTSpiralDualSourceBeam();
 
 private:
-    std::vector<Beam> m_beams;
+    std::vector<std::shared_ptr<Beam>> m_beams;
 };

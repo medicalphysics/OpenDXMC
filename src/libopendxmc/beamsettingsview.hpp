@@ -17,18 +17,18 @@ Copyright 2024 Erlend Andersen
 */
 
 #pragma once
-#include <beamsettingsmodel.hpp>
 #include <QTreeView>
+#include <beamsettingsmodel.hpp>
 
 class BeamSettingsView : public QTreeView {
     Q_OBJECT
 public:
     BeamSettingsView(QWidget* parent = nullptr);
 
-    void addCTSpiralBeam() { }
-    void addCTSpiralDualEnergyBeam() { }
+    void addCTSpiralBeam() { m_model->addCTSpiralBeam(); }
+    void addCTSpiralDualEnergyBeam() { m_model->addCTSpiralDualSourceBeam(); }
     void addDXBeam() { m_model->addDXBeam(); }
 
 private:
-    BeamSettingsModel* m_model=nullptr;
+    BeamSettingsModel* m_model = nullptr;
 };

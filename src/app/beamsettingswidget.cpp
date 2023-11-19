@@ -16,16 +16,11 @@ along with OpenDXMC. If not, see < https://www.gnu.org/licenses/>.
 Copyright 2024 Erlend Andersen
 */
 
-#include <beamsettingsview.hpp>
 #include <beamsettingswidget.hpp>
 
 #include <QComboBox>
 #include <QPushButton>
 #include <QVBoxLayout>
-
-
-
-
 
 BeamSettingsWidget::BeamSettingsWidget(QWidget* parent)
     : QWidget(parent)
@@ -34,7 +29,7 @@ BeamSettingsWidget::BeamSettingsWidget(QWidget* parent)
     layout->setContentsMargins(0, 0, 0, 0);
     this->setLayout(layout);
 
-    auto view = new BeamSettingsView(this);
+    m_view = new BeamSettingsView(this);
 
     auto beamselectlayout = new QHBoxLayout;
     beamselectlayout->setContentsMargins(0, 0, 0, 0);
@@ -49,12 +44,21 @@ BeamSettingsWidget::BeamSettingsWidget(QWidget* parent)
     connect(beamaddbutton, &QPushButton::clicked, [=](void) {
         auto idx = beamselectcombo->currentIndex();
         if (idx == 0)
-            view->addDXBeam();            
+            m_view->addDXBeam();
         else if (idx == 1)
-            view->addCTSpiralBeam();            
+            m_view->addCTSpiralBeam();
         else if (idx == 2)
-            view->addCTSpiralDualEnergyBeam();
+            m_view->addCTSpiralDualEnergyBeam();
     });
 
-    layout->addWidget(view);
+    layout->addWidget(m_view);
+
+    m_aecplot = new CTAECPlot(this);
+    layout->addWidget(m_aecplot);
+}
+
+void BeamSettingsWidget::updateImageData(std::shared_ptr<DataContainer> data)
+{
+    m_view->updateImageData(data);
+    m_aecplot->updateImageData(data);
 }

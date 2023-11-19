@@ -26,12 +26,12 @@ Copyright 2024 Erlend Andersen
 #include <QStatusBar>
 #include <QTabWidget>
 
+#include <beamsettingswidget.hpp>
 #include <ctdicomimportwidget.hpp>
 #include <ctimageimportpipeline.hpp>
 #include <ctsegmentationpipeline.hpp>
 #include <renderwidgetscollection.hpp>
 #include <volumerendersettingswidget.hpp>
-#include <beamsettingswidget.hpp>
 
 #include <mainwindow.hpp>
 
@@ -97,11 +97,11 @@ MainWindow::MainWindow(QWidget* parent)
     connect(ctsegmentationpipelie, &CTSegmentationPipeline::imageDataChanged, slicerender, &RenderWidgetsCollection::updateImageData);
     connect(ctimageimportpipeline, &CTImageImportPipeline::imageDataChanged, ctsegmentationpipelie, &CTSegmentationPipeline::updateImageData);
 
-
-
-    //beam settings widget
+    // beam settings widget
     auto beamsettingswidget = new BeamSettingsWidget(this);
     menuWidget->addTab(beamsettingswidget, tr("Configure X-ray beams"));
+    connect(ctimageimportpipeline, &CTImageImportPipeline::imageDataChanged, beamsettingswidget, &BeamSettingsWidget::updateImageData);
+    connect(ctsegmentationpipelie, &CTSegmentationPipeline::imageDataChanged, beamsettingswidget, &BeamSettingsWidget::updateImageData);
 
     // simulation progress
     /* m_progressTimer = new QTimer(this);

@@ -164,6 +164,11 @@ BeamSettingsModel::BeamSettingsModel(QObject* parent)
     setHorizontalHeaderLabels(header);
 }
 
+void BeamSettingsModel::updateImageData(std::shared_ptr<DataContainer> data)
+{
+    m_image = data;
+}
+
 void addItem(QStandardItem* parent, QString label, auto setter, auto getter, bool editable = true)
 {
     QList<QStandardItem*> row(2);
@@ -341,6 +346,15 @@ void BeamSettingsModel::addCTSpiralBeam()
     appendRow(root);
 
     auto beam = std::make_shared<Beam>(CTSpiralBeam());
+    if (m_image) {
+        const auto& s = m_image->spacing();
+        const auto& d = m_image->dimensions();
+        std::get<CTSpiralBeam>(*beam).setStartPosition({ 0, 0, -(s[2] * d[2]) / 2 });
+        std::get<CTSpiralBeam>(*beam).setStopPosition({ 0, 0, (s[2] * d[2]) / 2 });
+    } else {
+        std::get<CTSpiralBeam>(*beam).setStartPosition({ 0, 0, -20 });
+        std::get<CTSpiralBeam>(*beam).setStopPosition({ 0, 0, 20 });
+    }
     m_beams.push_back(beam);
 
     {

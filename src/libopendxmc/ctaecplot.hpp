@@ -13,25 +13,25 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with OpenDXMC. If not, see < https://www.gnu.org/licenses/>.
 
-Copyright 2024 Erlend Andersen
+Copyright 2023 Erlend Andersen
 */
 
 #pragma once
 
-#include <beamsettingsmodel.hpp>
+#include <datacontainer.hpp>
 
-#include <QTreeView>
+#include <QChartView>
 
-class BeamSettingsView : public QTreeView {
+class CTAECPlot : public QChartView {
     Q_OBJECT
 public:
-    BeamSettingsView(QWidget* parent = nullptr);
+    CTAECPlot(QWidget* parent = nullptr);
 
-    void addCTSpiralBeam() { m_model->addCTSpiralBeam(); }
-    void addCTSpiralDualEnergyBeam() { m_model->addCTSpiralDualSourceBeam(); }
-    void addDXBeam() { m_model->addDXBeam(); }
-    void updateImageData(std::shared_ptr<DataContainer> data) { m_model->updateImageData(data); }
+    void updateImageData(std::shared_ptr<DataContainer>);
+
+protected:
+    void updatePlot();
 
 private:
-    BeamSettingsModel* m_model = nullptr;
+    std::shared_ptr<DataContainer> m_data = nullptr;
 };

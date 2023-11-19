@@ -111,7 +111,7 @@ void CTImageImportPipeline::readImages(const QStringList& dicomPaths)
 
         std::array<double, 3> spacing;
         data->GetSpacing(spacing.data());
-        image->setSpacing(spacing);
+        image->setSpacingInmm(spacing);
 
         image->setImageArray(DataContainer::ImageType::CT, data);
     }

@@ -18,11 +18,9 @@ Copyright 2023 Erlend Andersen
 
 #include <colormaps.hpp>
 
-#include <array>
 #include <cmath>
 #include <map>
-#include <string>
-#include <vector>
+#include <numbers>
 
 const std::vector<double> MAGMA = {
     0.001462,
@@ -553,9 +551,8 @@ std::array<double, 4> Colormaps::discreetColor(int idx, double alpha)
     if (idx < 1)
         c = { 0, 0, 0, alpha };
     else {
-
-        double golden_ratio_conjugate = 0.618033988749895;
-        double h = std::fmod(golden_ratio_conjugate * idx, 1);
+        constexpr auto golden_ratio_conjugate = 1 / std::numbers::phi_v<double>;
+        const double h = std::fmod(golden_ratio_conjugate * idx, 1);
         c = HSVtoRGB(h, 0.65, 0.95, alpha);
     }
     return c;

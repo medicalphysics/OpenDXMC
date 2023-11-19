@@ -18,6 +18,7 @@ Copyright 2024 Erlend Andersen
 
 #pragma once
 
+#include <datacontainer.hpp>
 #include <dxmc_specialization.hpp>
 
 #include <QStandardItemModel>
@@ -32,6 +33,9 @@ public:
     void addCTSpiralBeam();
     void addCTSpiralDualSourceBeam();
 
+    void updateImageData(std::shared_ptr<DataContainer>);
+
 private:
     std::vector<std::shared_ptr<Beam>> m_beams;
+    std::shared_ptr<DataContainer> m_image = nullptr;
 };

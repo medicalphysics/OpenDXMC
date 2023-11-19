@@ -19,11 +19,16 @@ Copyright 2024 Erlend Andersen
 #pragma once
 
 #include <QWidget>
-
+#include <beamsettingsview.hpp>
+#include <ctaecplot.hpp>
 
 class BeamSettingsWidget : public QWidget {
     Q_OBJECT
 public:
     BeamSettingsWidget(QWidget* parent = nullptr);
-    
+    void updateImageData(std::shared_ptr<DataContainer> data);
+
+private:
+    BeamSettingsView* m_view = nullptr;
+    CTAECPlot* m_aecplot = nullptr;
 };

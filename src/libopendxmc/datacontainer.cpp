@@ -120,7 +120,7 @@ vtkSmartPointer<vtkImageData> DataContainer::generate_vtkImage(ImageType type)
 
 std::vector<DataContainer::ImageType> DataContainer::getAvailableImages() const
 {
-    
+
     std::array types = {
         ImageType::CT,
         ImageType::Density,
@@ -173,6 +173,14 @@ std::string DataContainer::getImageAsString(ImageType type)
 void DataContainer::setSpacing(const std::array<double, 3>& cm)
 {
     m_spacing = cm;
+    m_vtk_shallow_buffer.clear();
+}
+
+void DataContainer::setSpacingInmm(const std::array<double, 3>& mm)
+{
+    m_spacing = mm;
+    for (auto& s : m_spacing)
+        s /= 10;
     m_vtk_shallow_buffer.clear();
 }
 

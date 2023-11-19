@@ -152,7 +152,7 @@ void CTSegmentationPipeline::updateImageData(std::shared_ptr<DataContainer> data
         const auto& m_att = mat_data.attenuation[mIdx];
 
         const auto dens = (((w_att * w_dens - a_att * a_dens) * hu / 1000) + w_att * w_dens) / m_att;
-        return dens;
+        return std::max(dens, 0.0);
     });
     data->setImageArray(DataContainer::ImageType::Material, std::move(mat_array));
     data->setImageArray(DataContainer::ImageType::Density, std::move(dens_array));

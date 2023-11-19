@@ -50,6 +50,7 @@ public:
 
     DataContainer();
     void setSpacing(const std::array<double, 3>& cm);
+    void setSpacingInmm(const std::array<double, 3>& mm);
     void setDimensions(const std::array<std::size_t, 3>&);
     void setMaterials(const std::vector<DataContainer::Material>& materials);
     bool setImageArray(ImageType type, const std::vector<double>& image);
@@ -60,6 +61,8 @@ public:
     std::size_t size() const;
     bool hasImage(ImageType type) const;
     std::uint64_t ID() const;
+    const std::array<double, 3>& spacing() const { return m_spacing; }
+    const std::array<std::size_t, 3>& dimensions() const { return m_dimensions; }
 
     vtkSmartPointer<vtkImageData> vtkImage(ImageType);
 

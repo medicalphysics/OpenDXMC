@@ -205,7 +205,7 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(VolumeRenderSettings* set
     // option for power opacity transfer;
     auto uselog10 = new QCheckBox(tr("Power opacity"), this);
     uselog10->setChecked(false);
-    connect(uselog10, &QCheckBox::stateChanged, [=](int state) { m_settings->setUsePowerOpacityLUT(state != 0); });   
+    connect(uselog10, &QCheckBox::stateChanged, [=](int state) { m_settings->setUsePowerOpacityLUT(state != 0); });
     //  option for color crop;
     auto colorcrop = new QCheckBox(tr("Crop colors to opacity"), this);
     colorcrop->setChecked(true);

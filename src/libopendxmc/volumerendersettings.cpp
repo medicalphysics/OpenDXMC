@@ -186,7 +186,6 @@ void VolumeRenderSettings::setUsePowerOpacityLUT(bool on)
     updateOpacityLutFromNormalizedRange(true);
 }
 
-
 void VolumeRenderSettings::setCropColorToOpacityRange(bool on)
 {
     m_cropColorToOpacityRange = on;

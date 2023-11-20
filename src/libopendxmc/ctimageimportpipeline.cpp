@@ -20,9 +20,11 @@ Copyright 2024 Erlend Andersen
 
 #include <vtkDICOMApplyRescale.h>
 #include <vtkDICOMCTRectifier.h>
+#include <vtkDICOMMetaData.h>
 #include <vtkDICOMReader.h>
 #include <vtkImageGaussianSmooth.h>
 #include <vtkImageResize.h>
+#include <vtkIntArray.h>
 #include <vtkSmartPointer.h>
 #include <vtkStringArray.h>
 
@@ -34,6 +36,83 @@ CTImageImportPipeline::CTImageImportPipeline(QObject* parent)
 void CTImageImportPipeline::updateImageData(std::shared_ptr<DataContainer> data)
 {
     // we should only generate data, never recive it.
+}
+
+std::array<double, 3> cross(const std::array<double, 3>& v1, const std::array<double, 3> v2) noexcept
+{
+    return std::array<double, 3> {
+        v1[1] * v2[2] - v1[2] * v2[1],
+        v1[2] * v2[0] - v1[0] * v2[2],
+        v1[0] * v2[1] - v1[1] * v2[0]
+    };
+}
+
+// extract CT AEC data
+DataContainer::AECData readExposureData(vtkSmartPointer<vtkDICOMReader>& dicomReader)
+{
+    DataContainer::AECData res;
+
+    if (!dicomReader)
+        return res;
+
+    vtkDICOMMetaData* meta = dicomReader->GetMetaData();
+    if (!meta)
+        return res;
+    const auto n = meta->GetNumberOfInstances();
+    if (n < 2)
+        return res;
+
+    if (!meta->Has(DC::Exposure)) {
+        return res;
+    }
+
+    auto directionCosinesValue = meta->GetAttributeValue(0, DC::ImageOrientationPatient);
+    std::array<double, 3> xCos;
+    std::array<double, 3> yCos;
+    for (std::size_t p = 0; p < 3; ++p) {
+        xCos[p] = directionCosinesValue.GetDouble(p);
+        yCos[p] = directionCosinesValue.GetDouble(p + 3);
+    }
+
+    const auto imageDir = cross(xCos, yCos);
+    std::size_t imageDirIdx = 0;
+    if (std::abs(imageDir[imageDirIdx]) < std::abs(imageDir[1]))
+        imageDirIdx = 1;
+    if (std::abs(imageDir[imageDirIdx]) < std::abs(imageDir[2]))
+        imageDirIdx = 2;
+
+    std::vector<std::pair<std::array<double, 3>, double>> data(n);
+
+    // Get the arrays that map slice to file and frame.
+    // vtkIntArray* fileMap = dicomReader->GetFileIndexArray();
+
+    for (int i = 0; i < n; ++i) {
+
+        const auto& etag = meta->Get(i, DC::Exposure);
+        data[i].second = etag.GetDouble(0);
+
+        const auto& ptag = meta->Get(i, DC::ImagePositionPatient);
+        for (std::size_t j = 0; j < 3; ++j)
+            data[i].first[j] = ptag.GetDouble(j);
+    }
+    res.weights.resize(n);
+    std::sort(data.begin(), data.end(), [=](const auto& lh, const auto& rh) { return lh.first[imageDirIdx] < rh.first[imageDirIdx]; });
+    std::transform(data.cbegin(), data.cend(), res.weights.begin(), [](const auto& v) { return v.second; });
+
+    res.startPosition = data.front().first;
+    res.stopPosition = data.back().first;
+
+    // from mm to cm
+    for (std::size_t i = 0; i < 3; ++i) {
+        res.startPosition[i] /= 10.0;
+        res.stopPosition[i] /= 10.0;
+        if (i == imageDirIdx) {
+            const auto d = (res.stopPosition[i] - res.startPosition[i]) / 2;
+            res.startPosition[i] = -d;
+            res.stopPosition[i] = d;
+        }
+    }
+    return res;
 }
 
 void CTImageImportPipeline::readImages(const QStringList& dicomPaths)
@@ -114,6 +193,8 @@ void CTImageImportPipeline::readImages(const QStringList& dicomPaths)
         image->setSpacingInmm(spacing);
 
         image->setImageArray(DataContainer::ImageType::CT, data);
+
+        image->setAecData(readExposureData(dicomReader));
     }
 
     emit imageDataChanged(image);

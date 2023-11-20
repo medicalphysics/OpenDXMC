@@ -21,6 +21,7 @@ Copyright 2023 Erlend Andersen
 #include <datacontainer.hpp>
 
 #include <QChartView>
+#include <QValueAxis>
 
 class CTAECPlot : public QChartView {
     Q_OBJECT
@@ -34,4 +35,6 @@ protected:
 
 private:
     std::shared_ptr<DataContainer> m_data = nullptr;
+    QValueAxis* m_xaxis = nullptr;
+    QValueAxis* m_yaxis = nullptr;
 };

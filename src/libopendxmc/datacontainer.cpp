@@ -34,6 +34,9 @@ std::uint64_t generateID(void)
 DataContainer::DataContainer()
 {
     m_uid = generateID();
+    m_aecdata.startPosition = { 0, 0, 0 };
+    m_aecdata.stopPosition = { 0, 0, 0 };
+    m_aecdata.weights.resize(1, 1.0);
 }
 
 std::uint64_t DataContainer::ID() const { return m_uid; }
@@ -193,6 +196,28 @@ void DataContainer::setDimensions(const std::array<std::size_t, 3>& dim)
 void DataContainer::setMaterials(const std::vector<DataContainer::Material>& materials)
 {
     m_materials = materials;
+}
+
+void DataContainer::setAecData(const std::array<double, 3>& start, const std::array<double, 3>& stop, const std::vector<double>& weights)
+{
+    m_aecdata.startPosition = start;
+    m_aecdata.stopPosition = stop;
+
+    if (weights.size() > 1) {
+        const auto mean = std::reduce(weights.cbegin(), weights.cend()) / weights.size();
+        m_aecdata.weights.resize(weights.size());
+        std::transform(weights.cbegin(), weights.cend(), m_aecdata.weights.begin(), [=](const auto& w) { return w / mean; });
+    }
+}
+
+void DataContainer::setAecData(const DataContainer::AECData& d)
+{
+    m_aecdata = d;
+
+    if (m_aecdata.weights.size() > 1) {
+        const auto mean = std::reduce(m_aecdata.weights.cbegin(), m_aecdata.weights.cend()) / m_aecdata.weights.size();
+        std::for_each(m_aecdata.weights.begin(), m_aecdata.weights.end(), [=](auto& w) { w /= mean; });
+    }
 }
 
 bool DataContainer::setImageArray(ImageType type, const std::vector<double>& image)

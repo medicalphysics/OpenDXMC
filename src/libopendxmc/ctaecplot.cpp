@@ -21,7 +21,6 @@ Copyright 2023 Erlend Andersen
 #include <QChart>
 #include <QGraphicsLayout>
 #include <QLineSeries>
-#include <QValueAxis>
 
 CTAECPlot::CTAECPlot(QWidget* parent)
     : QChartView(parent)
@@ -40,57 +39,61 @@ CTAECPlot::CTAECPlot(QWidget* parent)
     chart()->setMargins(QMargins { 0, 0, 0, 0 });
     chart()->legend()->setVisible(false);
 
-    auto axisx = new QValueAxis(chart());
-    axisx->setMinorGridLineVisible(false);
-    axisx->setGridLineVisible(false);
-    axisx->setTickCount(2);
-    axisx->setLabelsVisible(false);
-    axisx->setRange(-.1, 1.1);
-    chart()->setAxisX(axisx);
-    auto axisy = new QValueAxis(chart());
-    axisy->setGridLineVisible(false);
-    axisy->setRange(-.1, 1.1);
-    chart()->setAxisY(axisy);
-    axisy->setLabelsVisible(false);
-    axisy->setMinorGridLineVisible(false);
-    axisy->setTickCount(2);
-    axisy->setLabelsVisible(false);
+    m_xaxis = new QValueAxis(chart());
+    chart()->setAxisX(m_xaxis);
+    m_xaxis->setMinorGridLineVisible(false);
+    m_xaxis->setGridLineVisible(false);
+    m_xaxis->setTickCount(2);
+    m_xaxis->setLabelsVisible(false);
+    m_xaxis->setRange(-.1, 1.1);
+
+    m_yaxis = new QValueAxis(chart());
+    chart()->setAxisY(m_yaxis);
+    m_yaxis->setGridLineVisible(false);
+    m_yaxis->setRange(-.1, 1.1);
+    m_yaxis->setLabelsVisible(false);
+    m_yaxis->setMinorGridLineVisible(false);
+    m_yaxis->setTickCount(2);
+    m_yaxis->setLabelsVisible(false);
 }
+
+double dist(const std::array<double, 3>& v1, const std::array<double, 3>& v2)
+{
+
+    double l = 0;
+    for (int i = 0; i < 3; ++i) {
+        const auto s = v1[i] - v2[i];
+        l += s * s;
+    }
+    return std::sqrt(l);
+}
+
 void CTAECPlot::updatePlot()
 {
     if (!m_data)
         return;
-    const auto& arr = m_data->hasImage(DataContainer::ImageType::CT) ? m_data->getCTArray() : m_data->getDensityArray();
 
-    const auto& s = m_data->spacing();
-    const auto& d = m_data->dimensions();
-    if (d[2] < 2)
-        return;
-    const auto offset = d[0] * d[1];
-
-    QList<QPointF> im_qt(d[2]);
-
-    auto max = std::numeric_limits<double>::lowest();
-    for (std::size_t i = 0; i < d[2]; ++i) {
-        im_qt[i].setY(std::reduce(arr.cbegin() + offset * i, arr.cbegin() + offset * (i + 1)));
-        max = std::max(max, im_qt[i].y());
+    auto series_aec = new QLineSeries(this);
+    const auto& aec = m_data->aecData();
+    const auto length = dist(aec.startPosition, aec.stopPosition) / 2;
+    const auto step_aec = 2 * length / (aec.weights.size() - 1);
+    QList<QPointF> aec_qt(aec.weights.size());
+    for (std::size_t i = 0; i < aec.weights.size(); ++i) {
+        aec_qt[i].setX(i * step_aec - length);
+        aec_qt[i].setY(aec.weights[i]);
     }
-
-    const auto step = 1.0 / (d[2] - 1);
-    for (std::size_t i = 0; i < d[2]; ++i) {
-        auto& p = im_qt[i];
-        p.setY(p.y() / max);
-        p.setX(step * i);
-    }
-
-    auto series = new QLineSeries(this);
-    series->append(im_qt);
-    for (auto ax : chart()->axes())
-        series->attachAxis(ax);
+    series_aec->append(aec_qt);
+    m_xaxis->setRange(-length, length);
+    const auto max = *std::max_element(aec.weights.cbegin(), aec.weights.cend());
+    m_yaxis->setRange(0.0, max * 1.1);
 
     chart()->removeAllSeries();
-    chart()->addSeries(series);
-    show();
+    chart()->addSeries(series_aec);
+
+    series_aec->attachAxis(m_xaxis);
+    series_aec->attachAxis(m_yaxis);
+
+    m_xaxis->setLabelsVisible(true);
 }
 void CTAECPlot::updateImageData(std::shared_ptr<DataContainer> d)
 {

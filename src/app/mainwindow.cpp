@@ -85,7 +85,7 @@ MainWindow::MainWindow(QWidget* parent)
     connect(ctdicomimportwidget, &CTDicomImportWidget::blurRadiusChanged, ctimageimportpipeline, &CTImageImportPipeline::setBlurRadius);
     connect(ctdicomimportwidget, &CTDicomImportWidget::outputSpacingChanged, ctimageimportpipeline, &CTImageImportPipeline::setOutputSpacing);
     connect(ctdicomimportwidget, &CTDicomImportWidget::useOutputSpacingChanged, ctimageimportpipeline, &CTImageImportPipeline::setUseOutputSpacing);
-    connect(ctimageimportpipeline, &CTImageImportPipeline::imageDataChanged, slicerender, &RenderWidgetsCollection::updateImageData);
+    // connect(ctimageimportpipeline, &CTImageImportPipeline::imageDataChanged, slicerender, &RenderWidgetsCollection::updateImageData);
 
     // adding ct segmentation pipeline
     auto ctsegmentationpipelie = new CTSegmentationPipeline;
@@ -100,7 +100,7 @@ MainWindow::MainWindow(QWidget* parent)
     // beam settings widget
     auto beamsettingswidget = new BeamSettingsWidget(this);
     menuWidget->addTab(beamsettingswidget, tr("Configure X-ray beams"));
-    connect(ctimageimportpipeline, &CTImageImportPipeline::imageDataChanged, beamsettingswidget, &BeamSettingsWidget::updateImageData);
+    // connect(ctimageimportpipeline, &CTImageImportPipeline::imageDataChanged, beamsettingswidget, &BeamSettingsWidget::updateImageData);
     connect(ctsegmentationpipelie, &CTSegmentationPipeline::imageDataChanged, beamsettingswidget, &BeamSettingsWidget::updateImageData);
 
     // simulation progress

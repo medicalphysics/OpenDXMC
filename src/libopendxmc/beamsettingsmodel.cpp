@@ -187,6 +187,79 @@ void addItem(QStandardItem* parent, QString label, auto getter)
     parent->appendRow(row);
 }
 
+template <typename T>
+void addTubeItems(LabelItem* tubeItem, std::shared_ptr<Beam> beam)
+{
+    {
+        auto setter = [=](double d) {
+            auto& dx = std::get<T>(*beam);
+            dx.setTubeVoltage(d);
+        };
+        auto getter = [=]() -> double {
+            auto& dx = std::get<T>(*beam);
+            const auto& tube = dx.tube();
+            return tube.voltage();
+        };
+        addItem(tubeItem, "Tube potential [kV]", setter, getter);
+    }
+    {
+        auto setter = [=](double d) {
+            auto& dx = std::get<T>(*beam);
+            dx.setTubeAnodeAngleDeg(d);
+        };
+        auto getter = [=]() -> double {
+            auto& dx = std::get<T>(*beam);
+            const auto& tube = dx.tube();
+            return tube.anodeAngleDeg();
+        };
+        addItem(tubeItem, "Tube anode angle [deg]", setter, getter);
+    }
+    {
+        auto setter = [=](double d) {
+            auto& dx = std::get<T>(*beam);
+            dx.addTubeFiltrationMaterial(13, d);
+        };
+        auto getter = [=]() -> double {
+            auto& dx = std::get<T>(*beam);
+            const auto& tube = dx.tube();
+            return tube.filtration(13);
+        };
+        addItem(tubeItem, "Tube Al filtration [mm]", setter, getter);
+    }
+    {
+
+        auto setter = [=](double d) {
+            auto& dx = std::get<T>(*beam);
+            dx.addTubeFiltrationMaterial(29, d);
+        };
+        auto getter = [=]() -> double {
+            auto& dx = std::get<T>(*beam);
+            const auto& tube = dx.tube();
+            return tube.filtration(29);
+        };
+        addItem(tubeItem, "Tube Cu filtration [mm]", setter, getter);
+    }
+    {
+        auto setter = [=](double d) {
+            auto& dx = std::get<T>(*beam);
+            dx.addTubeFiltrationMaterial(50, d);
+        };
+        auto getter = [=]() -> double {
+            auto& dx = std::get<T>(*beam);
+            const auto& tube = dx.tube();
+            return tube.filtration(50);
+        };
+        addItem(tubeItem, "Tube Sn filtration [mm]", setter, getter);
+    }
+    {
+        auto getter = [=]() -> double {
+            auto& dx = std::get<T>(*beam);
+            return dx.tubeAlHalfValueLayer();
+        };
+        addItem(tubeItem, "Tube half value layer [mmAl]", getter);
+    }
+}
+
 void BeamSettingsModel::addDXBeam()
 {
     auto parent = invisibleRootItem();
@@ -226,75 +299,10 @@ void BeamSettingsModel::addDXBeam()
 
     auto tubeItem = new LabelItem(tr("Tube"));
     root->appendRow(tubeItem);
-    {
-        auto setter = [=](double d) {
-            auto& dx = std::get<DXBeam>(*beam);
-            dx.setTubeVoltage(d);
-        };
-        auto getter = [=]() -> double {
-            auto& dx = std::get<DXBeam>(*beam);
-            const auto& tube = dx.tube();
-            return tube.voltage();
-        };
-        addItem(tubeItem, "Tube potential [kV]", setter, getter);
-    }
-    {
-        auto setter = [=](double d) {
-            auto& dx = std::get<DXBeam>(*beam);
-            dx.setTubeAnodeAngleDeg(d);
-        };
-        auto getter = [=]() -> double {
-            auto& dx = std::get<DXBeam>(*beam);
-            const auto& tube = dx.tube();
-            return tube.anodeAngleDeg();
-        };
-        addItem(tubeItem, "Tube anode angle [deg]", setter, getter);
-    }
-    {
-        std::get<DXBeam>(*beam).addTubeFiltrationMaterial(13, 2);
-        auto setter = [=](double d) {
-            auto& dx = std::get<DXBeam>(*beam);
-            dx.addTubeFiltrationMaterial(13, d);
-        };
-        auto getter = [=]() -> double {
-            auto& dx = std::get<DXBeam>(*beam);
-            const auto& tube = dx.tube();
-            return tube.filtration(13);
-        };
-        addItem(tubeItem, "Tube Al filtration [mm]", setter, getter);
-    }
-    {
-        std::get<DXBeam>(*beam).addTubeFiltrationMaterial(29, 0.1);
-        auto setter = [=](double d) {
-            auto& dx = std::get<DXBeam>(*beam);
-            dx.addTubeFiltrationMaterial(29, d);
-        };
-        auto getter = [=]() -> double {
-            auto& dx = std::get<DXBeam>(*beam);
-            const auto& tube = dx.tube();
-            return tube.filtration(29);
-        };
-        addItem(tubeItem, "Tube Cu filtration [mm]", setter, getter);
-    }
-    {
-        auto setter = [=](double d) {
-            auto& dx = std::get<DXBeam>(*beam);
-            dx.addTubeFiltrationMaterial(50, d);
-        };
-        auto getter = [=]() -> double {
-            auto& dx = std::get<DXBeam>(*beam);
-            const auto& tube = dx.tube();
-            return tube.filtration(50);
-        };
-        addItem(tubeItem, "Tube Sn filtration [mm]", setter, getter);
-    }
-    {
-        auto getter = [=]() -> double {
-            auto& dx = std::get<DXBeam>(*beam);
-            return dx.tubeAlHalfValueLayer();
-        };
-        addItem(tubeItem, "Tube half value layer [mmAl]", getter);
-    }
+    std::get<DXBeam>(*beam).addTubeFiltrationMaterial(29, 0.1);
+    std::get<DXBeam>(*beam).addTubeFiltrationMaterial(13, 2);
+    addTubeItems<DXBeam>(tubeItem, beam);
+
     {
         auto setter = [=](double d) {
             auto& dx = std::get<DXBeam>(*beam);
@@ -474,74 +482,9 @@ void BeamSettingsModel::addCTSpiralBeam()
 
     auto tubeItem = new LabelItem(tr("Tube"));
     root->appendRow(tubeItem);
-    {
-        auto setter = [=](double d) {
-            auto& ct = std::get<CTSpiralBeam>(*beam);
-            ct.setTubeVoltage(d);
-        };
-        auto getter = [=]() -> double {
-            auto& ct = std::get<CTSpiralBeam>(*beam);
-            const auto& tube = ct.tube();
-            return tube.voltage();
-        };
-        addItem(tubeItem, "Tube potential [kV]", setter, getter);
-    }
-    {
-        auto setter = [=](double d) {
-            auto& ct = std::get<CTSpiralBeam>(*beam);
-            ct.setTubeAnodeAngleDeg(d);
-        };
-        auto getter = [=]() -> double {
-            auto& ct = std::get<CTSpiralBeam>(*beam);
-            const auto& tube = ct.tube();
-            return tube.anodeAngleDeg();
-        };
-        addItem(tubeItem, "Tube anode angle [deg]", setter, getter);
-    }
-    {
-        std::get<CTSpiralBeam>(*beam).addTubeFiltrationMaterial(13, 9);
-        auto setter = [=](double d) {
-            auto& ct = std::get<CTSpiralBeam>(*beam);
-            ct.addTubeFiltrationMaterial(13, d);
-        };
-        auto getter = [=]() -> double {
-            auto& ct = std::get<CTSpiralBeam>(*beam);
-            const auto& tube = ct.tube();
-            return tube.filtration(13);
-        };
-        addItem(tubeItem, "Tube Al filtration [mm]", setter, getter);
-    }
-    {
-        auto setter = [=](double d) {
-            auto& ct = std::get<CTSpiralBeam>(*beam);
-            ct.addTubeFiltrationMaterial(29, d);
-        };
-        auto getter = [=]() -> double {
-            auto& ct = std::get<CTSpiralBeam>(*beam);
-            const auto& tube = ct.tube();
-            return tube.filtration(29);
-        };
-        addItem(tubeItem, "Tube Cu filtration [mm]", setter, getter);
-    }
-    {
-        auto setter = [=](double d) {
-            auto& ct = std::get<CTSpiralBeam>(*beam);
-            ct.addTubeFiltrationMaterial(50, d);
-        };
-        auto getter = [=]() -> double {
-            auto& ct = std::get<CTSpiralBeam>(*beam);
-            const auto& tube = ct.tube();
-            return tube.filtration(50);
-        };
-        addItem(tubeItem, "Tube Sn filtration [mm]", setter, getter);
-    }
-    {
-        auto getter = [=]() -> double {
-            auto& ct = std::get<CTSpiralBeam>(*beam);
-            return ct.tubeAlHalfValueLayer();
-        };
-        addItem(tubeItem, "Tube half value layer [mmAl]", getter);
-    }
+    std::get<CTSpiralBeam>(*beam).addTubeFiltrationMaterial(13, 9);
+    addTubeItems<CTSpiralBeam>(tubeItem, beam);
+
     {
         auto getter = [=]() -> std::uint64_t {
             auto& ct = std::get<CTSpiralBeam>(*beam);
@@ -571,4 +514,301 @@ void BeamSettingsModel::addCTSpiralBeam()
 
 void BeamSettingsModel::addCTSpiralDualSourceBeam()
 {
+    auto parent = invisibleRootItem();
+
+    auto root = new LabelItem(tr("CT Spiral Dual Energy Beam"));
+    appendRow(root);
+
+    auto beam = std::make_shared<Beam>(CTSpiralDualEnergyBeam());
+    if (m_image) {
+        const auto& s = m_image->spacing();
+        const auto& d = m_image->dimensions();
+        std::get<CTSpiralDualEnergyBeam>(*beam).setStartPosition({ 0, 0, -(s[2] * d[2]) / 2 });
+        std::get<CTSpiralDualEnergyBeam>(*beam).setStopPosition({ 0, 0, (s[2] * d[2]) / 2 });
+    } else {
+        std::get<CTSpiralDualEnergyBeam>(*beam).setStartPosition({ 0, 0, -20 });
+        std::get<CTSpiralDualEnergyBeam>(*beam).setStopPosition({ 0, 0, 20 });
+    }
+    m_beams.push_back(beam);
+
+    {
+        auto setter = [=](std::array<double, 3> d) {
+            auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
+            ct.setStartPosition(d);
+        };
+        auto getter = [=]() -> std::array<double, 3> {
+            auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
+            return ct.startPosition();
+        };
+
+        addItem(root, "Start position [cm]", setter, getter);
+    }
+    {
+        auto setter = [=](std::array<double, 3> d) {
+            auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
+            ct.setStopPosition(d);
+        };
+        auto getter = [=]() -> std::array<double, 3> {
+            auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
+            return ct.stopPosition();
+        };
+
+        addItem(root, "Stop position [cm]", setter, getter);
+    }
+    {
+        auto setter = [=](double d) {
+            auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
+            ct.setScanFieldOfViewA(d);
+        };
+        auto getter = [=]() -> double {
+            auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
+            return ct.scanFieldOfViewB();
+        };
+        addItem(root, "Scan FOV Tube A [cm]", setter, getter);
+        auto setterB = [=](double d) {
+            auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
+            ct.setScanFieldOfViewA(d);
+        };
+        auto getterB = [=]() -> double {
+            auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
+            return ct.scanFieldOfViewB();
+        };
+        addItem(root, "Scan FOV Tube B [cm]", setter, getter);
+    }
+    {
+        auto setter = [=](double d) {
+            auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
+            ct.setSourceDetectorDistance(d);
+        };
+        auto getter = [=]() -> double {
+            auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
+            return ct.sourceDetectorDistance();
+        };
+        addItem(root, "Source detector distance [cm]", setter, getter);
+    }
+    {
+        auto setter = [=](double d) {
+            auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
+            ct.setCollimation(d);
+        };
+        auto getter = [=]() -> double {
+            auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
+            return ct.collimation();
+        };
+        addItem(root, "Total collimation [cm]", setter, getter);
+    }
+    {
+        auto setter = [=](double d) {
+            auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
+            ct.setStartAngleDeg(d);
+        };
+        auto getter = [=]() -> double {
+            auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
+            return ct.startAngleDeg();
+        };
+        addItem(root, "Set start angle [deg]", setter, getter);
+    }
+    {
+        auto setter = [=](double d) {
+            auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
+            ct.setStepAngleDeg(d);
+        };
+        auto getter = [=]() -> double {
+            auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
+            return ct.stepAngleDeg();
+        };
+        addItem(root, "Set angle step [deg]", setter, getter);
+    }
+    {
+        auto setter = [=](double d) {
+            auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
+            ct.setTubeBoffsetAngleDeg(d);
+        };
+        auto getter = [=]() -> double {
+            auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
+            return ct.tubeBoffsetAngleDeg();
+        };
+        addItem(root, "Tube B offset angle [deg]", setter, getter);
+    }
+    {
+        auto setter = [=](double d) {
+            auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
+            ct.setPitch(d);
+        };
+        auto getter = [=]() -> double {
+            auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
+            return ct.pitch();
+        };
+        addItem(root, "Pitch", setter, getter);
+    }
+
+    {
+        auto setter = [=](double d) {
+            auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
+            ct.setCTDIvol(d);
+        };
+        auto getter = [=]() -> double {
+            auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
+            return ct.CTDIvol();
+        };
+        addItem(root, "CTDIvol [mGycm]", setter, getter);
+    }
+    {
+        auto setter = [=](double d) {
+            auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
+            ct.setCTDIdiameter(d);
+        };
+        auto getter = [=]() -> double {
+            auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
+            return ct.CTDIdiameter();
+        };
+        addItem(root, "CTDI phantom diameter [cm]", setter, getter);
+    }
+
+    auto tubeAItem = new LabelItem(tr("Tube A"));
+    root->appendRow(tubeAItem);
+    std::get<CTSpiralDualEnergyBeam>(*beam).addTubeAFiltrationMaterial(13, 9);
+    auto tubeBItem = new LabelItem(tr("Tube B"));
+    root->appendRow(tubeBItem);
+    std::get<CTSpiralDualEnergyBeam>(*beam).addTubeBFiltrationMaterial(13, 9);
+    {
+        auto setter = [=](double d) {
+            auto& dx = std::get<CTSpiralDualEnergyBeam>(*beam);
+            dx.setTubeAVoltage(d);
+        };
+        auto getter = [=]() -> double {
+            auto& dx = std::get<CTSpiralDualEnergyBeam>(*beam);
+            const auto& tube = dx.tubeA();
+            return tube.voltage();
+        };
+        auto setterB = [=](double d) {
+            auto& dx = std::get<CTSpiralDualEnergyBeam>(*beam);
+            dx.setTubeBVoltage(d);
+        };
+        auto getterB = [=]() -> double {
+            auto& dx = std::get<CTSpiralDualEnergyBeam>(*beam);
+            const auto& tube = dx.tubeB();
+            return tube.voltage();
+        };
+        addItem(tubeAItem, "Tube A potential [kV]", setter, getter);
+        addItem(tubeBItem, "Tube B potential [kV]", setterB, getterB);
+    }
+    {
+        auto setter = [=](double d) {
+            auto& dx = std::get<CTSpiralDualEnergyBeam>(*beam);
+            dx.setTubesAnodeAngleDeg(d);
+        };
+        auto getter = [=]() -> double {
+            auto& dx = std::get<CTSpiralDualEnergyBeam>(*beam);
+            const auto& tube = dx.tubeA();
+            return tube.anodeAngleDeg();
+        };
+
+        addItem(tubeAItem, "Tubes anode angle [deg]", setter, getter);
+        addItem(tubeBItem, "Tubes anode angle [deg]", getter);
+    }
+    {
+        auto setter = [=](double d) {
+            auto& dx = std::get<CTSpiralDualEnergyBeam>(*beam);
+            dx.addTubeAFiltrationMaterial(13, d);
+        };
+        auto getter = [=]() -> double {
+            auto& dx = std::get<CTSpiralDualEnergyBeam>(*beam);
+            const auto& tube = dx.tubeA();
+            return tube.filtration(13);
+        };
+        auto setterB = [=](double d) {
+            auto& dx = std::get<CTSpiralDualEnergyBeam>(*beam);
+            dx.addTubeBFiltrationMaterial(13, d);
+        };
+        auto getterB = [=]() -> double {
+            auto& dx = std::get<CTSpiralDualEnergyBeam>(*beam);
+            const auto& tube = dx.tubeB();
+            return tube.filtration(13);
+        };
+        addItem(tubeAItem, "Tube A Al filtration [mm]", setter, getter);
+        addItem(tubeBItem, "Tube B Al filtration [mm]", setterB, getterB);
+    }
+    {
+        auto setter = [=](double d) {
+            auto& dx = std::get<CTSpiralDualEnergyBeam>(*beam);
+            dx.addTubeAFiltrationMaterial(29, d);
+        };
+        auto getter = [=]() -> double {
+            auto& dx = std::get<CTSpiralDualEnergyBeam>(*beam);
+            const auto& tube = dx.tubeA();
+            return tube.filtration(29);
+        };
+        auto setterB = [=](double d) {
+            auto& dx = std::get<CTSpiralDualEnergyBeam>(*beam);
+            dx.addTubeBFiltrationMaterial(29, d);
+        };
+        auto getterB = [=]() -> double {
+            auto& dx = std::get<CTSpiralDualEnergyBeam>(*beam);
+            const auto& tube = dx.tubeB();
+            return tube.filtration(29);
+        };
+        addItem(tubeAItem, "Tube A Cu filtration [mm]", setter, getter);
+        addItem(tubeBItem, "Tube B Cu filtration [mm]", setterB, getterB);
+    }
+    {
+        auto setter = [=](double d) {
+            auto& dx = std::get<CTSpiralDualEnergyBeam>(*beam);
+            dx.addTubeAFiltrationMaterial(50, d);
+        };
+        auto getter = [=]() -> double {
+            auto& dx = std::get<CTSpiralDualEnergyBeam>(*beam);
+            const auto& tube = dx.tubeA();
+            return tube.filtration(50);
+        };
+        auto setterB = [=](double d) {
+            auto& dx = std::get<CTSpiralDualEnergyBeam>(*beam);
+            dx.addTubeBFiltrationMaterial(50, d);
+        };
+        auto getterB = [=]() -> double {
+            auto& dx = std::get<CTSpiralDualEnergyBeam>(*beam);
+            const auto& tube = dx.tubeB();
+            return tube.filtration(50);
+        };
+        addItem(tubeAItem, "Tube A Sn filtration [mm]", setter, getter);
+        addItem(tubeBItem, "Tube B Sn filtration [mm]", setterB, getterB);
+    }
+    {
+        auto getter = [=]() -> double {
+            auto& dx = std::get<CTSpiralDualEnergyBeam>(*beam);
+            return dx.tubeAAlHalfValueLayer();
+        };
+        auto getterB = [=]() -> double {
+            auto& dx = std::get<CTSpiralDualEnergyBeam>(*beam);
+            return dx.tubeBAlHalfValueLayer();
+        };
+
+        addItem(tubeAItem, "Tube half value layer [mmAl]", getter);
+        addItem(tubeBItem, "Tube half value layer [mmAl]", getterB);
+    }
+    {
+        auto getter = [=]() -> std::uint64_t {
+            auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
+            return ct.numberOfExposures();
+        };
+        addItem(root, "Number of exposures", getter);
+    }
+    {
+        auto setter = [=](std::uint64_t d) {
+            auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
+            ct.setNumberOfParticlesPerExposure(d);
+        };
+        auto getter = [=]() -> std::uint64_t {
+            auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
+            return ct.numberOfParticlesPerExposure();
+        };
+        addItem(root, "Particles per exposure", setter, getter);
+    }
+    {
+        auto getter = [=]() -> std::uint64_t {
+            auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
+            return ct.numberOfParticles();
+        };
+        addItem(root, "Total number of particles", getter);
+    }
 }

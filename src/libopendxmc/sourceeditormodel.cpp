@@ -26,7 +26,7 @@ SourceItem<S, T>::SourceItem(std::shared_ptr<S> source, std::function<void(T)> s
     f_setData = setter;
     m_source = source;
 
-    //For boolean data we want to use checkboxes
+    // For boolean data we want to use checkboxes
     if constexpr (std::is_same<bool, T>::value) {
         setCheckable(true);
     }
@@ -305,7 +305,7 @@ void SourceModel::addSource(Source::Type type)
         std::array<floating, 6> cosines = { -1, 0, 0, 0, 0, 1 };
         src->setDirectionCosines(cosines);
 
-        //fitting src position to cover image data
+        // fitting src position to cover image data
         if (m_currentImageID != 0) {
             std::array<floating, 2> srcCoverage = { static_cast<floating>(m_currentImageExtent[4]), static_cast<floating>(m_currentImageExtent[5]) };
             if (m_currentImageExtent[5] - m_currentImageExtent[4] > 500.0) {
@@ -328,7 +328,7 @@ void SourceModel::addSource(Source::Type type)
         auto src = std::make_shared<CTAxialSource>();
         std::array<floating, 6> cosines = { -1, 0, 0, 0, 0, 1 };
         src->setDirectionCosines(cosines);
-        //fitting src position to cover image data
+        // fitting src position to cover image data
         if (m_currentImageID != 0) {
             std::array<floating, 2> srcCoverage = { static_cast<floating>(m_currentImageExtent[4]), static_cast<floating>(m_currentImageExtent[5]) };
             if (m_currentImageExtent[5] - m_currentImageExtent[4] > 500.0) {
@@ -351,7 +351,7 @@ void SourceModel::addSource(Source::Type type)
         auto src = std::make_shared<CTSpiralDualSource>();
         std::array<floating, 6> cosines = { -1, 0, 0, 0, 0, 1 };
         src->setDirectionCosines(cosines);
-        //fitting src position to cover image data
+        // fitting src position to cover image data
         if (m_currentImageID != 0) {
             std::array<floating, 2> srcCoverage = { static_cast<floating>(m_currentImageExtent[4]), static_cast<floating>(m_currentImageExtent[5]) };
             if (m_currentImageExtent[5] - m_currentImageExtent[4] > 500.0) {
@@ -387,7 +387,7 @@ void SourceModel::addSource(Source::Type type)
         auto src = std::make_shared<CTTopogramSource>();
         std::array<floating, 6> cosines = { -1, 0, 0, 0, 0, 1 };
         src->setDirectionCosines(cosines);
-        //fitting src position to cover image data
+        // fitting src position to cover image data
         if (m_currentImageID != 0) {
             std::array<floating, 2> srcCoverage = { static_cast<floating>(m_currentImageExtent[4]), static_cast<floating>(m_currentImageExtent[5]) };
             if (m_currentImageExtent[5] - m_currentImageExtent[4] > 500.0) {
@@ -410,7 +410,7 @@ void SourceModel::addSource(Source::Type type)
         auto src = std::make_shared<CBCTSource>();
         std::array<floating, 6> cosines = { -1, 0, 0, 0, 0, 1 };
         src->setDirectionCosines(cosines);
-        //fitting src position to cover image data
+        // fitting src position to cover image data
         if (m_currentImageID != 0) {
             std::array<floating, 2> srcCoverage = { static_cast<floating>(m_currentImageExtent[4]), static_cast<floating>(m_currentImageExtent[5]) };
             if (m_currentImageExtent[5] - m_currentImageExtent[4] > 500.0) {
@@ -473,7 +473,7 @@ void SourceModel::addSource(std::shared_ptr<Source> src)
 
 void SourceModel::setSources(const std::vector<std::shared_ptr<Source>>& sources)
 {
-    //removing all sources
+    // removing all sources
     auto parentItem = invisibleRootItem();
     removeRows(0, m_sources.size(), parentItem->index());
 
@@ -709,7 +709,7 @@ void SourceModel::setupCTBaseSource(std::shared_ptr<CTBaseSource> src, QStandard
 {
     setupSource(std::static_pointer_cast<Source>(src), parent);
 
-    //CT parameters
+    // CT parameters
     QVector<QPair<QString, QStandardItem*>> nodes;
 
     auto sddItem = new SourceItem<CTBaseSource, floating>(
@@ -788,7 +788,7 @@ void SourceModel::setupCTSource(std::shared_ptr<CTSource> src, QStandardItem* pa
 {
     setupCTBaseSource(std::static_pointer_cast<CTBaseSource>(src), parent);
 
-    //CT parameters
+    // CT parameters
     QVector<QPair<QString, QStandardItem*>> nodes;
 
     auto l1Item = new SourceItem<CTSource, floating>(
@@ -819,10 +819,10 @@ void SourceModel::setupCTSource(std::shared_ptr<CTSource> src, QStandardItem* pa
 
 void SourceModel::setupCTAxialSource(std::shared_ptr<CTAxialSource> src, QStandardItem* parent)
 {
-    //sourve root node
+    // sourve root node
     auto sourceItem = new QStandardItem("CT Axial Source");
 
-    //standard parameters
+    // standard parameters
     setupCTSource(std::static_pointer_cast<CTSource>(src), sourceItem);
 
     QVector<QPair<QString, QStandardItem*>> nodes;
@@ -835,16 +835,16 @@ void SourceModel::setupCTAxialSource(std::shared_ptr<CTAxialSource> src, QStanda
 
     addModelItems(nodes, sourceItem);
 
-    //adding source
+    // adding source
     parent->appendRow(sourceItem);
 }
 
 void SourceModel::setupCTSpiralSource(std::shared_ptr<CTSpiralSource> src, QStandardItem* parent)
 {
-    //sourve root node
+    // sourve root node
     auto sourceItem = new QStandardItem("CT Spiral Source");
 
-    //standard parameters
+    // standard parameters
     setupCTSource(std::static_pointer_cast<CTSource>(src), sourceItem);
 
     QVector<QPair<QString, QStandardItem*>> nodes;
@@ -857,7 +857,7 @@ void SourceModel::setupCTSpiralSource(std::shared_ptr<CTSpiralSource> src, QStan
 
     addModelItems(nodes, sourceItem);
 
-    //adding source
+    // adding source
     parent->appendRow(sourceItem);
 }
 
@@ -1006,15 +1006,15 @@ void SourceModel::setupCTDualSource(std::shared_ptr<CTSpiralDualSource> src, QSt
     sourceItem->appendRow(tubeNodeA);
     sourceItem->appendRow(tubeNodeB);
 
-    //adding source
+    // adding source
     parent->appendRow(sourceItem);
 }
 
 void SourceModel::setupCTTopogramSource(std::shared_ptr<CTTopogramSource> src, QStandardItem* parent)
 {
-    //sourve root node
+    // sourve root node
     auto sourceItem = new QStandardItem("CT Topogram");
-    //setupSource(std::static_pointer_cast<Source>(src), sourceItem);
+    // setupSource(std::static_pointer_cast<Source>(src), sourceItem);
     setupCTBaseSource(std::static_pointer_cast<CTBaseSource>(src), sourceItem);
     QVector<QPair<QString, QStandardItem*>> nodes;
 
@@ -1043,7 +1043,7 @@ void SourceModel::setupDAPSource(std::shared_ptr<DAPSource> src, QStandardItem* 
         [=]() -> auto { return src->modelHeelEffect(); });
     nodes.append(qMakePair(QString("Model Heel effect"), static_cast<QStandardItem*>(heelItem)));
 
-    //DX parameters
+    // DX parameters
 
     auto sourceAngleItem = new SourceItem<DAPSource, std::array<floating, 2>>(
         src,
@@ -1092,10 +1092,10 @@ void SourceModel::setupDAPSource(std::shared_ptr<DAPSource> src, QStandardItem* 
 
 void SourceModel::setupDXSource(std::shared_ptr<DXSource> src, QStandardItem* parent)
 {
-    //sourve root node
+    // sourve root node
     auto sourceItem = new QStandardItem("DX Source");
 
-    //standard parameters
+    // standard parameters
     setupDAPSource(std::static_pointer_cast<DAPSource>(src), sourceItem);
 
     QVector<QPair<QString, QStandardItem*>> nodes;
@@ -1108,7 +1108,7 @@ void SourceModel::setupDXSource(std::shared_ptr<DXSource> src, QStandardItem* pa
 
     addModelItems(nodes, sourceItem);
 
-    //adding source
+    // adding source
     this->invisibleRootItem()->appendRow(sourceItem);
 }
 
@@ -1116,7 +1116,7 @@ void SourceModel::setupCBCTSource(std::shared_ptr<CBCTSource> src, QStandardItem
 {
     auto sourceItem = new QStandardItem("CBCT Source");
 
-    //standard parameters
+    // standard parameters
     setupDAPSource(std::static_pointer_cast<DAPSource>(src), sourceItem);
 
     QVector<QPair<QString, QStandardItem*>> nodes;
@@ -1141,7 +1141,7 @@ void SourceModel::setupCBCTSource(std::shared_ptr<CBCTSource> src, QStandardItem
 
     addModelItems(nodes, sourceItem);
 
-    //adding source
+    // adding source
     this->invisibleRootItem()->appendRow(sourceItem);
 }
 void SourceModel::sourceDataChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>& roles)

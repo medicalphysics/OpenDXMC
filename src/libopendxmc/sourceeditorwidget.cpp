@@ -140,7 +140,7 @@ void BowtieFilterReader::writeJson(QJsonObject& json) const
     json["filters"] = filtersArray;
 }
 
-//http://doc.qt.io/qt-5/qtwidgets-itemviews-coloreditorfactory-example.html
+// http://doc.qt.io/qt-5/qtwidgets-itemviews-coloreditorfactory-example.html
 SourceDelegate::SourceDelegate(QObject* parent)
     : QStyledItemDelegate(parent)
 {
@@ -265,7 +265,7 @@ void SourceDelegate::addBowtieFilter(std::shared_ptr<BowTieFilter> filter)
         name = "None";
     }
 
-    //Check for filter name already in buffer
+    // Check for filter name already in buffer
     auto idx = std::find_if(m_bowtieFilters.begin(), m_bowtieFilters.end(), [=](const auto& el) { return el.first == name; });
     if (idx == m_bowtieFilters.cend()) {
         m_bowtieFilters.emplace_back(std::make_pair(name, filter));
@@ -283,7 +283,7 @@ void SourceDelegate::addAecFilter(std::shared_ptr<AECFilter> filter)
         name = "None";
     }
 
-    //Check for filter name already in buffer
+    // Check for filter name already in buffer
     auto idx = std::find_if(m_aecFilters.begin(), m_aecFilters.end(), [=](const auto& el) { return el.first == name; });
     if (idx == m_aecFilters.cend()) {
         m_aecFilters.emplace_back(std::make_pair(name, filter));
@@ -318,7 +318,7 @@ SourceEditWidget::SourceEditWidget(QWidget* parent)
     qRegisterMetaType<std::vector<std::shared_ptr<Source>>>();
 
     auto mainLayout = new QVBoxLayout(this);
-    //defining available sources
+    // defining available sources
     m_sourceTypes[0] = "DX tube";
     m_sourceTypes[1] = "CT Spiral tube";
     m_sourceTypes[2] = "CT Axial tube";
@@ -326,7 +326,7 @@ SourceEditWidget::SourceEditWidget(QWidget* parent)
     m_sourceTypes[4] = "CT Topogram";
     m_sourceTypes[5] = "Cone Beam CT";
 
-    //add source button and selector
+    // add source button and selector
     auto addSourceBox = new QGroupBox(tr("Add a x-ray source"), this);
     auto addSourceLayout = new QHBoxLayout(addSourceBox);
     addSourceBox->setLayout(addSourceLayout);
@@ -341,7 +341,7 @@ SourceEditWidget::SourceEditWidget(QWidget* parent)
     connect(addSourceButton, &QPushButton::clicked, this, &SourceEditWidget::addCurrentSourceType);
     addSourceLayout->addWidget(addSourceButton);
 
-    //modelView
+    // modelView
     auto modelView = new SourceModelView(this);
     m_model = new SourceModel(this);
     modelView->setModel(m_model);
@@ -405,19 +405,19 @@ void SourceEditWidget::addCurrentSourceType(void)
         // add dx beam
         m_model->addSource(Source::Type::DX);
     } else if (m_currentSourceTypeSelected == 1) {
-        //add spiral beam
+        // add spiral beam
         m_model->addSource(Source::Type::CTSpiral);
     } else if (m_currentSourceTypeSelected == 2) {
-        //add axial beam
+        // add axial beam
         m_model->addSource(Source::Type::CTAxial);
     } else if (m_currentSourceTypeSelected == 3) {
-        //add DE beam
+        // add DE beam
         m_model->addSource(Source::Type::CTDual);
     } else if (m_currentSourceTypeSelected == 4) {
-        //add topogram beam
+        // add topogram beam
         m_model->addSource(Source::Type::CTTopogram);
     } else if (m_currentSourceTypeSelected == 5) {
-        //add topogram beam
+        // add topogram beam
         m_model->addSource(Source::Type::CBCT);
     }
 }

@@ -48,11 +48,19 @@ public:
         std::map<std::uint64_t, double> Z;
     };
 
+    struct AECData {
+        std::array<double, 3> startPosition;
+        std::array<double, 3> stopPosition;
+        std::vector<double> weights;
+    };
+
     DataContainer();
     void setSpacing(const std::array<double, 3>& cm);
     void setSpacingInmm(const std::array<double, 3>& mm);
     void setDimensions(const std::array<std::size_t, 3>&);
     void setMaterials(const std::vector<DataContainer::Material>& materials);
+    void setAecData(const std::array<double, 3>& start, const std::array<double, 3>& stop, const std::vector<double>& weights);
+    void setAecData(const DataContainer::AECData&);
     bool setImageArray(ImageType type, const std::vector<double>& image);
     bool setImageArray(ImageType type, const std::vector<std::uint8_t>& image);
     bool setImageArray(ImageType type, const std::vector<std::uint64_t>& image);
@@ -63,6 +71,7 @@ public:
     std::uint64_t ID() const;
     const std::array<double, 3>& spacing() const { return m_spacing; }
     const std::array<std::size_t, 3>& dimensions() const { return m_dimensions; }
+    const DataContainer::AECData& aecData() const { return m_aecdata; }
 
     vtkSmartPointer<vtkImageData> vtkImage(ImageType);
 
@@ -86,6 +95,7 @@ private:
     std::vector<std::uint8_t> m_organ_array;
     std::vector<double> m_dose_array;
     std::vector<double> m_dose_variance_array;
+    AECData m_aecdata;
     std::vector<std::uint64_t> m_dose_count_array;
     std::vector<DataContainer::Material> m_materials;
     std::map<ImageType, vtkSmartPointer<vtkImageData>> m_vtk_shallow_buffer;

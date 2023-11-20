@@ -3,6 +3,7 @@ qt_add_library(libopendxmc STATIC
 	basepipeline.cpp
 	beamsettingsview.cpp
 	beamsettingsmodel.cpp
+	beamactorcontainer.cpp
 	datacontainer.cpp
 	ctimageimportpipeline.cpp
 	ctsegmentationpipeline.cpp

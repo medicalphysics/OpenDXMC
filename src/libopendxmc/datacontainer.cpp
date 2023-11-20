@@ -118,6 +118,14 @@ vtkSmartPointer<vtkImageData> DataContainer::generate_vtkImage(ImageType type)
     vtkSmartPointer<vtkImageData> image;
     image.TakeReference(vtkimport->GetOutput());
     */
+
+    std::array<double, 3> origin = {
+        -(m_spacing[0] * m_dimensions[0]) / 2,
+        -(m_spacing[1] * m_dimensions[1]) / 2,
+        -(m_spacing[2] * m_dimensions[2]) / 2
+    };
+
+    image->SetOrigin(origin.data());
     return image;
 }
 

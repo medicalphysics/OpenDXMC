@@ -20,6 +20,7 @@ Copyright 2024 Erlend Andersen
 
 #include <datacontainer.hpp>
 #include <dxmc_specialization.hpp>
+#include <beamactorcontainer.hpp>
 
 #include <QStandardItemModel>
 
@@ -35,7 +36,12 @@ public:
 
     void updateImageData(std::shared_ptr<DataContainer>);
 
+signals:
+    void beamActorAdded(std::shared_ptr<BeamActorContainer>);
+    void beamActorRemoved(std::shared_ptr<BeamActorContainer>);
+
 private:
-    std::vector<std::shared_ptr<Beam>> m_beams;
-    std::shared_ptr<DataContainer> m_image = nullptr;
+    std::vector<std::pair<std::shared_ptr<Beam>, std::shared_ptr<BeamActorContainer>>> m_beams;
+    std::shared_ptr<DataContainer> m_image = nullptr;    
 };
+

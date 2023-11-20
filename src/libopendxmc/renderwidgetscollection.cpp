@@ -18,6 +18,7 @@ Copyright 2023 Erlend Andersen
 
 #include <renderwidgetscollection.hpp>
 #include <volumerendersettingswidget.hpp>
+#include <beamactorcontainer.hpp>
 
 #include <QGridLayout>
 #include <QSizePolicy>
@@ -65,6 +66,16 @@ RenderWidgetsCollection::RenderWidgetsCollection(QWidget* parent)
     });
 
     updateImageData(generateSampleData());
+}
+
+void RenderWidgetsCollection::addActor(std::shared_ptr<BeamActorContainer> actor)
+{
+    m_volume_widget->addActor(actor);
+}
+
+void RenderWidgetsCollection::removeActor(std::shared_ptr<BeamActorContainer> actor)
+{
+    m_volume_widget->removeActor(actor);
 }
 
 void RenderWidgetsCollection::updateImageData(std::shared_ptr<DataContainer> data)

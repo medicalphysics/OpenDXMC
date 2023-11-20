@@ -26,7 +26,10 @@ Copyright 2023 Erlend Andersen
 #include <QVTKOpenGLNativeWidget.h>
 #include <vtkVolume.h>
 
+#include <memory>
+
 class VolumerenderSettingsWidget;
+class BeamActorContainer;
 
 class VolumerenderWidget : public QWidget {
     Q_OBJECT
@@ -35,7 +38,8 @@ public:
     void updateImageData(std::shared_ptr<DataContainer>);
     VolumerenderSettingsWidget* createSettingsWidget(QWidget* parent = nullptr);
     void showData(DataContainer::ImageType type);
-
+    void addActor(std::shared_ptr<BeamActorContainer> actor);
+    void removeActor(std::shared_ptr<BeamActorContainer> actor);
 
 protected:
     void setupRenderingPipeline();

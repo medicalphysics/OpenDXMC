@@ -22,12 +22,14 @@ Copyright 2023 Erlend Andersen
 #include <slicerenderwidget.hpp>
 #include <volumerenderwidget.hpp>
 
-#include <QWidget>
 #include <QComboBox>
+#include <QWidget>
 
 #include <array>
+#include <memory>
 
 class VolumerenderSettingsWidget;
+class BeamActorContainer;
 
 class RenderWidgetsCollection : public QWidget {
     Q_OBJECT
@@ -40,6 +42,8 @@ public:
     void setInteractionStyleToSlicing();
     void setInteractionStyleTo3D();
     void setInterpolationType(int type = 1);
+    void addActor(std::shared_ptr<BeamActorContainer> actor);
+    void removeActor(std::shared_ptr<BeamActorContainer> actor);
 
     VolumerenderSettingsWidget* volumerenderSettingsWidget(QWidget* parent = nullptr);
     QComboBox* getVolumeSelector();

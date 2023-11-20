@@ -18,21 +18,29 @@ Copyright 2024 Erlend Andersen
 
 #pragma once
 
-#include <beamsettingsmodel.hpp>
+#include <dxmc_specialization.hpp>
 
-#include <QTreeView>
+#include <vtkActor.h>
+#include <vtkPolyData.h>
+#include <vtkPolyDataMapper.h>
+#include <vtkSmartPointer.h>
 
-class BeamSettingsView : public QTreeView {
-    Q_OBJECT
+#include <memory>
+
+class BeamActorContainer {
 public:
-    BeamSettingsView(QWidget* parent = nullptr);
+    BeamActorContainer(std::shared_ptr<Beam> beam);
+    void updateActor();
+    vtkActor* actor() { return m_actor.Get(); }
 
-    void addCTSpiralBeam() { m_model->addCTSpiralBeam(); }
-    void addCTSpiralDualEnergyBeam() { m_model->addCTSpiralDualSourceBeam(); }
-    void addDXBeam() { m_model->addDXBeam(); }
-    void updateImageData(std::shared_ptr<DataContainer> data) { m_model->updateImageData(data); }
-    BeamSettingsModel* model() { return m_model; }
-
+protected:
 private:
-    BeamSettingsModel* m_model = nullptr;
+    std::shared_ptr<Beam> m_beam = nullptr;
+    vtkSmartPointer<vtkActor> m_actor = nullptr;
+    vtkSmartPointer<vtkPolyData> m_polydata = nullptr;
+    vtkSmartPointer<vtkPolyDataMapper> m_mapper = nullptr;
 };
+
+#include <QMetaType>
+// Allow std::shared_ptr<BeamActorContainer> to be used in signal/slots
+Q_DECLARE_METATYPE(std::shared_ptr<BeamActorContainer>)

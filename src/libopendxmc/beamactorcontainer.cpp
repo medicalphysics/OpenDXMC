@@ -18,13 +18,9 @@ Copyright 2024 Erlend Andersen
 
 #include <beamactorcontainer.hpp>
 
-#include <vtkActor.h>
 #include <vtkCellArray.h>
-#include <vtkLine.h>
 #include <vtkNamedColors.h>
 #include <vtkPoints.h>
-#include <vtkPolyData.h>
-#include <vtkPolyDataMapper.h>
 #include <vtkPolyLine.h>
 #include <vtkProperty.h>
 #include <vtkSmartPointer.h>
@@ -32,9 +28,9 @@ Copyright 2024 Erlend Andersen
 BeamActorContainer::BeamActorContainer(std::shared_ptr<Beam> beam_ptr)
     : m_beam(beam_ptr)
 {
-    m_mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+    m_mapper = vtkSmartPointer<vtkOpenGLPolyDataMapper>::New();
 
-    m_actor = vtkSmartPointer<vtkActor>::New();
+    m_actor = vtkSmartPointer<vtkOpenGLActor>::New();
     m_actor->SetMapper(m_mapper);
 }
 

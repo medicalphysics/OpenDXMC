@@ -30,7 +30,7 @@ Copyright 2023 Erlend Andersen
 #include <vtkImageProperty.h>
 #include <vtkOpenGLImageSliceMapper.h>
 #include <vtkOpenGLTextActor.h>
-#include <vtkRenderWindow.h>
+#include <vtkGenericOpenGLRenderWindow.h>
 #include <vtkRendererCollection.h>
 #include <vtkScalarBarActor.h>
 #include <vtkTextProperty.h>
@@ -185,6 +185,8 @@ SliceRenderWidget::SliceRenderWidget(int orientation, QWidget* parent)
     layout->setSpacing(0);
 
     openGLWidget = new QVTKOpenGLNativeWidget(this);
+    auto window = vtkSmartPointer<vtkGenericOpenGLRenderWindow>::New();
+    openGLWidget->setRenderWindow(window);
     layout->addWidget(openGLWidget);
 
     this->setLayout(layout);
@@ -447,12 +449,10 @@ void SliceRenderWidget::updateImageData(std::shared_ptr<DataContainer> data)
 
 void SliceRenderWidget::addActor(std::shared_ptr<BeamActorContainer> actor)
 {
-    renderer->AddActor(actor->actor());
-    // Render();
+    renderer->AddActor(actor->actor());   
 }
 
 void SliceRenderWidget::removeActor(std::shared_ptr<BeamActorContainer> actor)
 {
     renderer->RemoveActor(actor->actor());
-    // Render();
 }

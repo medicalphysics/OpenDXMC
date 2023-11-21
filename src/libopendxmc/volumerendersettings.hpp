@@ -18,10 +18,10 @@ Copyright 2023 Erlend Andersen
 #pragma once
 
 #include <vtkDiscretizableColorTransferFunction.h>
+#include <vtkGenericOpenGLRenderWindow.h>
 #include <vtkImageData.h>
 #include <vtkOpenGLGPUVolumeRayCastMapper.h>
 #include <vtkOpenGLRenderer.h>
-#include <vtkRenderWindow.h>
 #include <vtkSmartPointer.h>
 #include <vtkVolume.h>
 

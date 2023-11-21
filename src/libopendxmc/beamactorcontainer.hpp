@@ -20,9 +20,9 @@ Copyright 2024 Erlend Andersen
 
 #include <dxmc_specialization.hpp>
 
-#include <vtkActor.h>
+#include <vtkOpenGLActor.h>
 #include <vtkPolyData.h>
-#include <vtkPolyDataMapper.h>
+#include <vtkOpenGLPolyDataMapper.h>
 #include <vtkSmartPointer.h>
 
 #include <memory>
@@ -36,9 +36,9 @@ public:
 protected:
 private:
     std::shared_ptr<Beam> m_beam = nullptr;
-    vtkSmartPointer<vtkActor> m_actor = nullptr;
+    vtkSmartPointer<vtkOpenGLActor> m_actor = nullptr;
     vtkSmartPointer<vtkPolyData> m_polydata = nullptr;
-    vtkSmartPointer<vtkPolyDataMapper> m_mapper = nullptr;
+    vtkSmartPointer<vtkOpenGLPolyDataMapper> m_mapper = nullptr;
 };
 
 #include <QMetaType>

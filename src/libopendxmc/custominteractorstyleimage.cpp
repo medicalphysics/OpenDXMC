@@ -19,12 +19,12 @@ Copyright 2024 Erlend Andersen
 
 #include <custominteractorstyleimage.hpp>
 
+#include <QVTKInteractor.h>
 #include <vtkCallbackCommand.h>
 #include <vtkImageProperty.h>
 #include <vtkInteractorObserver.h>
 #include <vtkObjectFactory.h>
 #include <vtkRenderWindow.h>
-#include <vtkRenderWindowInteractor.h>
 #include <vtkRenderer.h>
 
 vtkStandardNewMacro(CustomInteractorStyleImage);

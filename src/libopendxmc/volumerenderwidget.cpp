@@ -25,10 +25,10 @@ Copyright 2023 Erlend Andersen
 
 #include <vtkCamera.h>
 #include <vtkDiscretizableColorTransferFunction.h>
+#include <vtkGenericOpenGLRenderWindow.h>
 #include <vtkInteractorStyleTrackballCamera.h>
 #include <vtkPiecewiseFunction.h>
-#include <vtkRenderWindow.h>
-#include <vtkRenderWindowInteractor.h>
+#include <QVTKInteractor.h>
 #include <vtkVolumeProperty.h>
 
 VolumerenderWidget::VolumerenderWidget(QWidget* parent)
@@ -41,6 +41,8 @@ VolumerenderWidget::VolumerenderWidget(QWidget* parent)
     layout->setSpacing(0);
 
     openGLWidget = new QVTKOpenGLNativeWidget(this);
+    auto window = vtkSmartPointer<vtkGenericOpenGLRenderWindow>::New();
+    openGLWidget->setRenderWindow(window);
     layout->addWidget(openGLWidget);
 
     this->setLayout(layout);

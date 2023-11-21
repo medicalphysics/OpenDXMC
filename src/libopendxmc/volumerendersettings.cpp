@@ -18,7 +18,6 @@ Copyright 2023 Erlend Andersen
 
 #include <volumerendersettings.hpp>
 #include <vtkPiecewiseFunction.h>
-#include <vtkRenderWindow.h>
 #include <vtkRenderWindowInteractor.h>
 #include <vtkVolumeProperty.h>
 

@@ -85,7 +85,7 @@ void VolumerenderWidget::setupRenderingPipeline()
     m_settings = new VolumeRenderSettings(renderer, mapper, volume, color_lut, this);
 }
 void VolumerenderWidget::addActor(std::shared_ptr<BeamActorContainer> actor)
-{    
+{
     m_settings->renderer()->AddActor(actor->actor());
 }
 void VolumerenderWidget::removeActor(std::shared_ptr<BeamActorContainer> actor)
@@ -97,6 +97,11 @@ void VolumerenderWidget::setNewImageData(vtkSmartPointer<vtkImageData> data, boo
     if (data) {
         m_settings->setCurrentImageData(data, reset_camera);
     }
+}
+
+void VolumerenderWidget::Render()
+{
+    m_settings->render();
 }
 
 void VolumerenderWidget::showData(DataContainer::ImageType type)

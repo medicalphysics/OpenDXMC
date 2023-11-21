@@ -45,6 +45,8 @@ public:
     void addActor(std::shared_ptr<BeamActorContainer> actor);
     void removeActor(std::shared_ptr<BeamActorContainer> actor);
 
+    void requestRender();
+
     VolumerenderSettingsWidget* volumerenderSettingsWidget(QWidget* parent = nullptr);
     QComboBox* getVolumeSelector();
 

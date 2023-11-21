@@ -162,6 +162,7 @@ BeamSettingsModel::BeamSettingsModel(QObject* parent)
     header.append(tr("Settings"));
     header.append(tr("Value"));
     setHorizontalHeaderLabels(header);
+    connect(this, &QStandardItemModel::dataChanged, [=](const auto& arg) { emit this->requestRender(); });
 }
 
 void BeamSettingsModel::updateImageData(std::shared_ptr<DataContainer> data)
@@ -262,14 +263,10 @@ void addTubeItems(LabelItem* tubeItem, std::shared_ptr<Beam> beam)
 
 void BeamSettingsModel::addDXBeam()
 {
-    auto parent = invisibleRootItem();
-
     auto root = new LabelItem(tr("DX Beam"));
-    appendRow(root);
 
     auto beam = std::make_shared<Beam>(DXBeam());
     auto beamActor = std::make_shared<BeamActorContainer>(beam);
-
     m_beams.push_back(std::make_pair(beam, beamActor));
 
     {
@@ -282,7 +279,6 @@ void BeamSettingsModel::addDXBeam()
             auto& dx = std::get<DXBeam>(*beam);
             return dx.position();
         };
-
         addItem(root, "Tube position [cm]", setter, getter);
     }
 
@@ -297,7 +293,6 @@ void BeamSettingsModel::addDXBeam()
             auto& dx = std::get<DXBeam>(*beam);
             return dx.collimationAnglesDeg();
         };
-
         addItem(root, "Collimation [Deg]", setter, getter);
     }
 
@@ -348,16 +343,14 @@ void BeamSettingsModel::addDXBeam()
         };
         addItem(root, "Total number of particles", getter);
     }
-
+    beamActor->updateActor();
     emit beamActorAdded(beamActor);
+    appendRow(root);
 }
 
 void BeamSettingsModel::addCTSpiralBeam()
 {
-    auto parent = invisibleRootItem();
-
     auto root = new LabelItem(tr("CT Spiral Beam"));
-    appendRow(root);
 
     auto beam = std::make_shared<Beam>(CTSpiralBeam());
 
@@ -528,15 +521,14 @@ void BeamSettingsModel::addCTSpiralBeam()
         addItem(root, "Total number of particles", getter);
     }
 
+    beamActor->updateActor();
     emit beamActorAdded(beamActor);
+    appendRow(root);
 }
 
-void BeamSettingsModel::addCTSpiralDualSourceBeam()
+void BeamSettingsModel::addCTSpiralDualEnergyBeam()
 {
-    auto parent = invisibleRootItem();
-
     auto root = new LabelItem(tr("CT Spiral Dual Energy Beam"));
-    appendRow(root);
 
     auto beam = std::make_shared<Beam>(CTSpiralDualEnergyBeam());
 
@@ -842,6 +834,7 @@ void BeamSettingsModel::addCTSpiralDualSourceBeam()
         };
         addItem(root, "Total number of particles", getter);
     }
-
+    beamActor->updateActor();
     emit beamActorAdded(beamActor);
+    appendRow(root);
 }

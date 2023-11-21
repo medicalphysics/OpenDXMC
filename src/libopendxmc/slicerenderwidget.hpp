@@ -45,14 +45,13 @@ public:
     void setInteractionStyleTo3D();
 
     void showData(DataContainer::ImageType type);
-
+    void Render(bool rezoom_camera = false);
     void sharedViews(SliceRenderWidget* other1, SliceRenderWidget* other2);
     void sharedViews(std::vector<SliceRenderWidget*> others);
 
 protected:
     void setNewImageData(vtkSmartPointer<vtkImageData> data, bool rezoom_camera = false);
     void setupSlicePipeline(int orientation);
-    void Render(bool rezoom_camera = false);
     void switchLUTtable(DataContainer::ImageType type, int n_colors = -1);
 
 private:

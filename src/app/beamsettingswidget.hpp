@@ -27,7 +27,7 @@ class BeamSettingsWidget : public QWidget {
 public:
     BeamSettingsWidget(QWidget* parent = nullptr);
     void updateImageData(std::shared_ptr<DataContainer> data);
-    BeamSettingsModel* model() { return m_view->model(); }
+    BeamSettingsView* modelView() { return m_view; }
 
 private:
     BeamSettingsView* m_view = nullptr;

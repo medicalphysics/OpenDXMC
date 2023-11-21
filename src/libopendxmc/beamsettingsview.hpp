@@ -20,19 +20,29 @@ Copyright 2024 Erlend Andersen
 
 #include <beamsettingsmodel.hpp>
 
+#include <QThread>
 #include <QTreeView>
 
 class BeamSettingsView : public QTreeView {
     Q_OBJECT
 public:
     BeamSettingsView(QWidget* parent = nullptr);
+    ~BeamSettingsView();
+    void updateImageData(std::shared_ptr<DataContainer> data) { emit imageDataChanged(data); };
+    void addDXBeam() { emit requestAddDXBeam(); }
+    void addCTSpiralBeam() { emit requestAddCTSpiralBeam(); }
+    void addCTSpiralDualEnergyBeam() { emit requestAddCTSpiralDualEnergyBeam(); }
 
-    void addCTSpiralBeam() { m_model->addCTSpiralBeam(); }
-    void addCTSpiralDualEnergyBeam() { m_model->addCTSpiralDualSourceBeam(); }
-    void addDXBeam() { m_model->addDXBeam(); }
-    void updateImageData(std::shared_ptr<DataContainer> data) { m_model->updateImageData(data); }
-    BeamSettingsModel* model() { return m_model; }
+signals:
+    void requestAddDXBeam();
+    void requestAddCTSpiralBeam();
+    void requestAddCTSpiralDualEnergyBeam();
+    void beamActorAdded(std::shared_ptr<BeamActorContainer>);
+    void beamActorRemoved(std::shared_ptr<BeamActorContainer>);
+    void requestRender();
+    void imageDataChanged(std::shared_ptr<DataContainer> data);
 
 private:
+    QThread m_workerThread;
     BeamSettingsModel* m_model = nullptr;
 };

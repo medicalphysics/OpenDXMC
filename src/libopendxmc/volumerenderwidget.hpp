@@ -40,6 +40,7 @@ public:
     void showData(DataContainer::ImageType type);
     void addActor(std::shared_ptr<BeamActorContainer> actor);
     void removeActor(std::shared_ptr<BeamActorContainer> actor);
+    void Render();
 
 protected:
     void setupRenderingPipeline();

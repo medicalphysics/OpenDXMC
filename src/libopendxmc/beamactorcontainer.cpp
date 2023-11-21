@@ -36,34 +36,120 @@ BeamActorContainer::BeamActorContainer(std::shared_ptr<Beam> beam_ptr)
 
     m_actor = vtkSmartPointer<vtkActor>::New();
     m_actor->SetMapper(m_mapper);
-    vtkNew<vtkNamedColors> colors;
-    m_actor->GetProperty()->SetColor(colors->GetColor3d("Tomato").GetData());
-    updateActor();
 }
+
+std::array<std::array<double, 3>, 5> pointsFromCollimations(
+    const std::array<double, 3>& start,
+    const std::array<std::array<double, 3>, 2>& cosines,
+    const std::array<double, 2>& angles,
+    double scale = 1)
+{
+    std::array<std::array<double, 3>, 5> r;
+    r[0] = start;
+
+    const auto dir = dxmc::vectormath::cross(cosines[0], cosines[1]);
+    const auto sinx_r = std::sin(angles[0]);
+    const auto siny_r = std::sin(angles[1]);
+    const auto sinz = std::sqrt(1 - sinx_r * sinx_r - siny_r * siny_r);
+    constexpr std::array<int, 4> y_sign = { 1, -1, -1, 1 };
+
+    for (std::size_t i = 0; i < 4; ++i) {
+        const auto sinx = i < 2 ? sinx_r : -sinx_r;
+        const auto siny = siny_r * y_sign[i];
+        const auto sinz = std::sqrt(1 - sinx * sinx - siny * siny);
+        std::array raw = {
+            cosines[0][0] * sinx + cosines[1][0] * siny + dir[0] * sinz,
+            cosines[0][1] * sinx + cosines[1][1] * siny + dir[1] * sinz,
+            cosines[0][2] * sinx + cosines[1][2] * siny + dir[2] * sinz
+        };
+        r[i + 1] = dxmc::vectormath::add(start, dxmc::vectormath::scale(raw, scale));
+    }
+    return r;
+}
+
 void BeamActorContainer::updateActor()
 {
     if (!m_beam)
         return;
+
+    // Create points storage
     auto points = vtkSmartPointer<vtkPoints>::New();
-
-    std::visit([=](auto&& arg) {
-        const auto N = arg.numberOfExposures();
-
-        for (std::size_t i = 0; i < N; ++i) {
-            points->InsertNextPoint(arg.exposure(i).position().data());
-        }
-    },
-        *m_beam);
-
-    auto polyLine = vtkSmartPointer<vtkPolyLine>::New();
-    polyLine->GetPointIds()->SetNumberOfIds(points->GetNumberOfPoints());
-    for (int i = 0; i < points->GetNumberOfPoints(); ++i) {
-        polyLine->GetPointIds()->SetId(i, i);
-    }
 
     // Create a cell array to store the lines in and add the lines to it.
     auto cells = vtkSmartPointer<vtkCellArray>::New();
-    cells->InsertNextCell(polyLine);
+
+    std::visit([points, cells](auto&& arg) {
+        using U = std::decay_t<decltype(arg)>;
+        if constexpr (std::is_same_v<U, CTSpiralBeam>) {
+            const auto N = arg.numberOfExposures();
+            cells->InsertNextCell(N);
+            const auto exp_0 = arg.exposure(0);
+            points->InsertNextPoint(exp_0.position().data());
+            cells->InsertCellPoint(0);
+            for (std::size_t i = 1; i < N; ++i) {
+                points->InsertNextPoint(arg.exposure(i).position().data());
+                cells->InsertCellPoint(i);
+            }
+            const auto pos = exp_0.position();
+            const auto angles = exp_0.collimationAngles();
+            const auto cosines = exp_0.directionCosines();
+            auto p = pointsFromCollimations(pos, cosines, angles, arg.sourceDetectorDistance());
+            for (std::size_t i = 0; i < p.size(); ++i) {
+                auto& pi = p[i];
+                points->InsertNextPoint(pi.data());
+                if (i > 0) {
+                    cells->InsertNextCell(2);
+                    cells->InsertCellPoint(N + 0);
+                    cells->InsertCellPoint(N + i);
+                }
+            }
+            cells->InsertNextCell(5);
+            cells->InsertCellPoint(N + 1);
+            cells->InsertCellPoint(N + 2);
+            cells->InsertCellPoint(N + 3);
+            cells->InsertCellPoint(N + 4);
+            cells->InsertCellPoint(N + 1);
+
+        } else if constexpr (std::is_same_v<U, CTSpiralDualEnergyBeam>) {
+            auto polyLineA = vtkSmartPointer<vtkPolyLine>::New();
+            auto polyLineB = vtkSmartPointer<vtkPolyLine>::New();
+            const auto N = arg.numberOfExposures();
+            polyLineA->GetPointIds()->SetNumberOfIds(N / 2);
+            polyLineB->GetPointIds()->SetNumberOfIds(N / 2);
+            for (std::size_t i = 0; i < N; ++i) {
+                points->InsertNextPoint(arg.exposure(i).position().data());
+                if (i % 2 == 0)
+                    polyLineA->GetPointIds()->SetId(i / 2, i);
+                else
+                    polyLineB->GetPointIds()->SetId(i / 2, i);
+            }
+            cells->InsertNextCell(polyLineA);
+            cells->InsertNextCell(polyLineB);
+
+        } else if constexpr (std::is_same_v<U, DXBeam>) {
+
+            const auto pos = arg.position();
+            const auto angles = arg.collimationAngles();
+            const auto cosines = arg.directionCosines();
+            auto p = pointsFromCollimations(pos, cosines, angles, 50.0);
+            for (std::size_t i = 0; i < p.size(); ++i) {
+                auto& pi = p[i];
+                points->InsertNextPoint(pi.data());
+                if (i > 0) {
+                    cells->InsertNextCell(2);
+                    cells->InsertCellPoint(0);
+                    cells->InsertCellPoint(i);
+                }
+            }
+            cells->InsertNextCell(5);
+            cells->InsertCellPoint(1);
+            cells->InsertCellPoint(2);
+            cells->InsertCellPoint(3);
+            cells->InsertCellPoint(4);
+            cells->InsertCellPoint(1);
+        }
+    },
+        *m_beam);
 
     // Create a polydata to store everything in.
     m_polydata = vtkSmartPointer<vtkPolyData>::New();
@@ -73,6 +159,24 @@ void BeamActorContainer::updateActor()
 
     // Add the lines to the dataset.
     m_polydata->SetLines(cells);
+
+    // Color the lines.
+    // SetScalars() automatically associates the values in the data array passed
+    // as parameter to the elements in the same indices of the cell data array on
+    // which it is called. This means the first component (red) of the colors
+    // array is matched with the first component of the cell array (line 0) and
+    // the second component (green) of the colors array is matched with the second
+    // component of the cell array (line 1).
+    // m_polydata->GetCellData()->SetScalars(colors);
+
+    // vtkNew<vtkNamedColors> namedColors;
+    //     m_actor->GetProperty()->SetColor(colors->GetColor3d("Tomato").GetData());
+
+    // Create a vtkUnsignedCharArray container and store the colors in it.
+    // vtkNew<vtkUnsignedCharArray> colors;
+    // colors->SetNumberOfComponents(3);
+    // colors->InsertNextTypedTuple(namedColors->GetColor3ub("Tomato").GetData());
+    // colors->InsertNextTypedTuple(namedColors->GetColor3ub("Mint").GetData());
 
     m_mapper->SetInputData(m_polydata);
 }

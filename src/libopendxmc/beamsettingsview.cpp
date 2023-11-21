@@ -21,6 +21,27 @@ Copyright 2024 Erlend Andersen
 BeamSettingsView::BeamSettingsView(QWidget* parent)
     : QTreeView(parent)
 {
-    m_model = new BeamSettingsModel(this);
+    m_model = new BeamSettingsModel();
+    m_model->moveToThread(&m_workerThread);
     setModel(m_model);
+
+    connect(this, &BeamSettingsView::requestAddDXBeam, m_model, &BeamSettingsModel::addDXBeam);
+    connect(this, &BeamSettingsView::requestAddCTSpiralBeam, m_model, &BeamSettingsModel::addCTSpiralBeam);
+    connect(this, &BeamSettingsView::requestAddCTSpiralDualEnergyBeam, m_model, &BeamSettingsModel::addCTSpiralDualEnergyBeam);
+
+    connect(m_model, &BeamSettingsModel::beamActorAdded, [=](auto v) { emit this->beamActorAdded(v); });
+    connect(m_model, &BeamSettingsModel::beamActorRemoved, [=](auto v) { emit this->beamActorRemoved(v); });
+    connect(m_model, &BeamSettingsModel::requestRender, [=](void) { emit this->requestRender(); });
+
+    connect(this, &BeamSettingsView::imageDataChanged, m_model, &BeamSettingsModel::updateImageData);
+
+    m_workerThread.start();
+}
+
+BeamSettingsView::~BeamSettingsView()
+{
+    m_workerThread.quit();
+    m_workerThread.wait();
+    delete m_model;
+    m_model = nullptr;
 }

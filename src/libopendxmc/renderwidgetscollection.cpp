@@ -16,9 +16,9 @@ along with OpenDXMC. If not, see < https://www.gnu.org/licenses/>.
 Copyright 2023 Erlend Andersen
 */
 
+#include <beamactorcontainer.hpp>
 #include <renderwidgetscollection.hpp>
 #include <volumerendersettingswidget.hpp>
-#include <beamactorcontainer.hpp>
 
 #include <QGridLayout>
 #include <QSizePolicy>
@@ -134,6 +134,13 @@ void RenderWidgetsCollection::setInteractionStyleTo3D()
 QComboBox* RenderWidgetsCollection::getVolumeSelector()
 {
     return m_data_type_selector;
+}
+
+void RenderWidgetsCollection::requestRender()
+{
+    m_volume_widget->Render();
+    for (auto& w : m_slice_widgets)
+        w->Render();
 }
 
 VolumerenderSettingsWidget* RenderWidgetsCollection::volumerenderSettingsWidget(QWidget* parent)

@@ -101,9 +101,10 @@ MainWindow::MainWindow(QWidget* parent)
     auto beamsettingswidget = new BeamSettingsWidget(this);
     menuWidget->addTab(beamsettingswidget, tr("Configure X-ray beams"));
     connect(ctsegmentationpipelie, &CTSegmentationPipeline::imageDataChanged, beamsettingswidget, &BeamSettingsWidget::updateImageData);
-    auto beamsettingsmodel = beamsettingswidget->model();
-    connect(beamsettingsmodel, &BeamSettingsModel::beamActorAdded, slicerender, &RenderWidgetsCollection::addActor);
-    connect(beamsettingsmodel, &BeamSettingsModel::beamActorRemoved, slicerender, &RenderWidgetsCollection::removeActor);
+    auto beamsettingsmodel = beamsettingswidget->modelView();
+    connect(beamsettingsmodel, &BeamSettingsView::beamActorAdded, slicerender, &RenderWidgetsCollection::addActor);
+    connect(beamsettingsmodel, &BeamSettingsView::beamActorRemoved, slicerender, &RenderWidgetsCollection::removeActor);
+    connect(beamsettingsmodel, &BeamSettingsView::requestRender, slicerender, &RenderWidgetsCollection::requestRender);
 
     // simulation progress
     /* m_progressTimer = new QTimer(this);

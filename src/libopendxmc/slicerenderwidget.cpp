@@ -16,6 +16,7 @@ along with OpenDXMC. If not, see < https://www.gnu.org/licenses/>.
 Copyright 2023 Erlend Andersen
 */
 
+#include <beamactorcontainer.hpp>
 #include <colormaps.hpp>
 #include <slicerenderwidget.hpp>
 
@@ -354,18 +355,15 @@ void SliceRenderWidget::switchLUTtable(DataContainer::ImageType type, int n_colo
             lut->SetTableRange(0, n_colors - 1);
             lut->Build();
         }
-
         prop->UseLookupTableScalarRangeOn();
-
     } else {
-        if (lut->GetNumberOfColors() != 256) {
-            lut->IndexedLookupOff();
-            lut->SetNumberOfTableValues(256);
-            lut->SetValueRange(0, 1);
-            lut->SetMinimumTableValue(0, 0, 0, 1);
-            lut->SetMaximumTableValue(1, 1, 1, 1);
-            lut->ForceBuild();
-        }
+        lut->IndexedLookupOff();
+        lut->SetNumberOfTableValues(256);
+        lut->SetValueRange(0, 1);
+        lut->SetMinimumTableValue(0, 0, 0, 1);
+        lut->SetMaximumTableValue(1, 1, 1, 1);
+        lut->ForceBuild();
+
         if (type == DataContainer::ImageType::Density) {
             // replacing with turbo cmap
             const auto map = Colormaps::colormapLongForm("TURBO");
@@ -445,4 +443,16 @@ void SliceRenderWidget::updateImageData(std::shared_ptr<DataContainer> data)
     }
 
     m_data = data;
+}
+
+void SliceRenderWidget::addActor(std::shared_ptr<BeamActorContainer> actor)
+{
+    renderer->AddActor(actor->actor());
+    // Render();
+}
+
+void SliceRenderWidget::removeActor(std::shared_ptr<BeamActorContainer> actor)
+{
+    renderer->RemoveActor(actor->actor());
+    // Render();
 }

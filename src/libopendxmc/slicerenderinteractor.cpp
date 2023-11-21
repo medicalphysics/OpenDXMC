@@ -47,7 +47,7 @@ void customMouseInteractorStyle::OnLeftButtonDown()
     if (!m_pickedPlaneActor) {
         vtkInteractorStyleImage::OnLeftButtonDown();
     } else {
-        //Actor pan
+        // Actor pan
         this->StartPan();
     }
 }
@@ -60,7 +60,7 @@ void customMouseInteractorStyle::OnLeftButtonUp()
 
         m_pickedPlaneActor->applyActorTranslationToSource();
         m_callback();
-        //Actor pan
+        // Actor pan
         this->EndPan();
     }
 }
@@ -144,9 +144,6 @@ void customMouseInteractorStyle::update()
     auto renderer = GetCurrentRenderer();
     renderer->Render();
     GetInteractor()->Render();
-    
-    //auto renWin = renderer->GetRenderWindow();
-    //renWin->Render();
 }
 
 void customMouseInteractorStyle::updateWLText()

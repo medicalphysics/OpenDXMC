@@ -18,9 +18,9 @@ Copyright 2024 Erlend Andersen
 
 #pragma once
 
+#include <beamactorcontainer.hpp>
 #include <datacontainer.hpp>
 #include <dxmc_specialization.hpp>
-#include <beamactorcontainer.hpp>
 
 #include <QStandardItemModel>
 
@@ -34,6 +34,7 @@ public:
     void addCTSpiralBeam();
     void addCTSpiralDualEnergyBeam();
     void updateImageData(std::shared_ptr<DataContainer>);
+    void deleteBeam(int index);
 
 signals:
     void beamActorAdded(std::shared_ptr<BeamActorContainer>);
@@ -42,6 +43,5 @@ signals:
 
 private:
     std::vector<std::pair<std::shared_ptr<Beam>, std::shared_ptr<BeamActorContainer>>> m_beams;
-    std::shared_ptr<DataContainer> m_image = nullptr;    
+    std::shared_ptr<DataContainer> m_image = nullptr;
 };
-

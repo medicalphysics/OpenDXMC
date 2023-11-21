@@ -170,6 +170,17 @@ void BeamSettingsModel::updateImageData(std::shared_ptr<DataContainer> data)
     m_image = data;
 }
 
+void BeamSettingsModel::deleteBeam(int index)
+{
+    auto root = invisibleRootItem();
+    if (root->rowCount() > index) {
+        root->removeRows(index, 1);
+        auto [beam, actor] = m_beams[index];
+        m_beams.erase(m_beams.begin() + index);
+        emit beamActorRemoved(actor);
+    }
+}
+
 void addItem(QStandardItem* parent, QString label, auto setter, auto getter, bool editable = true)
 {
     QList<QStandardItem*> row(2);

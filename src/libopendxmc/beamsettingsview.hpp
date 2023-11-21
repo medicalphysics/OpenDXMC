@@ -32,7 +32,7 @@ public:
     void addDXBeam() { emit requestAddDXBeam(); }
     void addCTSpiralBeam() { emit requestAddCTSpiralBeam(); }
     void addCTSpiralDualEnergyBeam() { emit requestAddCTSpiralDualEnergyBeam(); }
-
+    void keyPressEvent(QKeyEvent*) override;
 signals:
     void requestAddDXBeam();
     void requestAddCTSpiralBeam();
@@ -41,6 +41,7 @@ signals:
     void beamActorRemoved(std::shared_ptr<BeamActorContainer>);
     void requestRender();
     void imageDataChanged(std::shared_ptr<DataContainer> data);
+    void requestDeleteBeamIndex(int);
 
 private:
     QThread m_workerThread;

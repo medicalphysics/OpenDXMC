@@ -32,6 +32,9 @@ Copyright 2023 Erlend Andersen
 #include <vtkWindowLevelLookupTable.h>
 
 #include <map>
+#include <memory>
+
+class BeamActorContainer;
 
 class SliceRenderWidget : public QWidget {
     Q_OBJECT
@@ -48,6 +51,9 @@ public:
     void Render(bool rezoom_camera = false);
     void sharedViews(SliceRenderWidget* other1, SliceRenderWidget* other2);
     void sharedViews(std::vector<SliceRenderWidget*> others);
+
+    void addActor(std::shared_ptr<BeamActorContainer> actor);
+    void removeActor(std::shared_ptr<BeamActorContainer> actor);
 
 protected:
     void setNewImageData(vtkSmartPointer<vtkImageData> data, bool rezoom_camera = false);

@@ -18,6 +18,8 @@ Copyright 2024 Erlend Andersen
 
 #include <beamsettingsview.hpp>
 
+#include <QKeyEvent>
+
 BeamSettingsView::BeamSettingsView(QWidget* parent)
     : QTreeView(parent)
 {
@@ -34,6 +36,7 @@ BeamSettingsView::BeamSettingsView(QWidget* parent)
     connect(m_model, &BeamSettingsModel::requestRender, [this](void) { emit this->requestRender(); });
 
     connect(this, &BeamSettingsView::imageDataChanged, m_model, &BeamSettingsModel::updateImageData);
+    connect(this, &BeamSettingsView::requestDeleteBeamIndex, m_model, &BeamSettingsModel::deleteBeam);
 
     m_workerThread.start();
 }
@@ -44,4 +47,20 @@ BeamSettingsView::~BeamSettingsView()
     m_workerThread.wait();
     delete m_model;
     m_model = nullptr;
+}
+
+void BeamSettingsView::keyPressEvent(QKeyEvent* ev)
+{
+    if (ev->key() == Qt::Key::Key_Delete) {
+        auto cIdx = currentIndex();
+        auto cItem = m_model->itemFromIndex(cIdx);
+        if (cItem) {
+            if (cItem->parent() == nullptr) {
+                // we delete the node since it's top level
+                emit requestDeleteBeamIndex(cItem->row());
+            }
+        }
+    }
+
+    QTreeView::keyPressEvent(ev);
 }

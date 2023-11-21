@@ -71,11 +71,15 @@ RenderWidgetsCollection::RenderWidgetsCollection(QWidget* parent)
 void RenderWidgetsCollection::addActor(std::shared_ptr<BeamActorContainer> actor)
 {
     m_volume_widget->addActor(actor);
+    for (auto& w : m_slice_widgets)
+        w->addActor(actor);
 }
 
 void RenderWidgetsCollection::removeActor(std::shared_ptr<BeamActorContainer> actor)
 {
     m_volume_widget->removeActor(actor);
+    for (auto& w : m_slice_widgets)
+        w->removeActor(actor);
 }
 
 void RenderWidgetsCollection::updateImageData(std::shared_ptr<DataContainer> data)

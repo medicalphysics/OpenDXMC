@@ -29,9 +29,9 @@ BeamSettingsView::BeamSettingsView(QWidget* parent)
     connect(this, &BeamSettingsView::requestAddCTSpiralBeam, m_model, &BeamSettingsModel::addCTSpiralBeam);
     connect(this, &BeamSettingsView::requestAddCTSpiralDualEnergyBeam, m_model, &BeamSettingsModel::addCTSpiralDualEnergyBeam);
 
-    connect(m_model, &BeamSettingsModel::beamActorAdded, [=](auto v) { emit this->beamActorAdded(v); });
-    connect(m_model, &BeamSettingsModel::beamActorRemoved, [=](auto v) { emit this->beamActorRemoved(v); });
-    connect(m_model, &BeamSettingsModel::requestRender, [=](void) { emit this->requestRender(); });
+    connect(m_model, &BeamSettingsModel::beamActorAdded, [this](auto v) { emit this->beamActorAdded(v); });
+    connect(m_model, &BeamSettingsModel::beamActorRemoved, [this](auto v) { emit this->beamActorRemoved(v); });
+    connect(m_model, &BeamSettingsModel::requestRender, [this](void) { emit this->requestRender(); });
 
     connect(this, &BeamSettingsView::imageDataChanged, m_model, &BeamSettingsModel::updateImageData);
 

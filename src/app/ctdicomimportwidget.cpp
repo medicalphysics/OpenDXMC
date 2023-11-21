@@ -81,14 +81,14 @@ CTDicomImportWidget::CTDicomImportWidget(QWidget* parent)
     auto outputSpacingBox = new QGroupBox(tr("Resize voxels to this spacing for imported series [XYZ]:"), this);
     outputSpacingBox->setCheckable(true);
     outputSpacingBox->setChecked(false);
-    connect(outputSpacingBox, &QGroupBox::toggled, [=](bool value) { emit useOutputSpacingChanged(value); });
+    connect(outputSpacingBox, &QGroupBox::toggled, [this](bool value) { emit useOutputSpacingChanged(value); });
     auto outputSpacingLayoutButtons = new QHBoxLayout;
     for (int i = 0; i < 3; ++i) {
         auto spinBox = new QDoubleSpinBox(outputSpacingBox);
         spinBox->setMinimum(0.1);
         spinBox->setSuffix(" mm");
         spinBox->setValue(m_outputSpacing[i]);
-        connect(spinBox, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [=](auto value) {
+        connect(spinBox, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [this, i](auto value) {
             this->m_outputSpacing[i] = value;
             emit outputSpacingChanged(this->m_outputSpacing.data());
         });
@@ -104,7 +104,7 @@ CTDicomImportWidget::CTDicomImportWidget(QWidget* parent)
         spinBox->setMinimum(0.0);
         spinBox->setSuffix(" voxels");
         spinBox->setValue(m_blurRadius[i]);
-        connect(spinBox, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [=](auto value) {
+        connect(spinBox, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [this, i](auto value) {
             this->m_blurRadius[i] = value;
             emit blurRadiusChanged(this->m_blurRadius.data());
         });
@@ -122,7 +122,7 @@ CTDicomImportWidget::CTDicomImportWidget(QWidget* parent)
     tubeVoltageSpinBox->setValue(120.0);
     tubeVoltageSpinBox->setSuffix(" kV");
     tubeVoltageSpinBox->setDecimals(0);
-    connect(tubeVoltageSpinBox, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [=](double val) { emit aqusitionVoltageChanged(val); });
+    connect(tubeVoltageSpinBox, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [this](double val) { emit aqusitionVoltageChanged(val); });
     auto tubeVoltageLabel = new QLabel(tr("Tube voltage"), this);
     tubeVoltageLayout->addWidget(tubeVoltageLabel);
     tubeVoltageLayout->addWidget(tubeVoltageSpinBox);
@@ -134,7 +134,7 @@ CTDicomImportWidget::CTDicomImportWidget(QWidget* parent)
     tubeAlFiltrationSpinBox->setSuffix(" mm");
     tubeAlFiltrationSpinBox->setValue(9.0);
     tubeAlFiltrationSpinBox->setDecimals(1);
-    connect(tubeAlFiltrationSpinBox, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [=](double val) { emit aqusitionAlFiltrationChanged(val); });
+    connect(tubeAlFiltrationSpinBox, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [this](double val) { emit aqusitionAlFiltrationChanged(val); });
     auto tubeAlFiltrationLabel = new QLabel(tr("Al filtration"), this);
     tubeAlFiltrationLayout->addWidget(tubeAlFiltrationLabel);
     tubeAlFiltrationLayout->addWidget(tubeAlFiltrationSpinBox);
@@ -146,7 +146,7 @@ CTDicomImportWidget::CTDicomImportWidget(QWidget* parent)
     tubeSnFiltrationSpinBox->setValue(0.0);
     tubeSnFiltrationSpinBox->setSuffix(" mm");
     tubeSnFiltrationSpinBox->setDecimals(1);
-    connect(tubeSnFiltrationSpinBox, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [=](double val) { emit aqusitionSnFiltrationChanged(val); });
+    connect(tubeSnFiltrationSpinBox, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [this](double val) { emit aqusitionSnFiltrationChanged(val); });
     auto tubeSnFiltrationLabel = new QLabel(tr("Sn filtration"), this);
     tubeSnFiltrationLayout->addWidget(tubeSnFiltrationLabel);
     tubeSnFiltrationLayout->addWidget(tubeSnFiltrationSpinBox);
@@ -172,9 +172,9 @@ CTDicomImportWidget::CTDicomImportWidget(QWidget* parent)
     }
 
     // signal for updating blur, spacing and aqusition settings
-    QTimer::singleShot(0, [=](void) {
-        emit this->blurRadiusChanged(m_blurRadius.data());
-        emit this->outputSpacingChanged(m_outputSpacing.data());
+    QTimer::singleShot(0, [=, this](void) {
+        emit this->blurRadiusChanged(this->m_blurRadius.data());
+        emit this->outputSpacingChanged(this->m_outputSpacing.data());
         emit useOutputSpacingChanged(outputSpacingBox->isChecked());
         emit aqusitionAlFiltrationChanged(tubeAlFiltrationSpinBox->value());
         emit aqusitionSnFiltrationChanged(tubeSnFiltrationSpinBox->value());

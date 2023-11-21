@@ -40,7 +40,7 @@ CTAECPlot::CTAECPlot(QWidget* parent)
     chart()->legend()->setVisible(false);
 
     m_xaxis = new QValueAxis(chart());
-    chart()->setAxisX(m_xaxis);
+    chart()->addAxis(m_xaxis, Qt::AlignBottom);
     m_xaxis->setMinorGridLineVisible(false);
     m_xaxis->setGridLineVisible(false);
     m_xaxis->setTickCount(2);
@@ -48,7 +48,7 @@ CTAECPlot::CTAECPlot(QWidget* parent)
     m_xaxis->setRange(-.1, 1.1);
 
     m_yaxis = new QValueAxis(chart());
-    chart()->setAxisY(m_yaxis);
+    chart()->addAxis(m_yaxis, Qt::AlignLeft);
     m_yaxis->setGridLineVisible(false);
     m_yaxis->setRange(-.1, 1.1);
     m_yaxis->setLabelsVisible(false);

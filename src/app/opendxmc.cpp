@@ -36,8 +36,6 @@ int main(int argc, char* argv[])
     // before initializing QApplication, set the default surface format.
     QSurfaceFormat::setDefaultFormat(QVTKOpenGLNativeWidget::defaultFormat());
 
-    QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-    QApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
     QApplication app(argc, argv);
 
     // setting current dir to exe dir

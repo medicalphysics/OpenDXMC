@@ -162,7 +162,7 @@ BeamSettingsModel::BeamSettingsModel(QObject* parent)
     header.append(tr("Settings"));
     header.append(tr("Value"));
     setHorizontalHeaderLabels(header);
-    connect(this, &QStandardItemModel::dataChanged, [=](const auto& arg) { emit this->requestRender(); });
+    connect(this, &QStandardItemModel::dataChanged, [this](const auto& arg) { emit this->requestRender(); });
 }
 
 void BeamSettingsModel::updateImageData(std::shared_ptr<DataContainer> data)

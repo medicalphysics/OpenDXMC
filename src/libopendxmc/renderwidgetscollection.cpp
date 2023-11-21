@@ -60,7 +60,7 @@ RenderWidgetsCollection::RenderWidgetsCollection(QWidget* parent)
 
     // data type selector
     m_data_type_selector = new QComboBox(this);
-    connect(m_data_type_selector, &QComboBox::currentIndexChanged, [=](int idx) {
+    connect(m_data_type_selector, &QComboBox::currentIndexChanged, [this](int idx) {
         auto type = static_cast<DataContainer::ImageType>(m_data_type_selector->currentData().toInt());
         this->showData(type);
     });

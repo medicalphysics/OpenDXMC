@@ -80,7 +80,7 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(VolumeRenderSettings* set
     // jittering
     auto jittering = getSettingsWidget<QCheckBox>(tr("Use jittering"), this);
     jittering.widget->setChecked(m_settings->mapper()->GetUseJittering());
-    connect(jittering.widget, &QCheckBox::stateChanged, [=](int state) {
+    connect(jittering.widget, &QCheckBox::stateChanged, [this](int state) {
         m_settings->mapper()->SetUseJittering(state != 0);
         m_settings->render();
     });
@@ -90,7 +90,7 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(VolumeRenderSettings* set
     auto multisampling = getSettingsWidget<QSpinBox>(tr("Multi sampling"), this);
     multisampling.widget->setValue(m_settings->renderWindow()->GetMultiSamples());
     multisampling.widget->setMinimum(0);
-    connect(multisampling.widget, &QSpinBox::valueChanged, [=](int value) {
+    connect(multisampling.widget, &QSpinBox::valueChanged, [this](int value) {
         m_settings->renderWindow()->SetMultiSamples(value);
         m_settings->render();
     });
@@ -104,7 +104,7 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(VolumeRenderSettings* set
     shadebox->setLayout(shade_layout);
     shadebox->setCheckable(true);
     shadebox->setChecked(vprop->GetShade() == 1);
-    connect(shadebox, &QGroupBox::toggled, [=](bool toggle) {
+    connect(shadebox, &QGroupBox::toggled, [vprop, this](bool toggle) {
         vprop->SetShade(toggle ? 1 : 0);
         m_settings->render();
     });
@@ -113,7 +113,7 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(VolumeRenderSettings* set
     // two sided lightning
     auto tsl = getSettingsWidget<QCheckBox>(tr("Two sided lightning"), this);
     tsl.widget->setChecked(m_settings->renderer()->GetTwoSidedLighting());
-    connect(tsl.widget, &QCheckBox::stateChanged, [=](int state) {
+    connect(tsl.widget, &QCheckBox::stateChanged, [this](int state) {
         m_settings->renderer()->SetTwoSidedLighting(state != 0);
         m_settings->render();
     });
@@ -122,7 +122,7 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(VolumeRenderSettings* set
     // Global illumination reach
     auto gir = getSettingsWidget<QSlider>(tr("Global illumination reach"), shadebox);
     gir.widget->setValue(static_cast<int>(m_settings->mapper()->GetGlobalIlluminationReach() * 100));
-    connect(gir.widget, &QSlider::valueChanged, [=](int value) {
+    connect(gir.widget, &QSlider::valueChanged, [this](int value) {
         const float g = value / float { 100 };
         m_settings->mapper()->SetGlobalIlluminationReach(std::clamp(g, 0.f, 1.f));
         m_settings->render();
@@ -132,7 +132,7 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(VolumeRenderSettings* set
     // Volumetric Scattering blending
     auto vsb = getSettingsWidget<QSlider>(tr("Volumetric scattering blending"), this);
     vsb.widget->setValue(static_cast<int>(m_settings->mapper()->GetGlobalIlluminationReach() * 50));
-    connect(vsb.widget, &QSlider::valueChanged, [=](int value) {
+    connect(vsb.widget, &QSlider::valueChanged, [this](int value) {
         const float g = value / float { 50 };
         m_settings->mapper()->SetVolumetricScatteringBlending(std::clamp(g, 0.f, 2.f));
         m_settings->render();
@@ -142,7 +142,7 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(VolumeRenderSettings* set
     // Ambient
     auto ambient = getSettingsWidget<QSlider>(tr("Ambient"), this);
     ambient.widget->setValue(static_cast<int>(vprop->GetAmbient() * 100));
-    connect(ambient.widget, &QSlider::valueChanged, [=](int value) {
+    connect(ambient.widget, &QSlider::valueChanged, [vprop, this](int value) {
         const float g = value / float { 100 };
         vprop->SetAmbient(std::clamp(g, 0.f, 1.f));
         m_settings->render();
@@ -152,7 +152,7 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(VolumeRenderSettings* set
     // Diffuse
     auto diffuse = getSettingsWidget<QSlider>(tr("Diffuse"), this);
     diffuse.widget->setValue(static_cast<int>(vprop->GetDiffuse() * 100));
-    connect(diffuse.widget, &QSlider::valueChanged, [=](int value) {
+    connect(diffuse.widget, &QSlider::valueChanged, [vprop, this](int value) {
         const float g = value / float { 100 };
         vprop->SetDiffuse(std::clamp(g, 0.f, 1.f));
         m_settings->render();
@@ -162,7 +162,7 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(VolumeRenderSettings* set
     // Specular
     auto specular = getSettingsWidget<QSlider>(tr("Specular"), this);
     specular.widget->setValue(static_cast<int>(vprop->GetSpecular() * 100));
-    connect(specular.widget, &QSlider::valueChanged, [=](int value) {
+    connect(specular.widget, &QSlider::valueChanged, [vprop, this](int value) {
         const float g = value / float { 100 };
         vprop->SetSpecular(std::clamp(g, 0.f, 1.f));
         m_settings->render();
@@ -172,7 +172,7 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(VolumeRenderSettings* set
     // Specular power
     auto specularpower = getSettingsWidget<QSlider>(tr("Specular power"), this);
     specularpower.widget->setValue(static_cast<int>(vprop->GetSpecularPower()));
-    connect(specularpower.widget, &QSlider::valueChanged, [=](int value) {
+    connect(specularpower.widget, &QSlider::valueChanged, [vprop, this](int value) {
         const float g = value;
         vprop->SetSpecularPower(g);
         m_settings->render();
@@ -182,7 +182,7 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(VolumeRenderSettings* set
     // Scattering anisotropy
     auto sa = getSettingsWidget<QSlider>(tr("Scattering anisotropy"), this);
     sa.widget->setValue(static_cast<int>(vprop->GetScatteringAnisotropy() * 50) + 50);
-    connect(sa.widget, &QSlider::valueChanged, [=](int value) {
+    connect(sa.widget, &QSlider::valueChanged, [vprop, this](int value) {
         const float g = value / float { 50 } - 1;
         vprop->SetScatteringAnisotropy(std::clamp(g, -1.f, 1.f));
         m_settings->render();
@@ -196,7 +196,7 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(VolumeRenderSettings* set
     }
     auto color_gray_index = color.widget->findText(QString::fromStdString("CT"));
     color.widget->setCurrentIndex(color_gray_index);
-    connect(color.widget, &QComboBox::currentTextChanged, [=](const QString& cname) {
+    connect(color.widget, &QComboBox::currentTextChanged, [this](const QString& cname) {
         m_settings->setColorMap(cname.toStdString());
     });
 
@@ -205,11 +205,11 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(VolumeRenderSettings* set
     // option for power opacity transfer;
     auto uselog10 = new QCheckBox(tr("Power opacity"), this);
     uselog10->setChecked(false);
-    connect(uselog10, &QCheckBox::stateChanged, [=](int state) { m_settings->setUsePowerOpacityLUT(state != 0); });
+    connect(uselog10, &QCheckBox::stateChanged, [this](int state) { m_settings->setUsePowerOpacityLUT(state != 0); });
     //  option for color crop;
     auto colorcrop = new QCheckBox(tr("Crop colors to opacity"), this);
     colorcrop->setChecked(true);
-    connect(colorcrop, &QCheckBox::stateChanged, [=](int state) { m_settings->setCropColorToOpacityRange(state != 0); });
+    connect(colorcrop, &QCheckBox::stateChanged, [this](int state) { m_settings->setCropColorToOpacityRange(state != 0); });
     auto color_opt_layout = new QHBoxLayout(this);
     color_opt_layout->setContentsMargins(0, 0, 0, 0);
     color_opt_layout->addWidget(colorcrop);

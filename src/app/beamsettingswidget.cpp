@@ -43,7 +43,7 @@ BeamSettingsWidget::BeamSettingsWidget(QWidget* parent)
     auto beamaddbutton = new QPushButton(tr("Add"), this);
     beamselectlayout->addWidget(beamaddbutton);
     layout->addLayout(beamselectlayout, 1);
-    connect(beamaddbutton, &QPushButton::clicked, [=](void) {
+    connect(beamaddbutton, &QPushButton::clicked, [beamselectcombo, this](void) {
         auto idx = beamselectcombo->currentIndex();
         if (idx == 0)
             m_view->addDXBeam();

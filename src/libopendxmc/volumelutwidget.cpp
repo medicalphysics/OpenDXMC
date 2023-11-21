@@ -60,17 +60,15 @@ public:
         setMarkerSize(8);
         setPointsVisible(true);
         setPointLabelsFormat("@xPoint");
-        // setPointLabelsVisible(true);
-        // setPointLabelsClipping(true);
 
-        connect(this, &QXYSeries::pressed, [=](const QPointF& point) {
+        connect(this, &QXYSeries::pressed, [this](const QPointF& point) {
             m_pIdx_edit = this->closestPointIndex(point);
         });
-        connect(this, &QXYSeries::released, [=](const QPointF& point) {
+        connect(this, &QXYSeries::released, [this](const QPointF& point) {
             m_pIdx_edit = -1;
             updateLUTfromPoints();
         });
-        connect(this, &QXYSeries::doubleClicked, [=](const QPointF& point) {
+        connect(this, &QXYSeries::doubleClicked, [this](const QPointF& point) {
             if (this->count() > 2) {
                 this->remove(point);
                 updateLUTfromPoints();
@@ -78,7 +76,7 @@ public:
         });
 
         if (type == VolumeLUTWidget::LUTType::Opacity) {
-            connect(m_settings, &VolumeRenderSettings::imageDataChanged, [=]() { this->imageDataUpdated(); });
+            connect(m_settings, &VolumeRenderSettings::imageDataChanged, [this]() { this->imageDataUpdated(); });
             for (const auto& p : m_settings->opacityDataNormalized()) {
                 append(p[0], p[1]);
             }
@@ -219,9 +217,7 @@ public:
         setMouseTracking(true);
 
         // chart and axis
-        // chart()->setAnimationOptions(QChart::AnimationOption::SeriesAnimations);
         chart()->layout()->setContentsMargins(0, 0, 0, 0);
-        // chart->setBackgroundRoundness(0);
         chart()->setTheme(QChart::ChartThemeDark);
         chart()->setBackgroundVisible(false);
         if (type == VolumeLUTWidget::LUTType::Opacity)
@@ -234,32 +230,27 @@ public:
         m_axisx->setGridLineVisible(false);
         m_axisx->setTickCount(3);
         m_axisx->setLabelsVisible(false);
-        chart()->setAxisX(m_axisx);
+        chart()->addAxis(m_axisx, Qt::AlignBottom);
         auto axisy = new QValueAxis(chart());
         axisy->setGridLineVisible(false);
         axisy->setRange(-.1, 1.1);
-        chart()->setAxisY(axisy);
+        chart()->addAxis(axisy, Qt::AlignLeft);
         axisy->setLabelsVisible(false);
         axisy->setMinorGridLineVisible(false);
         axisy->setTickCount(2);
         axisy->setLabelsVisible(false);
-        // axisy->hide();
-        connect(m_settings, &VolumeRenderSettings::imageDataChanged, [=](void) { this->updateAxisScalarRange(); });
+        connect(m_settings, &VolumeRenderSettings::imageDataChanged, [this](void) { this->updateAxisScalarRange(); });
 
         m_lut_series = new LUTSeries(settings, type, chart());
         chart()->addSeries(m_lut_series);
         m_lut_series->attachAxis(m_axisx);
         m_lut_series->attachAxis(axisy);
         updateAxisScalarRange();
-        connect(m_settings, &VolumeRenderSettings::colorLutChanged, [=](void) { this->updatechartColorBackground(); });
+        connect(m_settings, &VolumeRenderSettings::colorLutChanged, [this](void) { this->updatechartColorBackground(); });
     }
 
     void updateAxisScalarRange()
     {
-        /* const auto& range = m_settings->currentImageDataScalarRange();
-        m_axisx->setMin(range[0]);
-        m_axisx->setMax(range[1]);
-        */
         m_axisx->setMin(-.1);
         m_axisx->setMax(1.1);
     }
@@ -360,7 +351,7 @@ VolumeLUTWidget::VolumeLUTWidget(VolumeRenderSettings* settings, VolumeLUTWidget
         auto checkbox = new QCheckBox("Gradient LUT");
         checkbox->setCheckState(Qt::CheckState::Unchecked);
         this->m_settings->volumeProperty()->SetDisableGradientOpacity(true);
-        connect(checkbox, &QCheckBox::stateChanged, [=](int state) {
+        connect(checkbox, &QCheckBox::stateChanged, [=, this](int state) {
             if (state == 0) {
                 view->setEnabled(false);
                 this->m_settings->volumeProperty()->SetDisableGradientOpacity(true);

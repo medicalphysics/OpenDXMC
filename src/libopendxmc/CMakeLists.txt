@@ -11,8 +11,7 @@ qt_add_library(libopendxmc STATIC
 	colormaps.cpp
 	slicerenderwidget.cpp
 	custominteractorstyleimage.cpp
-	renderwidgetscollection.cpp
-	rendersettingswidget.cpp
+	renderwidgetscollection.cpp	
 	volumerenderwidget.cpp
 	volumerendersettingswidget.cpp
 	volumelutwidget.cpp

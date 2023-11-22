@@ -65,8 +65,9 @@ void VolumerenderWidget::setupRenderingPipeline()
 
     // create volume and mapper
     auto mapper = vtkSmartPointer<vtkOpenGLGPUVolumeRayCastMapper>::New();
-    mapper->LockSampleDistanceToInputSpacingOn();
+    mapper->LockSampleDistanceToInputSpacingOff();
     mapper->AutoAdjustSampleDistancesOn();
+    mapper->SetSampleDistance(0.3);
     auto volume = vtkSmartPointer<vtkVolume>::New();
     volume->SetMapper(mapper);
 

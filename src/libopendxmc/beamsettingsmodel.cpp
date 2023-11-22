@@ -276,7 +276,11 @@ void BeamSettingsModel::addDXBeam()
 {
     auto root = new LabelItem(tr("DX Beam"));
 
-    auto beam = std::make_shared<Beam>(DXBeam());
+    constexpr std::array<double, 3> pos_init = { 0, -50, 0 };
+    constexpr std::array<std::array<double, 3>, 2> cos_init = { 0, 0, 1, 1, 0, 0 };
+    const std::map<std::size_t, double> filt_init = { { 13, 2.0 }, { 29, 0.1 } };
+
+    auto beam = std::make_shared<Beam>(DXBeam(pos_init, cos_init, filt_init));
     auto beamActor = std::make_shared<BeamActorContainer>(beam);
     m_beams.push_back(std::make_pair(beam, beamActor));
 
@@ -309,8 +313,6 @@ void BeamSettingsModel::addDXBeam()
 
     auto tubeItem = new LabelItem(tr("Tube"));
     root->appendRow(tubeItem);
-    std::get<DXBeam>(*beam).addTubeFiltrationMaterial(29, 0.1);
-    std::get<DXBeam>(*beam).addTubeFiltrationMaterial(13, 2);
     addTubeItems<DXBeam>(tubeItem, beam);
 
     {
@@ -363,16 +365,20 @@ void BeamSettingsModel::addCTSpiralBeam()
 {
     auto root = new LabelItem(tr("CT Spiral Beam"));
 
-    auto beam = std::make_shared<Beam>(CTSpiralBeam());
+    std::shared_ptr<Beam> beam = nullptr;
 
     if (m_image) {
         const auto& s = m_image->spacing();
         const auto& d = m_image->dimensions();
-        std::get<CTSpiralBeam>(*beam).setStartPosition({ 0, 0, -(s[2] * d[2]) / 2 });
-        std::get<CTSpiralBeam>(*beam).setStopPosition({ 0, 0, (s[2] * d[2]) / 2 });
+        const std::array<double, 3> start_init = { 0, 0, -(s[2] * d[2]) / 2 };
+        const std::array<double, 3> stop_init = { 0, 0, (s[2] * d[2]) / 2 };
+        const std::map<std::size_t, double> filt_init = { { 13, 9.0 } };
+        beam = std::make_shared<Beam>(CTSpiralBeam(start_init, stop_init, filt_init));
     } else {
-        std::get<CTSpiralBeam>(*beam).setStartPosition({ 0, 0, -20 });
-        std::get<CTSpiralBeam>(*beam).setStopPosition({ 0, 0, 20 });
+        constexpr std::array<double, 3> start_init = { 0, 0, -20 };
+        constexpr std::array<double, 3> stop_init = { 0, 0, 20 };
+        const std::map<std::size_t, double> filt_init = { { 13, 9.0 } };
+        beam = std::make_shared<Beam>(CTSpiralBeam(start_init, stop_init, filt_init));
     }
 
     auto beamActor = std::make_shared<BeamActorContainer>(beam);
@@ -503,7 +509,6 @@ void BeamSettingsModel::addCTSpiralBeam()
 
     auto tubeItem = new LabelItem(tr("Tube"));
     root->appendRow(tubeItem);
-    std::get<CTSpiralBeam>(*beam).addTubeFiltrationMaterial(13, 9);
     addTubeItems<CTSpiralBeam>(tubeItem, beam);
 
     {
@@ -541,17 +546,22 @@ void BeamSettingsModel::addCTSpiralDualEnergyBeam()
 {
     auto root = new LabelItem(tr("CT Spiral Dual Energy Beam"));
 
-    auto beam = std::make_shared<Beam>(CTSpiralDualEnergyBeam());
+    std::shared_ptr<Beam> beam = nullptr;
 
     if (m_image) {
         const auto& s = m_image->spacing();
         const auto& d = m_image->dimensions();
-        std::get<CTSpiralDualEnergyBeam>(*beam).setStartPosition({ 0, 0, -(s[2] * d[2]) / 2 });
-        std::get<CTSpiralDualEnergyBeam>(*beam).setStopPosition({ 0, 0, (s[2] * d[2]) / 2 });
+        const std::array<double, 3> start_init = { 0, 0, -(s[2] * d[2]) / 2 };
+        const std::array<double, 3> stop_init = { 0, 0, (s[2] * d[2]) / 2 };
+        const std::map<std::size_t, double> filt_init = { { 13, 9.0 } };
+        beam = std::make_shared<Beam>(CTSpiralDualEnergyBeam(start_init, stop_init, filt_init));
     } else {
-        std::get<CTSpiralDualEnergyBeam>(*beam).setStartPosition({ 0, 0, -20 });
-        std::get<CTSpiralDualEnergyBeam>(*beam).setStopPosition({ 0, 0, 20 });
+        constexpr std::array<double, 3> start_init = { 0, 0, -20 };
+        constexpr std::array<double, 3> stop_init = { 0, 0, 20 };
+        const std::map<std::size_t, double> filt_init = { { 13, 9.0 } };
+        beam = std::make_shared<Beam>(CTSpiralDualEnergyBeam(start_init, stop_init, filt_init));
     }
+
     auto beamActor = std::make_shared<BeamActorContainer>(beam);
     m_beams.push_back(std::make_pair(beam, beamActor));
 

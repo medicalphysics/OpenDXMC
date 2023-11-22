@@ -20,6 +20,7 @@ Copyright 2024 Erlend Andersen
 
 #include <dxmc_specialization.hpp>
 
+#include <vtkMatrix4x4.h>
 #include <vtkPolyData.h>
 #include <vtkSmartPointer.h>
 
@@ -37,6 +38,7 @@ protected:
 private:
     std::shared_ptr<Beam> m_beam = nullptr;
     vtkSmartPointer<vtkPolyData> m_polydata = nullptr;
+    vtkSmartPointer<vtkMatrix4x4> m_transform = nullptr;
 };
 
 #include <QMetaType>

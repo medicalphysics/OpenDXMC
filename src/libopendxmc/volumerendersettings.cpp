@@ -24,7 +24,7 @@ Copyright 2023 Erlend Andersen
 #include <colormaps.hpp>
 
 VolumeRenderSettings::VolumeRenderSettings(
-    vtkSmartPointer<vtkOpenGLRenderer> renderer,
+    vtkSmartPointer<vtkRenderer> renderer,
     vtkSmartPointer<vtkOpenGLGPUVolumeRayCastMapper> mapper,
     vtkSmartPointer<vtkVolume> volume,
     vtkSmartPointer<vtkDiscretizableColorTransferFunction> colorlut,

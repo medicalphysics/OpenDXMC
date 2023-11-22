@@ -18,6 +18,7 @@ Copyright 2023 Erlend Andersen
 
 #pragma once
 
+#include <beamactorcontainer.hpp>
 #include <datacontainer.hpp>
 #include <slicerenderwidget.hpp>
 #include <volumerenderwidget.hpp>
@@ -25,14 +26,34 @@ Copyright 2023 Erlend Andersen
 #include <QComboBox>
 #include <QWidget>
 
+#include <vtkActor.h>
+#include <vtkSmartPointer.h>
+
 #include <array>
 #include <memory>
+#include <vector>
 
 class VolumerenderSettingsWidget;
 class BeamActorContainer;
+class RendersettingsWidget;
 
 class RenderWidgetsCollection : public QWidget {
     Q_OBJECT
+
+    struct BeamActorMonitor {
+        BeamActorMonitor(std::shared_ptr<BeamActorContainer> v)
+            : beamActorContainer(v)
+        {
+        }
+        std::shared_ptr<BeamActorContainer> beamActorContainer = nullptr;
+        std::vector<vtkSmartPointer<vtkActor>> actors;
+        vtkSmartPointer<vtkActor> getNewActor()
+        {
+            auto actor = beamActorContainer->createActor();
+            actors.push_back(actor);
+            return actors.back();
+        }
+    };
 
 public:
     RenderWidgetsCollection(QWidget* parent = nullptr);
@@ -44,16 +65,21 @@ public:
     void setInterpolationType(int type = 1);
     void addActor(std::shared_ptr<BeamActorContainer> actor);
     void removeActor(std::shared_ptr<BeamActorContainer> actor);
+    void setBeamActorsVisible(int);
 
     void requestRender();
 
-    VolumerenderSettingsWidget* volumerenderSettingsWidget(QWidget* parent = nullptr);
-    QComboBox* getVolumeSelector();
+    QWidget* createRendersettingsWidget(QWidget* parent = nullptr);
 
     void showData(DataContainer::ImageType type);
+
+protected:
+    VolumerenderSettingsWidget* volumerenderSettingsWidget(QWidget* parent = nullptr);
 
 private:
     std::array<SliceRenderWidget*, 3> m_slice_widgets = { nullptr, nullptr, nullptr };
     VolumerenderWidget* m_volume_widget = nullptr;
     QComboBox* m_data_type_selector = nullptr;
+    std::vector<BeamActorMonitor> m_beamActorsBuffer;
+    bool m_show_beam_actors = true;
 };

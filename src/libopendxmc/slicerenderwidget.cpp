@@ -28,11 +28,11 @@ Copyright 2023 Erlend Andersen
 #include <vtkCamera.h>
 #include <vtkCellPicker.h>
 #include <vtkImageProperty.h>
-#include <vtkOpenGLImageSliceMapper.h>
-#include <vtkOpenGLTextActor.h>
-#include <vtkGenericOpenGLRenderWindow.h>
+#include <vtkImageSliceMapper.h>
+#include <vtkRenderWindow.h>
 #include <vtkRendererCollection.h>
 #include <vtkScalarBarActor.h>
+#include <vtkTextActor.h>
 #include <vtkTextProperty.h>
 
 #include <charconv>
@@ -161,13 +161,13 @@ public:
     }
 
     // Set pointers to any clientData or callData here.
-    vtkSmartPointer<vtkOpenGLTextActor> textActorCorner = nullptr;
+    vtkSmartPointer<vtkTextActor> textActorCorner = nullptr;
 
 protected:
 private:
     TextModifiedCallback()
     {
-        textActorCorner = vtkSmartPointer<vtkOpenGLTextActor>::New();
+        textActorCorner = vtkSmartPointer<vtkTextActor>::New();
         textActorCorner->GetTextProperty()->SetColor(1.0, 1.0, 1.0);
     }
 
@@ -185,8 +185,6 @@ SliceRenderWidget::SliceRenderWidget(int orientation, QWidget* parent)
     layout->setSpacing(0);
 
     openGLWidget = new QVTKOpenGLNativeWidget(this);
-    auto window = vtkSmartPointer<vtkGenericOpenGLRenderWindow>::New();
-    openGLWidget->setRenderWindow(window);
     layout->addWidget(openGLWidget);
 
     this->setLayout(layout);
@@ -204,7 +202,7 @@ void SliceRenderWidget::setupSlicePipeline(int orientation)
 {
 
     // renderers
-    renderer = vtkSmartPointer<vtkOpenGLRenderer>::New();
+    renderer = vtkSmartPointer<vtkRenderer>::New();
     renderer->GetActiveCamera()->ParallelProjectionOn();
     renderer->SetBackground(0, 0, 0);
 
@@ -220,7 +218,7 @@ void SliceRenderWidget::setupSlicePipeline(int orientation)
     renWin->AddRenderer(renderer);
 
     // reslice mapper
-    auto imageMapper = vtkSmartPointer<vtkOpenGLImageSliceMapper>::New();
+    auto imageMapper = vtkSmartPointer<vtkImageSliceMapper>::New();
     imageMapper->SliceFacesCameraOn();
     imageMapper->SliceAtFocalPointOn();
     imageMapper->ReleaseDataFlagOn();
@@ -339,6 +337,7 @@ void SliceRenderWidget::setMultisampleAA(int samples)
 void SliceRenderWidget::setInterpolationType(int type)
 {
     imageSlice->GetProperty()->SetInterpolationType(type);
+    Render();
 }
 
 void SliceRenderWidget::switchLUTtable(DataContainer::ImageType type, int n_colors)
@@ -402,13 +401,10 @@ void SliceRenderWidget::showData(DataContainer::ImageType type)
     }
 }
 
-void SliceRenderWidget::Render(bool rezoom_camera)
+void SliceRenderWidget::Render(bool reset_camera)
 {
-    auto ps = renderer->GetActiveCamera()->GetParallelScale();
-    renderer->ResetCamera();
-    if (!rezoom_camera)
-        renderer->GetActiveCamera()->SetParallelScale(ps);
-
+    if (reset_camera)
+        renderer->ResetCamera();
     openGLWidget->renderWindow()->Render();
 }
 
@@ -447,12 +443,14 @@ void SliceRenderWidget::updateImageData(std::shared_ptr<DataContainer> data)
     m_data = data;
 }
 
-void SliceRenderWidget::addActor(std::shared_ptr<BeamActorContainer> actor)
+void SliceRenderWidget::addActor(vtkSmartPointer<vtkActor> actor)
 {
-    renderer->AddActor(actor->actor());   
+    renderer->AddActor(actor);
+    Render();
 }
 
-void SliceRenderWidget::removeActor(std::shared_ptr<BeamActorContainer> actor)
+void SliceRenderWidget::removeActor(vtkSmartPointer<vtkActor> actor)
 {
-    renderer->RemoveActor(actor->actor());
+    renderer->RemoveActor(actor);
+    Render();
 }

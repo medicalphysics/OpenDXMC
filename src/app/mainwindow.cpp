@@ -69,8 +69,7 @@ MainWindow::MainWindow(QWidget* parent)
     dockWidget->setContentsMargins(0, 0, 0, 0);
     auto dockWidget_layout = new QVBoxLayout;
     dockWidget->setLayout(dockWidget_layout);
-    dockWidget_layout->addWidget(slicerender->getVolumeSelector());
-    dockWidget_layout->addWidget(slicerender->volumerenderSettingsWidget(dockWidget));
+    dockWidget_layout->addWidget(slicerender->createRendersettingsWidget(dockWidget));
     rightDock->setWidget(dockWidget);
     addDockWidget(Qt::DockWidgetArea::RightDockWidgetArea, rightDock);
 

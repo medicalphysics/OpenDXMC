@@ -28,7 +28,6 @@ BeamSettingsWidget::BeamSettingsWidget(QWidget* parent)
 {
     auto layout = new QVBoxLayout;
     layout->setContentsMargins(0, 0, 0, 0);
-    layout->setSpacing(0);
     this->setLayout(layout);
 
     m_view = new BeamSettingsView(this);
@@ -53,12 +52,12 @@ BeamSettingsWidget::BeamSettingsWidget(QWidget* parent)
             m_view->addCTSpiralDualEnergyBeam();
     });
 
-    layout->addWidget(m_view, 10);
+    layout->addWidget(m_view, 300);
 
     auto aeclabel = new QLabel(tr("AEC curve"), this);
     layout->addWidget(aeclabel, 1, Qt::AlignHCenter);
     m_aecplot = new CTAECPlot(this);
-    layout->addWidget(m_aecplot, 3);
+    layout->addWidget(m_aecplot, 100);
 }
 
 void BeamSettingsWidget::updateImageData(std::shared_ptr<DataContainer> data)

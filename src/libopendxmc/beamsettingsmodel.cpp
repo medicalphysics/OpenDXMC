@@ -284,7 +284,7 @@ void BeamSettingsModel::addDXBeam()
         auto setter = [=](std::array<double, 3> d) {
             auto& dx = std::get<DXBeam>(*beam);
             dx.setPosition(d);
-            beamActor->updateActor();
+            beamActor->update();
         };
         auto getter = [=]() -> std::array<double, 3> {
             auto& dx = std::get<DXBeam>(*beam);
@@ -298,7 +298,7 @@ void BeamSettingsModel::addDXBeam()
         auto setter = [=](std::array<double, 2> d) {
             auto& dx = std::get<DXBeam>(*beam);
             dx.setCollimationAnglesDeg(d);
-            beamActor->updateActor();
+            beamActor->update();
         };
         auto getter = [=]() -> std::array<double, 2> {
             auto& dx = std::get<DXBeam>(*beam);
@@ -354,7 +354,7 @@ void BeamSettingsModel::addDXBeam()
         };
         addItem(root, "Total number of particles", getter);
     }
-    beamActor->updateActor();
+    beamActor->update();
     emit beamActorAdded(beamActor);
     appendRow(root);
 }
@@ -382,7 +382,7 @@ void BeamSettingsModel::addCTSpiralBeam()
         auto setter = [=](std::array<double, 3> d) {
             auto& ct = std::get<CTSpiralBeam>(*beam);
             ct.setStartPosition(d);
-            beamActor->updateActor();
+            beamActor->update();
         };
         auto getter = [=]() -> std::array<double, 3> {
             auto& ct = std::get<CTSpiralBeam>(*beam);
@@ -395,7 +395,7 @@ void BeamSettingsModel::addCTSpiralBeam()
         auto setter = [=](std::array<double, 3> d) {
             auto& ct = std::get<CTSpiralBeam>(*beam);
             ct.setStopPosition(d);
-            beamActor->updateActor();
+            beamActor->update();
         };
         auto getter = [=]() -> std::array<double, 3> {
             auto& ct = std::get<CTSpiralBeam>(*beam);
@@ -408,7 +408,7 @@ void BeamSettingsModel::addCTSpiralBeam()
         auto setter = [=](double d) {
             auto& ct = std::get<CTSpiralBeam>(*beam);
             ct.setScanFieldOfView(d);
-            beamActor->updateActor();
+            beamActor->update();
         };
         auto getter = [=]() -> double {
             auto& ct = std::get<CTSpiralBeam>(*beam);
@@ -420,7 +420,7 @@ void BeamSettingsModel::addCTSpiralBeam()
         auto setter = [=](double d) {
             auto& ct = std::get<CTSpiralBeam>(*beam);
             ct.setSourceDetectorDistance(d);
-            beamActor->updateActor();
+            beamActor->update();
         };
         auto getter = [=]() -> double {
             auto& ct = std::get<CTSpiralBeam>(*beam);
@@ -432,7 +432,7 @@ void BeamSettingsModel::addCTSpiralBeam()
         auto setter = [=](double d) {
             auto& ct = std::get<CTSpiralBeam>(*beam);
             ct.setCollimation(d);
-            beamActor->updateActor();
+            beamActor->update();
         };
         auto getter = [=]() -> double {
             auto& ct = std::get<CTSpiralBeam>(*beam);
@@ -444,7 +444,7 @@ void BeamSettingsModel::addCTSpiralBeam()
         auto setter = [=](double d) {
             auto& ct = std::get<CTSpiralBeam>(*beam);
             ct.setStartAngleDeg(d);
-            beamActor->updateActor();
+            beamActor->update();
         };
         auto getter = [=]() -> double {
             auto& ct = std::get<CTSpiralBeam>(*beam);
@@ -456,7 +456,7 @@ void BeamSettingsModel::addCTSpiralBeam()
         auto setter = [=](double d) {
             auto& ct = std::get<CTSpiralBeam>(*beam);
             ct.setStepAngleDeg(d);
-            beamActor->updateActor();
+            beamActor->update();
         };
         auto getter = [=]() -> double {
             auto& ct = std::get<CTSpiralBeam>(*beam);
@@ -469,7 +469,7 @@ void BeamSettingsModel::addCTSpiralBeam()
         auto setter = [=](double d) {
             auto& ct = std::get<CTSpiralBeam>(*beam);
             ct.setPitch(d);
-            beamActor->updateActor();
+            beamActor->update();
         };
         auto getter = [=]() -> double {
             auto& ct = std::get<CTSpiralBeam>(*beam);
@@ -532,7 +532,7 @@ void BeamSettingsModel::addCTSpiralBeam()
         addItem(root, "Total number of particles", getter);
     }
 
-    beamActor->updateActor();
+    beamActor->update();
     emit beamActorAdded(beamActor);
     appendRow(root);
 }
@@ -559,7 +559,7 @@ void BeamSettingsModel::addCTSpiralDualEnergyBeam()
         auto setter = [=](std::array<double, 3> d) {
             auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
             ct.setStartPosition(d);
-            beamActor->updateActor();
+            beamActor->update();
         };
         auto getter = [=]() -> std::array<double, 3> {
             auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
@@ -572,7 +572,7 @@ void BeamSettingsModel::addCTSpiralDualEnergyBeam()
         auto setter = [=](std::array<double, 3> d) {
             auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
             ct.setStopPosition(d);
-            beamActor->updateActor();
+            beamActor->update();
         };
         auto getter = [=]() -> std::array<double, 3> {
             auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
@@ -585,7 +585,7 @@ void BeamSettingsModel::addCTSpiralDualEnergyBeam()
         auto setter = [=](double d) {
             auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
             ct.setScanFieldOfViewA(d);
-            beamActor->updateActor();
+            beamActor->update();
         };
         auto getter = [=]() -> double {
             auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
@@ -595,7 +595,7 @@ void BeamSettingsModel::addCTSpiralDualEnergyBeam()
         auto setterB = [=](double d) {
             auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
             ct.setScanFieldOfViewA(d);
-            beamActor->updateActor();
+            beamActor->update();
         };
         auto getterB = [=]() -> double {
             auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
@@ -607,7 +607,7 @@ void BeamSettingsModel::addCTSpiralDualEnergyBeam()
         auto setter = [=](double d) {
             auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
             ct.setSourceDetectorDistance(d);
-            beamActor->updateActor();
+            beamActor->update();
         };
         auto getter = [=]() -> double {
             auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
@@ -619,7 +619,7 @@ void BeamSettingsModel::addCTSpiralDualEnergyBeam()
         auto setter = [=](double d) {
             auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
             ct.setCollimation(d);
-            beamActor->updateActor();
+            beamActor->update();
         };
         auto getter = [=]() -> double {
             auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
@@ -631,7 +631,7 @@ void BeamSettingsModel::addCTSpiralDualEnergyBeam()
         auto setter = [=](double d) {
             auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
             ct.setStartAngleDeg(d);
-            beamActor->updateActor();
+            beamActor->update();
         };
         auto getter = [=]() -> double {
             auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
@@ -643,7 +643,7 @@ void BeamSettingsModel::addCTSpiralDualEnergyBeam()
         auto setter = [=](double d) {
             auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
             ct.setStepAngleDeg(d);
-            beamActor->updateActor();
+            beamActor->update();
         };
         auto getter = [=]() -> double {
             auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
@@ -655,7 +655,7 @@ void BeamSettingsModel::addCTSpiralDualEnergyBeam()
         auto setter = [=](double d) {
             auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
             ct.setTubeBoffsetAngleDeg(d);
-            beamActor->updateActor();
+            beamActor->update();
         };
         auto getter = [=]() -> double {
             auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
@@ -667,7 +667,7 @@ void BeamSettingsModel::addCTSpiralDualEnergyBeam()
         auto setter = [=](double d) {
             auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
             ct.setPitch(d);
-            beamActor->updateActor();
+            beamActor->update();
         };
         auto getter = [=]() -> double {
             auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
@@ -845,7 +845,7 @@ void BeamSettingsModel::addCTSpiralDualEnergyBeam()
         };
         addItem(root, "Total number of particles", getter);
     }
-    beamActor->updateActor();
+    beamActor->update();
     emit beamActorAdded(beamActor);
     appendRow(root);
 }

@@ -18,9 +18,11 @@ Copyright 2024 Erlend Andersen
 
 #include <beamactorcontainer.hpp>
 
+#include <vtkActor.h>
 #include <vtkCellArray.h>
 #include <vtkNamedColors.h>
 #include <vtkPoints.h>
+#include <vtkPolyDataMapper.h>
 #include <vtkPolyLine.h>
 #include <vtkProperty.h>
 #include <vtkSmartPointer.h>
@@ -28,10 +30,7 @@ Copyright 2024 Erlend Andersen
 BeamActorContainer::BeamActorContainer(std::shared_ptr<Beam> beam_ptr)
     : m_beam(beam_ptr)
 {
-    m_mapper = vtkSmartPointer<vtkOpenGLPolyDataMapper>::New();
-
-    m_actor = vtkSmartPointer<vtkOpenGLActor>::New();
-    m_actor->SetMapper(m_mapper);
+    m_polydata = vtkSmartPointer<vtkPolyData>::New();
 }
 
 std::array<std::array<double, 3>, 5> pointsFromCollimations(
@@ -63,7 +62,7 @@ std::array<std::array<double, 3>, 5> pointsFromCollimations(
     return r;
 }
 
-void BeamActorContainer::updateActor()
+void BeamActorContainer::update()
 {
     if (!m_beam)
         return;
@@ -147,9 +146,6 @@ void BeamActorContainer::updateActor()
     },
         *m_beam);
 
-    // Create a polydata to store everything in.
-    m_polydata = vtkSmartPointer<vtkPolyData>::New();
-
     // Add the points to the dataset.
     m_polydata->SetPoints(points);
 
@@ -173,6 +169,13 @@ void BeamActorContainer::updateActor()
     // colors->SetNumberOfComponents(3);
     // colors->InsertNextTypedTuple(namedColors->GetColor3ub("Tomato").GetData());
     // colors->InsertNextTypedTuple(namedColors->GetColor3ub("Mint").GetData());
+}
 
-    m_mapper->SetInputData(m_polydata);
+vtkSmartPointer<vtkActor> BeamActorContainer::createActor()
+{
+    auto mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+    auto actor = vtkSmartPointer<vtkActor>::New();
+    mapper->SetInputData(m_polydata);
+    actor->SetMapper(mapper);
+    return actor;
 }

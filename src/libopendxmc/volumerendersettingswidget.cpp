@@ -76,6 +76,7 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(VolumeRenderSettings* set
 
     // Main layout
     auto layout = new QVBoxLayout(this);
+    layout->setContentsMargins(0, 0, 0, 0);
 
     // jittering
     auto jittering = getSettingsWidget<QCheckBox>(tr("Use jittering"), this);
@@ -224,6 +225,5 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(VolumeRenderSettings* set
     m_lut_gradient_widget = new VolumeLUTWidget(m_settings, VolumeLUTWidget::LUTType::Gradient, this);
     layout->addWidget(m_lut_gradient_widget);
 
-    layout->addStretch();
     setLayout(layout);
 }

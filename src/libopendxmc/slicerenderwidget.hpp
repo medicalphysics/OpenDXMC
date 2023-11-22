@@ -27,7 +27,7 @@ Copyright 2023 Erlend Andersen
 
 #include <vtkImageActor.h>
 #include <vtkImageGaussianSmooth.h>
-#include <vtkOpenGLRenderer.h>
+#include <vtkRenderer.h>
 #include <vtkSmartPointer.h>
 #include <vtkWindowLevelLookupTable.h>
 
@@ -48,12 +48,13 @@ public:
     void setInteractionStyleTo3D();
 
     void showData(DataContainer::ImageType type);
-    void Render(bool rezoom_camera = false);
+    // void Render(bool rezoom_camera = false);
+    void Render(bool reset_camera = false);
     void sharedViews(SliceRenderWidget* other1, SliceRenderWidget* other2);
     void sharedViews(std::vector<SliceRenderWidget*> others);
 
-    void addActor(std::shared_ptr<BeamActorContainer> actor);
-    void removeActor(std::shared_ptr<BeamActorContainer> actor);
+    void addActor(vtkSmartPointer<vtkActor> actor);
+    void removeActor(vtkSmartPointer<vtkActor> actor);
 
 protected:
     void setNewImageData(vtkSmartPointer<vtkImageData> data, bool rezoom_camera = false);
@@ -63,7 +64,7 @@ protected:
 private:
     std::shared_ptr<DataContainer> m_data = nullptr;
     vtkSmartPointer<vtkImageActor> imageSlice = nullptr;
-    vtkSmartPointer<vtkOpenGLRenderer> renderer = nullptr;
+    vtkSmartPointer<vtkRenderer> renderer = nullptr;
     QVTKOpenGLNativeWidget* openGLWidget = nullptr;
     vtkSmartPointer<CustomInteractorStyleImage> interactorStyle = nullptr;
     vtkSmartPointer<vtkWindowLevelLookupTable> lut = nullptr;

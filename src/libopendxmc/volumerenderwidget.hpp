@@ -38,8 +38,8 @@ public:
     void updateImageData(std::shared_ptr<DataContainer>);
     VolumerenderSettingsWidget* createSettingsWidget(QWidget* parent = nullptr);
     void showData(DataContainer::ImageType type);
-    void addActor(std::shared_ptr<BeamActorContainer> actor);
-    void removeActor(std::shared_ptr<BeamActorContainer> actor);
+    void addActor(vtkSmartPointer<vtkActor> actor);
+    void removeActor(vtkSmartPointer<vtkActor> actor);
     void Render();
 
 protected:

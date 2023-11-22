@@ -20,25 +20,23 @@ Copyright 2024 Erlend Andersen
 
 #include <dxmc_specialization.hpp>
 
-#include <vtkOpenGLActor.h>
 #include <vtkPolyData.h>
-#include <vtkOpenGLPolyDataMapper.h>
 #include <vtkSmartPointer.h>
 
 #include <memory>
 
+class vtkActor;
+
 class BeamActorContainer {
 public:
     BeamActorContainer(std::shared_ptr<Beam> beam);
-    void updateActor();
-    vtkActor* actor() { return m_actor.Get(); }
+    void update();
+    vtkSmartPointer<vtkActor> createActor();
 
 protected:
 private:
     std::shared_ptr<Beam> m_beam = nullptr;
-    vtkSmartPointer<vtkOpenGLActor> m_actor = nullptr;
     vtkSmartPointer<vtkPolyData> m_polydata = nullptr;
-    vtkSmartPointer<vtkOpenGLPolyDataMapper> m_mapper = nullptr;
 };
 
 #include <QMetaType>

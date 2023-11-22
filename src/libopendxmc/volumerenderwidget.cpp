@@ -23,12 +23,12 @@ Copyright 2023 Erlend Andersen
 #include <QChartView>
 #include <QVBoxLayout>
 
+#include <QVTKInteractor.h>
 #include <vtkCamera.h>
 #include <vtkDiscretizableColorTransferFunction.h>
-#include <vtkGenericOpenGLRenderWindow.h>
 #include <vtkInteractorStyleTrackballCamera.h>
 #include <vtkPiecewiseFunction.h>
-#include <QVTKInteractor.h>
+#include <vtkRenderWindow.h>
 #include <vtkVolumeProperty.h>
 
 VolumerenderWidget::VolumerenderWidget(QWidget* parent)
@@ -41,8 +41,7 @@ VolumerenderWidget::VolumerenderWidget(QWidget* parent)
     layout->setSpacing(0);
 
     openGLWidget = new QVTKOpenGLNativeWidget(this);
-    auto window = vtkSmartPointer<vtkGenericOpenGLRenderWindow>::New();
-    openGLWidget->setRenderWindow(window);
+    auto window = openGLWidget->renderWindow();
     layout->addWidget(openGLWidget);
 
     this->setLayout(layout);
@@ -52,7 +51,7 @@ VolumerenderWidget::VolumerenderWidget(QWidget* parent)
 
 void VolumerenderWidget::setupRenderingPipeline()
 {
-    auto renderer = vtkSmartPointer<vtkOpenGLRenderer>::New();
+    auto renderer = vtkSmartPointer<vtkRenderer>::New();
 
     openGLWidget->renderWindow()->AddRenderer(renderer);
 
@@ -87,15 +86,15 @@ void VolumerenderWidget::setupRenderingPipeline()
     m_settings = new VolumeRenderSettings(renderer, mapper, volume, color_lut, this);
 }
 
-void VolumerenderWidget::addActor(std::shared_ptr<BeamActorContainer> actor)
+void VolumerenderWidget::addActor(vtkSmartPointer<vtkActor> actor)
 {
-    m_settings->renderer()->AddActor(actor->actor());
+    m_settings->renderer()->AddActor(actor);
     m_settings->render();
 }
 
-void VolumerenderWidget::removeActor(std::shared_ptr<BeamActorContainer> actor)
+void VolumerenderWidget::removeActor(vtkSmartPointer<vtkActor> actor)
 {
-    m_settings->renderer()->RemoveActor(actor->actor());
+    m_settings->renderer()->RemoveActor(actor);
     m_settings->render();
 }
 

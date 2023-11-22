@@ -20,7 +20,11 @@ Copyright 2023 Erlend Andersen
 #include <renderwidgetscollection.hpp>
 #include <volumerendersettingswidget.hpp>
 
+#include <QCheckBox>
 #include <QGridLayout>
+#include <QGroupBox>
+#include <QLabel>
+#include <QSLider>
 #include <QSizePolicy>
 
 std::shared_ptr<DataContainer> generateSampleData()
@@ -70,16 +74,39 @@ RenderWidgetsCollection::RenderWidgetsCollection(QWidget* parent)
 
 void RenderWidgetsCollection::addActor(std::shared_ptr<BeamActorContainer> actor)
 {
-    m_volume_widget->addActor(actor);
-    for (auto& w : m_slice_widgets)
-        w->addActor(actor);
+    for (auto& bm : m_beamActorsBuffer) {
+        if (bm.beamActorContainer == actor) {
+            return;
+        }
+    }
+
+    m_beamActorsBuffer.push_back({ actor });
+    if (m_show_beam_actors) {
+        auto& a = m_beamActorsBuffer.back();
+        m_volume_widget->addActor(a.getNewActor());
+        for (auto& w : m_slice_widgets)
+            w->addActor(a.getNewActor());
+    }
 }
 
 void RenderWidgetsCollection::removeActor(std::shared_ptr<BeamActorContainer> actor)
 {
-    m_volume_widget->removeActor(actor);
-    for (auto& w : m_slice_widgets)
-        w->removeActor(actor);
+    std::size_t idx = m_beamActorsBuffer.size();
+    for (std::size_t i = 0; i < m_beamActorsBuffer.size(); ++i) {
+        auto& buf = m_beamActorsBuffer[i];
+        auto cact = buf.beamActorContainer;
+        if (cact == actor) {
+            idx = i;
+            for (auto vtkactor : buf.actors) {
+                m_volume_widget->removeActor(vtkactor);
+                for (auto& w : m_slice_widgets)
+                    w->removeActor(vtkactor);
+            }
+        }
+    }
+
+    if (idx != m_beamActorsBuffer.size())
+        m_beamActorsBuffer.erase(m_beamActorsBuffer.begin() + idx);
 }
 
 void RenderWidgetsCollection::updateImageData(std::shared_ptr<DataContainer> data)
@@ -135,11 +162,6 @@ void RenderWidgetsCollection::setInteractionStyleTo3D()
         w->setInteractionStyleTo3D();
 }
 
-QComboBox* RenderWidgetsCollection::getVolumeSelector()
-{
-    return m_data_type_selector;
-}
-
 void RenderWidgetsCollection::requestRender()
 {
     m_volume_widget->Render();
@@ -153,6 +175,107 @@ VolumerenderSettingsWidget* RenderWidgetsCollection::volumerenderSettingsWidget(
         parent = this;
 
     auto wid = m_volume_widget->createSettingsWidget(parent);
+
+    return wid;
+}
+
+template <typename T>
+T* addWidgetAndLabel(const QString& txt, QVBoxLayout* layout, QWidget* parent = nullptr)
+{
+    auto tlayout = new QHBoxLayout;
+    tlayout->setContentsMargins(0, 0, 0, 0);
+    tlayout->setSpacing(0);
+    auto tlabel = new QLabel(txt, parent);
+    tlayout->addWidget(tlabel);
+
+    T* wid = nullptr;
+    if constexpr (std::is_same_v<T, QSlider>)
+        wid = new QSlider(Qt::Horizontal, parent);
+    else
+        wid = new T(parent);
+
+    tlayout->addWidget(wid);
+    layout->addLayout(tlayout);
+    return wid;
+}
+
+void RenderWidgetsCollection::setBeamActorsVisible(int state)
+{
+    m_show_beam_actors = state != 0;
+    if (state == 0) {
+        for (auto& coll : m_beamActorsBuffer) {
+            for (auto& vtkactor : coll.actors) {
+                m_volume_widget->removeActor(vtkactor);
+                for (auto& w : m_slice_widgets)
+                    w->removeActor(vtkactor);
+            }
+            coll.actors.clear();
+        }
+    } else {
+        for (auto& coll : m_beamActorsBuffer) {
+            m_volume_widget->addActor(coll.getNewActor());
+            for (auto& w : m_slice_widgets)
+                w->addActor(coll.getNewActor());
+        }
+    }
+}
+
+QWidget* RenderWidgetsCollection::createRendersettingsWidget(QWidget* parent)
+{
+
+    auto wid = new QWidget(parent);
+    auto layout = new QVBoxLayout;
+    wid->setLayout(layout);
+    layout->setContentsMargins(0, 0, 0, 0);
+
+    auto vol_select_label = new QLabel(tr("Select volume"), wid);
+    vol_select_label->setAlignment(Qt::AlignHCenter);
+    layout->addWidget(vol_select_label);
+    layout->addWidget(m_data_type_selector);
+
+    auto show_beams = addWidgetAndLabel<QCheckBox>(tr("Show beam outlines"), layout, wid);
+    show_beams->setChecked(true);
+    connect(show_beams, &QCheckBox::stateChanged, this, &RenderWidgetsCollection::setBeamActorsVisible);
+
+    auto sliceg = new QGroupBox(tr("Slice render settings"), wid);
+    auto sliceg_layout = new QVBoxLayout;
+    sliceg_layout->setContentsMargins(0, 0, 0, 0);
+    sliceg->setLayout(sliceg_layout);
+    layout->addWidget(sliceg);
+
+    auto inter_type = addWidgetAndLabel<QComboBox>(tr("Set interpolation type"), sliceg_layout, parent);
+    inter_type->addItem(tr("Nearest"));
+    inter_type->addItem(tr("Linear"));
+    inter_type->addItem(tr("Cubic"));
+    inter_type->setCurrentIndex(1);
+    connect(inter_type, &QComboBox::currentIndexChanged, this, &RenderWidgetsCollection::setInterpolationType);
+
+    // These settings are unusable per now
+    /*
+    auto set_use_FXAA = new QCheckBox(tr("Use FXAA"));
+    set_use_FXAA->setChecked(false);
+    layout->addWidget(set_use_FXAA);
+    connect(set_use_FXAA, &QCheckBox::stateChanged, [this](int state) { this->useFXAA(state != 0); });
+
+    auto msaa_slider = addWidgetAndLabel<QSlider>(tr("Use multisamples"), layout, wid);
+    msaa_slider->setRange(0, 64);
+    msaa_slider->setValue(0);
+    connect(msaa_slider, &QSlider::valueChanged, this, &RenderWidgetsCollection::setMultisampleAA);
+
+    auto interaction = addWidgetAndLabel<QComboBox>(tr("Set interaction mode"), layout, parent);
+    interaction->addItem(tr("Slicing"));
+    interaction->addItem(tr("3D"));
+    interaction->setCurrentIndex(0);
+    connect(interaction, &QComboBox::currentIndexChanged, [this](int idx) { if (idx ==0) this->setInteractionStyleToSlicing(); else this->setInteractionStyleTo3D(); });
+    */
+
+    auto volumeg = new QGroupBox(tr("Volume render settings"), wid);
+    auto volumeg_layout = new QVBoxLayout;
+    volumeg->setLayout(volumeg_layout);
+    layout->addWidget(volumeg);
+
+    auto volumerenderettings = m_volume_widget->createSettingsWidget(wid);
+    volumeg_layout->addWidget(volumerenderettings);
 
     return wid;
 }

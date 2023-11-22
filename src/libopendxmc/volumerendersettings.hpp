@@ -18,10 +18,10 @@ Copyright 2023 Erlend Andersen
 #pragma once
 
 #include <vtkDiscretizableColorTransferFunction.h>
-#include <vtkGenericOpenGLRenderWindow.h>
 #include <vtkImageData.h>
 #include <vtkOpenGLGPUVolumeRayCastMapper.h>
-#include <vtkOpenGLRenderer.h>
+#include <vtkRenderWindow.h>
+#include <vtkRenderer.h>
 #include <vtkSmartPointer.h>
 #include <vtkVolume.h>
 
@@ -37,13 +37,13 @@ class vtkVolumeProperty;
 class VolumeRenderSettings : public QObject {
     Q_OBJECT
 public:
-    VolumeRenderSettings(vtkSmartPointer<vtkOpenGLRenderer> renderer,
+    VolumeRenderSettings(vtkSmartPointer<vtkRenderer> renderer,
         vtkSmartPointer<vtkOpenGLGPUVolumeRayCastMapper> mapper,
         vtkSmartPointer<vtkVolume> volume,
         vtkSmartPointer<vtkDiscretizableColorTransferFunction> colorlut,
         QObject* parent = nullptr);
 
-    vtkOpenGLRenderer* renderer() { return m_renderer.Get(); }
+    vtkRenderer* renderer() { return m_renderer.Get(); }
     vtkOpenGLGPUVolumeRayCastMapper* mapper() { return m_mapper.Get(); }
     vtkVolume* volume() { return m_volume.Get(); }
     vtkVolumeProperty* volumeProperty();
@@ -84,7 +84,7 @@ protected:
     void updateColorLutFromNormalizedRange(bool render = true);
 
 private:
-    vtkSmartPointer<vtkOpenGLRenderer> m_renderer = nullptr;
+    vtkSmartPointer<vtkRenderer> m_renderer = nullptr;
     vtkSmartPointer<vtkOpenGLGPUVolumeRayCastMapper> m_mapper = nullptr;
     vtkSmartPointer<vtkDiscretizableColorTransferFunction> m_color_lut = nullptr;
     vtkSmartPointer<vtkVolume> m_volume = nullptr;

@@ -17,6 +17,7 @@ Copyright 2023 Erlend Andersen
 */
 
 #include <volumerendersettings.hpp>
+#include <vtkContourValues.h>
 #include <vtkPiecewiseFunction.h>
 #include <vtkRenderWindowInteractor.h>
 #include <vtkVolumeProperty.h>
@@ -197,6 +198,18 @@ bool VolumeRenderSettings::getCropColorToOpacityRange()
     return m_cropColorToOpacityRange;
 }
 
+void VolumeRenderSettings::setIsoContourValuesFromOpacityDataNormalized()
+{
+    const auto& range = m_currentImageDataScalarRange;
+    const auto& data = m_opacityDataNormalizedRange;
+    auto grad = m_volume->GetProperty()->GetIsoSurfaceValues();
+    grad->SetNumberOfContours(data.size());
+    for (std::size_t i = 0; i < data.size(); ++i) {
+        const auto d = shiftscale(data[i][0], range);
+        grad->SetValue(i, d);
+    }
+}
+
 void VolumeRenderSettings::updateOpacityLutFromNormalizedRange(bool rnd)
 {
     auto lut = opacityLut();
@@ -211,10 +224,12 @@ void VolumeRenderSettings::updateOpacityLutFromNormalizedRange(bool rnd)
             lut->AddPoint(x, y);
         }
     }
+    setIsoContourValuesFromOpacityDataNormalized();
     if (rnd) {
         m_volume->Update();
         render();
     }
+
     emit opacityLutChanged();
 }
 

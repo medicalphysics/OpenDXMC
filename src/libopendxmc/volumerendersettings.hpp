@@ -82,6 +82,7 @@ protected:
     void updateOpacityLutFromNormalizedRange(bool render = true);
     void updateGradientLutFromNormalizedRange(bool render = true);
     void updateColorLutFromNormalizedRange(bool render = true);
+    void setIsoContourValuesFromOpacityDataNormalized();
 
 private:
     vtkSmartPointer<vtkRenderer> m_renderer = nullptr;

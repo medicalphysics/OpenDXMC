@@ -78,6 +78,45 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(VolumeRenderSettings* set
     auto layout = new QVBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
 
+    auto blend_mode = getSettingsWidget<QComboBox>(tr("Set blend mode"), this);
+    blend_mode.widget->addItem(tr("Composite"));
+    blend_mode.widget->addItem(tr("MaxIP"));
+    blend_mode.widget->addItem(tr("Additive"));
+    blend_mode.widget->addItem(tr("Isosurface"));
+    blend_mode.widget->setCurrentIndex(0);
+    connect(blend_mode.widget, &QComboBox::currentIndexChanged, this, [this](int val) {
+        switch (val) {
+        case 0:
+            m_settings->mapper()->SetBlendModeToComposite();
+            break;
+        case 1:
+            m_settings->mapper()->SetBlendModeToMaximumIntensity();
+            break;
+        case 2:
+            m_settings->mapper()->SetBlendModeToAdditive();
+            break;
+        case 3:
+            m_settings->mapper()->SetBlendModeToIsoSurface();
+            break;
+        default:
+            break;
+        }
+        m_settings->render();
+    });
+    layout->addLayout(blend_mode.layout);
+
+    // interpolation
+    auto inter_type = getSettingsWidget<QComboBox>(tr("Set interpolation"), this);
+    inter_type.widget->addItem(tr("Nearest"));
+    inter_type.widget->addItem(tr("Linear"));
+    inter_type.widget->addItem(tr("Cubic"));
+    inter_type.widget->setCurrentIndex(1);
+    connect(inter_type.widget, &QComboBox::currentIndexChanged, this, [this](int val) {
+        m_settings->volumeProperty()->SetInterpolationType(val);
+        m_settings->render();
+    });
+    layout->addLayout(inter_type.layout);
+
     // jittering
     auto jittering = getSettingsWidget<QCheckBox>(tr("Use jittering"), this);
     jittering.widget->setChecked(m_settings->mapper()->GetUseJittering());
@@ -87,6 +126,7 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(VolumeRenderSettings* set
     });
     layout->addLayout(jittering.layout);
 
+    /* NOT used (no effect?)
     // Multi samples
     auto multisampling = getSettingsWidget<QSpinBox>(tr("Multi sampling"), this);
     multisampling.widget->setValue(m_settings->renderWindow()->GetMultiSamples());
@@ -96,6 +136,7 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(VolumeRenderSettings* set
         m_settings->render();
     });
     layout->addLayout(multisampling.layout);
+    */
 
     auto vprop = m_settings->volumeProperty();
     // shadebox
@@ -189,6 +230,15 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(VolumeRenderSettings* set
         m_settings->render();
     });
     shade_layout->addLayout(sa.layout);
+
+    // computeNormalFromOpacity
+    auto computeNormalFromOpacity = getSettingsWidget<QCheckBox>(tr("Compute normals from opacity"), this);
+    computeNormalFromOpacity.widget->setChecked(m_settings->mapper()->GetComputeNormalFromOpacity());
+    connect(computeNormalFromOpacity.widget, &QCheckBox::stateChanged, [this](int state) {
+        m_settings->mapper()->SetComputeNormalFromOpacity(state != 0);
+        m_settings->render();
+    });
+    shade_layout->addLayout(computeNormalFromOpacity.layout);
 
     // colortable selector
     auto color = getSettingsWidget<QComboBox>(tr("Color table"), this);

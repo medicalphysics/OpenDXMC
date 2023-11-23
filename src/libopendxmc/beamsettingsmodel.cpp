@@ -87,7 +87,7 @@ public:
     QVariant data(int role = Qt::UserRole + 1) const override
     {
         if (role == Qt::DisplayRole || role == Qt::EditRole) {
-            if constexpr (std::is_convertible_v<T, std::array<double, 3>> || std::is_convertible_v<T, std::array<double, 2>>) {
+            if constexpr (std::is_convertible_v<T, std::array<double, 2>> || std::is_convertible_v<T, std::array<double, 3>> || std::is_convertible_v<T, std::array<double, 6>>) {
                 return arrayToString(m_getter());
             } else {
                 return QVariant(m_getter());
@@ -99,16 +99,23 @@ public:
     void setData(const QVariant& value, int role = Qt::UserRole + 1) override
     {
         if (role == Qt::DisplayRole || role == Qt::EditRole) {
-            if constexpr (std::is_convertible_v<T, std::array<double, 3>>) {
+            if constexpr (std::is_convertible_v<T, std::array<double, 2>>) {
+                auto str = value.toString();
+                auto r = stringToArray<2>(str);
+                if (r) {
+                    m_setter(r.value());
+                    QStandardItem::setData(value, role);
+                }
+            } else if constexpr (std::is_convertible_v<T, std::array<double, 3>>) {
                 auto str = value.toString();
                 auto r = stringToArray<3>(str);
                 if (r) {
                     m_setter(r.value());
                     QStandardItem::setData(value, role);
                 }
-            } else if constexpr (std::is_convertible_v<T, std::array<double, 2>>) {
+            } else if constexpr (std::is_convertible_v<T, std::array<double, 6>>) {
                 auto str = value.toString();
-                auto r = stringToArray<2>(str);
+                auto r = stringToArray<6>(str);
                 if (r) {
                     m_setter(r.value());
                     QStandardItem::setData(value, role);
@@ -295,6 +302,33 @@ void BeamSettingsModel::addDXBeam()
             return dx.position();
         };
         addItem(root, "Tube position [cm]", setter, getter);
+    }
+
+    {
+        auto setter = [=](std::array<double, 6> d) {
+            auto& dx = std::get<DXBeam>(*beam);
+            std::array<double, 3> cosx, cosy;
+            for (std::size_t i = 0; i < 3; ++i) {
+                cosx[i] = d[i];
+                cosy[i] = d[i + 3];
+            }
+            dx.setDirectionCosines(cosx, cosy);
+            beamActor->update();
+        };
+        auto getter = [=]() -> std::array<double, 6> {
+            auto& dx = std::get<DXBeam>(*beam);
+            const auto& cos = dx.directionCosines();
+            std::array<double, 6> r = {
+                cos[0][0],
+                cos[0][1],
+                cos[0][2],
+                cos[1][0],
+                cos[1][1],
+                cos[1][2]
+            };
+            return r;
+        };
+        addItem(root, "Tube cosine vectors [x1, y1, z1, x2, y2, z2]", setter, getter);
     }
 
     {

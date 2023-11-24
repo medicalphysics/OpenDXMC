@@ -77,6 +77,22 @@ CTDicomImportWidget::CTDicomImportWidget(QWidget* parent)
     auto seriesSelectorBox = new QGroupBox(tr("Select CT series to be imported"), this);
     seriesSelectorBox->setLayout(seriesSelectorLayout);
 
+    // image blurfactor selection
+    auto outputBlurBox = new QGroupBox(tr("Image smooth factor [XYZ]:"), this);
+    auto outputBlurLayoutButtons = new QHBoxLayout;
+    for (int i = 0; i < 3; i++) {
+        auto spinBox = new QDoubleSpinBox(this);
+        spinBox->setMinimum(0.0);
+        spinBox->setSuffix(" voxels");
+        spinBox->setValue(m_blurRadius[i]);
+        connect(spinBox, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [this, i](auto value) {
+            this->m_blurRadius[i] = value;
+            emit blurRadiusChanged(this->m_blurRadius.data());
+        });
+        outputBlurLayoutButtons->addWidget(spinBox);
+    }
+    outputBlurBox->setLayout(outputBlurLayoutButtons);
+
     // voxel resize selection
     auto outputSpacingBox = new QGroupBox(tr("Resize voxels to this spacing for imported series [XYZ]:"), this);
     outputSpacingBox->setCheckable(true);
@@ -96,21 +112,7 @@ CTDicomImportWidget::CTDicomImportWidget(QWidget* parent)
     }
     outputSpacingBox->setLayout(outputSpacingLayoutButtons);
 
-    // image blurfactor selection
-    auto outputBlurBox = new QGroupBox(tr("Image smooth factor [XYZ]:"), this);
-    auto outputBlurLayoutButtons = new QHBoxLayout;
-    for (int i = 0; i < 3; i++) {
-        auto spinBox = new QDoubleSpinBox(this);
-        spinBox->setMinimum(0.0);
-        spinBox->setSuffix(" voxels");
-        spinBox->setValue(m_blurRadius[i]);
-        connect(spinBox, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [this, i](auto value) {
-            this->m_blurRadius[i] = value;
-            emit blurRadiusChanged(this->m_blurRadius.data());
-        });
-        outputBlurLayoutButtons->addWidget(spinBox);
-    }
-    outputBlurBox->setLayout(outputBlurLayoutButtons);
+    
 
     // tube settings
     auto tubeBox = new QGroupBox(tr("Aqusition tube settings: "), this);

@@ -29,6 +29,7 @@ Copyright 2023 Erlend Andersen
 #include <vtkImageGaussianSmooth.h>
 #include <vtkRenderer.h>
 #include <vtkSmartPointer.h>
+#include <vtkTextActor.h>
 #include <vtkWindowLevelLookupTable.h>
 
 #include <map>
@@ -60,12 +61,15 @@ protected:
     void setNewImageData(vtkSmartPointer<vtkImageData> data, bool rezoom_camera = false);
     void setupSlicePipeline(int orientation);
     void switchLUTtable(DataContainer::ImageType type, int n_colors = -1);
+    void resizeEvent(QResizeEvent* event) override;
+    void updateTextPositions(bool render=false);
 
 private:
     std::shared_ptr<DataContainer> m_data = nullptr;
     vtkSmartPointer<vtkImageActor> imageSlice = nullptr;
     vtkSmartPointer<vtkRenderer> renderer = nullptr;
     QVTKOpenGLNativeWidget* openGLWidget = nullptr;
+    vtkSmartPointer<vtkTextActor> lowerLeftText = nullptr;
     vtkSmartPointer<CustomInteractorStyleImage> interactorStyle = nullptr;
     vtkSmartPointer<vtkWindowLevelLookupTable> lut = nullptr;
     std::map<DataContainer::ImageType, std::pair<double, double>> lut_windowing;

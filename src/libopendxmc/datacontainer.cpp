@@ -364,6 +364,28 @@ std::size_t DataContainer::size() const
     return m_dimensions[0] * m_dimensions[1] * m_dimensions[2];
 }
 
+std::string DataContainer::units(ImageType type) const
+{
+    switch (type) {
+    case DataContainer::ImageType::CT:
+        return "HU";
+    case DataContainer::ImageType::Density:
+        return "g/cm3";
+    case DataContainer::ImageType::Material:
+        return "";
+    case DataContainer::ImageType::Organ:
+        return "";
+    case DataContainer::ImageType::Dose:
+        return "mGy";
+    case DataContainer::ImageType::DoseVariance:
+        return "mGy^2";
+    case DataContainer::ImageType::DoseCount:
+        return "N events";
+    default:
+        return "";
+    }
+}
+
 bool DataContainer::hasImage(ImageType type) const
 {
     if (m_uid == 0)

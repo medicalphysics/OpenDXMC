@@ -84,6 +84,8 @@ public:
 
     const std::vector<DataContainer::Material>& getMaterials() const { return m_materials; }
 
+    std::string units(ImageType type) const;
+
 protected:
     vtkSmartPointer<vtkImageData> generate_vtkImage(ImageType);
 

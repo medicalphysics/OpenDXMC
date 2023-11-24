@@ -32,11 +32,12 @@ Copyright 2023 Erlend Andersen
 #include <vtkRenderWindow.h>
 #include <vtkRendererCollection.h>
 #include <vtkScalarBarActor.h>
-#include <vtkTextActor.h>
 #include <vtkTextProperty.h>
 
 #include <charconv>
 #include <string>
+
+constexpr std::array<double, 3> TEXT_COLOR = { 0.6, 0.5, 0.1 };
 
 class WindowLevelSlicingModifiedCallback : public vtkCallbackCommand {
 public:
@@ -232,6 +233,7 @@ void SliceRenderWidget::setupSlicePipeline(int orientation)
         cam->SetFocalPoint(0, 0, 0);
         cam->SetPosition(0, 0, -1);
         cam->SetViewUp(0, -1, 0);
+
     } else if (orientation == 1) {
         cam->SetFocalPoint(0, 0, 0);
         cam->SetPosition(0, -1, 0);
@@ -250,6 +252,30 @@ void SliceRenderWidget::setupSlicePipeline(int orientation)
     lut->UseBelowRangeColorOn();
     lut->SetBelowRangeColor(0, 0, 0, 0);
     lut->Build();
+
+    lowerLeftText = vtkSmartPointer<vtkTextActor>::New();
+    renderer->AddActor2D(lowerLeftText);
+    auto txtStyle = lowerLeftText->GetTextProperty();
+    txtStyle->SetColor(TEXT_COLOR.data());
+    txtStyle->BoldOn();
+}
+
+void SliceRenderWidget::resizeEvent(QResizeEvent* event)
+{
+    QWidget::resizeEvent(event);
+    updateTextPositions(true);
+}
+
+void SliceRenderWidget::updateTextPositions(bool render)
+{
+    if (lowerLeftText) {
+        double size[2];
+        lowerLeftText->GetSize(renderer, size);
+        auto rsize = renderer->GetSize();
+        lowerLeftText->SetPosition(rsize[0] - size[0] - 5, 5);
+        if (render)
+            Render();
+    }
 }
 
 void SliceRenderWidget::sharedViews(std::vector<SliceRenderWidget*> wids)
@@ -276,7 +302,7 @@ void SliceRenderWidget::sharedViews(std::vector<SliceRenderWidget*> wids)
     }
 
     auto txtStyle = vtkSmartPointer<vtkTextProperty>::New();
-    txtStyle->SetColor(0.6, 0.5, 0.1);
+    txtStyle->SetColor(TEXT_COLOR.data());
     txtStyle->BoldOn();
 
     // windowlevel text
@@ -304,6 +330,10 @@ void SliceRenderWidget::sharedViews(std::vector<SliceRenderWidget*> wids)
         scalarColorBar->AnnotationTextScalingOff();
         wids[0]->renderer->AddActor(scalarColorBar);
     }
+
+    // remove all but one lower left text actor
+    for (std::size_t i = 1; i < wids.size(); ++i)
+        wids[i]->lowerLeftText = nullptr;
 }
 void SliceRenderWidget::sharedViews(SliceRenderWidget* other1, SliceRenderWidget* other2)
 {
@@ -397,7 +427,11 @@ void SliceRenderWidget::showData(DataContainer::ImageType type)
         } else {
             switchLUTtable(type);
         }
-        setNewImageData(vtkimage, false);
+        if (lowerLeftText) {
+            lowerLeftText->SetInput(m_data->units(type).c_str());
+            updateTextPositions();
+        }
+        setNewImageData(vtkimage, false);        
     }
 }
 

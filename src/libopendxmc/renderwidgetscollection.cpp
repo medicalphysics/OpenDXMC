@@ -162,7 +162,7 @@ void RenderWidgetsCollection::setInteractionStyleTo3D()
         w->setInteractionStyleTo3D();
 }
 
-void RenderWidgetsCollection::requestRender()
+void RenderWidgetsCollection::Render()
 {
     m_volume_widget->Render();
     for (auto& w : m_slice_widgets)

@@ -67,7 +67,7 @@ public:
     void removeActor(std::shared_ptr<BeamActorContainer> actor);
     void setBeamActorsVisible(int);
 
-    void requestRender();
+    void Render();
 
     QWidget* createRendersettingsWidget(QWidget* parent = nullptr);
 

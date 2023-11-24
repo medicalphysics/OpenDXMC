@@ -33,6 +33,7 @@ public:
     BeamActorContainer(std::shared_ptr<Beam> beam);
     void update();
     vtkSmartPointer<vtkActor> createActor();
+    std::shared_ptr<Beam> getBeam();
 
 protected:
 private:

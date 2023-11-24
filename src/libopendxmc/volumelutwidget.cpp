@@ -281,25 +281,28 @@ public:
     {
         QChartView::mouseMoveEvent(event);
         // to move a point
-        if (const int pIdx = m_lut_series->currentClickedPoint(); (pIdx >= 0) && (event->buttons() == Qt::LeftButton)) {
 
-            QPointF pos_scene = this->mapToScene(event->pos());
-            QPointF pos = chart()->mapToValue(pos_scene, m_lut_series);
-
-            pos.setX(std::clamp(pos.x(), 0.0, 1.0));
-            pos.setY(std::clamp(pos.y(), 0.0, 1.0));
-
-            m_lut_series->replace(pIdx, pos);
-
-            // are we still sorted?
+        if (event->buttons() == Qt::LeftButton) {
             const auto n = m_lut_series->count();
-            if (pIdx > 0 && pIdx < n - 1) {
-                if (const auto lower_x = m_lut_series->at(pIdx - 1).x(); pos.x() < lower_x) {
-                    m_lut_series->swapPointsX(pIdx, pIdx - 1);
-                    m_lut_series->setCurrentClickedPoint(pIdx - 1);
-                } else if (const auto upper_x = m_lut_series->at(pIdx + 1).x(); pos.x() > upper_x) {
-                    m_lut_series->swapPointsX(pIdx, pIdx + 1);
-                    m_lut_series->setCurrentClickedPoint(pIdx + 1);
+            const int pIdx = m_lut_series->currentClickedPoint();
+            if ((pIdx >= 0) && (pIdx < n)) {
+                QPointF pos_scene = this->mapToScene(event->pos());
+                QPointF pos = chart()->mapToValue(pos_scene, m_lut_series);
+
+                pos.setX(std::clamp(pos.x(), 0.0, 1.0));
+                pos.setY(std::clamp(pos.y(), 0.0, 1.0));
+
+                m_lut_series->replace(pIdx, pos);
+
+                // are we still sorted?
+                if (pIdx > 0 && pIdx < n - 1) {
+                    if (const auto lower_x = m_lut_series->at(pIdx - 1).x(); pos.x() < lower_x) {
+                        m_lut_series->swapPointsX(pIdx, pIdx - 1);
+                        m_lut_series->setCurrentClickedPoint(pIdx - 1);
+                    } else if (const auto upper_x = m_lut_series->at(pIdx + 1).x(); pos.x() > upper_x) {
+                        m_lut_series->swapPointsX(pIdx, pIdx + 1);
+                        m_lut_series->setCurrentClickedPoint(pIdx + 1);
+                    }
                 }
             }
         }

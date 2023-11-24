@@ -37,6 +37,11 @@ BeamActorContainer::BeamActorContainer(std::shared_ptr<Beam> beam_ptr)
     m_polydata = vtkSmartPointer<vtkPolyData>::New();
 }
 
+std::shared_ptr<Beam> BeamActorContainer::getBeam()
+{
+    return m_beam;
+}
+
 std::array<std::array<double, 3>, 5> pointsFromCollimations(
     const std::array<double, 3>& start,
     const std::array<std::array<double, 3>, 2>& cosines,

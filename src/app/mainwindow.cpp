@@ -31,6 +31,8 @@ Copyright 2024 Erlend Andersen
 #include <ctimageimportpipeline.hpp>
 #include <ctsegmentationpipeline.hpp>
 #include <renderwidgetscollection.hpp>
+#include <simulationpipeline.hpp>
+#include <simulationwidget.hpp>
 #include <volumerendersettingswidget.hpp>
 
 #include <mainwindow.hpp>
@@ -84,7 +86,7 @@ MainWindow::MainWindow(QWidget* parent)
     connect(ctdicomimportwidget, &CTDicomImportWidget::blurRadiusChanged, ctimageimportpipeline, &CTImageImportPipeline::setBlurRadius);
     connect(ctdicomimportwidget, &CTDicomImportWidget::outputSpacingChanged, ctimageimportpipeline, &CTImageImportPipeline::setOutputSpacing);
     connect(ctdicomimportwidget, &CTDicomImportWidget::useOutputSpacingChanged, ctimageimportpipeline, &CTImageImportPipeline::setUseOutputSpacing);
-    // connect(ctimageimportpipeline, &CTImageImportPipeline::imageDataChanged, slicerender, &RenderWidgetsCollection::updateImageData);
+    connect(ctimageimportpipeline, &CTImageImportPipeline::imageDataChanged, slicerender, &RenderWidgetsCollection::updateImageData);
 
     // adding ct segmentation pipeline
     auto ctsegmentationpipelie = new CTSegmentationPipeline;
@@ -103,7 +105,20 @@ MainWindow::MainWindow(QWidget* parent)
     auto beamsettingsmodel = beamsettingswidget->modelView();
     connect(beamsettingsmodel, &BeamSettingsView::beamActorAdded, slicerender, &RenderWidgetsCollection::addActor);
     connect(beamsettingsmodel, &BeamSettingsView::beamActorRemoved, slicerender, &RenderWidgetsCollection::removeActor);
-    connect(beamsettingsmodel, &BeamSettingsView::requestRender, slicerender, &RenderWidgetsCollection::requestRender);
+    connect(beamsettingsmodel, &BeamSettingsView::requestRender, slicerender, &RenderWidgetsCollection::Render);
+
+    // simulationwidget
+    auto simulationwidget = new SimulationWidget(this);
+    menuWidget->addTab(simulationwidget, tr("Simulation"));
+
+    // simulationpipeline
+    auto simulationpipeline = new SimulationPipeline;
+    simulationpipeline->moveToThread(&m_workerThread);
+    connect(ctsegmentationpipelie, &CTSegmentationPipeline::imageDataChanged, simulationpipeline, &SimulationPipeline::updateImageData);
+    connect(simulationwidget, &SimulationWidget::numberOfThreadsChanged, simulationpipeline, &SimulationPipeline::setNumberOfThreads);
+    connect(simulationpipeline, &SimulationPipeline::simulationReady, simulationwidget, &SimulationWidget::setSimulationReady);
+    connect(beamsettingsmodel, &BeamSettingsView::beamActorAdded, simulationpipeline, &SimulationPipeline::addBeamActor);
+    connect(beamsettingsmodel, &BeamSettingsView::beamActorRemoved, simulationpipeline, &SimulationPipeline::removeBeamActor);
 
     // simulation progress
     /* m_progressTimer = new QTimer(this);
@@ -181,24 +196,10 @@ MainWindow::~MainWindow()
     m_workerThread.quit();
     m_workerThread.wait();
 
-    /*
-    if (m_progressBar) {
-        m_progressBar->setCancel(true);
-    }
-
-    m_workerThread.quit();
-    m_workerThread.wait();
-    delete m_importPipeline;
-    m_importPipeline = nullptr;
-    delete m_simulationPipeline;
-    m_simulationPipeline = nullptr;
-    delete m_saveLoad;
-    m_saveLoad = nullptr;
-    delete m_binaryImportPipeline;
-    m_binaryImportPipeline = nullptr;
-    delete m_phantomImportPipeline;
-    m_phantomImportPipeline = nullptr;
-    */
+    // we should cleanup following objects but we let the OS handle this for us now.
+    // ctimageimportpipeline
+    // ctsegmentationpipelie
+    // simulationpipeline
 }
 
 void MainWindow::createMenu()

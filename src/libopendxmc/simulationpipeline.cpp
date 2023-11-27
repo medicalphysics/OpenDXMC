@@ -16,7 +16,13 @@ along with OpenDXMC. If not, see < https://www.gnu.org/licenses/>.
 Copyright 2023 Erlend Andersen
 */
 
+#include <beamactorcontainer.hpp>
+#include <dxmc_specialization.hpp>
 #include <simulationpipeline.hpp>
+
+#include <dxmc/transport.hpp>
+#include <dxmc/world/world.hpp>
+#include <dxmc/world/worlditems/aavoxelgrid.hpp>
 
 #include <algorithm>
 #include <execution>
@@ -56,26 +62,35 @@ bool SimulationPipeline::testIfReadyForSimulation(bool test_image) const
 
 void SimulationPipeline::addBeamActor(std::shared_ptr<BeamActorContainer> actor)
 {
-    // we do not add existing beam
-    for (const auto& b : m_beams)
-        if (actor == b)
-            return;
-    m_beams.push_back(actor);
-    emit simulationReady(testIfReadyForSimulation(false));
+    if (actor) {
+        auto beam = actor->getBeam();
+        if (beam) {
+            // we do not add existing beam
+            for (const auto& b : m_beams)
+                if (beam == b)
+                    return;
+            m_beams.push_back(beam);
+            emit simulationReady(testIfReadyForSimulation(false));
+        }
+    }
 }
 
 void SimulationPipeline::removeBeamActor(std::shared_ptr<BeamActorContainer> actor)
 {
-    std::size_t Idx = m_beams.size();
-    for (std::size_t i = 0; i < m_beams.size(); ++i) {
-        if (actor == m_beams[i]) {
-            Idx = i;
+    if (actor) {
+        auto beam = actor->getBeam();
+        if (beam) {
+            std::size_t Idx = m_beams.size();
+            for (std::size_t i = 0; i < m_beams.size(); ++i) {
+                if (beam == m_beams[i]) {
+                    Idx = i;
+                }
+            }
+            if (Idx < m_beams.size())
+                m_beams.erase(m_beams.begin() + Idx);
+            emit simulationReady(testIfReadyForSimulation(false));
         }
     }
-    if (Idx < m_beams.size())
-        m_beams.erase(m_beams.begin() + Idx);
-
-    emit simulationReady(testIfReadyForSimulation(false));
 }
 
 void SimulationPipeline::setNumberOfThreads(int nthreads)
@@ -86,8 +101,91 @@ void SimulationPipeline::setNumberOfThreads(int nthreads)
 
 void SimulationPipeline::startSimulation()
 {
+    run();
 }
 
 void SimulationPipeline::stopSimulation()
 {
+}
+
+void SimulationPipeline::run()
+{
+    emit simulationRunning(true);
+    if (!testIfReadyForSimulation(true)) {
+        emit simulationRunning(false);
+        return;
+    }
+
+    using VoxelGrid = dxmc::AAVoxelGrid<double, 5, 1, 255>;
+    using World = dxmc::World<double, VoxelGrid>;
+
+    World world;
+    auto& vgrid = world.addItem<VoxelGrid>();
+
+    {
+        std::vector<Material> materials;
+        for (const auto& materialTemplate : m_data->getMaterials()) {
+            auto material = Material::byWeight(materialTemplate.Z);
+            if (!material) {
+                // we failed to create material
+                emit simulationRunning(false);
+                return;
+            } else {
+                materials.push_back(material.value());
+            }
+        }
+        const auto dims = m_data->dimensions();
+        const auto spacing = m_data->spacing();
+        const auto& densityArray = m_data->getDensityArray();
+        const auto& materialArray = m_data->getMaterialArray();
+        vgrid.setData(dims, densityArray, materialArray, materials);
+        vgrid.setSpacing(spacing);
+    }
+
+    world.build();
+
+    dxmc::Transport transport;
+    if (m_threads > 0)
+        transport.setNumberOfThreads(m_threads);
+
+    dxmc::TransportProgress progress;
+
+    const auto Njobs = m_beams.size();
+
+    for (std::size_t jobIdx = 0; jobIdx < Njobs; jobIdx++) {
+        const auto& currentbeam = *(m_beams[jobIdx]);
+        std::visit([&](auto&& beam) {
+            bool running = true;
+            std::thread job([&, this]() {
+                transport(world, beam, &progress, true);
+                running = false;
+            });
+            while (running) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(500));
+                auto elapsed = QString::fromStdString(progress.message());
+                emit this->simulationProgress(elapsed, jobIdx, Njobs);
+            }
+            job.join();
+        },
+            currentbeam);
+    }
+
+    // collect dose
+    const auto N = vgrid.size();
+    {
+        std::vector<double> dose(N);
+        for (std::size_t i = 0; i < N; ++i)
+            dose[i] = vgrid.doseScored(i).dose();
+
+        if (m_deleteAirDose) {
+            const auto matarr = m_data->getMaterialArray();
+            std::transform(std::execution::par_unseq, dose.cbegin(), dose.cend(), matarr.cbegin(), dose.begin(), [](const auto d, const auto m) {
+                return m > 0 ? d : 0.0;
+            });
+        }
+        m_data->setImageArray(DataContainer::ImageType::Dose, dose);
+    }
+
+    emit imageDataChanged(m_data);
+    emit simulationRunning(false);
 }

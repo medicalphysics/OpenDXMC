@@ -19,7 +19,11 @@ Copyright 2023 Erlend Andersen
 #pragma once
 
 #include <basepipeline.hpp>
-#include <beamactorcontainer.hpp>
+#include <dxmc_specialization.hpp>
+
+#include <QString>
+
+class BeamActorContainer;
 
 class SimulationPipeline : public BasePipeline {
     Q_OBJECT
@@ -31,19 +35,25 @@ public:
     void removeBeamActor(std::shared_ptr<BeamActorContainer> actor);
 
     void setNumberOfThreads(int nthreads);
+    void setDeleteAirDose(bool on) { m_deleteAirDose = on; };
 
     void startSimulation();
     void stopSimulation();
 
 signals:
     void simulationReady(bool on);
+    void simulationRunning(bool running);
+    void simulationProgress(QString, int, int);
 
 protected:
-    bool testIfReadyForSimulation(bool test_image = true)const;
+    bool testIfReadyForSimulation(bool test_image = true) const;
+    void run();
+
 
 private:
     std::shared_ptr<DataContainer> m_data = nullptr;
-    std::vector<std::shared_ptr<BeamActorContainer>> m_beams;
+    std::vector<std::shared_ptr<Beam>> m_beams;
     int m_threads = 0;
     int m_lowenergyCorrection = 1;
+    bool m_deleteAirDose = true;
 };

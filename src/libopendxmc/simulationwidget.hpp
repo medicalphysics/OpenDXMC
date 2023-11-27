@@ -32,6 +32,7 @@ signals:
     void lowEnergyCorrectionMethodChanged(int);
     void requestStartSimulation();
     void requestStopSimulation();
+    void ignoreAirChanged(bool);
 
 private:
     bool m_simulation_ready = false;

@@ -43,8 +43,7 @@ public:
     };
 
     struct Material {
-        std::string name;
-        std::string composition;
+        std::string name;        
         std::map<std::uint64_t, double> Z;
     };
 

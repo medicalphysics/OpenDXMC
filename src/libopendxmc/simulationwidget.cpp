@@ -18,6 +18,7 @@ Copyright 2023 Erlend Andersen
 
 #include <simulationwidget.hpp>
 
+#include <QCheckBox>
 #include <QComboBox>
 #include <QGroupBox>
 #include <QHBoxLayout>
@@ -73,6 +74,17 @@ SimulationWidget::SimulationWidget(QWidget* parent)
     connect(lec_select, &QComboBox::currentIndexChanged, this, &SimulationWidget::lowEnergyCorrectionMethodChanged);
     layout->addWidget(lec_box);
 
+    auto air_txt = tr("Remove dose to air for easier visualization of dose. Photons are still transported through air media.");
+    auto air_box = new QGroupBox(tr("Ignore air dose"), parent);
+    air_box->setCheckable(true);
+    auto air_layout = new QHBoxLayout;
+    air_box->setLayout(air_layout);
+    auto air_label = new QLabel(air_txt, air_box);
+    air_label->setWordWrap(true);
+    air_layout->addWidget(air_label);
+    connect(air_box, &QGroupBox::toggled, this, &SimulationWidget::ignoreAirChanged);
+    layout->addWidget(air_box);
+
     auto start_stop_box = new QGroupBox(tr("Start simulation"), this);
     auto start_stop_layout = new QHBoxLayout;
     start_stop_box->setLayout(start_stop_layout);
@@ -85,7 +97,6 @@ SimulationWidget::SimulationWidget(QWidget* parent)
     m_start_simulation_button->setEnabled(false);
     m_stop_simulation_button->setEnabled(false);
     layout->addWidget(start_stop_box);
-
 
     layout->addStretch(100);
 }

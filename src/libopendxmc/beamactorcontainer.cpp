@@ -135,7 +135,8 @@ void BeamActorContainer::update()
             const auto pos = arg.position();
             const auto angles = arg.collimationAngles();
             const auto cosines = arg.directionCosines();
-            auto p = pointsFromCollimations(pos, cosines, angles, 50.0);
+            const auto lenght = arg.sourceDetectorDistance();
+            auto p = pointsFromCollimations(pos, cosines, angles, lenght);
             for (std::size_t i = 0; i < p.size(); ++i) {
                 auto& pi = p[i];
                 points->InsertNextPoint(pi.data());

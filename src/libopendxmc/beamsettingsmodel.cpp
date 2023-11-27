@@ -89,8 +89,10 @@ public:
         if (role == Qt::DisplayRole || role == Qt::EditRole) {
             if constexpr (std::is_convertible_v<T, std::array<double, 2>> || std::is_convertible_v<T, std::array<double, 3>> || std::is_convertible_v<T, std::array<double, 6>>) {
                 return arrayToString(m_getter());
+            } else if constexpr (std::is_integral_v<T>) {
+                return QVariant(static_cast<qulonglong>(m_getter()));
             } else {
-                return QVariant(m_getter());
+                return QVariant::fromValue(m_getter());
             }
         }
         return QStandardItem::data(role);
@@ -120,8 +122,12 @@ public:
                     m_setter(r.value());
                     QStandardItem::setData(value, role);
                 }
+            } else if constexpr (std::is_integral_v<T>) {
+                qulonglong v = value.toULongLong();
+                m_setter(static_cast<T>(v));
+                QStandardItem::setData(value, role);
             } else {
-                auto val = get<T>(value);
+                T val = get<T>(value);
                 m_setter(val);
                 QStandardItem::setData(value, role);
             }
@@ -294,43 +300,75 @@ void BeamSettingsModel::addDXBeam()
     {
         auto setter = [=](std::array<double, 3> d) {
             auto& dx = std::get<DXBeam>(*beam);
-            dx.setPosition(d);
+            dx.setRotationCenter(d);
             beamActor->update();
         };
         auto getter = [=]() -> std::array<double, 3> {
             auto& dx = std::get<DXBeam>(*beam);
-            return dx.position();
+            return dx.rotationCenter();
         };
-        addItem(root, "Tube position [cm]", setter, getter);
+        addItem(root, "Rotation center [cm]", setter, getter);
     }
-
     {
-        auto setter = [=](std::array<double, 6> d) {
+        auto setter = [=](double d) {
             auto& dx = std::get<DXBeam>(*beam);
-            std::array<double, 3> cosx, cosy;
-            for (std::size_t i = 0; i < 3; ++i) {
-                cosx[i] = d[i];
-                cosy[i] = d[i + 3];
-            }
-            dx.setDirectionCosines(cosx, cosy);
+            dx.setSourcePatientDistance(d);
             beamActor->update();
         };
-        auto getter = [=]() -> std::array<double, 6> {
+        auto getter = [=]() -> double {
             auto& dx = std::get<DXBeam>(*beam);
-            const auto& cos = dx.directionCosines();
-            std::array<double, 6> r = {
-                cos[0][0],
-                cos[0][1],
-                cos[0][2],
-                cos[1][0],
-                cos[1][1],
-                cos[1][2]
-            };
-            return r;
+            return dx.sourcePatientDistance();
         };
-        addItem(root, "Tube cosine vectors [x1, y1, z1, x2, y2, z2]", setter, getter);
+        addItem(root, "Source rotation center distance [cm]", setter, getter);
     }
-
+    {
+        auto setter = [=](double d) {
+            auto& dx = std::get<DXBeam>(*beam);
+            dx.setPrimaryAngleDeg(d);
+            beamActor->update();
+        };
+        auto getter = [=]() -> double {
+            auto& dx = std::get<DXBeam>(*beam);
+            return dx.primaryAngleDeg();
+        };
+        addItem(root, "Primary angle [deg]", setter, getter);
+    }
+    {
+        auto setter = [=](double d) {
+            auto& dx = std::get<DXBeam>(*beam);
+            dx.setSecondaryAngleDeg(d);
+            beamActor->update();
+        };
+        auto getter = [=]() -> double {
+            auto& dx = std::get<DXBeam>(*beam);
+            return dx.secondaryAngleDeg();
+        };
+        addItem(root, "Secondary angle [deg]", setter, getter);
+    }
+    {
+        auto setter = [=](double d) {
+            auto& dx = std::get<DXBeam>(*beam);
+            dx.setSourceDetectorDistance(d);
+            beamActor->update();
+        };
+        auto getter = [=]() -> double {
+            auto& dx = std::get<DXBeam>(*beam);
+            return dx.sourceDetectorDistance();
+        };
+        addItem(root, "Source detector distance [cm]", setter, getter);
+    }
+    {
+        auto setter = [=](std::array<double, 2> d) {
+            auto& dx = std::get<DXBeam>(*beam);
+            dx.setCollimation(d);
+            beamActor->update();
+        };
+        auto getter = [=]() -> std::array<double, 2> {
+            auto& dx = std::get<DXBeam>(*beam);
+            return dx.collimation();
+        };
+        addItem(root, "Collimation [cm x cm]", setter, getter);
+    }
     {
         std::get<DXBeam>(*beam).setCollimationAnglesDeg(15, 15);
         auto setter = [=](std::array<double, 2> d) {
@@ -342,7 +380,7 @@ void BeamSettingsModel::addDXBeam()
             auto& dx = std::get<DXBeam>(*beam);
             return dx.collimationAnglesDeg();
         };
-        addItem(root, "Collimation [Deg]", setter, getter);
+        addItem(root, "Collimation angles [Deg]", setter, getter);
     }
 
     auto tubeItem = new LabelItem(tr("Tube"));
@@ -361,6 +399,7 @@ void BeamSettingsModel::addDXBeam()
 
         addItem(root, "Dose area product [mGycm^2]", setter, getter);
     }
+
     {
         auto setter = [=](std::uint64_t d) {
             auto& dx = std::get<DXBeam>(*beam);
@@ -390,6 +429,7 @@ void BeamSettingsModel::addDXBeam()
         };
         addItem(root, "Total number of particles", getter);
     }
+
     beamActor->update();
     emit beamActorAdded(beamActor);
     appendRow(root);

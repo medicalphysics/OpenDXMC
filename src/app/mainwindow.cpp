@@ -116,10 +116,15 @@ MainWindow::MainWindow(QWidget* parent)
     simulationpipeline->moveToThread(&m_workerThread);
     connect(ctsegmentationpipelie, &CTSegmentationPipeline::imageDataChanged, simulationpipeline, &SimulationPipeline::updateImageData);
     connect(simulationwidget, &SimulationWidget::numberOfThreadsChanged, simulationpipeline, &SimulationPipeline::setNumberOfThreads);
+    connect(simulationwidget, &SimulationWidget::ignoreAirChanged, simulationpipeline, &SimulationPipeline::setDeleteAirDose);
+    connect(simulationwidget, &SimulationWidget::requestStartSimulation, simulationpipeline, &SimulationPipeline::startSimulation);
+    connect(simulationwidget, &SimulationWidget::requestStopSimulation, simulationpipeline, &SimulationPipeline::stopSimulation);
     connect(simulationpipeline, &SimulationPipeline::simulationReady, simulationwidget, &SimulationWidget::setSimulationReady);
     connect(beamsettingsmodel, &BeamSettingsView::beamActorAdded, simulationpipeline, &SimulationPipeline::addBeamActor);
     connect(beamsettingsmodel, &BeamSettingsView::beamActorRemoved, simulationpipeline, &SimulationPipeline::removeBeamActor);
-
+    connect(simulationpipeline, &SimulationPipeline::imageDataChanged, slicerender, &RenderWidgetsCollection::updateImageData);
+    connect(simulationpipeline, &SimulationPipeline::simulationRunning, beamsettingswidget, &BeamSettingsWidget::setDisabled);
+    connect(simulationpipeline, &SimulationPipeline::simulationRunning, ctdicomimportwidget, &CTDicomImportWidget::setDisabled);
     // simulation progress
     /* m_progressTimer = new QTimer(this);
     m_progressTimer->setTimerType(Qt::CoarseTimer);

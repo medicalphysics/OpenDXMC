@@ -29,11 +29,7 @@ Copyright 2024 Erlend Andersen
 
 BeamActorContainer::BeamActorContainer(std::shared_ptr<Beam> beam_ptr)
     : m_beam(beam_ptr)
-{
-    m_transform = vtkSmartPointer<vtkMatrix4x4>::New();
-    m_transform->Zero();
-    for (int i = 0; i < 4; ++i)
-        m_transform->SetElement(i, i, i != 1 ? 1.0 : -1.0);
+{    
     m_polydata = vtkSmartPointer<vtkPolyData>::New();
 }
 
@@ -186,7 +182,6 @@ vtkSmartPointer<vtkActor> BeamActorContainer::createActor()
     auto mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
     auto actor = vtkSmartPointer<vtkActor>::New();
     mapper->SetInputData(m_polydata);
-    actor->SetMapper(mapper);
-    actor->SetUserMatrix(m_transform);
+    actor->SetMapper(mapper);   
     return actor;
 }

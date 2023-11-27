@@ -9,6 +9,7 @@ qt_add_library(libopendxmc STATIC
 	ctsegmentationpipeline.cpp
 	ctaecplot.cpp
 	colormaps.cpp
+	dxmc_specialization.cpp
 	slicerenderwidget.cpp
 	custominteractorstyleimage.cpp
 	renderwidgetscollection.cpp	

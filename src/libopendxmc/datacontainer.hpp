@@ -43,7 +43,7 @@ public:
     };
 
     struct Material {
-        std::string name;        
+        std::string name;
         std::map<std::uint64_t, double> Z;
     };
 
@@ -84,6 +84,7 @@ public:
     const std::vector<DataContainer::Material>& getMaterials() const { return m_materials; }
 
     std::string units(ImageType type) const;
+    void setDoseUnits(const std::string& unit);
 
 protected:
     vtkSmartPointer<vtkImageData> generate_vtkImage(ImageType);
@@ -102,6 +103,7 @@ private:
     std::vector<std::uint64_t> m_dose_count_array;
     std::vector<DataContainer::Material> m_materials;
     std::map<ImageType, vtkSmartPointer<vtkImageData>> m_vtk_shallow_buffer;
+    std::string m_doseUnits = "mGy";
 };
 
 // Allow std::shared_ptr<DataContainer> to be used in signal/slots

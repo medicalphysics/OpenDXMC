@@ -183,6 +183,17 @@ void SimulationPipeline::run()
                 return m > 0 ? d : 0.0;
             });
         }
+
+        const auto& [min_idx, max_idx] = std::minmax_element(std::execution::par_unseq, dose.cbegin(), dose.cend());
+        if (*min_idx < 1 && *max_idx < 1) {
+            std::transform(std::execution::par_unseq, dose.cbegin(), dose.cend(), dose.begin(), [](const auto d) {
+                return d * 1e3;
+            });
+            m_data->setDoseUnits("uGy");
+        } else {
+            m_data->setDoseUnits("mGy");
+        }
+
         m_data->setImageArray(DataContainer::ImageType::Dose, dose);
     }
 

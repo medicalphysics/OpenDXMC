@@ -232,7 +232,7 @@ void SliceRenderWidget::setupSlicePipeline(int orientation)
     if (auto cam = renderer->GetActiveCamera(); orientation == 0) {
         cam->SetFocalPoint(0, 0, 0);
         cam->SetPosition(0, 0, -1);
-        cam->SetViewUp(0, -1, 0);
+        cam->SetViewUp(0, 1, 0);
 
     } else if (orientation == 1) {
         cam->SetFocalPoint(0, 0, 0);
@@ -402,6 +402,13 @@ void SliceRenderWidget::switchLUTtable(DataContainer::ImageType type, int n_colo
                 const auto ii = i * 3;
                 lut->SetTableValue(i, map[ii], map[ii + 1], map[ii + 2], 1.0);
             }
+        } else if (type == DataContainer::ImageType::Dose) {
+            // replacing with turbo cmap
+            const auto map = Colormaps::colormapLongForm("TURBO");
+            for (int i = 0; i < map.size() / 3; ++i) {
+                const auto ii = i * 3;
+                lut->SetTableValue(i, map[ii], map[ii + 1], map[ii + 2], 1.0);
+            }
         }
 
         prop->UseLookupTableScalarRangeOff();
@@ -431,7 +438,7 @@ void SliceRenderWidget::showData(DataContainer::ImageType type)
             lowerLeftText->SetInput(m_data->units(type).c_str());
             updateTextPositions();
         }
-        setNewImageData(vtkimage, false);        
+        setNewImageData(vtkimage, false);
     }
 }
 

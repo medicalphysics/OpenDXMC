@@ -363,7 +363,10 @@ std::size_t DataContainer::size() const
 {
     return m_dimensions[0] * m_dimensions[1] * m_dimensions[2];
 }
-
+void DataContainer::setDoseUnits(const std::string& unit)
+{
+    m_doseUnits = unit;
+}
 std::string DataContainer::units(ImageType type) const
 {
     switch (type) {
@@ -376,9 +379,9 @@ std::string DataContainer::units(ImageType type) const
     case DataContainer::ImageType::Organ:
         return "";
     case DataContainer::ImageType::Dose:
-        return "mGy";
+        return m_doseUnits;
     case DataContainer::ImageType::DoseVariance:
-        return "mGy^2";
+        return m_doseUnits + "^2";
     case DataContainer::ImageType::DoseCount:
         return "N events";
     default:

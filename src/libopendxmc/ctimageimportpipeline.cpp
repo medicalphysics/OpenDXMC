@@ -23,6 +23,7 @@ Copyright 2024 Erlend Andersen
 #include <vtkDICOMMetaData.h>
 #include <vtkDICOMReader.h>
 #include <vtkImageGaussianSmooth.h>
+#include <vtkImageFlip.h>
 #include <vtkImageResize.h>
 #include <vtkIntArray.h>
 #include <vtkSmartPointer.h>
@@ -83,9 +84,7 @@ DataContainer::AECData readExposureData(vtkSmartPointer<vtkDICOMReader>& dicomRe
 
     std::vector<std::pair<std::array<double, 3>, double>> data(n);
 
-    // Get the arrays that map slice to file and frame.
-    // vtkIntArray* fileMap = dicomReader->GetFileIndexArray();
-
+    
     for (int i = 0; i < n; ++i) {
 
         const auto& etag = meta->Get(i, DC::Exposure);
@@ -146,13 +145,19 @@ void CTImageImportPipeline::readImages(const QStringList& dicomPaths)
         dicomRectifier->SetInputConnection(dicomRescaler->GetOutputPort());
         dicomRectifier->ReleaseDataFlagOn();
 
+        //flip y axis since vtk use a left handed coordinate system
+        auto flipper = vtkSmartPointer<vtkImageFlip>::New();
+        flipper->SetFilteredAxis(1);
+        flipper->ReleaseDataFlagOn();
+        flipper->SetInputConnection(dicomRectifier->GetOutputPort());
+
         // image smoothing filter for volume rendering and segmentation
         vtkSmartPointer<vtkImageGaussianSmooth> smoother = vtkSmartPointer<vtkImageGaussianSmooth>::New();
         smoother->SetDimensionality(3);
         smoother->SetStandardDeviations(m_blurRadius[0], m_blurRadius[1], m_blurRadius[2]);
         smoother->SetRadiusFactors(m_blurRadius[0] * 2, m_blurRadius[1] * 2, m_blurRadius[2] * 2);
         smoother->ReleaseDataFlagOn();
-        smoother->SetInputConnection(dicomRectifier->GetOutputPort());
+        smoother->SetInputConnection(flipper->GetOutputPort());
 
         // rescale if we want to
         vtkSmartPointer<vtkImageResize> rescaler = vtkSmartPointer<vtkImageResize>::New();

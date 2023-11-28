@@ -470,7 +470,7 @@ void SliceRenderWidget::Render(bool reset_camera)
             }
         }
         camera->SetPosition(pos);
-        camera->SetFocalPoint(fpoint)
+        camera->SetFocalPoint(fpoint);
     }
     openGLWidget->renderWindow()->Render();
 }

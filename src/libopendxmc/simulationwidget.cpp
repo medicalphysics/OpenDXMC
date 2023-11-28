@@ -63,6 +63,7 @@ SimulationWidget::SimulationWidget(QWidget* parent)
     threads_spin->setValue(0);
     connect(threads_spin, &QSpinBox::valueChanged, this, &SimulationWidget::numberOfThreadsChanged);
     layout->addWidget(threads_box);
+    m_items.push_back(threads_box);
 
     // auto lec_txt = tr("Select bound electron correction method: None treats all electrons as free. Livermore applies atomic form factor and scatterfactor corrections to coherent and incoherent scattering. Impulse Approximation uses Harthree-Fock approximation to sample electron momentum for atomic shells for coherent scattering, in addition fluro photons are emitted for photoelectric effect.");
     auto lec_txt = tr("Select bound electron correction method");
@@ -73,6 +74,7 @@ SimulationWidget::SimulationWidget(QWidget* parent)
     lec_select->setCurrentIndex(1);
     connect(lec_select, &QComboBox::currentIndexChanged, this, &SimulationWidget::lowEnergyCorrectionMethodChanged);
     layout->addWidget(lec_box);
+    m_items.push_back(lec_box);
 
     auto air_txt = tr("Remove dose to air for easier visualization of dose. Photons are still transported through air media.");
     auto air_box = new QGroupBox(tr("Ignore air dose"), parent);
@@ -84,6 +86,7 @@ SimulationWidget::SimulationWidget(QWidget* parent)
     air_layout->addWidget(air_label);
     connect(air_box, &QGroupBox::toggled, this, &SimulationWidget::ignoreAirChanged);
     layout->addWidget(air_box);
+    m_items.push_back(air_box);
 
     auto start_stop_box = new QGroupBox(tr("Start simulation"), this);
     auto start_stop_layout = new QHBoxLayout;
@@ -105,4 +108,44 @@ void SimulationWidget::setSimulationReady(bool on)
 {
     m_simulation_ready = on;
     m_start_simulation_button->setDisabled(!m_simulation_ready);
+}
+
+void SimulationWidget::setSimulationRunning(bool on)
+{
+    for (auto& wid : m_items)
+        wid->setDisabled(on);
+    m_start_simulation_button->setDisabled(on);
+    m_stop_simulation_button->setDisabled(!on);
+    for (auto& p : m_progress_bars) {
+        p->setVisible(on);
+    }
+}
+
+void SimulationWidget::updateSimulationProgress(QString message, int percent, int job, int njobs)
+{
+    if (njobs > m_progress_bars.size()) {
+        auto lay = layout();
+        auto item = lay->takeAt(lay->count() - 1);
+        while (njobs != m_progress_bars.size()) {
+            auto p = new QProgressBar(this);
+            p->setRange(0, 0);
+            lay->addWidget(p);
+            m_progress_bars.push_back(p);
+        }
+        lay->addItem(item);
+    } else if (njobs < m_progress_bars.size()) {
+        auto lay = layout();
+        for (int n = njobs; n < m_progress_bars.size(); ++n) {
+            lay->removeWidget(m_progress_bars[n]);
+            m_progress_bars[n]->deleteLater();
+        }
+        m_progress_bars.erase(m_progress_bars.begin(), m_progress_bars.begin() + njobs);
+    }
+
+    auto p = m_progress_bars[job];
+    if (p->maximum() == 0) {
+        p->setRange(0, 100);
+    }
+    p->setValue(percent);
+    p->setFormat(message);
 }

@@ -18,15 +18,19 @@ Copyright 2023 Erlend Andersen
 
 #pragma once
 
-#include <QWidget>
 #include <QPushButton>
+#include <QWidget>
+#include <QProgressBar>
+
+#include <vector>
 
 class SimulationWidget : public QWidget {
     Q_OBJECT
 public:
     SimulationWidget(QWidget* parent = nullptr);
     void setSimulationReady(bool on);
-
+    void setSimulationRunning(bool on);
+    void updateSimulationProgress(QString, int, int, int);
 signals:
     void numberOfThreadsChanged(int);
     void lowEnergyCorrectionMethodChanged(int);
@@ -38,4 +42,6 @@ private:
     bool m_simulation_ready = false;
     QPushButton* m_start_simulation_button = nullptr;
     QPushButton* m_stop_simulation_button = nullptr;
+    std::vector<QWidget*> m_items;
+    std::vector<QProgressBar*> m_progress_bars;
 };

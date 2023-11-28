@@ -442,12 +442,35 @@ void SliceRenderWidget::showData(DataContainer::ImageType type)
     }
 }
 
+int argmax3(double v[3])
+{
+    if (std::abs(v[0]) > std::abs(v[1]) && std::abs(v[0]) > std::abs(v[2]))
+        return 0;
+    else if (std::abs(v[1]) > std::abs(v[0]) && std::abs(v[1]) > std::abs(v[2]))
+        return 1;
+    return 2;
+}
+
 void SliceRenderWidget::Render(bool reset_camera)
 {
     if (reset_camera) {
         renderer->ResetCamera();
         auto camera = renderer->GetActiveCamera();
-        camera->SetFocalPoint(0, 0, 0);
+        double dir[3];
+        camera->GetDirectionOfProjection(dir);
+        int dIdx = argmax3(dir);
+
+        double fpoint[3], pos[3];
+        camera->GetPosition(pos);
+        camera->GetFocalPoint(pos);
+        for (int i = 0; i < 3; ++i) {
+            if (i != dIdx) {
+                fpoint[i] = 0;
+                pos[i] = 0;
+            }
+        }
+        camera->SetPosition(pos);
+        camera->SetFocalPoint(fpoint)
     }
     openGLWidget->renderWindow()->Render();
 }

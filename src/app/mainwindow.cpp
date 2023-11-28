@@ -125,6 +125,9 @@ MainWindow::MainWindow(QWidget* parent)
     connect(simulationpipeline, &SimulationPipeline::imageDataChanged, slicerender, &RenderWidgetsCollection::updateImageData);
     connect(simulationpipeline, &SimulationPipeline::simulationRunning, beamsettingswidget, &BeamSettingsWidget::setDisabled);
     connect(simulationpipeline, &SimulationPipeline::simulationRunning, ctdicomimportwidget, &CTDicomImportWidget::setDisabled);
+    connect(simulationpipeline, &SimulationPipeline::simulationRunning, simulationwidget, &SimulationWidget::setSimulationRunning);    
+    connect(simulationpipeline, &SimulationPipeline::simulationProgress, simulationwidget, &SimulationWidget::updateSimulationProgress);    
+
     // simulation progress
     /* m_progressTimer = new QTimer(this);
     m_progressTimer->setTimerType(Qt::CoarseTimer);

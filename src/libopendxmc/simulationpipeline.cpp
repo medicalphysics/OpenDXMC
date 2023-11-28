@@ -106,6 +106,7 @@ void SimulationPipeline::startSimulation()
 
 void SimulationPipeline::stopSimulation()
 {
+    m_stop_flag = true;
 }
 
 void SimulationPipeline::run()
@@ -148,11 +149,12 @@ void SimulationPipeline::run()
     if (m_threads > 0)
         transport.setNumberOfThreads(m_threads);
 
+    m_stop_flag = false;
     dxmc::TransportProgress progress;
 
-    const auto Njobs = m_beams.size();
+    const int Njobs = m_beams.size();
 
-    for (std::size_t jobIdx = 0; jobIdx < Njobs; jobIdx++) {
+    for (int jobIdx = 0; jobIdx < Njobs; jobIdx++) {
         const auto& currentbeam = *(m_beams[jobIdx]);
         std::visit([&](auto&& beam) {
             bool running = true;
@@ -162,12 +164,22 @@ void SimulationPipeline::run()
             });
             while (running) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(500));
-                auto elapsed = QString::fromStdString(progress.message());
-                emit this->simulationProgress(elapsed, jobIdx, Njobs);
+                const auto [n, total] = progress.progress();
+                const int percent = static_cast<int>((n * 100) / total);
+                auto message = QString::fromStdString(progress.message());
+                emit this->simulationProgress(message, percent, jobIdx, Njobs);
+                if (m_stop_flag) {
+                    progress.setStopSimulation();
+                }
             }
             job.join();
         },
             currentbeam);
+    }
+
+    if (m_stop_flag) {
+        emit simulationRunning(false);
+        return;
     }
 
     // collect dose

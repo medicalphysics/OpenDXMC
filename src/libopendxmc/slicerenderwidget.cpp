@@ -444,8 +444,11 @@ void SliceRenderWidget::showData(DataContainer::ImageType type)
 
 void SliceRenderWidget::Render(bool reset_camera)
 {
-    if (reset_camera)
+    if (reset_camera) {
         renderer->ResetCamera();
+        auto camera = renderer->GetActiveCamera();
+        camera->SetFocalPoint(0, 0, 0);
+    }
     openGLWidget->renderWindow()->Render();
 }
 

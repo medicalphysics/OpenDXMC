@@ -82,6 +82,9 @@ public:
     {
         emitDataChanged();
         setEditable(editable);
+        if constexpr (std::is_same_v<T, bool>) {
+            setCheckable(true);
+        }
     }
 
     QVariant data(int role = Qt::UserRole + 1) const override
@@ -89,10 +92,18 @@ public:
         if (role == Qt::DisplayRole || role == Qt::EditRole) {
             if constexpr (std::is_convertible_v<T, std::array<double, 2>> || std::is_convertible_v<T, std::array<double, 3>> || std::is_convertible_v<T, std::array<double, 6>>) {
                 return arrayToString(m_getter());
+            } else if constexpr (std::is_same_v<T, bool>) {
+                // We handle bool types by checked state
+                return QVariant {};
             } else if constexpr (std::is_integral_v<T>) {
                 return QVariant(static_cast<qulonglong>(m_getter()));
             } else {
                 return QVariant::fromValue(m_getter());
+            }
+        }
+        if constexpr (std::is_same_v<T, bool>) {
+            if (role == Qt::CheckStateRole) {
+                return QVariant(m_getter() ? Qt::CheckState::Checked : Qt::CheckState::Unchecked);
             }
         }
         return QStandardItem::data(role);
@@ -122,6 +133,9 @@ public:
                     m_setter(r.value());
                     QStandardItem::setData(value, role);
                 }
+            } else if constexpr (std::is_same_v<T, bool>) {
+                // We handle bool types with checkstate
+                return;
             } else if constexpr (std::is_integral_v<T>) {
                 qulonglong v = value.toULongLong();
                 m_setter(static_cast<T>(v));
@@ -132,6 +146,12 @@ public:
                 QStandardItem::setData(value, role);
             }
         } else {
+            if constexpr (std::is_same_v<T, bool>) {
+                if (role == Qt::CheckStateRole) {
+                    m_setter(value == Qt::CheckState::Checked);
+                }
+            }
+
             QStandardItem::setData(value, role);
         }
     }
@@ -358,6 +378,7 @@ void BeamSettingsModel::addDXBeam()
         addItem(root, "Source detector distance [cm]", setter, getter);
     }
     {
+        std::get<DXBeam>(*beam).setCollimation({ 20., 20. });
         auto setter = [=](std::array<double, 2> d) {
             auto& dx = std::get<DXBeam>(*beam);
             dx.setCollimation(d);
@@ -370,7 +391,6 @@ void BeamSettingsModel::addDXBeam()
         addItem(root, "Collimation [cm x cm]", setter, getter);
     }
     {
-        std::get<DXBeam>(*beam).setCollimationAnglesDeg(15, 15);
         auto setter = [=](std::array<double, 2> d) {
             auto& dx = std::get<DXBeam>(*beam);
             dx.setCollimationAnglesDeg(d);
@@ -581,6 +601,25 @@ void BeamSettingsModel::addCTSpiralBeam()
         addItem(root, "CTDI phantom diameter [cm]", setter, getter);
     }
 
+    {
+        auto setter = [=](bool d) {
+            if (m_image) {
+                auto& ct = std::get<CTSpiralBeam>(*beam);
+                if (d) {
+                    ct.setAECFilter(m_image->aecData());
+                } else {
+                    ct.setAECFilter(CTAECFilter {});
+                }
+            }
+        };
+        auto getter = [=]() -> bool {
+            auto& ct = std::get<CTSpiralBeam>(*beam);
+            const auto& aec = ct.AECFilter();
+            return aec.weights().size() > 2;
+        };
+        addItem(root, "Use current AEC profile", setter, getter);
+    }
+
     auto tubeItem = new LabelItem(tr("Tube"));
     root->appendRow(tubeItem);
     addTubeItems<CTSpiralBeam>(tubeItem, beam);
@@ -673,19 +712,19 @@ void BeamSettingsModel::addCTSpiralDualEnergyBeam()
         };
         auto getter = [=]() -> double {
             auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
-            return ct.scanFieldOfViewB();
+            return ct.scanFieldOfViewA();
         };
         addItem(root, "Scan FOV Tube A [cm]", setter, getter);
         auto setterB = [=](double d) {
             auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
-            ct.setScanFieldOfViewA(d);
+            ct.setScanFieldOfViewB(d);
             beamActor->update();
         };
         auto getterB = [=]() -> double {
             auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
             return ct.scanFieldOfViewB();
         };
-        addItem(root, "Scan FOV Tube B [cm]", setter, getter);
+        addItem(root, "Scan FOV Tube B [cm]", setterB, getterB);
     }
     {
         auto setter = [=](double d) {

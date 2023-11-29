@@ -44,4 +44,5 @@ signals:
 private:
     std::vector<std::pair<std::shared_ptr<Beam>, std::shared_ptr<BeamActorContainer>>> m_beams;
     std::shared_ptr<DataContainer> m_image = nullptr;
+    
 };

@@ -41,6 +41,15 @@ qt_add_resources(opendxmc icons
     "${CMAKE_SOURCE_DIR}/data/icons/settings.png"
 )
 
+# adding phantoms to be available in binary folder
+add_custom_command(
+  TARGET opendxmc
+  POST_BUILD
+  COMMAND ${CMAKE_COMMAND}
+  ARGS -E copy_directory_if_different "${PROJECT_SOURCE_DIR}/data/phantoms" "$<TARGET_FILE_DIR:opendxmc>/data/phantoms"
+  COMMENT "Copying ICRP phantoms to build folder"
+)
+
 # Install data folder
 install(DIRECTORY "${CMAKE_SOURCE_DIR}/data/" DESTINATION "bin/resources")
 

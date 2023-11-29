@@ -37,6 +37,7 @@ using NISTMaterials = dxmc::NISTMaterials<double>;
 
 using CTSpiralBeam = dxmc::CTSpiralBeam<double>;
 using CTSpiralDualEnergyBeam = dxmc::CTSpiralDualEnergyBeam<double>;
+using CTAECFilter = dxmc::CTAECFilter<double>;
 
 class DXBeam : public dxmc::DXBeam<double> {
 public:

@@ -49,9 +49,9 @@ std::array<double, 3> cross(const std::array<double, 3>& v1, const std::array<do
 }
 
 // extract CT AEC data
-DataContainer::AECData readExposureData(vtkSmartPointer<vtkDICOMReader>& dicomReader)
+CTAECFilter readExposureData(vtkSmartPointer<vtkDICOMReader>& dicomReader)
 {
-    DataContainer::AECData res;
+    CTAECFilter res;
 
     if (!dicomReader)
         return res;
@@ -94,23 +94,28 @@ DataContainer::AECData readExposureData(vtkSmartPointer<vtkDICOMReader>& dicomRe
         for (std::size_t j = 0; j < 3; ++j)
             data[i].first[j] = ptag.GetDouble(j);
     }
-    res.weights.resize(n);
+
+    
+
+    
     std::sort(data.begin(), data.end(), [=](const auto& lh, const auto& rh) { return lh.first[imageDirIdx] < rh.first[imageDirIdx]; });
-    std::transform(data.cbegin(), data.cend(), res.weights.begin(), [](const auto& v) { return v.second; });
+    std::vector<double> weights(data.size());
+    std::transform(data.cbegin(), data.cend(), weights.begin(), [](const auto& v) { return v.second; });
 
-    res.startPosition = data.front().first;
-    res.stopPosition = data.back().first;
-
+     auto startPosition = data.front().first;
+     auto stopPosition = data.back().first;
     // from mm to cm
     for (std::size_t i = 0; i < 3; ++i) {
-        res.startPosition[i] /= 10.0;
-        res.stopPosition[i] /= 10.0;
+        startPosition[i] /= 10.0;
+        stopPosition[i] /= 10.0;
         if (i == imageDirIdx) {
-            const auto d = (res.stopPosition[i] - res.startPosition[i]) / 2;
-            res.startPosition[i] = -d;
-            res.stopPosition[i] = d;
+            const auto d = (stopPosition[i] - startPosition[i]) / 2;
+            startPosition[i] = -d;
+            stopPosition[i] = d;
         }
     }
+    res.setData(startPosition, stopPosition, weights);
+
     return res;
 }
 

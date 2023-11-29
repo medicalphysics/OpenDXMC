@@ -75,16 +75,17 @@ void CTAECPlot::updatePlot()
 
     auto series_aec = new QLineSeries(this);
     const auto& aec = m_data->aecData();
-    const auto length = dist(aec.startPosition, aec.stopPosition) / 2;
-    const auto step_aec = 2 * length / (aec.weights.size() - 1);
-    QList<QPointF> aec_qt(aec.weights.size());
-    for (std::size_t i = 0; i < aec.weights.size(); ++i) {
+    const auto length = aec.length();
+    const auto& weights = aec.weights();
+    const auto step_aec = 2 * length / (weights.size() - 1);
+    QList<QPointF> aec_qt(weights.size());
+    for (std::size_t i = 0; i < weights.size(); ++i) {
         aec_qt[i].setX(i * step_aec - length);
-        aec_qt[i].setY(aec.weights[i]);
+        aec_qt[i].setY(weights[i]);
     }
     series_aec->append(aec_qt);
     m_xaxis->setRange(-length, length);
-    const auto max = *std::max_element(aec.weights.cbegin(), aec.weights.cend());
+    const auto max = *std::max_element(weights.cbegin(),weights.cend());
     m_yaxis->setRange(0.0, max * 1.1);
 
     chart()->removeAllSeries();

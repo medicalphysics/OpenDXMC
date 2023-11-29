@@ -462,7 +462,7 @@ void SliceRenderWidget::Render(bool reset_camera)
 
         double fpoint[3], pos[3];
         camera->GetPosition(pos);
-        camera->GetFocalPoint(pos);
+        camera->GetFocalPoint(fpoint);
         for (int i = 0; i < 3; ++i) {
             if (i != dIdx) {
                 fpoint[i] = 0;

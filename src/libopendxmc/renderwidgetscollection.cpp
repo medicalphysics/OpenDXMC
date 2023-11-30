@@ -35,6 +35,8 @@ std::shared_ptr<DataContainer> generateSampleData()
     std::vector<double> im(8 * 8 * 8, 0);
     for (int i = 0; i < im.size(); ++i)
         im[i] = i;
+    im[0] = -500;
+    im.back() = 500;
     data->setImageArray(DataContainer::ImageType::CT, im);
     return data;
 }
@@ -60,16 +62,15 @@ RenderWidgetsCollection::RenderWidgetsCollection(QWidget* parent)
 
     m_slice_widgets[0]->sharedViews(m_slice_widgets[1], m_slice_widgets[2]);
 
-    this->setLayout(layout);
-
     // data type selector
     m_data_type_selector = new QComboBox(this);
-    connect(m_data_type_selector, &QComboBox::currentIndexChanged, [this](int idx) {
+    connect(m_data_type_selector, &QComboBox::activated, [this](int idx) {
         auto type = static_cast<DataContainer::ImageType>(m_data_type_selector->currentData().toInt());
         this->showData(type);
     });
 
     updateImageData(generateSampleData());
+    this->setLayout(layout);
 }
 
 void RenderWidgetsCollection::addActor(std::shared_ptr<BeamActorContainer> actor)
@@ -111,6 +112,7 @@ void RenderWidgetsCollection::removeActor(std::shared_ptr<BeamActorContainer> ac
 
 void RenderWidgetsCollection::updateImageData(std::shared_ptr<DataContainer> data)
 {
+    const auto current_data = m_data_type_selector->currentData().toInt();
     m_data_type_selector->clear();
     if (data) {
         auto types = data->getAvailableImages();
@@ -123,6 +125,10 @@ void RenderWidgetsCollection::updateImageData(std::shared_ptr<DataContainer> dat
     for (auto& w : m_slice_widgets)
         w->updateImageData(data);
     m_volume_widget->updateImageData(data);
+    if (current_data != m_data_type_selector->currentData().toInt()) {
+        auto type = static_cast<DataContainer::ImageType>(m_data_type_selector->currentData().toInt());
+        showData(type);
+    }
 }
 
 void RenderWidgetsCollection::showData(DataContainer::ImageType type)

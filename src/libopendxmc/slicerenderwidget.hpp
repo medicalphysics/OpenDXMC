@@ -63,6 +63,7 @@ protected:
     void switchLUTtable(DataContainer::ImageType type, int n_colors = -1);
     void resizeEvent(QResizeEvent* event) override;
     void updateTextPositions(bool render=false);
+    void resetCamera();
 
 private:
     std::shared_ptr<DataContainer> m_data = nullptr;

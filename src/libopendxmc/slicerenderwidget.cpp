@@ -193,8 +193,8 @@ SliceRenderWidget::SliceRenderWidget(int orientation, QWidget* parent)
     // lut
     lut = vtkSmartPointer<vtkWindowLevelLookupTable>::New();
 
-    lut_windowing[DataContainer::ImageType::CT] = std::make_pair(100.0, 300.0);
-    lut_windowing[DataContainer::ImageType::Density] = std::make_pair(1.0, 0.5);
+    lut_windowing[DataContainer::ImageType::CT] = std::make_pair(0, 1000);
+    lut_windowing[DataContainer::ImageType::Density] = std::make_pair(1.0, 1.0);
 
     setupSlicePipeline(orientation);
 }
@@ -252,6 +252,8 @@ void SliceRenderWidget::setupSlicePipeline(int orientation)
     lut->UseBelowRangeColorOn();
     lut->SetBelowRangeColor(0, 0, 0, 0);
     lut->Build();
+    sliceProperty->SetColorLevel(lut_windowing[DataContainer::ImageType::CT].first);
+    sliceProperty->SetColorWindow(lut_windowing[DataContainer::ImageType::CT].second);
 
     lowerLeftText = vtkSmartPointer<vtkTextActor>::New();
     renderer->AddActor2D(lowerLeftText);
@@ -419,7 +421,8 @@ void SliceRenderWidget::switchLUTtable(DataContainer::ImageType type, int n_colo
         }
     }
     lut_current_type = type;
-    imageSlice->Update();
+    // imageSlice->Update();
+    // Render();
 }
 
 void SliceRenderWidget::showData(DataContainer::ImageType type)
@@ -428,6 +431,7 @@ void SliceRenderWidget::showData(DataContainer::ImageType type)
         return;
     if (m_data->hasImage(type)) {
         auto vtkimage = m_data->vtkImage(type);
+        setNewImageData(vtkimage, false);
         if (type == DataContainer::ImageType::Material || type == DataContainer::ImageType::Organ) {
             auto max_val = static_cast<int>(vtkimage->GetScalarRange()[1]);
             switchLUTtable(type, max_val + 1);
@@ -438,7 +442,6 @@ void SliceRenderWidget::showData(DataContainer::ImageType type)
             lowerLeftText->SetInput(m_data->units(type).c_str());
             updateTextPositions();
         }
-        setNewImageData(vtkimage, false);
     }
 }
 
@@ -451,26 +454,31 @@ int argmax3(double v[3])
     return 2;
 }
 
+void SliceRenderWidget::resetCamera()
+{
+    renderer->ResetCamera();
+    auto camera = renderer->GetActiveCamera();
+    double dir[3];
+    camera->GetDirectionOfProjection(dir);
+    int dIdx = argmax3(dir);
+
+    double fpoint[3], pos[3];
+    camera->GetPosition(pos);
+    camera->GetFocalPoint(fpoint);
+    for (int i = 0; i < 3; ++i) {
+        if (i != dIdx) {
+            fpoint[i] = 0;
+            pos[i] = 0;
+        }
+    }
+    camera->SetPosition(pos);
+    camera->SetFocalPoint(fpoint);
+}
+
 void SliceRenderWidget::Render(bool reset_camera)
 {
     if (reset_camera) {
-        renderer->ResetCamera();
-        auto camera = renderer->GetActiveCamera();
-        double dir[3];
-        camera->GetDirectionOfProjection(dir);
-        int dIdx = argmax3(dir);
-
-        double fpoint[3], pos[3];
-        camera->GetPosition(pos);
-        camera->GetFocalPoint(fpoint);
-        for (int i = 0; i < 3; ++i) {
-            if (i != dIdx) {
-                fpoint[i] = 0;
-                pos[i] = 0;
-            }
-        }
-        camera->SetPosition(pos);
-        camera->SetFocalPoint(fpoint);
+        resetCamera();
     }
     openGLWidget->renderWindow()->Render();
 }
@@ -496,18 +504,19 @@ void SliceRenderWidget::updateImageData(std::shared_ptr<DataContainer> data)
     if (m_data && data)
         uid_is_new = data->ID() != m_data->ID();
 
-    // updating images before replacing old buffer
     if (data) {
+        m_data = data;
         if (data->hasImage(DataContainer::ImageType::CT) && uid_is_new) {
             auto vtkimage = data->vtkImage(DataContainer::ImageType::CT);
-            setNewImageData(vtkimage, true);
+            // setNewImageData(vtkimage, true);
+            showData(DataContainer::ImageType::CT);
         } else if (data->hasImage(DataContainer::ImageType::Density) && uid_is_new) {
             auto vtkimage = data->vtkImage(DataContainer::ImageType::Density);
-            setNewImageData(vtkimage, true);
+            // setNewImageData(vtkimage, true);
+            showData(DataContainer::ImageType::Density);
         }
+        Render(true);
     }
-
-    m_data = data;
 }
 
 void SliceRenderWidget::addActor(vtkSmartPointer<vtkActor> actor)

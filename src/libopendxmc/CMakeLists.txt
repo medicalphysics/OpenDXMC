@@ -10,6 +10,8 @@ qt_add_library(libopendxmc STATIC
 	ctaecplot.cpp
 	colormaps.cpp
 	dxmc_specialization.cpp
+	icrpphantomimportwidget.cpp
+	icrpphantomimportpipeline.cpp
 	slicerenderwidget.cpp
 	custominteractorstyleimage.cpp
 	renderwidgetscollection.cpp	

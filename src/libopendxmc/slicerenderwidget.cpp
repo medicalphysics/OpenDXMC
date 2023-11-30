@@ -428,7 +428,7 @@ void SliceRenderWidget::showData(DataContainer::ImageType type)
         return;
     if (m_data->hasImage(type)) {
         auto vtkimage = m_data->vtkImage(type);
-        if (type == DataContainer::ImageType::Material) {
+        if (type == DataContainer::ImageType::Material || type == DataContainer::ImageType::Organ) {
             auto max_val = static_cast<int>(vtkimage->GetScalarRange()[1]);
             switchLUTtable(type, max_val + 1);
         } else {

@@ -30,6 +30,8 @@ Copyright 2024 Erlend Andersen
 #include <ctdicomimportwidget.hpp>
 #include <ctimageimportpipeline.hpp>
 #include <ctsegmentationpipeline.hpp>
+#include <icrpphantomimportpipeline.hpp>
+#include <icrpphantomimportwidget.hpp>
 #include <renderwidgetscollection.hpp>
 #include <simulationpipeline.hpp>
 #include <simulationwidget.hpp>
@@ -98,6 +100,15 @@ MainWindow::MainWindow(QWidget* parent)
     connect(ctsegmentationpipelie, &CTSegmentationPipeline::imageDataChanged, slicerender, &RenderWidgetsCollection::updateImageData);
     connect(ctimageimportpipeline, &CTImageImportPipeline::imageDataChanged, ctsegmentationpipelie, &CTSegmentationPipeline::updateImageData);
 
+    // Adding icrp phantom import widget
+    auto icrpimportwidget = new ICRPPhantomImportWidget(importWidgets);
+    importWidgets->addTab(icrpimportwidget, tr("ICRP phantom import"));
+    auto icrppipeline = new ICRPPhantomImportPipeline;
+    icrppipeline->moveToThread(&m_workerThread);
+    connect(icrpimportwidget, &ICRPPhantomImportWidget::setRemoveArms, icrppipeline, &ICRPPhantomImportPipeline::setRemoveArms);
+    connect(icrpimportwidget, &ICRPPhantomImportWidget::requestImportPhantom, icrppipeline, &ICRPPhantomImportPipeline::importPhantom);
+    connect(icrppipeline, &ICRPPhantomImportPipeline::imageDataChanged, slicerender, &RenderWidgetsCollection::updateImageData);
+
     // beam settings widget
     auto beamsettingswidget = new BeamSettingsWidget(this);
     menuWidget->addTab(beamsettingswidget, tr("Configure X-ray beams"));
@@ -115,6 +126,7 @@ MainWindow::MainWindow(QWidget* parent)
     auto simulationpipeline = new SimulationPipeline;
     simulationpipeline->moveToThread(&m_workerThread);
     connect(ctsegmentationpipelie, &CTSegmentationPipeline::imageDataChanged, simulationpipeline, &SimulationPipeline::updateImageData);
+    connect(icrppipeline, &ICRPPhantomImportPipeline::imageDataChanged, simulationpipeline, &SimulationPipeline::updateImageData);
     connect(simulationwidget, &SimulationWidget::numberOfThreadsChanged, simulationpipeline, &SimulationPipeline::setNumberOfThreads);
     connect(simulationwidget, &SimulationWidget::ignoreAirChanged, simulationpipeline, &SimulationPipeline::setDeleteAirDose);
     connect(simulationwidget, &SimulationWidget::requestStartSimulation, simulationpipeline, &SimulationPipeline::startSimulation);
@@ -125,8 +137,8 @@ MainWindow::MainWindow(QWidget* parent)
     connect(simulationpipeline, &SimulationPipeline::imageDataChanged, slicerender, &RenderWidgetsCollection::updateImageData);
     connect(simulationpipeline, &SimulationPipeline::simulationRunning, beamsettingswidget, &BeamSettingsWidget::setDisabled);
     connect(simulationpipeline, &SimulationPipeline::simulationRunning, ctdicomimportwidget, &CTDicomImportWidget::setDisabled);
-    connect(simulationpipeline, &SimulationPipeline::simulationRunning, simulationwidget, &SimulationWidget::setSimulationRunning);    
-    connect(simulationpipeline, &SimulationPipeline::simulationProgress, simulationwidget, &SimulationWidget::updateSimulationProgress);    
+    connect(simulationpipeline, &SimulationPipeline::simulationRunning, simulationwidget, &SimulationWidget::setSimulationRunning);
+    connect(simulationpipeline, &SimulationPipeline::simulationProgress, simulationwidget, &SimulationWidget::updateSimulationProgress);
 
     // simulation progress
     /* m_progressTimer = new QTimer(this);
@@ -208,6 +220,7 @@ MainWindow::~MainWindow()
     // ctimageimportpipeline
     // ctsegmentationpipelie
     // simulationpipeline
+    // ICRPPhantomImportPipeline
 }
 
 void MainWindow::createMenu()

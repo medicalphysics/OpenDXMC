@@ -18,21 +18,15 @@ Copyright 2023 Erlend Andersen
 
 #pragma once
 
-#include <basepipeline.hpp>
+#include <QWidget>
 
-#include <QStringList>
-
-class CTImageImportPipeline : public BasePipeline {
+class ICRPPhantomImportWidget : public QWidget {
+    Q_OBJECT
 public:
-    CTImageImportPipeline(QObject* parent = nullptr);
-    void updateImageData(std::shared_ptr<DataContainer>) override;
-    void readImages(const QStringList& images);
-    void setBlurRadius(const double*);
-    void setOutputSpacing(const double*);
-    void setUseOutputSpacing(bool);
+    ICRPPhantomImportWidget(QWidget* parent = nullptr);
+signals:
+    void setRemoveArms(bool);
+    void requestImportPhantom(QString organArrayPath, QString organMediaPath, QString mediaPath, double, double, double, int, int, int);
 
 private:
-    std::array<double, 3> m_outputSpacing = { 0, 0, 0 };
-    std::array<double, 3> m_blurRadius = { 0, 0, 0 };
-    bool m_useOutputSpacing = false;
 };

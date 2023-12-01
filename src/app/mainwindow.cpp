@@ -30,6 +30,8 @@ Copyright 2024 Erlend Andersen
 #include <ctdicomimportwidget.hpp>
 #include <ctimageimportpipeline.hpp>
 #include <ctsegmentationpipeline.hpp>
+#include <dosetablepipeline.hpp>
+#include <dosetablewidget.hpp>
 #include <icrpphantomimportpipeline.hpp>
 #include <icrpphantomimportwidget.hpp>
 #include <renderwidgetscollection.hpp>
@@ -137,8 +139,20 @@ MainWindow::MainWindow(QWidget* parent)
     connect(simulationpipeline, &SimulationPipeline::imageDataChanged, slicerender, &RenderWidgetsCollection::updateImageData);
     connect(simulationpipeline, &SimulationPipeline::simulationRunning, beamsettingswidget, &BeamSettingsWidget::setDisabled);
     connect(simulationpipeline, &SimulationPipeline::simulationRunning, ctdicomimportwidget, &CTDicomImportWidget::setDisabled);
+    connect(simulationpipeline, &SimulationPipeline::simulationRunning, icrpimportwidget, &ICRPPhantomImportWidget::setDisabled);
     connect(simulationpipeline, &SimulationPipeline::simulationRunning, simulationwidget, &SimulationWidget::setSimulationRunning);
     connect(simulationpipeline, &SimulationPipeline::simulationProgress, simulationwidget, &SimulationWidget::updateSimulationProgress);
+
+    // dosetable
+    auto dosetable = new DoseTableWidget(this);
+    menuWidget->addTab(dosetable, tr("Organ Doses"));
+    auto dosetablepipeline = new DoseTablePipeline;
+    dosetablepipeline->moveToThread(&m_workerThread);
+    connect(dosetablepipeline, &DoseTablePipeline::clearTable, dosetable, &DoseTableWidget::clearContents);
+    connect(dosetablepipeline, &DoseTablePipeline::doseData, dosetable, &DoseTableWidget::setDoseData);
+    connect(simulationpipeline, &SimulationPipeline::imageDataChanged, dosetablepipeline, &DoseTablePipeline::updateImageData);
+    connect(icrppipeline, &ICRPPhantomImportPipeline::imageDataChanged, dosetablepipeline, &DoseTablePipeline::updateImageData);
+    connect(ctimageimportpipeline, &CTImageImportPipeline::imageDataChanged, dosetablepipeline, &DoseTablePipeline::updateImageData);
 
     // simulation progress
     /* m_progressTimer = new QTimer(this);

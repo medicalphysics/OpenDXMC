@@ -77,12 +77,16 @@ public:
 
     const std::vector<double>& getCTArray() const { return m_ct_array; }
     const std::vector<double>& getDensityArray() const { return m_density_array; }
+    const std::vector<double>& getDoseArray() const { return m_dose_array; }
     const std::vector<std::uint8_t>& getMaterialArray() const { return m_material_array; }
+    const std::vector<std::uint8_t>& getOrganArray() const { return m_organ_array; }
+
 
     static std::string getImageAsString(ImageType type);
     std::vector<ImageType> getAvailableImages() const;
 
     const std::vector<DataContainer::Material>& getMaterials() const { return m_materials; }
+    const std::vector<std::string>& getOrganNames() const { return m_organ_names; }
 
     std::string units(ImageType type) const;
     void setDoseUnits(const std::string& unit);

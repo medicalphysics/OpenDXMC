@@ -21,6 +21,8 @@ Copyright 2023 Erlend Andersen
 #include <basepipeline.hpp>
 #include <datacontainer.hpp>
 
+#include <QVariant>
+
 class DoseTablePipeline : public BasePipeline {
     Q_OBJECT
 public:
@@ -30,8 +32,7 @@ public:
 
 signals:
     void clearTable();
-    void addTableRow();
+    void doseData(int col, int row, QVariant data);
 
 private:
-
 };

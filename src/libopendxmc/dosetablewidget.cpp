@@ -18,7 +18,17 @@ Copyright 2023 Erlend Andersen
 
 #include <dosetablewidget.hpp>
 
+#include <QTableWidgetItem>
+
 DoseTableWidget::DoseTableWidget(QWidget* parent)
     : QTableWidget(parent)
 {
+    
+}
+
+void DoseTableWidget::setDoseData(int col, int row, QVariant data)
+{
+    auto item = new QTableWidgetItem;
+    item->setData(Qt::DisplayRole, data);
+    setItem(row, col, item);   
 }

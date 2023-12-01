@@ -62,7 +62,7 @@ protected:
     void setupSlicePipeline(int orientation);
     void switchLUTtable(DataContainer::ImageType type, int n_colors = -1);
     void resizeEvent(QResizeEvent* event) override;
-    void updateTextPositions(bool render=false);
+    void updateTextPositions(bool render = false);
     void resetCamera();
 
 private:

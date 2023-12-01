@@ -58,6 +58,7 @@ public:
     void setSpacingInmm(const std::array<double, 3>& mm);
     void setDimensions(const std::array<std::size_t, 3>&);
     void setMaterials(const std::vector<DataContainer::Material>& materials);
+    void setOrganNames(const std::vector<std::string>& names);
     void setAecData(const std::array<double, 3>& start, const std::array<double, 3>& stop, const std::vector<double>& weights);
     void setAecData(const CTAECFilter&);
     bool setImageArray(ImageType type, const std::vector<double>& image);
@@ -102,6 +103,7 @@ private:
     CTAECFilter m_aecdata;
     std::vector<std::uint64_t> m_dose_count_array;
     std::vector<DataContainer::Material> m_materials;
+    std::vector<std::string> m_organ_names;
     std::map<ImageType, vtkSmartPointer<vtkImageData>> m_vtk_shallow_buffer;
     std::string m_doseUnits = "mGy";
 };

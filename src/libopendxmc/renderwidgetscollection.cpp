@@ -32,11 +32,8 @@ std::shared_ptr<DataContainer> generateSampleData()
     auto data = std::make_shared<DataContainer>();
     data->setDimensions({ 8, 8, 8 });
     data->setSpacing({ 1, 1, 1 });
-    std::vector<double> im(8 * 8 * 8, 0);
-    for (int i = 0; i < im.size(); ++i)
-        im[i] = i;
-    im[0] = -500;
-    im.back() = 500;
+    std::vector<double> im(8 * 8 * 8, -10000.0);
+
     data->setImageArray(DataContainer::ImageType::CT, im);
     return data;
 }

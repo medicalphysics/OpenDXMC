@@ -21,10 +21,10 @@ Copyright 2023 Erlend Andersen
 #include <QCheckbox>
 #include <QComboBox>
 #include <QCoreApplication>
+#include <QDir>
 #include <QGroupBox>
 #include <QHBoxLayout>
 #include <QLabel>
-#include <QDir>
 #include <QVBoxLayout>
 
 #include <array>
@@ -55,9 +55,9 @@ struct Phantom {
     QString organArrayPath(QString basepath) const
     {
         QDir dir(basepath);
-        if (dir.cd(folderPath)) {            
+        if (dir.cd(folderPath)) {
             return dir.absoluteFilePath(filePrefix + QStringLiteral("binary.dat"));
-        }  
+        }
         return QString {};
     }
 };
@@ -165,14 +165,14 @@ ICRPPhantomImportWidget::ICRPPhantomImportWidget(QWidget* parent)
         const auto& d = p.dimensions;
         const auto& s = p.spacing;
 
-        QDir phantoms_path(exeDirPath); 
+        QDir phantoms_path(exeDirPath);
         phantoms_path.cd("data");
         phantoms_path.cd("phantoms");
         phantoms_path.cd("icrp");
         auto arr = p.organArrayPath(phantoms_path.absolutePath());
         auto organs = p.organDefinitionPath(phantoms_path.absolutePath());
         auto media = p.mediaDefinitionPath(phantoms_path.absolutePath());
-        emit this->requestImportPhantom(arr,organs, media, s[0], s[1], s[2], d[0], d[1], d[2]);
+        emit this->requestImportPhantom(arr, organs, media, s[0], s[1], s[2], d[0], d[1], d[2]);
     });
     lay->addWidget(p_box);
 

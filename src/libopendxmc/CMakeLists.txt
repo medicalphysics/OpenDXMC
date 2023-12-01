@@ -9,6 +9,8 @@ qt_add_library(libopendxmc STATIC
 	ctsegmentationpipeline.cpp
 	ctaecplot.cpp
 	colormaps.cpp
+	dosetablepipeline.cpp
+	dosetablewidget.cpp
 	dxmc_specialization.cpp
 	icrpphantomimportwidget.cpp
 	icrpphantomimportpipeline.cpp

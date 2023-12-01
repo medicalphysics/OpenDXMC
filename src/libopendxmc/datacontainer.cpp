@@ -127,6 +127,11 @@ vtkSmartPointer<vtkImageData> DataContainer::generate_vtkImage(ImageType type)
     return image;
 }
 
+void DataContainer::setOrganNames(const std::vector<std::string>& names)
+{
+    m_organ_names = names;
+}
+
 std::vector<DataContainer::ImageType> DataContainer::getAvailableImages() const
 {
 

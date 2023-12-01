@@ -216,6 +216,55 @@ std::vector<Media> readMedia(const std::string& path)
     return media;
 }
 
+void pruneOrganArray(std::vector<std::uint8_t>& organArray, std::vector<Organ>& organs)
+{
+    std::sort(organs.begin(), organs.end(), [](const auto& lh, const auto& rh) { return lh.ID < rh.ID; });
+    std::uint8_t index = 0;
+    while (index < organs.size()) {
+        // do we have index ID in array?
+        auto id = organs[index].ID;
+        bool id_exists = organArray.cend() != std::find(std::execution::par_unseq, organArray.cbegin(), organArray.cend(), id);
+        if (!id_exists) {
+            // organ id do not exists in organ array we delete it
+            organs.erase(organs.begin() + index);
+        } else {
+            index++;
+        }
+    }
+    // now we only have valid organs, lets make organ indexes concecutive
+    for (std::uint8_t i = 0; i < organs.size(); ++i) {
+        if (i != organs[i].ID) {
+            std::replace(std::execution::par_unseq, organArray.begin(), organArray.end(), organs[i].ID, i);
+            organs[i].ID = i;
+        }
+    }
+}
+
+void pruneMedia(std::vector<Organ>& organs, std::vector<Media>& media)
+{
+    std::sort(media.begin(), media.end(), [](const auto& lh, const auto& rh) { return lh.ID < rh.ID; });
+    std::uint8_t index = 0;
+    while (index < media.size()) {
+        bool media_in_organ_list = false;
+        for (const auto& o : organs)
+            media_in_organ_list = media_in_organ_list || o.materialID == media[index].ID;
+        if (media_in_organ_list)
+            index++;
+        else
+            media.erase(media.begin() + index);
+    }
+    // now we only have media that is in an organ
+    // lets make media IDs consecutive
+    for (std::uint8_t i = 0; i < media.size(); ++i) {
+        if (media[i].ID != i) {
+            for (auto& o : organs)
+                if (o.materialID == media[i].ID)
+                    o.materialID = i;
+            media[i].ID = i;
+        }
+    }
+}
+
 void ICRPPhantomImportPipeline::importPhantom(QString organArrayPath, QString organMediaPath, QString mediaPath, double sx, double sy, double sz, int x, int y, int z)
 {
 
@@ -230,16 +279,7 @@ void ICRPPhantomImportPipeline::importPhantom(QString organArrayPath, QString or
     auto organs = readOrgans(organMediaPath.toStdString());
     if (organs.size() == 0)
         return;
-    auto media = readMedia(mediaPath.toStdString());
-    if (media.size() == 0)
-        return;
-
     organs.push_back({ .density = 0.001, .ID = 0, .materialID = 0, .name = "Air" });
-    media.push_back({ .ID = 0, .composition = { { 7, 0.8 }, { 8, 0.20 } }, .name = "Air" });
-
-    std::sort(media.begin(), media.end(), [](const auto& lh, const auto& rh) { return lh.ID < rh.ID; });
-    std::sort(organs.begin(), organs.end(), [](const auto& lh, const auto& rh) { return lh.ID < rh.ID; });
-
     if (m_remove_arms) {
         for (auto& organ : organs) {
             // find arm string
@@ -261,6 +301,13 @@ void ICRPPhantomImportPipeline::importPhantom(QString organArrayPath, QString or
             }
         }
     }
+    pruneOrganArray(organArray, organs);
+
+    auto media = readMedia(mediaPath.toStdString());
+    if (media.size() == 0)
+        return;
+    media.push_back({ .ID = 0, .composition = { { 7, 0.8 }, { 8, 0.20 } }, .name = "Air" });
+    pruneMedia(organs, media);
 
     auto success = container->setImageArray(DataContainer::ImageType::Organ, organArray);
     if (!success) {

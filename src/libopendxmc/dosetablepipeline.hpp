@@ -13,34 +13,25 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with OpenDXMC. If not, see < https://www.gnu.org/licenses/>.
 
-Copyright 2019 Erlend Andersen
+Copyright 2023 Erlend Andersen
 */
+
 #pragma once
 
+#include <basepipeline.hpp>
+#include <datacontainer.hpp>
 
-#include <QComboBox>
-#include <QString>
-#include <QWidget>
-
-#include <vector>
-
-#include "opendxmc/imagecontainer.h"
-#include "opendxmc/phantomimportpipeline.h"
-
-class PhantomSelectionWidget : public QWidget {
+class DoseTablePipeline : public BasePipeline {
     Q_OBJECT
 public:
-    PhantomSelectionWidget(QWidget* parent = nullptr);
-    void importHelmholtzPhantoms();
+    DoseTablePipeline(QObject* parent = nullptr);
+
+    void updateImageData(std::shared_ptr<DataContainer>);
 
 signals:
-    void readIRCUPhantom(PhantomImportPipeline::Phantom phantom, bool removeArms = false);
-    void readCTDIPhantom(int diameter_mm, bool force_measurements);
-    void readAWSPhantom(const QString& name);
-
-protected:
-    void addInstalledPhantoms(void);
+    void clearTable();
+    addTableItem
 
 private:
-    QComboBox* m_phantomSelector = nullptr;
+
 };

@@ -49,7 +49,6 @@ public:
     void setInteractionStyleTo3D();
 
     void showData(DataContainer::ImageType type);
-    // void Render(bool rezoom_camera = false);
     void Render(bool reset_camera = false);
     void sharedViews(SliceRenderWidget* other1, SliceRenderWidget* other2);
     void sharedViews(std::vector<SliceRenderWidget*> others);

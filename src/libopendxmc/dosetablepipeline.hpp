@@ -30,7 +30,7 @@ public:
 
 signals:
     void clearTable();
-    addTableItem
+    void addTableRow();
 
 private:
 

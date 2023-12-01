@@ -27,17 +27,6 @@ Copyright 2023 Erlend Andersen
 #include <QSLider>
 #include <QSizePolicy>
 
-std::shared_ptr<DataContainer> generateSampleData()
-{
-    auto data = std::make_shared<DataContainer>();
-    data->setDimensions({ 8, 8, 8 });
-    data->setSpacing({ 1, 1, 1 });
-    std::vector<double> im(8 * 8 * 8, -10000.0);
-
-    data->setImageArray(DataContainer::ImageType::CT, im);
-    return data;
-}
-
 RenderWidgetsCollection::RenderWidgetsCollection(QWidget* parent)
     : QWidget(parent)
 {
@@ -66,7 +55,6 @@ RenderWidgetsCollection::RenderWidgetsCollection(QWidget* parent)
         this->showData(type);
     });
 
-    updateImageData(generateSampleData());
     this->setLayout(layout);
 }
 
@@ -122,10 +110,6 @@ void RenderWidgetsCollection::updateImageData(std::shared_ptr<DataContainer> dat
     for (auto& w : m_slice_widgets)
         w->updateImageData(data);
     m_volume_widget->updateImageData(data);
-    if (current_data != m_data_type_selector->currentData().toInt()) {
-        auto type = static_cast<DataContainer::ImageType>(m_data_type_selector->currentData().toInt());
-        showData(type);
-    }
 }
 
 void RenderWidgetsCollection::showData(DataContainer::ImageType type)

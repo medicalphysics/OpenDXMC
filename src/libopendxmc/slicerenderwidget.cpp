@@ -177,6 +177,18 @@ private:
     void operator=(const TextModifiedCallback&) = delete;
 };
 
+vtkSmartPointer<vtkImageData> generateSampleData()
+{
+    auto data = std::make_shared<DataContainer>();
+    data->setDimensions({ 8, 8, 8 });
+    data->setSpacing({ 1, 1, 1 });
+    std::vector<double> im(8 * 8 * 8, -10000.0);
+
+    data->setImageArray(DataContainer::ImageType::CT, im);
+    auto image = data->vtkImage(DataContainer::ImageType::CT);
+    return image;
+}
+
 SliceRenderWidget::SliceRenderWidget(int orientation, QWidget* parent)
     : QWidget(parent)
 {
@@ -197,6 +209,7 @@ SliceRenderWidget::SliceRenderWidget(int orientation, QWidget* parent)
     lut_windowing[DataContainer::ImageType::Density] = std::make_pair(1.0, 1.0);
 
     setupSlicePipeline(orientation);
+    setNewImageData(generateSampleData());
 }
 
 void SliceRenderWidget::setupSlicePipeline(int orientation)
@@ -265,7 +278,7 @@ void SliceRenderWidget::setupSlicePipeline(int orientation)
 void SliceRenderWidget::resizeEvent(QResizeEvent* event)
 {
     QWidget::resizeEvent(event);
-    updateTextPositions(true);
+    updateTextPositions(false);
 }
 
 void SliceRenderWidget::updateTextPositions(bool render)
@@ -385,12 +398,13 @@ void SliceRenderWidget::switchLUTtable(DataContainer::ImageType type, int n_colo
                 auto rgba = Colormaps::discreetColor(i);
                 lut->SetTableValue(i, rgba.data());
             }
+
             lut->SetTableRange(0, n_colors - 1);
             lut->Build();
         }
         prop->UseLookupTableScalarRangeOn();
     } else {
-        lut->IndexedLookupOff();
+        prop->UseLookupTableScalarRangeOff();
         lut->SetNumberOfTableValues(256);
         lut->SetValueRange(0, 1);
         lut->SetMinimumTableValue(0, 0, 0, 1);
@@ -413,16 +427,13 @@ void SliceRenderWidget::switchLUTtable(DataContainer::ImageType type, int n_colo
             }
         }
 
-        prop->UseLookupTableScalarRangeOff();
-
         if (lut_windowing.contains(type)) {
             prop->SetColorLevel(lut_windowing[type].first);
             prop->SetColorWindow(lut_windowing[type].second);
         }
     }
+    imageSlice->Update();
     lut_current_type = type;
-    // imageSlice->Update();
-    // Render();
 }
 
 void SliceRenderWidget::showData(DataContainer::ImageType type)
@@ -431,17 +442,18 @@ void SliceRenderWidget::showData(DataContainer::ImageType type)
         return;
     if (m_data->hasImage(type)) {
         auto vtkimage = m_data->vtkImage(type);
-        setNewImageData(vtkimage, false);
         if (type == DataContainer::ImageType::Material || type == DataContainer::ImageType::Organ) {
             auto max_val = static_cast<int>(vtkimage->GetScalarRange()[1]);
             switchLUTtable(type, max_val + 1);
         } else {
             switchLUTtable(type);
         }
+        setNewImageData(vtkimage, false);
         if (lowerLeftText) {
             lowerLeftText->SetInput(m_data->units(type).c_str());
             updateTextPositions();
         }
+        Render();
     }
 }
 
@@ -508,11 +520,9 @@ void SliceRenderWidget::updateImageData(std::shared_ptr<DataContainer> data)
         m_data = data;
         if (data->hasImage(DataContainer::ImageType::CT) && uid_is_new) {
             auto vtkimage = data->vtkImage(DataContainer::ImageType::CT);
-            // setNewImageData(vtkimage, true);
             showData(DataContainer::ImageType::CT);
         } else if (data->hasImage(DataContainer::ImageType::Density) && uid_is_new) {
             auto vtkimage = data->vtkImage(DataContainer::ImageType::Density);
-            // setNewImageData(vtkimage, true);
             showData(DataContainer::ImageType::Density);
         }
         Render(true);

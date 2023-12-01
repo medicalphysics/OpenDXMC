@@ -157,7 +157,7 @@ ICRPPhantomImportWidget::ICRPPhantomImportWidget(QWidget* parent)
     for (const auto& p : phantoms()) {
         p_combo->addItem(p.name);
     }
-    connect(p_combo, &QComboBox::currentIndexChanged, [this, exeDirPath](int index) {
+    connect(p_combo, &QComboBox::activated, [this, exeDirPath](int index) {
         if (index == 0)
             return;
         auto pIdx = index - 1;

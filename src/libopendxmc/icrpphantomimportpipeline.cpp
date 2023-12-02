@@ -310,6 +310,14 @@ void ICRPPhantomImportPipeline::importPhantom(QString organArrayPath, QString or
     pruneMedia(organs, media);
 
     auto success = container->setImageArray(DataContainer::ImageType::Organ, organArray);
+    {
+        std::vector<std::string> organNames;
+        organNames.reserve(organs.size());
+        for (const auto& o : organs)
+            organNames.push_back(o.name);
+        container->setOrganNames(organNames);
+    }
+
     if (!success) {
         emit errorMessage(tr("Could not read organ array"));
     }

@@ -150,6 +150,7 @@ MainWindow::MainWindow(QWidget* parent)
     dosetablepipeline->moveToThread(&m_workerThread);
     connect(dosetablepipeline, &DoseTablePipeline::clearTable, dosetable, &DoseTableWidget::clearContents);
     connect(dosetablepipeline, &DoseTablePipeline::doseData, dosetable, &DoseTableWidget::setDoseData);
+    connect(dosetablepipeline, &DoseTablePipeline::doseDataHeader, dosetable, &DoseTableWidget::setDoseDataHeader);
     connect(simulationpipeline, &SimulationPipeline::imageDataChanged, dosetablepipeline, &DoseTablePipeline::updateImageData);
     connect(icrppipeline, &ICRPPhantomImportPipeline::imageDataChanged, dosetablepipeline, &DoseTablePipeline::updateImageData);
     connect(ctimageimportpipeline, &CTImageImportPipeline::imageDataChanged, dosetablepipeline, &DoseTablePipeline::updateImageData);

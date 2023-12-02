@@ -33,6 +33,5 @@ public:
 signals:
     void clearTable();
     void doseData(int col, int row, QVariant data);
-
-private:
+    void doseDataHeader(QStringList);
 };

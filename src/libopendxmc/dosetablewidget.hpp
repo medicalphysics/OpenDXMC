@@ -20,10 +20,16 @@ Copyright 2023 Erlend Andersen
 
 #include <QTableWidget>
 #include <QVariant>
+
 class DoseTableWidget : public QTableWidget {
     Q_OBJECT
 public:
     DoseTableWidget(QWidget* parent = nullptr);
-
     void setDoseData(int col, int row, QVariant);
+    void setDoseDataHeader(QStringList header);
+
+    void keyPressEvent(QKeyEvent* event);
+
+protected:
+    void copyToClipBoard();
 };

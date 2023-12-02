@@ -33,12 +33,22 @@ void DoseTablePipeline::updateImageData(std::shared_ptr<DataContainer> data)
         return;
     }
 
+    QStringList header;
+    header.append(QString(tr("Name")));
+    header.append(QString(tr("# Voxels")));
+    header.append(QString(tr("Volume cm3")));
+    header.append(QString(tr("Mass g")));
+    auto units = QString::fromStdString(data->units(DataContainer::ImageType::Dose));
+    header.append(QString(tr("Dose ")) + units);
+
+    emit doseDataHeader(header);
+
     const auto& organArray = data->getOrganArray();
     const auto organNames = data->getOrganNames();
     const auto doseArray = data->getDoseArray();
     const auto densityArray = data->getDensityArray();
 
-    const auto voxelVolume = std::reduce(data->dimensions().cbegin(), data->dimensions().cend(), 1.0, std::multiplies {});
+    const auto voxelVolume = std::reduce(data->spacing().cbegin(), data->spacing().cend(), 1.0, std::multiplies {});
     std::vector<double> energy_imparted(doseArray.size());
     std::transform(std::execution::par_unseq, doseArray.cbegin(), doseArray.cend(), densityArray.cbegin(), energy_imparted.begin(),
         [=](const auto& dose, const auto& dens) {

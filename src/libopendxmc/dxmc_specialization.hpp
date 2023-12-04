@@ -41,9 +41,7 @@ using CTAECFilter = dxmc::CTAECFilter<double>;
 
 class DXBeam : public dxmc::DXBeam<double> {
 public:
-    DXBeam(const std::array<double, 3>& pos = { 0, 0, 0 },
-        const std::array<std::array<double, 3>, 2>& dircosines = { { { 1, 0, 0 }, { 0, -1, 0 } } },
-        const std::map<std::size_t, double>& filtrationMaterials = {});
+    DXBeam(const std::map<std::size_t, double>& filtrationMaterials = {});
 
     const std::array<double, 3>& rotationCenter() const;
     void setRotationCenter(const std::array<double, 3>& c);

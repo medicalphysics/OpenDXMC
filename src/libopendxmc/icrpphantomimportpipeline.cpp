@@ -47,17 +47,7 @@ std::vector<std::uint8_t> readOrganArray(const std::string& path, const std::arr
     // copies all data into buffer
     std::vector<std::uint8_t> organs(std::istreambuf_iterator<char>(input), {});
 
-    // flipping y axis
-    std::vector<std::uint8_t> organs_flip(organs.size());
-    for (std::size_t z = 0; z < dim[2]; z++)
-        for (std::size_t y = 0; y < dim[1]; y++)
-            for (std::size_t x = 0; x < dim[0]; x++) {
-                const auto fid = z * dim[0] * dim[1] + y * dim[0] + x;
-                const auto sid = z * dim[0] * dim[1] + (dim[1] - y - 1) * dim[0] + x;
-                organs_flip[sid] = organs[fid];
-            }
-
-    return organs_flip;
+    return organs;
 }
 
 struct Organ {

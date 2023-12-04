@@ -23,7 +23,6 @@ Copyright 2023 Erlend Andersen
 #include <vtkDICOMMetaData.h>
 #include <vtkDICOMReader.h>
 #include <vtkImageGaussianSmooth.h>
-#include <vtkImageFlip.h>
 #include <vtkImageResize.h>
 #include <vtkIntArray.h>
 #include <vtkSmartPointer.h>
@@ -84,7 +83,6 @@ CTAECFilter readExposureData(vtkSmartPointer<vtkDICOMReader>& dicomReader)
 
     std::vector<std::pair<std::array<double, 3>, double>> data(n);
 
-    
     for (int i = 0; i < n; ++i) {
 
         const auto& etag = meta->Get(i, DC::Exposure);
@@ -95,15 +93,12 @@ CTAECFilter readExposureData(vtkSmartPointer<vtkDICOMReader>& dicomReader)
             data[i].first[j] = ptag.GetDouble(j);
     }
 
-    
-
-    
     std::sort(data.begin(), data.end(), [=](const auto& lh, const auto& rh) { return lh.first[imageDirIdx] < rh.first[imageDirIdx]; });
     std::vector<double> weights(data.size());
     std::transform(data.cbegin(), data.cend(), weights.begin(), [](const auto& v) { return v.second; });
 
-     auto startPosition = data.front().first;
-     auto stopPosition = data.back().first;
+    auto startPosition = data.front().first;
+    auto stopPosition = data.back().first;
     // from mm to cm
     for (std::size_t i = 0; i < 3; ++i) {
         startPosition[i] /= 10.0;
@@ -150,19 +145,13 @@ void CTImageImportPipeline::readImages(const QStringList& dicomPaths)
         dicomRectifier->SetInputConnection(dicomRescaler->GetOutputPort());
         dicomRectifier->ReleaseDataFlagOn();
 
-        //flip y axis since vtk use a left handed coordinate system
-        auto flipper = vtkSmartPointer<vtkImageFlip>::New();
-        flipper->SetFilteredAxis(1);
-        flipper->ReleaseDataFlagOn();
-        flipper->SetInputConnection(dicomRectifier->GetOutputPort());
-
         // image smoothing filter for volume rendering and segmentation
         vtkSmartPointer<vtkImageGaussianSmooth> smoother = vtkSmartPointer<vtkImageGaussianSmooth>::New();
         smoother->SetDimensionality(3);
         smoother->SetStandardDeviations(m_blurRadius[0], m_blurRadius[1], m_blurRadius[2]);
         smoother->SetRadiusFactors(m_blurRadius[0] * 2, m_blurRadius[1] * 2, m_blurRadius[2] * 2);
         smoother->ReleaseDataFlagOn();
-        smoother->SetInputConnection(flipper->GetOutputPort());
+        smoother->SetInputConnection(dicomRectifier->GetOutputPort());
 
         // rescale if we want to
         vtkSmartPointer<vtkImageResize> rescaler = vtkSmartPointer<vtkImageResize>::New();

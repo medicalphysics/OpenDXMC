@@ -245,7 +245,7 @@ void SliceRenderWidget::setupSlicePipeline(int orientation)
     if (auto cam = renderer->GetActiveCamera(); orientation == 0) {
         cam->SetFocalPoint(0, 0, 0);
         cam->SetPosition(0, 0, -1);
-        cam->SetViewUp(0, 1, 0);
+        cam->SetViewUp(0, -1, 0);
 
     } else if (orientation == 1) {
         cam->SetFocalPoint(0, 0, 0);

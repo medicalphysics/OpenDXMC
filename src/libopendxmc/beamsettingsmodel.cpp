@@ -309,11 +309,9 @@ void BeamSettingsModel::addDXBeam()
 {
     auto root = new LabelItem(tr("DX Beam"));
 
-    constexpr std::array<double, 3> pos_init = { 0, -50, 0 };
-    constexpr std::array<std::array<double, 3>, 2> cos_init = { 0, 0, 1, 1, 0, 0 };
     const std::map<std::size_t, double> filt_init = { { 13, 2.0 }, { 29, 0.1 } };
 
-    auto beam = std::make_shared<Beam>(DXBeam(pos_init, cos_init, filt_init));
+    auto beam = std::make_shared<Beam>(DXBeam(filt_init));
     auto beamActor = std::make_shared<BeamActorContainer>(beam);
     m_beams.push_back(std::make_pair(beam, beamActor));
 

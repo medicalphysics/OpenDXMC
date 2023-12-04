@@ -18,10 +18,8 @@ Copyright 2023 Erlend Andersen
 
 #include <dxmc_specialization.hpp>
 
-DXBeam::DXBeam(const std::array<double, 3>& pos,
-    const std::array<std::array<double, 3>, 2>& dircosines,
-    const std::map<std::size_t, double>& filtrationMaterials)
-    : dxmc::DXBeam<double>(pos, dircosines, filtrationMaterials)
+DXBeam::DXBeam(const std::map<std::size_t, double>& filtrationMaterials)
+    : dxmc::DXBeam<double>({ 0, 0, 0 }, { { { 1, 0, 0 }, { 0, -1, 0 } } }, filtrationMaterials)
 {
     updatePosition();
 }
@@ -60,7 +58,10 @@ std::array<double, 2> DXBeam::collimation() const
     return coll;
 }
 
-double DXBeam::primaryAngleDeg() const { return dxmc::RAD_TO_DEG<double>() * m_rotAngles[0]; }
+double DXBeam::primaryAngleDeg() const
+{
+    return dxmc::RAD_TO_DEG<double>() * m_rotAngles[0];
+}
 void DXBeam::setPrimaryAngleDeg(double ang)
 {
     m_rotAngles[0] = dxmc::DEG_TO_RAD<double>() * std::clamp(ang, -180.0, 180.0);
@@ -75,11 +76,11 @@ void DXBeam::setSecondaryAngleDeg(double ang)
 
 void DXBeam::updatePosition()
 {
-    std::array<std::array<double, 3>, 2> cosines = { { { 0, 0, 1 }, { 1, 0, 0 } } };
-    cosines[0] = dxmc::vectormath::rotate(cosines[0], { 0, 0, -1 }, m_rotAngles[0]);
-    cosines[1] = dxmc::vectormath::rotate(cosines[1], { 0, 0, -1 }, m_rotAngles[0]);
-    cosines[0] = dxmc::vectormath::rotate(cosines[0], { 1, 0, 0 }, m_rotAngles[1]);
-    cosines[1] = dxmc::vectormath::rotate(cosines[1], { 1, 0, 0 }, m_rotAngles[1]);
+    std::array<std::array<double, 3>, 2> cosines = { { { 0, 0, 1 }, { -1, 0, 0 } } };
+    cosines[0] = dxmc::vectormath::rotate(cosines[0], { 0, 0, 1 }, m_rotAngles[0]);
+    cosines[1] = dxmc::vectormath::rotate(cosines[1], { 0, 0, 1 }, m_rotAngles[0]);
+    cosines[0] = dxmc::vectormath::rotate(cosines[0], { -1, 0, 0 }, m_rotAngles[1]);
+    cosines[1] = dxmc::vectormath::rotate(cosines[1], { -1, 0, 0 }, m_rotAngles[1]);
     auto dir = dxmc::vectormath::cross(cosines[0], cosines[1]);
     auto ddist = dxmc::vectormath::scale(dir, -m_SPD);
 

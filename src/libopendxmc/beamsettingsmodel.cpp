@@ -527,6 +527,7 @@ void BeamSettingsModel::addCTSpiralBeam()
         addItem(root, "Source detector distance [cm]", setter, getter);
     }
     {
+        std::get<CTSpiralBeam>(*beam).setCollimation(3.84);
         auto setter = [=](double d) {
             auto& ct = std::get<CTSpiralBeam>(*beam);
             ct.setCollimation(d);
@@ -941,6 +942,26 @@ void BeamSettingsModel::addCTSpiralDualEnergyBeam()
         addItem(tubeAItem, "Tube half value layer [mmAl]", getter);
         addItem(tubeBItem, "Tube half value layer [mmAl]", getterB);
     }
+
+    {
+        auto setter = [=](bool d) {
+            if (m_image) {
+                auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
+                if (d) {
+                    ct.setAECFilter(m_image->aecData());
+                } else {
+                    ct.setAECFilter(CTAECFilter {});
+                }
+            }
+        };
+        auto getter = [=]() -> bool {
+            auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
+            const auto& aec = ct.AECFilter();
+            return aec.weights().size() > 2;
+        };
+        addItem(root, "Use current AEC profile", setter, getter);
+    }
+
     {
         auto getter = [=]() -> std::uint64_t {
             auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);

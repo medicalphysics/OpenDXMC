@@ -47,11 +47,11 @@ public:
         std::map<std::uint64_t, double> Z;
     };
 
-    struct AECData {
+    /* struct AECData {
         std::array<double, 3> startPosition;
         std::array<double, 3> stopPosition;
         std::vector<double> weights;
-    };
+    };*/
 
     DataContainer();
     void setSpacing(const std::array<double, 3>& cm);
@@ -72,6 +72,8 @@ public:
     const std::array<double, 3>& spacing() const { return m_spacing; }
     const std::array<std::size_t, 3>& dimensions() const { return m_dimensions; }
     const CTAECFilter& aecData() const { return m_aecdata; }
+    [[nodiscard]] CTAECFilter calculateAECfilterFromWaterEquivalentDiameter(bool useDensity = false) const;
+    [[nodiscard]] std::vector<double> calculateWaterEquivalentDiameter(bool useDensity = false) const;
 
     vtkSmartPointer<vtkImageData> vtkImage(ImageType);
 
@@ -80,7 +82,6 @@ public:
     const std::vector<double>& getDoseArray() const { return m_dose_array; }
     const std::vector<std::uint8_t>& getMaterialArray() const { return m_material_array; }
     const std::vector<std::uint8_t>& getOrganArray() const { return m_organ_array; }
-
 
     static std::string getImageAsString(ImageType type);
     std::vector<ImageType> getAvailableImages() const;

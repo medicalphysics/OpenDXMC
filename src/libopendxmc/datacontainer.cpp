@@ -34,10 +34,70 @@ std::uint64_t generateID(void)
 DataContainer::DataContainer()
 {
     m_uid = generateID();
-    m_aecdata.setData({ 0, 0, 0 }, { 0, 0, 0 }, { 1.0, 1.0 });    
+    m_aecdata.setData({ 0, 0, 0 }, { 0, 0, 0 }, { 1.0, 1.0 });
 }
 
 std::uint64_t DataContainer::ID() const { return m_uid; }
+
+std::vector<double> aecProfileFromWED(const std::vector<double>& wed)
+{
+    auto aec = wed;
+
+    constexpr auto u_water = 0.2; // about for 60-70 kev photons
+    for (auto& v : aec)
+        v = std::exp(u_water * v);
+
+    return aec;
+}
+
+CTAECFilter DataContainer::calculateAECfilterFromWaterEquivalentDiameter(bool useDensity) const
+{
+    double l = m_spacing[2] * m_dimensions[2] / 2.0;
+    std::array<double, 3> start = { 0, 0, -l };
+    std::array<double, 3> stop = { 0, 0, l };
+
+    CTAECFilter filter(start, stop, aecProfileFromWED(calculateWaterEquivalentDiameter(useDensity)));
+
+    return filter;
+}
+
+std::vector<double> DataContainer::calculateWaterEquivalentDiameter(bool useDensity) const
+{
+    DataContainer::ImageType type = DataContainer::ImageType::CT;
+    if (useDensity)
+        type = DataContainer::ImageType::Density;
+    else if (!hasImage(DataContainer::ImageType::CT))
+        type = DataContainer::ImageType::Density;
+
+    std::vector<double> r;
+    if (!hasImage(type))
+        return r;
+    const auto& dim = dimensions();
+    const auto dd = spacing();
+    const auto step = dim[0] * dim[1];
+
+    const auto& arr = type == DataContainer::ImageType::CT ? getCTArray() : getDensityArray();
+
+    r.reserve(dim[2]);
+
+    for (std::size_t i = 0; i < dim[2]; ++i) {
+        const auto start = step * i;
+        const auto stop = start + step;
+        if (type == DataContainer::ImageType::CT) {
+            const auto mean = std::reduce(std::execution::par_unseq, arr.cbegin() + start, arr.cbegin() + stop, 0.0) / step;
+            const auto Aw = (mean / 1000 + 1) * step * dd[0] * dd[1];
+            const auto Dw = 2 * std::sqrt(Aw / std::numbers::pi_v<double>);
+            r.push_back(Dw);
+        } else {
+            const auto sum = std::reduce(std::execution::par_unseq, arr.cbegin() + start, arr.cbegin() + stop, 0.0);
+            const auto Aw = sum * dd[0] * dd[1];
+            const auto Dw = 2 * std::sqrt(Aw / std::numbers::pi_v<double>);
+            r.push_back(Dw);
+        }
+    }
+
+    return r;
+}
 
 vtkSmartPointer<vtkImageData> DataContainer::vtkImage(ImageType type)
 {
@@ -211,8 +271,7 @@ void DataContainer::setMaterials(const std::vector<DataContainer::Material>& mat
 
 void DataContainer::setAecData(const std::array<double, 3>& start, const std::array<double, 3>& stop, const std::vector<double>& weights)
 {
-    m_aecdata.setData(start, stop,weights);
-    
+    m_aecdata.setData(start, stop, weights);
 }
 
 void DataContainer::setAecData(const CTAECFilter& d)

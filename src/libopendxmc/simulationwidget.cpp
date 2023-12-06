@@ -101,6 +101,10 @@ SimulationWidget::SimulationWidget(QWidget* parent)
     m_stop_simulation_button->setEnabled(false);
     layout->addWidget(start_stop_box);
 
+    m_progress_bar = new QProgressBar(this);
+    layout->addWidget(m_progress_bar);
+    m_progress_bar->hide();
+
     layout->addStretch(100);
 }
 
@@ -116,33 +120,12 @@ void SimulationWidget::setSimulationRunning(bool on)
         wid->setDisabled(on);
     m_start_simulation_button->setDisabled(on);
     m_stop_simulation_button->setDisabled(!on);
-    for (auto& p : m_progress_bars) {
-        p->setVisible(on);
-    }
+    m_progress_bar->setVisible(on);
 }
 
-void SimulationWidget::updateSimulationProgress(QString message, int percent, int job, int njobs)
-{
-    if (njobs > m_progress_bars.size()) {
-        auto lay = layout();
-        auto item = lay->takeAt(lay->count() - 1);
-        while (njobs != m_progress_bars.size()) {
-            auto p = new QProgressBar(this);
-            p->setRange(0, 0);
-            lay->addWidget(p);
-            m_progress_bars.push_back(p);
-        }
-        lay->addItem(item);
-    } else if (njobs < m_progress_bars.size()) {
-        auto lay = layout();
-        for (int n = njobs; n < m_progress_bars.size(); ++n) {
-            lay->removeWidget(m_progress_bars[n]);
-            m_progress_bars[n]->deleteLater();
-        }
-        m_progress_bars.erase(m_progress_bars.begin(), m_progress_bars.begin() + njobs);
-    }
-
-    auto p = m_progress_bars[job];
+void SimulationWidget::updateSimulationProgress(QString message, int percent)
+{    
+    auto p = m_progress_bar;
     if (p->maximum() == 0) {
         p->setRange(0, 100);
     }

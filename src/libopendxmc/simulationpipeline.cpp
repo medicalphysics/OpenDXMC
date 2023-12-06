@@ -32,7 +32,10 @@ SimulationPipeline::SimulationPipeline(QObject* parent)
     : BasePipeline(parent)
 {
 }
-
+SimulationPipeline::~SimulationPipeline()
+{
+    m_progress.setStopSimulation();
+}
 void SimulationPipeline::updateImageData(std::shared_ptr<DataContainer> data)
 {
     m_data = data;
@@ -98,25 +101,26 @@ void SimulationPipeline::setNumberOfThreads(int nthreads)
     const auto nthreads_max = 2 * std::max(1, static_cast<int>(std::thread::hardware_concurrency()));
     m_threads = std::clamp(nthreads, 0, nthreads_max);
 }
-
-void SimulationPipeline::startSimulation()
+void SimulationPipeline::finishingSimulation()
 {
-    run();
+    emit imageDataChanged(m_data);
+    killTimer(m_timerID);
+    emit simulationRunning(false);
 }
-
-void SimulationPipeline::stopSimulation()
+void SimulationPipeline::timerEvent(QTimerEvent* event)
 {
-    m_stop_flag = true;
-}
+    const auto [n, total] = m_progress.progress();
+    const int percent = static_cast<int>((n * 100) / total);
+    auto message = QString::fromStdString(m_progress.message());
+    emit this->simulationProgress(message, percent);
 
-void SimulationPipeline::run()
-{
-    emit simulationRunning(true);
-    if (!testIfReadyForSimulation(true)) {
-        emit simulationRunning(false);
-        return;
+    if (!m_progress.continueSimulation()) {
+        finishingSimulation();
     }
+}
 
+static void worker(bool deleteAirDose, int nthreads, std::shared_ptr<DataContainer> data, std::vector<std::shared_ptr<Beam>> beams, dxmc::TransportProgress* progress)
+{
     using VoxelGrid = dxmc::AAVoxelGrid<double, 5, 1, 255>;
     using World = dxmc::World<double, VoxelGrid>;
 
@@ -125,20 +129,20 @@ void SimulationPipeline::run()
 
     {
         std::vector<Material> materials;
-        for (const auto& materialTemplate : m_data->getMaterials()) {
+        for (const auto& materialTemplate : data->getMaterials()) {
             auto material = Material::byWeight(materialTemplate.Z);
             if (!material) {
                 // we failed to create material
-                emit simulationRunning(false);
+                progress->setStopSimulation();
                 return;
             } else {
                 materials.push_back(material.value());
             }
         }
-        const auto dims = m_data->dimensions();
-        const auto spacing = m_data->spacing();
-        const auto& densityArray = m_data->getDensityArray();
-        const auto& materialArray = m_data->getMaterialArray();
+        const auto dims = data->dimensions();
+        const auto spacing = data->spacing();
+        const auto& densityArray = data->getDensityArray();
+        const auto& materialArray = data->getMaterialArray();
         vgrid.setData(dims, densityArray, materialArray, materials);
         vgrid.setSpacing(spacing);
     }
@@ -146,40 +150,21 @@ void SimulationPipeline::run()
     world.build();
 
     dxmc::Transport transport;
-    if (m_threads > 0)
-        transport.setNumberOfThreads(m_threads);
+    if (nthreads > 0)
+        transport.setNumberOfThreads(nthreads);
 
-    m_stop_flag = false;
-    dxmc::TransportProgress progress;
-
-    const int Njobs = m_beams.size();
+    const int Njobs = beams.size();
 
     for (int jobIdx = 0; jobIdx < Njobs; jobIdx++) {
-        const auto& currentbeam = *(m_beams[jobIdx]);
-        std::visit([&](auto&& beam) {
-            bool running = true;
-            std::thread job([&, this]() {
-                transport(world, beam, &progress, true);
-                running = false;
-            });
-            while (running) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(500));
-                const auto [n, total] = progress.progress();
-                const int percent = static_cast<int>((n * 100) / total);
-                auto message = QString::fromStdString(progress.message());
-                emit this->simulationProgress(message, percent, jobIdx, Njobs);
-                if (m_stop_flag) {
-                    progress.setStopSimulation();
-                }
-            }
-            job.join();
-        },
+        const auto& currentbeam = *(beams[jobIdx]);
+        std::visit(
+            [&](auto&& beam) {
+                transport(world, beam, progress, true);
+            },
             currentbeam);
-    }
 
-    if (m_stop_flag) {
-        emit simulationRunning(false);
-        return;
+        if (!progress->continueSimulation())
+            return;
     }
 
     // collect dose
@@ -189,8 +174,8 @@ void SimulationPipeline::run()
         for (std::size_t i = 0; i < N; ++i)
             dose[i] = vgrid.doseScored(i).dose();
 
-        if (m_deleteAirDose) {
-            const auto matarr = m_data->getMaterialArray();
+        if (deleteAirDose) {
+            const auto matarr = data->getMaterialArray();
             std::transform(std::execution::par_unseq, dose.cbegin(), dose.cend(), matarr.cbegin(), dose.begin(), [](const auto d, const auto m) {
                 return m > 0 ? d : 0.0;
             });
@@ -201,14 +186,32 @@ void SimulationPipeline::run()
             std::transform(std::execution::par_unseq, dose.cbegin(), dose.cend(), dose.begin(), [](const auto d) {
                 return d * 1e3;
             });
-            m_data->setDoseUnits("uGy");
+            data->setDoseUnits("uGy");
         } else {
-            m_data->setDoseUnits("mGy");
+            data->setDoseUnits("mGy");
         }
 
-        m_data->setImageArray(DataContainer::ImageType::Dose, dose);
+        data->setImageArray(DataContainer::ImageType::Dose, dose);
     }
 
-    emit imageDataChanged(m_data);
-    emit simulationRunning(false);
+    progress->setStopSimulation();
+}
+
+void SimulationPipeline::startSimulation()
+{
+    emit simulationRunning(true);
+    m_timerID = startTimer(3000, Qt::VeryCoarseTimer);
+
+    if (!testIfReadyForSimulation(true)) {
+        emit simulationRunning(false);
+        return;
+    }
+
+    std::jthread t(worker, m_deleteAirDose, m_threads, m_data, m_beams, &m_progress);
+    t.detach();
+}
+
+void SimulationPipeline::stopSimulation()
+{
+    m_progress.setStopSimulation();
 }

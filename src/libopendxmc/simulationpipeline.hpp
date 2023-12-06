@@ -20,21 +20,27 @@ Copyright 2023 Erlend Andersen
 
 #include <basepipeline.hpp>
 #include <dxmc_specialization.hpp>
+#include "dxmc/transportprogress.hpp"
+
 
 #include <QString>
 
+
+
 class BeamActorContainer;
+class QTimerEvent;
 
 class SimulationPipeline : public BasePipeline {
     Q_OBJECT
 public:
     SimulationPipeline(QObject* parent = nullptr);
-
+    ~SimulationPipeline();
     void updateImageData(std::shared_ptr<DataContainer>) override;
     void addBeamActor(std::shared_ptr<BeamActorContainer> actor);
     void removeBeamActor(std::shared_ptr<BeamActorContainer> actor);    
     void setNumberOfThreads(int nthreads);
     void setDeleteAirDose(bool on) { m_deleteAirDose = on; };
+    void timerEvent(QTimerEvent*);
 
     void startSimulation();
     void stopSimulation();
@@ -42,11 +48,11 @@ public:
 signals:
     void simulationReady(bool on);
     void simulationRunning(bool running);
-    void simulationProgress(QString, int, int, int);
+    void simulationProgress(QString, int);
 
 protected:
     bool testIfReadyForSimulation(bool test_image = true) const;
-    void run();
+    void finishingSimulation();
 
 
 private:
@@ -55,5 +61,6 @@ private:
     int m_threads = 0;
     int m_lowenergyCorrection = 1;
     bool m_deleteAirDose = true;
-    bool m_stop_flag = false;
+    int m_timerID = 0;
+    dxmc::TransportProgress m_progress;
 };

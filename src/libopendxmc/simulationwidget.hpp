@@ -30,7 +30,7 @@ public:
     SimulationWidget(QWidget* parent = nullptr);
     void setSimulationReady(bool on);
     void setSimulationRunning(bool on);
-    void updateSimulationProgress(QString, int, int, int);
+    void updateSimulationProgress(QString, int);
 signals:
     void numberOfThreadsChanged(int);
     void lowEnergyCorrectionMethodChanged(int);
@@ -43,5 +43,5 @@ private:
     QPushButton* m_start_simulation_button = nullptr;
     QPushButton* m_stop_simulation_button = nullptr;
     std::vector<QWidget*> m_items;
-    std::vector<QProgressBar*> m_progress_bars;
+    QProgressBar* m_progress_bar = nullptr;
 };

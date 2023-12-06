@@ -419,6 +419,7 @@ void BeamSettingsModel::addDXBeam()
     }
 
     {
+        std::get<DXBeam>(*beam).setNumberOfExposures(64);
         auto setter = [=](std::uint64_t d) {
             auto& dx = std::get<DXBeam>(*beam);
             dx.setNumberOfExposures(d);
@@ -430,6 +431,8 @@ void BeamSettingsModel::addDXBeam()
         addItem(root, "Number of exposures", setter, getter);
     }
     {
+        std::get<DXBeam>(*beam).setNumberOfParticlesPerExposure(1e6);
+
         auto setter = [=](std::uint64_t d) {
             auto& dx = std::get<DXBeam>(*beam);
             dx.setNumberOfParticlesPerExposure(d);
@@ -515,6 +518,8 @@ void BeamSettingsModel::addCTSpiralBeam()
         addItem(root, "Scan FOV [cm]", setter, getter);
     }
     {
+        std::get<CTSpiralBeam>(*beam).setSourceDetectorDistance(119);
+
         auto setter = [=](double d) {
             auto& ct = std::get<CTSpiralBeam>(*beam);
             ct.setSourceDetectorDistance(d);
@@ -552,6 +557,7 @@ void BeamSettingsModel::addCTSpiralBeam()
         addItem(root, "Set start angle [deg]", setter, getter);
     }
     {
+        std::get<CTSpiralBeam>(*beam).setStepAngleDeg(5);
         auto setter = [=](double d) {
             auto& ct = std::get<CTSpiralBeam>(*beam);
             ct.setStepAngleDeg(d);
@@ -631,6 +637,7 @@ void BeamSettingsModel::addCTSpiralBeam()
         addItem(root, "Number of exposures", getter);
     }
     {
+        std::get<CTSpiralBeam>(*beam).setNumberOfParticlesPerExposure(1e6);
         auto setter = [=](std::uint64_t d) {
             auto& ct = std::get<CTSpiralBeam>(*beam);
             ct.setNumberOfParticlesPerExposure(d);
@@ -726,6 +733,7 @@ void BeamSettingsModel::addCTSpiralDualEnergyBeam()
         addItem(root, "Scan FOV Tube B [cm]", setterB, getterB);
     }
     {
+        std::get<CTSpiralDualEnergyBeam>(*beam).setSourceDetectorDistance(119);
         auto setter = [=](double d) {
             auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
             ct.setSourceDetectorDistance(d);
@@ -738,6 +746,7 @@ void BeamSettingsModel::addCTSpiralDualEnergyBeam()
         addItem(root, "Source detector distance [cm]", setter, getter);
     }
     {
+        std::get<CTSpiralDualEnergyBeam>(*beam).setCollimation(3.84);
         auto setter = [=](double d) {
             auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
             ct.setCollimation(d);
@@ -762,6 +771,7 @@ void BeamSettingsModel::addCTSpiralDualEnergyBeam()
         addItem(root, "Set start angle [deg]", setter, getter);
     }
     {
+        std::get<CTSpiralDualEnergyBeam>(*beam).setStepAngleDeg(5);
         auto setter = [=](double d) {
             auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
             ct.setStepAngleDeg(d);
@@ -970,6 +980,7 @@ void BeamSettingsModel::addCTSpiralDualEnergyBeam()
         addItem(root, "Number of exposures", getter);
     }
     {
+        std::get<CTSpiralDualEnergyBeam>(*beam).setNumberOfParticlesPerExposure(1e6);
         auto setter = [=](std::uint64_t d) {
             auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
             ct.setNumberOfParticlesPerExposure(d);

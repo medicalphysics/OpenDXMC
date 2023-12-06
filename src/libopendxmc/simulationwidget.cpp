@@ -55,7 +55,7 @@ SimulationWidget::SimulationWidget(QWidget* parent)
 
     const auto n_threads = std::max(1, static_cast<int>(std::thread::hardware_concurrency()));
     auto threads_txt = tr("Select number of threads for simulations, setting this to 0 uses ");
-    threads_txt += QString::number(n_threads) + tr(" threads and is optimal for your system.");
+    threads_txt += QString::number(n_threads) + tr(" threads.");
     // threads widget
     auto [threads_spin, threads_box] = createWidget<QSpinBox>(tr("Number of threads"), threads_txt, this);
     threads_spin->setRange(0, n_threads * 2);

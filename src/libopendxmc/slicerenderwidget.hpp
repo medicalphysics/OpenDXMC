@@ -59,7 +59,7 @@ public:
 protected:
     void setNewImageData(vtkSmartPointer<vtkImageData> data, bool rezoom_camera = false);
     void setupSlicePipeline(int orientation);
-    void switchLUTtable(DataContainer::ImageType type, int n_colors = -1);
+    void switchLUTtable(DataContainer::ImageType type);
     void resizeEvent(QResizeEvent* event) override;
     void updateTextPositions(bool render = false);
     void resetCamera();

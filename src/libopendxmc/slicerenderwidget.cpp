@@ -385,12 +385,14 @@ void SliceRenderWidget::setInterpolationType(int type)
     Render();
 }
 
-void SliceRenderWidget::switchLUTtable(DataContainer::ImageType type, int n_colors)
+void SliceRenderWidget::switchLUTtable(DataContainer::ImageType type)
 {
     auto prop = imageSlice->GetProperty();
     lut_windowing[lut_current_type] = std::make_pair(prop->GetColorLevel(), prop->GetColorWindow());
 
     if (type == DataContainer::ImageType::Material || type == DataContainer::ImageType::Organ) {
+        auto vtkimage = m_data->vtkImage(type);
+        auto n_colors = static_cast<int>(vtkimage->GetScalarRange()[1]);
         if (n_colors > 1 && lut->GetNumberOfColors() != n_colors) {
             lut->SetNumberOfTableValues(n_colors);
             lut->SetTableValue(0, 0, 0, 0, 0);
@@ -430,6 +432,14 @@ void SliceRenderWidget::switchLUTtable(DataContainer::ImageType type, int n_colo
         if (lut_windowing.contains(type)) {
             prop->SetColorLevel(lut_windowing[type].first);
             prop->SetColorWindow(lut_windowing[type].second);
+        } else {
+            auto vtkimage = m_data->vtkImage(type);
+            std::array<double, 2> range;
+            vtkimage->GetScalarRange(range.data());
+            auto wl = (range[0] + range[1]) / 2;
+            auto ww = range[1] - range[0];
+            prop->SetColorLevel(wl);
+            prop->SetColorWindow(ww);
         }
     }
     imageSlice->Update();
@@ -442,12 +452,8 @@ void SliceRenderWidget::showData(DataContainer::ImageType type)
         return;
     if (m_data->hasImage(type)) {
         auto vtkimage = m_data->vtkImage(type);
-        if (type == DataContainer::ImageType::Material || type == DataContainer::ImageType::Organ) {
-            auto max_val = static_cast<int>(vtkimage->GetScalarRange()[1]);
-            switchLUTtable(type, max_val + 1);
-        } else {
-            switchLUTtable(type);
-        }
+        switchLUTtable(type);
+
         setNewImageData(vtkimage, false);
         if (lowerLeftText) {
             lowerLeftText->SetInput(m_data->units(type).c_str());

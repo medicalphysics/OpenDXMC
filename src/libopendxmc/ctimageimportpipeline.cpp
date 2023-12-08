@@ -24,7 +24,9 @@ Copyright 2023 Erlend Andersen
 #include <vtkDICOMReader.h>
 #include <vtkImageGaussianSmooth.h>
 #include <vtkImageResize.h>
+#include <vtkImageReslice.h>
 #include <vtkIntArray.h>
+#include <vtkMatrix4x4.h>
 #include <vtkSmartPointer.h>
 #include <vtkStringArray.h>
 
@@ -114,6 +116,19 @@ CTAECFilter readExposureData(vtkSmartPointer<vtkDICOMReader>& dicomReader)
     return res;
 }
 
+bool isIdentity(vtkMatrix4x4* matrix)
+{
+    std::array<double, 3> trace = {
+        matrix->GetElement(0, 0),
+        matrix->GetElement(1, 1),
+        matrix->GetElement(2, 2)
+    };
+    bool res = true;
+    for (auto v : trace)
+        res = res && std::abs(1 - v) < 1e-6;
+    return res;
+}
+
 void CTImageImportPipeline::readImages(const QStringList& dicomPaths)
 {
     emit dataProcessingStarted();
@@ -160,6 +175,15 @@ void CTImageImportPipeline::readImages(const QStringList& dicomPaths)
         rescaler->SetOutputSpacing(m_outputSpacing.data());
         rescaler->ReleaseDataFlagOn();
 
+        // If the images are an mpr, we align axis to world axis
+        vtkSmartPointer<vtkImageReslice> reslicer = vtkSmartPointer<vtkImageReslice>::New();
+        reslicer->SetInputConnection(dicomRectifier->GetOutputPort());
+        reslicer->SetInterpolationModeToNearestNeighbor();
+        reslicer->SetInterpolationModeToLinear();
+        reslicer->ReleaseDataFlagOn();
+        reslicer->AutoCropOutputOn();
+        reslicer->SetBackgroundLevel(-1024);
+
         dicomReader->SetFileNames(fileNameArray);
         dicomReader->SortingOn();
         dicomReader->Update();
@@ -169,15 +193,31 @@ void CTImageImportPipeline::readImages(const QStringList& dicomPaths)
 
         dicomRectifier->Update();
         auto rectifiedMatrix = dicomRectifier->GetVolumeMatrix();
+        auto resliceMatrix = vtkSmartPointer<vtkMatrix4x4>::New();
+        resliceMatrix->DeepCopy(rectifiedMatrix);
+        resliceMatrix->Invert();
+        reslicer->SetResliceAxes(resliceMatrix);
 
         // selecting image data i.e are we rescaling or not
         vtkSmartPointer<vtkImageData> data;
-        if (!m_useOutputSpacing) {
-            smoother->Update();
-            data = smoother->GetOutput();
+        if (isIdentity(resliceMatrix)) {
+            if (!m_useOutputSpacing) {
+                smoother->Update();
+                data = smoother->GetOutput();
+            } else {
+                rescaler->Update();
+                data = rescaler->GetOutput();
+            }
         } else {
-            rescaler->Update();
-            data = rescaler->GetOutput();
+            if (!m_useOutputSpacing) {
+
+                reslicer->SetInputConnection(smoother->GetOutputPort());
+            } else {
+                reslicer->SetInputConnection(rescaler->GetOutputPort());
+            }
+            reslicer->Update();
+            data = reslicer->GetOutput();
+            bool test = true;
         }
 
         std::array<int, 3> dims_int;

@@ -205,7 +205,7 @@ SliceRenderWidget::SliceRenderWidget(int orientation, QWidget* parent)
     // lut
     lut = vtkSmartPointer<vtkWindowLevelLookupTable>::New();
 
-    lut_windowing[DataContainer::ImageType::CT] = std::make_pair(0, 1000);
+    lut_windowing[DataContainer::ImageType::CT] = std::make_pair(100, 800);
     lut_windowing[DataContainer::ImageType::Density] = std::make_pair(1.0, 1.0);
 
     setupSlicePipeline(orientation);

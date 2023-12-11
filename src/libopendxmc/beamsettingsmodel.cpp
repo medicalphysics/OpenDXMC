@@ -611,7 +611,11 @@ void BeamSettingsModel::addCTSpiralBeam()
             if (m_image) {
                 auto& ct = std::get<CTSpiralBeam>(*beam);
                 if (d) {
-                    ct.setAECFilter(m_image->aecData());
+                    const auto& ct_aec = m_image->aecData();
+                    if (ct_aec.isEmpty())
+                        ct.setAECFilter(m_image->calculateAECfilterFromWaterEquivalentDiameter());
+                    else
+                        ct.setAECFilter(ct_aec);
                 } else {
                     ct.setAECFilter(CTAECFilter {});
                 }
@@ -620,7 +624,7 @@ void BeamSettingsModel::addCTSpiralBeam()
         auto getter = [=]() -> bool {
             auto& ct = std::get<CTSpiralBeam>(*beam);
             const auto& aec = ct.AECFilter();
-            return aec.weights().size() > 2;
+            return !aec.isEmpty();
         };
         addItem(root, "Use current AEC profile", setter, getter);
     }

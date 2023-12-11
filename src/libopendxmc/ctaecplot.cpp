@@ -70,58 +70,51 @@ double dist(const std::array<double, 3>& v1, const std::array<double, 3>& v2)
 
 void CTAECPlot::updatePlot()
 {
-    if (!m_data)
-        return;
-    {
-        auto series_aec = new QLineSeries(this);
-        const auto& aec = m_data->aecData();
-        const auto length = aec.length();
-        const auto& weights = aec.weights();
-        const auto step_aec = length / (weights.size() - 1);
-        QList<QPointF> aec_qt(weights.size());
-        for (std::size_t i = 0; i < weights.size(); ++i) {
-            aec_qt[i].setX(i * step_aec - length / 2);
-            aec_qt[i].setY(weights[i]);
-        }
-        series_aec->append(aec_qt);
-        m_xaxis->setRange(-length / 2, length / 2);
-        const auto max = *std::max_element(weights.cbegin(), weights.cend());
-        m_yaxis->setRange(0.0, max * 1.1);
-
+    if (!m_data) {
+        chart()->setTitle("");
         chart()->removeAllSeries();
-        chart()->addSeries(series_aec);
-
-        series_aec->attachAxis(m_xaxis);
-        series_aec->attachAxis(m_yaxis);
-
-        m_xaxis->setLabelsVisible(true);
+        return;
     }
-    std::vector<CTAECFilter> f;
-    f.push_back(m_data->calculateAECfilterFromWaterEquivalentDiameter(false));
-    f.push_back(m_data->calculateAECfilterFromWaterEquivalentDiameter(true));
 
-    for (const auto& filt : f) {
-
-        auto series_f = new QLineSeries(this);
-
-        const auto length = filt.length();
-        const auto& weights = filt.weights();
-        const auto step = length / (weights.size() - 1);
-        QList<QPointF> filt_qt(weights.size());
-        for (std::size_t i = 0; i < weights.size(); ++i) {
-            filt_qt[i].setX(i * step - length / 2);
-            filt_qt[i].setY(weights[i]);
-        }
-        series_f->append(filt_qt);
-        chart()->addSeries(series_f);
-        series_f->attachAxis(m_xaxis);
-        series_f->attachAxis(m_yaxis);
+    CTAECFilter aec = m_data->aecData();
+    chart()->setTitle(tr("AEC from DiCOM exposure"));
+    if (aec.isEmpty()) {
+        aec = m_data->calculateAECfilterFromWaterEquivalentDiameter();
+        chart()->setTitle(tr("AEC from water equiv. diameter"));
     }
+    if (aec.isEmpty()) {
+        chart()->removeAllSeries();
+        chart()->setTitle("");
+        return;
+    }
+
+    auto series_aec = new QLineSeries(this);
+    const auto length = aec.length();
+    const auto& weights = aec.weights();
+    const auto step_aec = length / (weights.size() - 1);
+    QList<QPointF> aec_qt(weights.size());
+    for (std::size_t i = 0; i < weights.size(); ++i) {
+        aec_qt[i].setX(i * step_aec - length / 2);
+        aec_qt[i].setY(weights[i]);
+    }
+    series_aec->append(aec_qt);
+    m_xaxis->setRange(-length / 2, length / 2);
+    const auto max = *std::max_element(weights.cbegin(), weights.cend());
+    m_yaxis->setRange(0.0, max * 1.1);
+
+    chart()->removeAllSeries();
+    chart()->addSeries(series_aec);
+
+    series_aec->attachAxis(m_xaxis);
+    series_aec->attachAxis(m_yaxis);
+
+    m_xaxis->setLabelsVisible(true);
 }
+
 void CTAECPlot::updateImageData(std::shared_ptr<DataContainer> d)
 {
     if (m_data && d) {
-        if (m_data->ID() == d->ID() && !d->hasImage(DataContainer::ImageType::Density))
+        if (m_data->ID() == d->ID())
             return;
     }
     m_data = d;

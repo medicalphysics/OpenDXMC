@@ -61,7 +61,7 @@ CTAECFilter readExposureData(vtkSmartPointer<vtkDICOMReader>& dicomReader)
     if (!meta)
         return res;
     const auto n = meta->GetNumberOfInstances();
-    if (n < 2)
+    if (n <= 2)
         return res;
 
     if (!meta->Has(DC::Exposure)) {
@@ -94,6 +94,12 @@ CTAECFilter readExposureData(vtkSmartPointer<vtkDICOMReader>& dicomReader)
         for (std::size_t j = 0; j < 3; ++j)
             data[i].first[j] = ptag.GetDouble(j);
     }
+
+    // check if all is equal
+    const auto first_val = data.front().second;
+    const auto all_equal = std::all_of(data.cbegin(), data.cend(), [first_val](const auto& v) { return v.second == first_val; });
+    if (all_equal)
+        return res;
 
     std::sort(data.begin(), data.end(), [=](const auto& lh, const auto& rh) { return lh.first[imageDirIdx] < rh.first[imageDirIdx]; });
     std::vector<double> weights(data.size());
@@ -181,8 +187,8 @@ void CTImageImportPipeline::readImages(const QStringList& dicomPaths)
         reslicer->SetInterpolationModeToNearestNeighbor();
         reslicer->SetInterpolationModeToLinear();
         reslicer->ReleaseDataFlagOn();
-        reslicer->AutoCropOutputOn();
-        reslicer->SetBackgroundLevel(-1024);
+        reslicer->AutoCropOutputOff();
+        reslicer->SetBackgroundLevel(-1000);
 
         dicomReader->SetFileNames(fileNameArray);
         dicomReader->SortingOn();

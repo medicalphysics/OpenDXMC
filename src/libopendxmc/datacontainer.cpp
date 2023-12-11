@@ -85,8 +85,8 @@ std::vector<double> DataContainer::calculateWaterEquivalentDiameter(bool useDens
         const auto stop = start + step;
         if (type == DataContainer::ImageType::CT) {
             const auto mean = std::reduce(std::execution::par_unseq, arr.cbegin() + start, arr.cbegin() + stop, 0.0) / step;
-            const auto Aw = (mean / 1000 + 1) * step * dd[0] * dd[1];
-            const auto Dw = 2 * std::sqrt(Aw / std::numbers::pi_v<double>);
+            const double Aw = (mean / 1000 + 1) * step * dd[0] * dd[1];
+            const auto Dw = 2 * std::sqrt(std::max(Aw, 0.0) / std::numbers::pi_v<double>);
             r.push_back(Dw);
         } else {
             const auto sum = std::reduce(std::execution::par_unseq, arr.cbegin() + start, arr.cbegin() + stop, 0.0);
@@ -170,12 +170,6 @@ vtkSmartPointer<vtkImageData> DataContainer::generate_vtkImage(ImageType type)
     vtkimport->Update();
 
     vtkSmartPointer<vtkImageData> image = vtkimport->GetOutput();
-
-    // for returning vtksmart pointer with copy of vtkimagedata
-    /* vtkimport->CopyImportVoidPointer(data, size());
-    vtkSmartPointer<vtkImageData> image;
-    image.TakeReference(vtkimport->GetOutput());
-    */
 
     std::array<double, 3> origin = {
         -(m_spacing[0] * m_dimensions[0]) / 2,

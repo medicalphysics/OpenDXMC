@@ -41,6 +41,14 @@ qt_add_resources(opendxmc icons
     "${CMAKE_SOURCE_DIR}/data/icons/settings.png"
 )
 
+# Adding base bowtiefilters to binary resource
+qt_add_resources(opendxmc bowtiefilters
+    PREFIX "/bowtiefilters"
+    BASE "${CMAKE_SOURCE_DIR}/data/bowtiefilters"
+    FILES 
+    "${CMAKE_SOURCE_DIR}/data/bowtiefilters/bowtiefilters.json"     
+)
+
 # adding phantoms to be available in binary folder
 add_custom_command(
   TARGET opendxmc

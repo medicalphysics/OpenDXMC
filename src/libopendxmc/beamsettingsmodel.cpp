@@ -17,6 +17,7 @@ Copyright 2024 Erlend Andersen
 */
 
 #include <beamsettingsmodel.hpp>
+#include <bowtiefilterreader.hpp>
 
 #include <array>
 #include <charconv>
@@ -196,6 +197,9 @@ BeamSettingsModel::BeamSettingsModel(QObject* parent)
     header.append(tr("Value"));
     setHorizontalHeaderLabels(header);
     connect(this, &QStandardItemModel::dataChanged, [this](const auto& arg) { emit this->requestRender(); });
+
+    // reading bowtiefilters
+    m_bowtieFilters = BowtieFilterReader::read(":bowtiefilters/bowtiefilters.json");
 }
 
 void BeamSettingsModel::updateImageData(std::shared_ptr<DataContainer> data)

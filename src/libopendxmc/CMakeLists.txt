@@ -4,6 +4,8 @@ qt_add_library(libopendxmc STATIC
 	beamsettingsview.cpp
 	beamsettingsmodel.cpp
 	beamactorcontainer.cpp
+	beamsettingsdelegate.cpp
+	bowtiefilterreader.cpp
 	datacontainer.cpp
 	ctimageimportpipeline.cpp
 	ctsegmentationpipeline.cpp

@@ -22,7 +22,9 @@ Copyright 2024 Erlend Andersen
 #include <datacontainer.hpp>
 #include <dxmc_specialization.hpp>
 
+#include <QMap>
 #include <QStandardItemModel>
+#include <QString>
 
 #include <memory>
 
@@ -44,4 +46,5 @@ signals:
 private:
     std::vector<std::pair<std::shared_ptr<Beam>, std::shared_ptr<BeamActorContainer>>> m_beams;
     std::shared_ptr<DataContainer> m_image = nullptr;
+    QMap<QString, BowtieFilter> m_bowtieFilters;
 };

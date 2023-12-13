@@ -64,7 +64,7 @@
           "weight": 2.09645
         }
       ],
-      "name": "Siemens Definition Flash W1 80kV"
+      "name": "Siemens Definition Flash W1  80kV"
     },
     {
       "filterdata": [
@@ -295,7 +295,7 @@
           "weight": 0.384338
         }
       ],
-      "name": "Siemens Definition Flash W2 80kV"
+      "name": "Siemens Definition Flash W2  80kV"
     },
     {
       "filterdata": [
@@ -328,7 +328,7 @@
           "weight": 0.201356
         }
       ],
-      "name": "Siemens Definition Flash W2 70kV"
+      "name": "Siemens Definition Flash W2  70kV"
     },
     {
       "filterdata": [
@@ -361,7 +361,7 @@
           "weight": 0.111661
         }
       ],
-      "name": "Siemens Definition Flash W2+W3 70kV"
+      "name": "Siemens Definition Flash W2+W3  70kV"
     },
     {
       "filterdata": [
@@ -460,7 +460,7 @@
           "weight": 1.3692
         }
       ],
-      "name": "Siemens Definition Flash W1 70kV"
+      "name": "Siemens Definition Flash W1  70kV"
     },
     {
       "filterdata": [
@@ -526,7 +526,7 @@
           "weight": 0.533293
         }
       ],
-      "name": "Siemens Definition Flash W3 70kV"
+      "name": "Siemens Definition Flash W3  70kV"
     },
     {
       "filterdata": [
@@ -559,7 +559,7 @@
           "weight": 0.219894
         }
       ],
-      "name": "Siemens Definition Flash W2+W3 80kV"
+      "name": "Siemens Definition Flash W2+W3  80kV"
     },
     {
       "filterdata": [
@@ -658,7 +658,7 @@
           "weight": 0.9101450000000001
         }
       ],
-      "name": "Siemens Definition Flash W3 80kV"
+      "name": "Siemens Definition Flash W3  80kV"
     },
     {
       "filterdata": [
@@ -703,7 +703,7 @@
           "weight": 0.001636242
         }
       ],
-      "name": "Siemens Force W1 70kVp"
+      "name": "Siemens Force W1  70kVp"
     },
     {
       "filterdata": [
@@ -748,7 +748,7 @@
           "weight": 0.003272608
         }
       ],
-      "name": "Siemens Force W1 80kVp"
+      "name": "Siemens Force W1  80kVp"
     },
     {
       "filterdata": [
@@ -793,7 +793,7 @@
           "weight": 0.005474747
         }
       ],
-      "name": "Siemens Force W1 90kVp"
+      "name": "Siemens Force W1  90kVp"
     },
     {
       "filterdata": [
@@ -1108,7 +1108,7 @@
           "weight": 0.00056244
         }
       ],
-      "name": "Siemens Force W2 70kVp"
+      "name": "Siemens Force W2  70kVp"
     },
     {
       "filterdata": [
@@ -1153,7 +1153,7 @@
           "weight": 0.001171479
         }
       ],
-      "name": "Siemens Force W2 80kVp"
+      "name": "Siemens Force W2  80kVp"
     },
     {
       "filterdata": [
@@ -1198,7 +1198,7 @@
           "weight": 0.002113795
         }
       ],
-      "name": "Siemens Force W2 90kVp"
+      "name": "Siemens Force W2  90kVp"
     },
     {
       "filterdata": [

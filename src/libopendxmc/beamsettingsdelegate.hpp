@@ -18,16 +18,19 @@ Copyright 2024 Erlend Andersen
 
 #pragma once
 
+#include <beamsettingsmodel.hpp>
+
 #include <QStyledItemDelegate>
 
 class BeamSettingsDelegate : public QStyledItemDelegate {
     Q_OBJECT
 public:
-    BeamSettingsDelegate(QObject* parent = nullptr);
+    BeamSettingsDelegate(BeamSettingsModel* model, QObject* parent = nullptr);
     QWidget* createEditor(QWidget* parent, const QStyleOptionViewItem& option, const QModelIndex& index) const override;
-    void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const override;
     void setEditorData(QWidget* editor, const QModelIndex& index) const override;
     void setModelData(QWidget* editor, QAbstractItemModel* model, const QModelIndex& index) const override;
-    QSize sizeHint(const QStyleOptionViewItem& option, const QModelIndex& index) const override;
-    void updateEditorGeometry(QWidget* editor, const QStyleOptionViewItem& option, const QModelIndex& index) const override;
+    QString displayText(const QVariant& value, const QLocale& locale) const override;
+
+private:
+    BeamSettingsModel* m_model = nullptr;
 };

@@ -16,6 +16,7 @@ along with OpenDXMC. If not, see < https://www.gnu.org/licenses/>.
 Copyright 2024 Erlend Andersen
 */
 
+#include <beamsettingsdelegate.hpp>
 #include <beamsettingsview.hpp>
 
 #include <QKeyEvent>
@@ -38,6 +39,8 @@ BeamSettingsView::BeamSettingsView(QWidget* parent)
     connect(this, &BeamSettingsView::imageDataChanged, m_model, &BeamSettingsModel::updateImageData);
     connect(this, &BeamSettingsView::requestDeleteBeamIndex, m_model, &BeamSettingsModel::deleteBeam);
 
+    auto itemdelegate = new BeamSettingsDelegate(m_model, this);
+    setItemDelegate(itemdelegate);
     m_workerThread.start();
 }
 

@@ -152,7 +152,6 @@ public:
                     m_setter(value == Qt::CheckState::Checked);
                 }
             }
-
             QStandardItem::setData(value, role);
         }
     }
@@ -205,6 +204,11 @@ BeamSettingsModel::BeamSettingsModel(QObject* parent)
 void BeamSettingsModel::updateImageData(std::shared_ptr<DataContainer> data)
 {
     m_image = data;
+}
+
+const QMap<QString, BowtieFilter>& BeamSettingsModel::bowtieFilters() const
+{
+    return m_bowtieFilters;
 }
 
 void BeamSettingsModel::deleteBeam(int index)
@@ -549,6 +553,25 @@ void BeamSettingsModel::addCTSpiralBeam()
         addItem(root, "Total collimation [cm]", setter, getter);
     }
     {
+        auto bowtiekey = std::make_shared<QString>(m_bowtieFilters.firstKey());
+        auto& ct = std::get<CTSpiralBeam>(*beam);
+        ct.setBowtieFilter(m_bowtieFilters.value(*bowtiekey));
+        auto setter = [=](const BeamSettingsModel::BowtieSelection& d) {
+            if (d.bowtieMap->contains(d.currentKey)) {
+                *bowtiekey = d.currentKey;
+                auto& ct = std::get<CTSpiralBeam>(*beam);
+                ct.setBowtieFilter(d.bowtieMap->value(d.currentKey));
+            }
+        };
+        auto getter = [=]() -> BeamSettingsModel::BowtieSelection {
+            BeamSettingsModel::BowtieSelection d { .bowtieMap = &m_bowtieFilters };
+            d.currentKey = *bowtiekey;
+            return d;
+        };
+        addItem(root, "Bowtie filter", setter, getter);
+    }
+
+    {
         auto setter = [=](double d) {
             auto& ct = std::get<CTSpiralBeam>(*beam);
             ct.setStartAngleDeg(d);
@@ -766,6 +789,43 @@ void BeamSettingsModel::addCTSpiralDualEnergyBeam()
         };
         addItem(root, "Total collimation [cm]", setter, getter);
     }
+    {
+        auto bowtiekey = std::make_shared<QString>(m_bowtieFilters.firstKey());
+        auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
+        ct.setBowtieFilterA(m_bowtieFilters.value(*bowtiekey));
+        auto setter = [=](const BeamSettingsModel::BowtieSelection& d) {
+            if (d.bowtieMap->contains(d.currentKey)) {
+                *bowtiekey = d.currentKey;
+                auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
+                ct.setBowtieFilterA(d.bowtieMap->value(d.currentKey));
+            }
+        };
+        auto getter = [=]() -> BeamSettingsModel::BowtieSelection {
+            BeamSettingsModel::BowtieSelection d { .bowtieMap = &m_bowtieFilters };
+            d.currentKey = *bowtiekey;
+            return d;
+        };
+        addItem(root, "Bowtie filter Tube A", setter, getter);
+    }
+    {
+        auto bowtiekey = std::make_shared<QString>(m_bowtieFilters.firstKey());
+        auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
+        ct.setBowtieFilterB(m_bowtieFilters.value(*bowtiekey));
+        auto setter = [=](const BeamSettingsModel::BowtieSelection& d) {
+            if (d.bowtieMap->contains(d.currentKey)) {
+                *bowtiekey = d.currentKey;
+                auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
+                ct.setBowtieFilterB(d.bowtieMap->value(d.currentKey));
+            }
+        };
+        auto getter = [=]() -> BeamSettingsModel::BowtieSelection {
+            BeamSettingsModel::BowtieSelection d { .bowtieMap = &m_bowtieFilters };
+            d.currentKey = *bowtiekey;
+            return d;
+        };
+        addItem(root, "Bowtie filter Tube B", setter, getter);
+    }
+
     {
         auto setter = [=](double d) {
             auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);

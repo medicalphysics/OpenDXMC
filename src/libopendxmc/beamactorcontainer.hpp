@@ -37,7 +37,7 @@ public:
 protected:
 private:
     std::shared_ptr<Beam> m_beam = nullptr;
-    vtkSmartPointer<vtkPolyData> m_polydata = nullptr;   
+    vtkSmartPointer<vtkPolyData> m_polydata = nullptr;
 };
 
 #include <QMetaType>

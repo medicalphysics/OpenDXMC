@@ -6,19 +6,20 @@ qt_add_library(libopendxmc STATIC
 	beamactorcontainer.cpp
 	beamsettingsdelegate.cpp
 	bowtiefilterreader.cpp
-	datacontainer.cpp
+	datacontainer.cpp	
 	ctimageimportpipeline.cpp
 	ctsegmentationpipeline.cpp
 	ctaecplot.cpp
 	colormaps.cpp
+	custominteractorstyleimage.cpp
 	dosetablepipeline.cpp
 	dosetablewidget.cpp
 	dxmc_specialization.cpp
+	hdf5wrapper.cpp
 	icrpphantomimportwidget.cpp
 	icrpphantomimportpipeline.cpp
-	slicerenderwidget.cpp
-	custominteractorstyleimage.cpp
 	renderwidgetscollection.cpp	
+	slicerenderwidget.cpp		
 	simulationpipeline.cpp
 	simulationwidget.cpp
 	volumerenderwidget.cpp

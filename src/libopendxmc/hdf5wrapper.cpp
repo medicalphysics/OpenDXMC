@@ -18,10 +18,89 @@ Copyright 2023 Erlend Andersen
 
 #include <hdf5wrapper.hpp>
 
-template <typename T, std::size_t N>
-    requires std::is_integral_v<T> || std::is_floating_point_v<T>
-bool saveArray(std::unique_ptr<H5::H5File>& file, const std::string& path, const std::vector<T>& v, const std::array<std::size_t, N>& dims)
+#include <concepts>
+#include <ranges>
+#include <span>
+
+std::vector<std::string> split(const std::string& str, const std::string& sep)
 {
+    auto s = str | std::ranges::views::split(std::string_view(sep)) | std::ranges::to<std::vector<std::string>>();
+    return s;
+}
+std::string join(const std::vector<std::string>& v, const std::string& sep)
+{
+    auto s = v | std::ranges::views::join(std::string_view(sep)) | std::ranges::to<std::string>();
+    return s;
+}
+
+std::unique_ptr<H5::Group> getGroup(std::unique_ptr<H5::H5File>& file, const std::vector<std::string>& names, bool create = false)
+{
+    if (!file)
+        return nullptr;
+    std::unique_ptr<H5::Group> g = nullptr;
+    std::string fullname;
+    for (const auto& name : names) {
+        fullname += "/" + name;
+        if (!file->nameExists(fullname.c_str())) {
+            if (create) {
+                g = std::make_unique<H5::Group>(file->createGroup(fullname.c_str()));
+            } else {
+                return nullptr;
+            }
+        } else {
+            g = std::make_unique<H5::Group>(file->openGroup(fullname.c_str()));
+        }
+    }
+    return g;
+}
+std::unique_ptr<H5::Group> getGroup(std::unique_ptr<H5::H5File>& file, const std::string& path, bool create = false)
+{
+    const auto names = split(path, "/");
+    return getGroup(file, names, create);
+}
+
+template <typename T, std::size_t N>
+    requires(std::is_integral_v<T> || std::is_floating_point_v<T>)
+bool saveArray(std::unique_ptr<H5::H5File>& file, const std::vector<std::string>& names, std::span<const T>, const std::array<std::size_t, N>& dims)
+{
+    if (!file)
+        return false;
+    if (names.size() < 1)
+        return false;
+    auto arrname = names.back();
+    auto group = getGroup(file, names, true);
+    if (!group)
+        return false;
+
+    constexpr int rank = static_cast<int>(N);
+
+    auto dataspace = std::make_unique<H5::DataSpace>(rank, dims.data());
+
+    H5::DSetCreatPropList ds_createplist;
+    ds_createplist.setChunk(rank, dims.data());
+    ds_createplist.setDeflate(6);
+
+    H5::PredType h5type = H5::PredType::NATIVE_DOUBLE;
+    if constexpr (std::is_same_v<T, std::uint64_t>)
+        h5type = H5::PredType::NATIVE_UINT64;
+    else if constexpr (std::is_same_v<T, std::uint8_t>)
+        h5type = H5::PredType::NATIVE_UINT8;
+
+    auto path = join(names, "/");
+
+    auto dataset = std::make_unique<H5::DataSet>(group->createDataSet(path.c_str(), h5type, *dataspace, ds_createplist));
+    if (!dataset)
+        return false;
+    dataset->write(v.data(), h5type);
+    return true;
+}
+
+template <typename T, std::size_t N>
+    requires(std::is_integral_v<T> || std::is_floating_point_v<T>)
+bool saveArray(std::unique_ptr<H5::H5File>& file, const std::string& path, std::span<const T> v, const std::array<std::size_t, N>& dims)
+{
+    const auto names = split(path, "/");
+    return saveArray(file, names, v, dims);
 }
 
 HDF5Wrapper::HDF5Wrapper(const std::string& path, FileOpenMode mode)
@@ -39,6 +118,20 @@ HDF5Wrapper::HDF5Wrapper(const std::string& path, FileOpenMode mode)
 
 bool HDF5Wrapper::save(std::shared_ptr<DataContainer> data)
 {
+    if (!m_file || !data)
+        return false;
+    bool success = true;
 
-    return false;
+    std::vector<std::string> names;
+    names.push_back(std::to_string(data->ID()));
+    names.push_back("dimensions");
+    const auto& dim = data->dimensions();
+    {
+        std::vector<std::size_t> dimv(dim.cbegin(), dim.cend());
+        std::array<std::size_t, 1> dim1 = { 3 };
+        success = success && saveArray(m_file, names, std::span { dim }, dim1);
+        const auto& spacing = data->spacing();
+        names[1] = "spacing";
+        success = success && saveArray(m_file, names, std::span { spacing }, dim1);
+    }
 }

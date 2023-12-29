@@ -32,6 +32,7 @@ Copyright 2024 Erlend Andersen
 #include <ctsegmentationpipeline.hpp>
 #include <dosetablepipeline.hpp>
 #include <dosetablewidget.hpp>
+#include <h5io.hpp>
 #include <icrpphantomimportpipeline.hpp>
 #include <icrpphantomimportwidget.hpp>
 #include <renderwidgetscollection.hpp>
@@ -156,6 +157,16 @@ MainWindow::MainWindow(QWidget* parent)
     connect(icrppipeline, &ICRPPhantomImportPipeline::imageDataChanged, dosetablepipeline, &DoseTablePipeline::updateImageData);
     connect(ctimageimportpipeline, &CTImageImportPipeline::imageDataChanged, dosetablepipeline, &DoseTablePipeline::updateImageData);
 
+    // save load
+    auto h5io = new H5IO;
+    h5io->moveToThread(&m_workerThread);
+    connect(ctsegmentationpipelie, &CTSegmentationPipeline::imageDataChanged, h5io, &H5IO::updateImageData);
+    connect(icrppipeline, &ICRPPhantomImportPipeline::imageDataChanged, h5io, &H5IO::updateImageData);
+    connect(simulationpipeline, &SimulationPipeline::imageDataChanged, h5io, &H5IO::updateImageData);
+    connect(beamsettingsmodel, &BeamSettingsView::beamActorAdded, h5io, &H5IO::addBeamActor);
+    connect(beamsettingsmodel, &BeamSettingsView::beamActorRemoved, h5io, &H5IO::removeBeamActor);
+    connect(this, &MainWindow::saveData, h5io, &H5IO::saveData);
+
     // simulation progress
     /* m_progressTimer = new QTimer(this);
     m_progressTimer->setTimerType(Qt::CoarseTimer);
@@ -243,18 +254,48 @@ void MainWindow::createMenu()
 {
     auto fileMenu = menuBar()->addMenu(tr("&File"));
 
-    /* auto saveAction = new QAction(tr("Save as"), this);
+    auto saveAction = new QAction(tr("Save as"), this);
     saveAction->setShortcut(QKeySequence::SaveAs);
-    saveAction->setStatusTip(tr("Save current simulation as"));
+    saveAction->setStatusTip(tr("Save current simulation"));
     connect(saveAction, &QAction::triggered, this, &MainWindow::saveFileAction);
     fileMenu->addAction(saveAction);
-    connect(this, &MainWindow::requestSaveToFile, m_saveLoad, &SaveLoad::saveToFile);
 
-    auto openAction = new QAction(tr("Open"), this);
+    /* auto openAction = new QAction(tr("Open"), this);
     openAction->setShortcut(QKeySequence::Open);
     openAction->setStatusTip(tr("Open a previously saved simulation"));
     connect(openAction, &QAction::triggered, this, &MainWindow::loadFileAction);
     fileMenu->addAction(openAction);
     connect(this, &MainWindow::requestOpenSaveFile, m_saveLoad, &SaveLoad::loadFromFile);
     */
+}
+
+QString directoryPath(const QString& path)
+{
+    QFileInfo info(path);
+    if (info.isFile()) {
+        auto dirpath = info.absolutePath();
+        return dirpath;
+    }
+    return path;
+}
+QString filePath(const QString& directory, const QString& filename)
+{
+    auto dir = directoryPath(directory);
+    QDir d(dir);
+    auto s = d.absoluteFilePath(filename);    
+    return s;
+}
+void MainWindow::saveFileAction()
+{
+    QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
+    auto dirname = directoryPath(settings.value("saveload/path", ".").value<QString>());
+
+    auto path = filePath(dirname, QString("savefile.h5"));
+    QWidget* parent = this;
+    path = QFileDialog::getSaveFileName(parent, tr("Save simulation"), path, tr("HDF5 (*.h5)"));
+    if (path.isNull())
+        return;
+    dirname = directoryPath(path);
+    settings.setValue("saveload/path", dirname);
+    emit saveData(path);
 }

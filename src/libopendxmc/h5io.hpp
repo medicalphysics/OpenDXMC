@@ -13,26 +13,30 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with OpenDXMC. If not, see < https://www.gnu.org/licenses/>.
 
-Copyright 2024 Erlend Andersen
+Copyright 2023 Erlend Andersen
 */
+
 #pragma once
 
-#include <QMainWindow>
-#include <QThread>
+#include <basepipeline.hpp>
+#include <beamactorcontainer.hpp>
 
-class MainWindow : public QMainWindow {
+#include <QObject>
+#include <QString>
+
+class H5IO : public BasePipeline {
     Q_OBJECT
 public:
-    MainWindow(QWidget* parent = nullptr);
-    ~MainWindow();
+    H5IO(QObject* parent = nullptr);
+    void updateImageData(std::shared_ptr<DataContainer>) override;
+    void addBeamActor(std::shared_ptr<BeamActorContainer>);
+    void removeBeamActor(std::shared_ptr<BeamActorContainer>);
 
-signals:
     void saveData(QString path);
+    void loadData(QString path);
 
 protected:
-    void createMenu();
-    void saveFileAction();
-
 private:
-    QThread m_workerThread;
+    std::shared_ptr<DataContainer> m_data;
+    std::vector<std::shared_ptr<BeamActorContainer>> m_beams;
 };

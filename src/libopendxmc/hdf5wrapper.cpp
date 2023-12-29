@@ -24,12 +24,12 @@ Copyright 2023 Erlend Andersen
 
 std::vector<std::string> split(const std::string& str, const std::string& sep)
 {
-    auto s = str | std::ranges::views::split(std::string_view(sep)) | std::ranges::to<std::vector<std::string>>();
+    std::vector<std::string> s = str | std::ranges::views::split(std::string_view(sep)) | std::ranges::to<std::vector<std::string>>();
     return s;
 }
 std::string join(const std::vector<std::string>& v, const std::string& sep)
 {
-    auto s = v | std::ranges::views::join(std::string_view(sep)) | std::ranges::to<std::string>();
+    std::string s = v | std::ranges::views::join_with(std::string_view(sep)) | std::ranges::to<std::string>();
     return s;
 }
 
@@ -61,7 +61,7 @@ std::unique_ptr<H5::Group> getGroup(std::unique_ptr<H5::H5File>& file, const std
 
 template <typename T, std::size_t N>
     requires(std::is_integral_v<T> || std::is_floating_point_v<T>)
-bool saveArray(std::unique_ptr<H5::H5File>& file, const std::vector<std::string>& names, std::span<const T>, const std::array<std::size_t, N>& dims)
+bool saveArray(std::unique_ptr<H5::H5File>& file, const std::vector<std::string>& names, std::span<const T> v, const std::array<std::size_t, N>& dims)
 {
     if (!file)
         return false;
@@ -129,9 +129,10 @@ bool HDF5Wrapper::save(std::shared_ptr<DataContainer> data)
     {
         std::vector<std::size_t> dimv(dim.cbegin(), dim.cend());
         std::array<std::size_t, 1> dim1 = { 3 };
-        success = success && saveArray(m_file, names, std::span { dim }, dim1);
+        success = success && saveArray<std::size_t, 1>(m_file, names, std::span { dim }, {3});
         const auto& spacing = data->spacing();
         names[1] = "spacing";
-        success = success && saveArray(m_file, names, std::span { spacing }, dim1);
+        success = success && saveArray<double, 1>(m_file, names, std::span { spacing }, {3});
     }
+    return true;
 }

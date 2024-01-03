@@ -140,10 +140,33 @@ bool saveArray(std::unique_ptr<H5::H5File>& file, const std::vector<std::string>
 
 template <typename T, std::size_t N>
     requires(std::is_integral_v<T> || std::is_floating_point_v<T>)
-bool saveArray(std::unique_ptr<H5::H5File>& file, const std::string& path, std::span<const T> v, const std::array<std::size_t, N>& dims)
+bool saveArray(std::unique_ptr<H5::H5File>& file, const std::string& path, std::span<const T> v, const std::array<std::size_t, N>& dims, bool compress = false)
 {
     const auto names = split(path, "/");
-    return saveArray(file, names, v, dims);
+    return saveArray(file, names, v, dims, compress);
+}
+
+bool saveArray(std::unique_ptr<H5::H5File>& file, const std::vector<std::string>& names, const std::vector<std::string>& v)
+{
+    // finding longest string
+    std::size_t N = 0;
+    for (const auto& s : v)
+        N = std::max(N, s.size());
+    if (N == 0)
+        return false;
+    std::vector<std::uint8_t> s(v.size() * N, ' ');
+    auto s_beg = s.begin();
+    for (std::size_t i = 0; i < v.size(); ++i) {
+        std::copy(v[i].cbegin(), v[i].cend(), s_beg);
+        s_beg += N;
+    }
+    std::array<std::size_t, 2> dims = { N, v.size() };
+    return saveArray<std::uint8_t, 2>(file, names, s, dims);
+}
+bool saveArray(std::unique_ptr<H5::H5File>& file, const std::string& path, const std::vector<std::string>& v)
+{
+    const auto names = split(path, "/");
+    return saveArray(file, names, v);
 }
 
 HDF5Wrapper::HDF5Wrapper(const std::string& path, FileOpenMode mode)
@@ -204,5 +227,14 @@ bool HDF5Wrapper::save(std::shared_ptr<DataContainer> data)
         names[1] = "organarray";
         success = success && saveArray(m_file, names, std::span { v }, dim, true);
     }
+    if (const auto& v = data->getOrganNames(); v.size() > 0) {
+        names[1] = "organnames";
+        success = success && saveArray(m_file, names, v);
+    }
+    if (const auto& v = data->getMaterials(); v.size() > 0) {
+        names[1] = "organnames";
+        success = success && saveArray(m_file, names, v);
+    }
+
     return success;
 }

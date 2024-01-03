@@ -32,7 +32,7 @@ public:
         WriteOver
     };
     HDF5Wrapper(const std::string& path, FileOpenMode mode = FileOpenMode::ReadOnly);
-
+    ~HDF5Wrapper();
     bool save(std::shared_ptr<DataContainer> data);
 
 protected:

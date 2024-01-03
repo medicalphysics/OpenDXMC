@@ -46,7 +46,7 @@ void H5IO::saveData(QString path)
 {
     emit dataProcessingStarted();
 
-    HDF5Wrapper s(path.toStdString());
+    HDF5Wrapper s(path.toStdString(), HDF5Wrapper::FileOpenMode::WriteOver);
     bool success = s.save(m_data);
 
     emit dataProcessingFinished();

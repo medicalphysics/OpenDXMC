@@ -89,10 +89,6 @@ bool saveArray(std::unique_ptr<H5::H5File>& file, const std::vector<std::string>
     std::copy(dims.cbegin(), dims.cend(), h5dims.begin());
     H5::DataSpace dataspace(rank, h5dims.data());
 
-    // H5::DSetCreatPropList ds_createplist;
-    // ds_createplist.setChunk(rank, dims.data());
-    // ds_createplist.setDeflate(6);
-
     H5::PredType h5type = H5::PredType::NATIVE_DOUBLE;
     if constexpr (std::is_same_v<T, std::uint64_t>)
         h5type = H5::PredType::NATIVE_UINT64;
@@ -101,7 +97,6 @@ bool saveArray(std::unique_ptr<H5::H5File>& file, const std::vector<std::string>
 
     auto path = join(names, "/");
 
-    // auto dataset = std::make_unique<H5::DataSet>(group->createDataSet(path.c_str(), h5type, dataspace, ds_createplist));
     H5::Exception::dontPrint();
     const auto datasize = std::reduce(dims.cbegin(), dims.cend(), std::size_t { 1 }, std::multiplies());
     try {
@@ -148,6 +143,99 @@ bool saveArray(std::unique_ptr<H5::H5File>& file, const std::string& path, std::
 
 bool saveArray(std::unique_ptr<H5::H5File>& file, const std::vector<std::string>& names, const std::vector<std::string>& v)
 {
+
+    if (!file)
+        return false;
+    if (names.size() < 1)
+        return false;
+
+    // creating groups if needed
+    if (names.size() > 1) {
+        std::vector<std::string> gnames(names.cbegin(), names.cend() - 1);
+        try {
+            getGroup(file, gnames, true);
+        } catch (...) {
+            return false;
+        }
+    }
+
+    // H5::Exception::dontPrint();
+    //  HDF5 only understands vector of char* :-(
+    std::vector<const char*> arr_c_str;
+    arr_c_str.reserve(v.size());
+    for (const auto& vv : v)
+        arr_c_str.push_back(vv.c_str());
+
+    hsize_t str_dimsf[1] { arr_c_str.size() };
+    H5::DataSpace dataspace(1, str_dimsf);
+
+    // Variable length string
+    H5::StrType datatype(H5::PredType::C_S1, H5T_VARIABLE);
+
+    auto path = join(names, "/");
+
+    try {
+        H5::DataSet str_dataset = file->createDataSet(path.c_str(), datatype, dataspace);
+
+        str_dataset.write(arr_c_str.data(), datatype);
+    } catch (H5::Exception& err) {
+        throw std::runtime_error(std::string("HDF5 Error in ")
+            + err.getFuncName()
+            + ": "
+            + err.getDetailMsg());
+
+        return false;
+    }
+    return true;
+}
+
+template <typename T>
+    requires(std::is_integral_v<T> || std::is_floating_point_v<T> || std::is_same_v<T, std::string>)
+std::vector<T> loadArray(std::unique_ptr<H5::H5File>& file, const std::string& path)
+{
+    std::vector<T> res;
+    if (file->nameExists(path)) {
+
+        H5::DataSet dataset = file->openDataSet(path.c_str());
+        H5::DataSpace space = dataset.getSpace();
+        int rank = space.getSimpleExtentNdims();
+        std::vector<hsize_t> dims(rank);
+        int ndims = space.getSimpleExtentDims(dims.data());
+
+        const auto size = std::reduce(dims.cbegin(), dims.cend(), hsize_t { 1 }, std::multiplies());
+
+        res.resize(size);
+
+        auto h5type = H5::PredType::NATIVE_DOUBLE;
+        if constexpr (std::is_same_v<T, std::uint8_t>)
+            h5type = H5::PredType::NATIVE_UINT8;
+        else if constexpr (std::is_same_v<T, std::uint8_t>)
+            h5type = H5::PredType::NATIVE_UINT64;
+
+        if constexpr (std::is_same_v<T, std::string>) {
+            std::vector<const char*> tmpvect(size, nullptr);
+            H5::StrType datatype(H5::PredType::C_S1, H5T_VARIABLE);
+            dataset.read(tmpvect.data(), datatype);
+            for (std::size_t i = 0; i < tmpvect.size(); ++i) {
+                res[i] = tmpvect[i];
+            }
+        } else {
+            dataset.read(res.data(), h5type);
+        }
+    }
+    return res;
+}
+
+template <typename T>
+    requires(std::is_integral_v<T> || std::is_floating_point_v<T> || std::is_same_v<T, std::string>)
+std::vector<T> loadArray(std::unique_ptr<H5::H5File>& file, const std::vector<std::string>& names)
+{
+    const auto path = join(names, "/");
+    return loadArray<T>(file, path);
+}
+
+/* bool slett()
+{
     // finding longest string
     std::size_t N = 0;
     for (const auto& s : v)
@@ -160,9 +248,9 @@ bool saveArray(std::unique_ptr<H5::H5File>& file, const std::vector<std::string>
         std::copy(v[i].cbegin(), v[i].cend(), s_beg);
         s_beg += N;
     }
-    std::array<std::size_t, 2> dims = { N, v.size() };
+    std::array<std::size_t, 2> dims = { v.size(), N };
     return saveArray<std::uint8_t, 2>(file, names, s, dims);
-}
+}*/
 bool saveArray(std::unique_ptr<H5::H5File>& file, const std::string& path, const std::vector<std::string>& v)
 {
     const auto names = split(path, "/");
@@ -232,8 +320,20 @@ bool HDF5Wrapper::save(std::shared_ptr<DataContainer> data)
         success = success && saveArray(m_file, names, v);
     }
     if (const auto& v = data->getMaterials(); v.size() > 0) {
-        names[1] = "organnames";
-        success = success && saveArray(m_file, names, v);
+        names[1] = "materialnames";
+        std::vector<std::string> mat_names(v.size());
+        std::transform(v.cbegin(), v.cend(), mat_names.begin(), [](const auto& n) { return n.name; });
+        success = success && saveArray(m_file, names, mat_names);
+        names[1] = "materialcomposition";
+        std::transform(std::execution::par_unseq, v.cbegin(), v.cend(), mat_names.begin(), [](const auto& n) {
+            std::string res;
+            for (const auto& [Z, frac] : n.Z) {
+                res += dxmc::AtomHandler<double>::toSymbol(Z);
+                res += std::to_string(frac);
+            }
+            return res;
+        });
+        success = success && saveArray(m_file, names, mat_names);
     }
 
     return success;

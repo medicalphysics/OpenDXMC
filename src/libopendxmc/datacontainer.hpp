@@ -47,12 +47,6 @@ public:
         std::map<std::uint64_t, double> Z;
     };
 
-    /* struct AECData {
-        std::array<double, 3> startPosition;
-        std::array<double, 3> stopPosition;
-        std::vector<double> weights;
-    };*/
-
     DataContainer();
     void setSpacing(const std::array<double, 3>& cm);
     void setSpacingInmm(const std::array<double, 3>& mm);

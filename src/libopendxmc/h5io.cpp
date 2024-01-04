@@ -48,7 +48,9 @@ void H5IO::saveData(QString path)
 
     HDF5Wrapper s(path.toStdString(), HDF5Wrapper::FileOpenMode::WriteOver);
     bool success = s.save(m_data);
-
+    bool beam_success = true;
+    for (auto beam : m_beams)
+        beam_success = beam_success && s.save(beam);
     emit dataProcessingFinished();
 }
 

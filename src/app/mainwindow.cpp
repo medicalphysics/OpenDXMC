@@ -166,6 +166,13 @@ MainWindow::MainWindow(QWidget* parent)
     connect(beamsettingsmodel, &BeamSettingsView::beamActorAdded, h5io, &H5IO::addBeamActor);
     connect(beamsettingsmodel, &BeamSettingsView::beamActorRemoved, h5io, &H5IO::removeBeamActor);
     connect(this, &MainWindow::saveData, h5io, &H5IO::saveData);
+    connect(this, &MainWindow::loadData, h5io, &H5IO::loadData);
+    connect(h5io, &H5IO::imageDataChanged, simulationpipeline, &SimulationPipeline::updateImageData);
+    connect(h5io, &H5IO::imageDataChanged, dosetablepipeline, &DoseTablePipeline::updateImageData);
+    connect(h5io, &H5IO::imageDataChanged, beamsettingswidget, &BeamSettingsWidget::updateImageData);
+    connect(h5io, &H5IO::imageDataChanged, slicerender, &RenderWidgetsCollection::updateImageData);
+    connect(h5io, &H5IO::imageDataChanged, simulationpipeline, &SimulationPipeline::updateImageData);
+    connect(h5io, &H5IO::imageDataChanged, simulationpipeline, &SimulationPipeline::updateImageData);
 
     // simulation progress
     /* m_progressTimer = new QTimer(this);
@@ -260,13 +267,11 @@ void MainWindow::createMenu()
     connect(saveAction, &QAction::triggered, this, &MainWindow::saveFileAction);
     fileMenu->addAction(saveAction);
 
-    /* auto openAction = new QAction(tr("Open"), this);
+    auto openAction = new QAction(tr("Open"), this);
     openAction->setShortcut(QKeySequence::Open);
     openAction->setStatusTip(tr("Open a previously saved simulation"));
     connect(openAction, &QAction::triggered, this, &MainWindow::loadFileAction);
     fileMenu->addAction(openAction);
-    connect(this, &MainWindow::requestOpenSaveFile, m_saveLoad, &SaveLoad::loadFromFile);
-    */
 }
 
 QString directoryPath(const QString& path)
@@ -282,7 +287,7 @@ QString filePath(const QString& directory, const QString& filename)
 {
     auto dir = directoryPath(directory);
     QDir d(dir);
-    auto s = d.absoluteFilePath(filename);    
+    auto s = d.absoluteFilePath(filename);
     return s;
 }
 void MainWindow::saveFileAction()
@@ -298,4 +303,18 @@ void MainWindow::saveFileAction()
     dirname = directoryPath(path);
     settings.setValue("saveload/path", dirname);
     emit saveData(path);
+}
+void MainWindow::loadFileAction()
+{
+    // getting file
+    QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
+    auto dirname = directoryPath(settings.value("saveload/path", ".").value<QString>());
+
+    QWidget* parent = this;
+    auto path = QFileDialog::getOpenFileName(parent, tr("Open simulation"), dirname, tr("HDF5 (*.h5)"));
+    if (path.isNull())
+        return;
+    dirname = directoryPath(path);
+    settings.setValue("saveload/path", dirname);
+    emit loadData(path);
 }

@@ -28,10 +28,12 @@ public:
 
 signals:
     void saveData(QString path);
+    void loadData(QString path);
 
 protected:
     void createMenu();
     void saveFileAction();
+    void loadFileAction();
 
 private:
     QThread m_workerThread;

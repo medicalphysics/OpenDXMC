@@ -141,9 +141,24 @@ bool saveArray(std::unique_ptr<H5::H5File>& file, const std::string& path, std::
     return saveArray(file, names, v, dims, compress);
 }
 
+template <typename T>
+    requires(std::is_integral_v<T> || std::is_floating_point_v<T>)
+bool saveArray(std::unique_ptr<H5::H5File>& file, const std::vector<std::string>& names, std::span<const T> v, bool compress = true)
+{
+    const std::array<std::size_t, 1> dims { v.size() };
+    return saveArray<T, 1>(file, names, v, dims, compress);
+}
+
+template <typename T, std::size_t N>
+    requires(std::is_integral_v<T> || std::is_floating_point_v<T>)
+bool saveArray(std::unique_ptr<H5::H5File>& file, const std::string& path, std::span<const T> v, bool compress = false)
+{
+    const auto names = split(path, "/");
+    return saveArray<T>(file, names, v, compress);
+}
+
 bool saveArray(std::unique_ptr<H5::H5File>& file, const std::vector<std::string>& names, const std::vector<std::string>& v)
 {
-
     if (!file)
         return false;
     if (names.size() < 1)
@@ -187,6 +202,11 @@ bool saveArray(std::unique_ptr<H5::H5File>& file, const std::vector<std::string>
         return false;
     }
     return true;
+}
+bool saveArray(std::unique_ptr<H5::H5File>& file, const std::string& path, const std::vector<std::string>& v)
+{
+    const auto names = split(path, "/");
+    return saveArray(file, names, v);
 }
 
 template <typename T>
@@ -234,27 +254,32 @@ std::vector<T> loadArray(std::unique_ptr<H5::H5File>& file, const std::vector<st
     return loadArray<T>(file, path);
 }
 
-/* bool slett()
+template <typename T>
+    requires(std::is_same_v<T, double> || std::is_same_v<T, std::uint64_t>)
+void saveAttribute(std::unique_ptr<H5::Group>& group, const std::string& name, std::span<const T> val)
 {
-    // finding longest string
-    std::size_t N = 0;
-    for (const auto& s : v)
-        N = std::max(N, s.size());
-    if (N == 0)
-        return false;
-    std::vector<std::uint8_t> s(v.size() * N, ' ');
-    auto s_beg = s.begin();
-    for (std::size_t i = 0; i < v.size(); ++i) {
-        std::copy(v[i].cbegin(), v[i].cend(), s_beg);
-        s_beg += N;
-    }
-    std::array<std::size_t, 2> dims = { v.size(), N };
-    return saveArray<std::uint8_t, 2>(file, names, s, dims);
-}*/
-bool saveArray(std::unique_ptr<H5::H5File>& file, const std::string& path, const std::vector<std::string>& v)
+    auto size = static_cast<hsize_t>(val.size());
+    H5::DataSpace space(1, &size);
+
+    auto type = H5::PredType::NATIVE_DOUBLE;
+    if constexpr (std::is_same_v<T, std::uint64_t>)
+        type = H5::PredType::NATIVE_UINT64;
+
+    auto att = group->createAttribute(name.c_str(), type, space);
+    att.write(type, val.data());
+}
+
+template <typename T>
+    requires(std::is_same_v<T, double> || std::is_same_v<T, std::uint64_t>)
+void saveAttribute(std::unique_ptr<H5::Group>& group, const std::string& name, const T val)
 {
-    const auto names = split(path, "/");
-    return saveArray(file, names, v);
+    H5::DataSpace space;
+    auto type = H5::PredType::NATIVE_DOUBLE;
+    if constexpr (std::is_same_v<T, std::uint64_t>)
+        type = H5::PredType::NATIVE_UINT64;
+
+    auto att = group->createAttribute(name.c_str(), type, space);
+    att.write(type, &val);
 }
 
 HDF5Wrapper::HDF5Wrapper(const std::string& path, FileOpenMode mode)
@@ -286,45 +311,40 @@ bool HDF5Wrapper::save(std::shared_ptr<DataContainer> data)
 
     const auto& dim = data->dimensions();
 
-    std::vector<std::string> names(2);
-    names[0] = std::to_string(data->ID());
+    std::vector<std::string> names(1);
     {
-        names[1] = "dimensions";
+        names[0] = "dimensions";
         success = success && saveArray<std::size_t, 1>(m_file, names, std::span { dim }, { 3 });
         const auto& spacing = data->spacing();
-        names[1] = "spacing";
+        names[0] = "spacing";
         success = success && saveArray<double, 1>(m_file, names, std::span { spacing }, { 3 });
     }
     if (const auto& v = data->getDensityArray(); v.size() > 0) {
-        names[1] = "density";
+        names[0] = "density";
         success = success && saveArray(m_file, names, std::span { v }, dim, true);
     }
     if (const auto& v = data->getCTArray(); v.size() > 0) {
-        names[1] = "ct";
-        success = success && saveArray(m_file, names, std::span { v }, dim, true);
-    }
-    if (const auto& v = data->getDoseArray(); v.size() > 0) {
-        names[1] = "dose";
+        names[0] = "ct";
         success = success && saveArray(m_file, names, std::span { v }, dim, true);
     }
     if (const auto& v = data->getMaterialArray(); v.size() > 0) {
-        names[1] = "materialarray";
+        names[0] = "materialarray";
         success = success && saveArray(m_file, names, std::span { v }, dim, true);
     }
     if (const auto& v = data->getOrganArray(); v.size() > 0) {
-        names[1] = "organarray";
+        names[0] = "organarray";
         success = success && saveArray(m_file, names, std::span { v }, dim, true);
     }
     if (const auto& v = data->getOrganNames(); v.size() > 0) {
-        names[1] = "organnames";
+        names[0] = "organnames";
         success = success && saveArray(m_file, names, v);
     }
     if (const auto& v = data->getMaterials(); v.size() > 0) {
-        names[1] = "materialnames";
+        names[0] = "materialnames";
         std::vector<std::string> mat_names(v.size());
         std::transform(v.cbegin(), v.cend(), mat_names.begin(), [](const auto& n) { return n.name; });
         success = success && saveArray(m_file, names, mat_names);
-        names[1] = "materialcomposition";
+        names[0] = "materialcomposition";
         std::transform(std::execution::par_unseq, v.cbegin(), v.cend(), mat_names.begin(), [](const auto& n) {
             std::string res;
             for (const auto& [Z, frac] : n.Z) {
@@ -335,6 +355,219 @@ bool HDF5Wrapper::save(std::shared_ptr<DataContainer> data)
         });
         success = success && saveArray(m_file, names, mat_names);
     }
+    if (const auto& v = data->getDoseArray(); v.size() > 0) {
+        names[0] = "dosearray";
+        success = success && saveArray(m_file, names, std::span { v }, dim, true);
+    }
+    if (const auto& v = data->getDoseVarianceArray(); v.size() > 0) {
+        names[0] = "dosevariancearray";
+        success = success && saveArray(m_file, names, std::span { v }, dim, true);
+    }
+    if (const auto& v = data->getDoseEventCountArray(); v.size() > 0) {
+        names[0] = "doseeventcountarray";
+        success = success && saveArray(m_file, names, std::span { v }, dim, true);
+    }
+    if (const auto& v = data->aecData(); v.size() > 2) {
+        names[0] = "aecweights";
+        const auto& w = v.weights();
+        success = success && saveArray<double>(m_file, names, w);
+        names[0] = "aecstart";
+        success = success && saveArray<double>(m_file, names, v.start());
+        names[0] = "aecstop";
+        success = success && saveArray<double>(m_file, names, v.stop());
+    }
 
     return success;
+}
+
+bool HDF5Wrapper::save(DXBeam& beam)
+{
+    auto beamgroup = getGroup(m_file, "/beams/DXBeams/1", false);
+    int teller = 1;
+    while (beamgroup) {
+        teller++;
+        auto path = std::string { "/beams/DXBeams/" } + std::to_string(teller);
+        beamgroup = getGroup(m_file, path, false);
+    }
+    beamgroup = getGroup(m_file, std::string { "/beams/DXBeams/" } + std::to_string(teller), true);
+
+    saveAttribute<double>(beamgroup, "rotation_center", beam.rotationCenter());
+    saveAttribute<double>(beamgroup, "source_center_distance", beam.sourcePatientDistance());
+    saveAttribute<double>(beamgroup, "primary_angle", beam.primaryAngleDeg());
+    saveAttribute<double>(beamgroup, "secondary_angle", beam.secondaryAngleDeg());
+    saveAttribute<double>(beamgroup, "source_detector_distance", beam.sourceDetectorDistance());
+    saveAttribute<double>(beamgroup, "collimation_angles", beam.collimationAnglesDeg());
+    saveAttribute<double>(beamgroup, "DAPvalue", beam.DAPvalue());
+    saveAttribute<std::uint64_t>(beamgroup, "number_of_exposures", beam.numberOfExposures());
+    saveAttribute<std::uint64_t>(beamgroup, "particles_per_exposure", beam.numberOfParticlesPerExposure());
+
+    saveAttribute<double>(beamgroup, "tube_voltage", beam.tube().voltage());
+    saveAttribute<double>(beamgroup, "tube_anode_angle", beam.tube().anodeAngleDeg());
+    saveAttribute<double>(beamgroup, "tube_Al_filtration", beam.tube().filtration(13));
+    saveAttribute<double>(beamgroup, "tube_Cu_filtration", beam.tube().filtration(29));
+    saveAttribute<double>(beamgroup, "tube_Sn_filtration", beam.tube().filtration(50));
+    return true;
+}
+bool HDF5Wrapper::save(CTSpiralBeam& beam)
+{
+    auto beamgroup = getGroup(m_file, "/beams/CTSpiralBeams/1", false);
+    int teller = 1;
+    while (beamgroup) {
+        teller++;
+        
+        auto path = std::string { "/beams/CTSpiralBeams/" } + std::to_string(teller);
+        beamgroup = getGroup(m_file, path, false);
+    }
+    beamgroup = getGroup(m_file, std::string { "/beams/CTSpiralBeams/" } + std::to_string(teller), true);
+
+    saveAttribute<double>(beamgroup, "start_position", beam.startPosition());
+    saveAttribute<double>(beamgroup, "stop_position", beam.stopPosition());
+    saveAttribute<double>(beamgroup, "scan_field_view", beam.scanFieldOfView());
+    saveAttribute<double>(beamgroup, "source_detector_distance", beam.sourceDetectorDistance());
+    saveAttribute<double>(beamgroup, "collimation", beam.collimation());
+    saveAttribute<double>(beamgroup, "start_angle", beam.startAngleDeg());
+    saveAttribute<double>(beamgroup, "step_angle", beam.stepAngleDeg());
+    saveAttribute<double>(beamgroup, "pitch", beam.pitch());
+    saveAttribute<double>(beamgroup, "CTDIvol", beam.CTDIvol());
+    saveAttribute<double>(beamgroup, "CTDIdiameter", beam.CTDIdiameter());
+    saveAttribute<double>(beamgroup, "tube_voltage", beam.tube().voltage());
+    saveAttribute<double>(beamgroup, "tube_anode_angle", beam.tube().anodeAngleDeg());
+    saveAttribute<double>(beamgroup, "tube_Al_filtration", beam.tube().filtration(13));
+    saveAttribute<double>(beamgroup, "tube_Cu_filtration", beam.tube().filtration(29));
+    saveAttribute<double>(beamgroup, "tube_Sn_filtration", beam.tube().filtration(50));
+    saveAttribute<std::uint64_t>(beamgroup, "particles_per_exposure", beam.numberOfParticlesPerExposure());
+    return true;
+}
+bool HDF5Wrapper::save(CTSpiralDualEnergyBeam& beam)
+{
+    auto beamgroup = getGroup(m_file, "/beams/CTSpiralDualEnergyBeams/1", false);
+    int teller = 1;
+    while (beamgroup) {
+        teller++;
+        auto path = std::string { "/beams/CTSpiralDualEnergyBeams/" } + std::to_string(teller);
+        beamgroup = getGroup(m_file, path, false);
+    }
+    beamgroup = getGroup(m_file, std::string { "/beams/CTSpiralDualEnergyBeams/" } + std::to_string(teller), true);
+
+    saveAttribute<double>(beamgroup, "start_position", beam.startPosition());
+    saveAttribute<double>(beamgroup, "stop_position", beam.stopPosition());
+    saveAttribute<double>(beamgroup, "scan_field_viewA", beam.scanFieldOfViewA());
+    saveAttribute<double>(beamgroup, "scan_field_viewB", beam.scanFieldOfViewB());
+    saveAttribute<double>(beamgroup, "source_detector_distance", beam.sourceDetectorDistance());
+    saveAttribute<double>(beamgroup, "collimation", beam.collimation());
+    saveAttribute<double>(beamgroup, "start_angle", beam.startAngleDeg());
+    saveAttribute<double>(beamgroup, "step_angle", beam.stepAngleDeg());
+    saveAttribute<double>(beamgroup, "pitch", beam.pitch());
+    saveAttribute<double>(beamgroup, "CTDIvol", beam.CTDIvol());
+    saveAttribute<double>(beamgroup, "CTDIdiameter", beam.CTDIdiameter());
+    saveAttribute<double>(beamgroup, "tube_voltageB", beam.tubeB().voltage());
+    saveAttribute<double>(beamgroup, "tube_anode_angleB", beam.tubeB().anodeAngleDeg());
+    saveAttribute<double>(beamgroup, "tube_Al_filtrationB", beam.tubeB().filtration(13));
+    saveAttribute<double>(beamgroup, "tube_Cu_filtrationB", beam.tubeB().filtration(29));
+    saveAttribute<double>(beamgroup, "tube_Sn_filtrationB", beam.tubeB().filtration(50));
+    saveAttribute<double>(beamgroup, "tube_voltageA", beam.tubeA().voltage());
+    saveAttribute<double>(beamgroup, "tube_anode_angleA", beam.tubeA().anodeAngleDeg());
+    saveAttribute<double>(beamgroup, "tube_Al_filtrationA", beam.tubeA().filtration(13));
+    saveAttribute<double>(beamgroup, "tube_Cu_filtrationA", beam.tubeA().filtration(29));
+    saveAttribute<double>(beamgroup, "tube_Sn_filtrationA", beam.tubeA().filtration(50));
+    saveAttribute<std::uint64_t>(beamgroup, "particles_per_exposure", beam.numberOfParticlesPerExposure());
+    return true;
+}
+
+bool HDF5Wrapper::save(std::shared_ptr<BeamActorContainer> beam)
+{
+    if (!m_file || !beam)
+        return false;
+
+    if (std::holds_alternative<DXBeam>(*beam->getBeam())) {
+        return save(std::get<DXBeam>(*beam->getBeam()));
+    } else if (std::holds_alternative<CTSpiralBeam>(*beam->getBeam())) {
+        return save(std::get<CTSpiralBeam>(*beam->getBeam()));
+    } else if (std::holds_alternative<CTSpiralDualEnergyBeam>(*beam->getBeam())) {
+        return save(std::get<CTSpiralDualEnergyBeam>(*beam->getBeam()));
+    }
+
+    return false;
+}
+
+std::shared_ptr<DataContainer> HDF5Wrapper::load()
+{
+    auto res = std::make_shared<DataContainer>();
+    std::string name;
+    {
+        auto v = loadArray<std::size_t>(m_file, "dimensions");
+        if (v.size() == 3) {
+            res->setDimensions({ v[0], v[1], v[2] });
+        } else {
+            return nullptr;
+        }
+    }
+    {
+        auto v = loadArray<double>(m_file, "spacing");
+        if (v.size() == 3) {
+            res->setSpacing({ v[0], v[1], v[2] });
+        } else {
+            return nullptr;
+        }
+    }
+    {
+        auto v = loadArray<std::uint8_t>(m_file, "materialarray");
+        if (v.size() == res->size()) {
+            res->setImageArray(DataContainer::ImageType::Material, v);
+            auto material_names = loadArray<std::string>(m_file, "materialnames");
+            auto material_comp = loadArray<std::string>(m_file, "materialnames");
+            if (material_names.size() == material_comp.size()) {
+                std::vector<DataContainer::Material> materials(material_names.size());
+                for (std::size_t i = 0; i < material_names.size(); ++i) {
+                    materials[i].name = material_names[i];
+                    materials[i].Z = dxmc::Material<double>::parseCompoundStr(material_comp[i]);
+                }
+
+            } else {
+                return nullptr;
+            }
+
+        } else {
+            return nullptr;
+        }
+        v = loadArray<std::uint8_t>(m_file, "organarray");
+
+        if (v.size() == res->size()) {
+            res->setImageArray(DataContainer::ImageType::Organ, v);
+            auto o_names = loadArray<std::string>(m_file, "organnames");
+            res->setOrganNames(o_names);
+        }
+    }
+    {
+        auto v = loadArray<double>(m_file, "densityarray");
+        if (v.size() == res->size()) {
+            res->setImageArray(DataContainer::ImageType::Density, v);
+        } else {
+            return nullptr;
+        }
+        v = loadArray<double>(m_file, "ctarray");
+        if (v.size() == res->size())
+            res->setImageArray(DataContainer::ImageType::CT, v);
+        v = loadArray<double>(m_file, "dosearray");
+        if (v.size() == res->size())
+            res->setImageArray(DataContainer::ImageType::Dose, v);
+        v = loadArray<double>(m_file, "dosevariancearray");
+        if (v.size() == res->size())
+            res->setImageArray(DataContainer::ImageType::DoseVariance, v);
+    }
+    {
+        auto v = loadArray<std::uint64_t>(m_file, "doseeventcountarray");
+        if (v.size() == res->size())
+            res->setImageArray(DataContainer::ImageType::DoseCount, v);
+    }
+    {
+        auto start = loadArray<double>(m_file, "aecstart");
+        auto stop = loadArray<double>(m_file, "aecstop");
+        auto weights = loadArray<double>(m_file, "weights");
+        if (start.size() == 3 && stop.size() == 3 && weights.size() > 2) {
+            res->setAecData({ start[0], start[1], start[2] }, { stop[0], stop[1], stop[2] }, weights);
+        }
+    }
+
+    return res;
 }

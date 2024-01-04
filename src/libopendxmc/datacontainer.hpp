@@ -74,6 +74,8 @@ public:
     const std::vector<double>& getCTArray() const { return m_ct_array; }
     const std::vector<double>& getDensityArray() const { return m_density_array; }
     const std::vector<double>& getDoseArray() const { return m_dose_array; }
+    const std::vector<double>& getDoseVarianceArray() const { return m_dose_variance_array; }
+    const std::vector<std::uint64_t>& getDoseEventCountArray() const { return m_dose_count_array; }
     const std::vector<std::uint8_t>& getMaterialArray() const { return m_material_array; }
     const std::vector<std::uint8_t>& getOrganArray() const { return m_organ_array; }
 

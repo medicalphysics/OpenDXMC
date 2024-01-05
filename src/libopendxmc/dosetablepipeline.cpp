@@ -28,8 +28,9 @@ DoseTablePipeline::DoseTablePipeline(QObject* parent)
 void DoseTablePipeline::updateImageData(std::shared_ptr<DataContainer> data)
 {
     emit clearTable();
+    if (!data)
+        return;
     if (!data->hasImage(DataContainer::ImageType::Organ) || !data->hasImage(DataContainer::ImageType::Dose)) {
-        emit clearTable();
         return;
     }
 

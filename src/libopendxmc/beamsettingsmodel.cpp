@@ -313,13 +313,36 @@ void addTubeItems(LabelItem* tubeItem, std::shared_ptr<Beam> beam)
     }
 }
 
-void BeamSettingsModel::addDXBeam()
+void BeamSettingsModel::addBeam(std::shared_ptr<BeamActorContainer> actor)
+{
+    if (!actor)
+        return;
+    if (!actor->getBeam())
+        return;
+
+    if (std::holds_alternative<DXBeam>(*actor->getBeam())) {
+        addDXBeam(actor);
+    } else if (std::holds_alternative<CTSpiralBeam>(*actor->getBeam())) {
+        addCTSpiralBeam(actor);
+    } else if (std::holds_alternative<CTSpiralDualEnergyBeam>(*actor->getBeam())) {
+        addCTSpiralDualEnergyBeam(actor);
+    }
+}
+
+void BeamSettingsModel::addDXBeam(std::shared_ptr<BeamActorContainer> actor)
 {
     auto root = new LabelItem(tr("DX Beam"));
-
-    const std::map<std::size_t, double> filt_init = { { 13, 2.0 }, { 29, 0.1 } };
-
-    auto beam = std::make_shared<Beam>(DXBeam(filt_init));
+    std::shared_ptr<Beam> beam = nullptr;
+    if (actor) {
+        beam = actor->getBeam();
+        if (beam)
+            if (!std::holds_alternative<DXBeam>(*beam))
+                beam = nullptr;
+    }
+    if (!beam) {
+        const std::map<std::size_t, double> filt_init = { { 13, 2.0 }, { 29, 0.1 } };
+        beam = std::make_shared<Beam>(DXBeam(filt_init));
+    }
     auto beamActor = std::make_shared<BeamActorContainer>(beam);
     m_beams.push_back(std::make_pair(beam, beamActor));
 
@@ -464,26 +487,33 @@ void BeamSettingsModel::addDXBeam()
     appendRow(root);
 }
 
-void BeamSettingsModel::addCTSpiralBeam()
+void BeamSettingsModel::addCTSpiralBeam(std::shared_ptr<BeamActorContainer> actor)
 {
     auto root = new LabelItem(tr("CT Spiral Beam"));
 
     std::shared_ptr<Beam> beam = nullptr;
-
-    if (m_image) {
-        const auto& s = m_image->spacing();
-        const auto& d = m_image->dimensions();
-        const std::array<double, 3> start_init = { 0, 0, -(s[2] * d[2]) / 2 };
-        const std::array<double, 3> stop_init = { 0, 0, (s[2] * d[2]) / 2 };
-        const std::map<std::size_t, double> filt_init = { { 13, 9.0 } };
-        beam = std::make_shared<Beam>(CTSpiralBeam(start_init, stop_init, filt_init));
-    } else {
-        constexpr std::array<double, 3> start_init = { 0, 0, -20 };
-        constexpr std::array<double, 3> stop_init = { 0, 0, 20 };
-        const std::map<std::size_t, double> filt_init = { { 13, 9.0 } };
-        beam = std::make_shared<Beam>(CTSpiralBeam(start_init, stop_init, filt_init));
+    if (actor) {
+        beam = actor->getBeam();
+        if (beam)
+            if (!std::holds_alternative<CTSpiralBeam>(*beam))
+                beam = nullptr;
     }
 
+    if (!beam) {
+        if (m_image) {
+            const auto& s = m_image->spacing();
+            const auto& d = m_image->dimensions();
+            const std::array<double, 3> start_init = { 0, 0, -(s[2] * d[2]) / 2 };
+            const std::array<double, 3> stop_init = { 0, 0, (s[2] * d[2]) / 2 };
+            const std::map<std::size_t, double> filt_init = { { 13, 9.0 } };
+            beam = std::make_shared<Beam>(CTSpiralBeam(start_init, stop_init, filt_init));
+        } else {
+            constexpr std::array<double, 3> start_init = { 0, 0, -20 };
+            constexpr std::array<double, 3> stop_init = { 0, 0, 20 };
+            const std::map<std::size_t, double> filt_init = { { 13, 9.0 } };
+            beam = std::make_shared<Beam>(CTSpiralBeam(start_init, stop_init, filt_init));
+        }
+    }
     auto beamActor = std::make_shared<BeamActorContainer>(beam);
     m_beams.push_back(std::make_pair(beam, beamActor));
 
@@ -692,24 +722,32 @@ void BeamSettingsModel::addCTSpiralBeam()
     appendRow(root);
 }
 
-void BeamSettingsModel::addCTSpiralDualEnergyBeam()
+void BeamSettingsModel::addCTSpiralDualEnergyBeam(std::shared_ptr<BeamActorContainer> actor)
 {
     auto root = new LabelItem(tr("CT Spiral Dual Energy Beam"));
 
     std::shared_ptr<Beam> beam = nullptr;
+    if (actor) {
+        beam = actor->getBeam();
+        if (beam)
+            if (!std::holds_alternative<CTSpiralBeam>(*beam))
+                beam = nullptr;
+    }
 
-    if (m_image) {
-        const auto& s = m_image->spacing();
-        const auto& d = m_image->dimensions();
-        const std::array<double, 3> start_init = { 0, 0, -(s[2] * d[2]) / 2 };
-        const std::array<double, 3> stop_init = { 0, 0, (s[2] * d[2]) / 2 };
-        const std::map<std::size_t, double> filt_init = { { 13, 9.0 } };
-        beam = std::make_shared<Beam>(CTSpiralDualEnergyBeam(start_init, stop_init, filt_init));
-    } else {
-        constexpr std::array<double, 3> start_init = { 0, 0, -20 };
-        constexpr std::array<double, 3> stop_init = { 0, 0, 20 };
-        const std::map<std::size_t, double> filt_init = { { 13, 9.0 } };
-        beam = std::make_shared<Beam>(CTSpiralDualEnergyBeam(start_init, stop_init, filt_init));
+    if (!beam) {
+        if (m_image) {
+            const auto& s = m_image->spacing();
+            const auto& d = m_image->dimensions();
+            const std::array<double, 3> start_init = { 0, 0, -(s[2] * d[2]) / 2 };
+            const std::array<double, 3> stop_init = { 0, 0, (s[2] * d[2]) / 2 };
+            const std::map<std::size_t, double> filt_init = { { 13, 9.0 } };
+            beam = std::make_shared<Beam>(CTSpiralDualEnergyBeam(start_init, stop_init, filt_init));
+        } else {
+            constexpr std::array<double, 3> start_init = { 0, 0, -20 };
+            constexpr std::array<double, 3> stop_init = { 0, 0, 20 };
+            const std::map<std::size_t, double> filt_init = { { 13, 9.0 } };
+            beam = std::make_shared<Beam>(CTSpiralDualEnergyBeam(start_init, stop_init, filt_init));
+        }
     }
 
     auto beamActor = std::make_shared<BeamActorContainer>(beam);

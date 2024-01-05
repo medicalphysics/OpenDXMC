@@ -23,6 +23,7 @@ Copyright 2023 Erlend Andersen
 
 #include <memory>
 #include <string>
+#include <vector>
 
 #include <H5Cpp.h>
 
@@ -37,11 +38,12 @@ public:
     bool save(std::shared_ptr<DataContainer> data);
     bool save(std::shared_ptr<BeamActorContainer> beam);
     std::shared_ptr<DataContainer> load();
+    std::vector<std::shared_ptr<BeamActorContainer>> loadBeams();
 
 protected:
     bool save(DXBeam& beam);
     bool save(CTSpiralBeam& beam);
-    bool save(CTSpiralDualEnergyBeam& beam);
+    bool save(CTSpiralDualEnergyBeam& beam);    
 
 private:
     std::unique_ptr<H5::H5File> m_file = nullptr;

@@ -35,8 +35,12 @@ public:
     void saveData(QString path);
     void loadData(QString path);
 
+signals:
+    void beamDataChanged(std::shared_ptr<BeamActorContainer> beam);
+
 protected:
 private:
     std::shared_ptr<DataContainer> m_data;
     std::vector<std::shared_ptr<BeamActorContainer>> m_beams;
 };
+

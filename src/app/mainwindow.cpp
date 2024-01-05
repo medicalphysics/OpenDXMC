@@ -173,7 +173,7 @@ MainWindow::MainWindow(QWidget* parent)
     connect(h5io, &H5IO::imageDataChanged, slicerender, &RenderWidgetsCollection::updateImageData);
     connect(h5io, &H5IO::imageDataChanged, simulationpipeline, &SimulationPipeline::updateImageData);
     connect(h5io, &H5IO::imageDataChanged, simulationpipeline, &SimulationPipeline::updateImageData);
-
+    connect(h5io, &H5IO::beamDataChanged, beamsettingsmodel, &BeamSettingsView::addBeam);
     // simulation progress
     /* m_progressTimer = new QTimer(this);
     m_progressTimer->setTimerType(Qt::CoarseTimer);

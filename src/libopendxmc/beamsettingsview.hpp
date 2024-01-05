@@ -29,14 +29,16 @@ public:
     BeamSettingsView(QWidget* parent = nullptr);
     ~BeamSettingsView();
     void updateImageData(std::shared_ptr<DataContainer> data) { emit imageDataChanged(data); };
+    void addBeam(std::shared_ptr<BeamActorContainer> beam) { emit requestAddNewBeam(beam); }
     void addDXBeam() { emit requestAddDXBeam(); }
     void addCTSpiralBeam() { emit requestAddCTSpiralBeam(); }
     void addCTSpiralDualEnergyBeam() { emit requestAddCTSpiralDualEnergyBeam(); }
     void keyPressEvent(QKeyEvent*) override;
 signals:
-    void requestAddDXBeam();
-    void requestAddCTSpiralBeam();
-    void requestAddCTSpiralDualEnergyBeam();
+    void requestAddNewBeam(std::shared_ptr<BeamActorContainer> beam);
+    void requestAddDXBeam(std::shared_ptr<BeamActorContainer> beam = nullptr);
+    void requestAddCTSpiralBeam(std::shared_ptr<BeamActorContainer> beam = nullptr);
+    void requestAddCTSpiralDualEnergyBeam(std::shared_ptr<BeamActorContainer> beam = nullptr);
     void beamActorAdded(std::shared_ptr<BeamActorContainer>);
     void beamActorRemoved(std::shared_ptr<BeamActorContainer>);
     void requestRender();

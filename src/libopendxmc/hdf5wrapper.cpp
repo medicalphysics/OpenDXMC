@@ -19,6 +19,7 @@ Copyright 2023 Erlend Andersen
 #include <hdf5wrapper.hpp>
 
 #include <concepts>
+#include <optional>
 #include <ranges>
 #include <span>
 
@@ -27,11 +28,7 @@ std::vector<std::string> split(const std::string& str, const std::string& sep)
     std::vector<std::string> s = str | std::ranges::views::split(std::string_view(sep)) | std::ranges::to<std::vector<std::string>>();
     return s;
 }
-/* std::string join(const std::vector<std::string>& v, const std::string& sep)
-{
-    std::string s = v | std::ranges::views::join_with(std::string_view(sep)) | std::ranges::to<std::string>();
-    return s;
-}*/
+
 std::string join(std::span<const std::string> v, const std::string& sep)
 {
     std::string s = v | std::ranges::views::join_with(std::string_view(sep)) | std::ranges::to<std::string>();
@@ -174,8 +171,8 @@ bool saveArray(std::unique_ptr<H5::H5File>& file, const std::vector<std::string>
         }
     }
 
-    // H5::Exception::dontPrint();
-    //  HDF5 only understands vector of char* :-(
+    H5::Exception::dontPrint();
+
     std::vector<const char*> arr_c_str;
     arr_c_str.reserve(v.size());
     for (const auto& vv : v)
@@ -280,6 +277,42 @@ void saveAttribute(std::unique_ptr<H5::Group>& group, const std::string& name, c
 
     auto att = group->createAttribute(name.c_str(), type, space);
     att.write(type, &val);
+}
+
+template <typename T, std::size_t N = 1>
+    requires(std::is_same_v<T, double> || std::is_same_v<T, std::uint64_t>)
+std::optional<std::array<T, N>> loadAttribute(std::unique_ptr<H5::Group>& group, const std::string& name)
+{
+    if (group->attrExists(name.c_str())) {
+        auto att = group->openAttribute(name.c_str());
+        auto space = att.getSpace();
+        auto rank = space.getSimpleExtentNdims();
+        auto n_elements = space.getSimpleExtentNpoints();
+        if (rank > 1 || n_elements != N)
+            return std::nullopt;
+
+        auto type_class = att.getTypeClass();
+
+        if constexpr (std::is_same_v<T, double>) {
+            auto float_type_class = att.getFloatType();
+            auto type_size = float_type_class.getSize();
+            if (type_class != H5T_FLOAT || type_size != 8)
+                return std::nullopt;
+        } else {
+            auto int_type_class = att.getIntType();
+            auto type_size = int_type_class.getSize();
+            if (type_class != H5T_INTEGER || type_size != 8)
+                return std::nullopt;
+        }
+
+        std::array<T, N> res;
+        if constexpr (std::is_same_v<T, double>)
+            att.read(H5::PredType::NATIVE_DOUBLE, res.data());
+        else
+            att.read(H5::PredType::NATIVE_UINT64, res.data());
+        return std::make_optional(res);
+    }
+    return std::nullopt;
 }
 
 HDF5Wrapper::HDF5Wrapper(const std::string& path, FileOpenMode mode)
@@ -400,7 +433,6 @@ bool HDF5Wrapper::save(DXBeam& beam)
     saveAttribute<double>(beamgroup, "DAPvalue", beam.DAPvalue());
     saveAttribute<std::uint64_t>(beamgroup, "number_of_exposures", beam.numberOfExposures());
     saveAttribute<std::uint64_t>(beamgroup, "particles_per_exposure", beam.numberOfParticlesPerExposure());
-
     saveAttribute<double>(beamgroup, "tube_voltage", beam.tube().voltage());
     saveAttribute<double>(beamgroup, "tube_anode_angle", beam.tube().anodeAngleDeg());
     saveAttribute<double>(beamgroup, "tube_Al_filtration", beam.tube().filtration(13));
@@ -414,7 +446,7 @@ bool HDF5Wrapper::save(CTSpiralBeam& beam)
     int teller = 1;
     while (beamgroup) {
         teller++;
-        
+
         auto path = std::string { "/beams/CTSpiralBeams/" } + std::to_string(teller);
         beamgroup = getGroup(m_file, path, false);
     }
@@ -461,17 +493,243 @@ bool HDF5Wrapper::save(CTSpiralDualEnergyBeam& beam)
     saveAttribute<double>(beamgroup, "CTDIvol", beam.CTDIvol());
     saveAttribute<double>(beamgroup, "CTDIdiameter", beam.CTDIdiameter());
     saveAttribute<double>(beamgroup, "tube_voltageB", beam.tubeB().voltage());
-    saveAttribute<double>(beamgroup, "tube_anode_angleB", beam.tubeB().anodeAngleDeg());
     saveAttribute<double>(beamgroup, "tube_Al_filtrationB", beam.tubeB().filtration(13));
     saveAttribute<double>(beamgroup, "tube_Cu_filtrationB", beam.tubeB().filtration(29));
     saveAttribute<double>(beamgroup, "tube_Sn_filtrationB", beam.tubeB().filtration(50));
+    saveAttribute<double>(beamgroup, "tube_anode_angle", beam.tubeA().anodeAngleDeg());
     saveAttribute<double>(beamgroup, "tube_voltageA", beam.tubeA().voltage());
-    saveAttribute<double>(beamgroup, "tube_anode_angleA", beam.tubeA().anodeAngleDeg());
     saveAttribute<double>(beamgroup, "tube_Al_filtrationA", beam.tubeA().filtration(13));
     saveAttribute<double>(beamgroup, "tube_Cu_filtrationA", beam.tubeA().filtration(29));
     saveAttribute<double>(beamgroup, "tube_Sn_filtrationA", beam.tubeA().filtration(50));
     saveAttribute<std::uint64_t>(beamgroup, "particles_per_exposure", beam.numberOfParticlesPerExposure());
     return true;
+}
+
+std::shared_ptr<Beam> loadDXBeam(std::unique_ptr<H5::Group>& group)
+{
+    auto beam = std::make_shared<Beam>(DXBeam());
+    auto& dx = std::get<DXBeam>(*beam);
+
+    auto rotation_center = loadAttribute<double, 3>(group, "rotation_center");
+    if (rotation_center)
+        dx.setRotationCenter(rotation_center.value());
+
+    auto source_patient_distance = loadAttribute<double, 1>(group, "source_center_distance");
+    if (source_patient_distance)
+        dx.setSourcePatientDistance(source_patient_distance.value()[0]);
+
+    auto primary_angle = loadAttribute<double, 1>(group, "primary_angle");
+    if (primary_angle)
+        dx.setPrimaryAngleDeg(primary_angle.value()[0]);
+
+    auto secondary_angle = loadAttribute<double, 1>(group, "secondary_angle");
+    if (secondary_angle)
+        dx.setSecondaryAngleDeg(secondary_angle.value()[0]);
+
+    auto source_detector_distance = loadAttribute<double, 1>(group, "source_detector_distance");
+    if (source_detector_distance)
+        dx.setSourceDetectorDistance(source_detector_distance.value()[0]);
+
+    auto collimation_angles = loadAttribute<double, 2>(group, "collimation_angles");
+    if (collimation_angles)
+        dx.setCollimationAnglesDeg(collimation_angles.value());
+
+    auto DAPvalue = loadAttribute<double, 1>(group, "DAPvalue");
+    if (DAPvalue)
+        dx.setDAPvalue(DAPvalue.value()[0]);
+
+    auto number_of_exposures = loadAttribute<std::uint64_t, 1>(group, "number_of_exposures");
+    if (number_of_exposures)
+        dx.setNumberOfExposures(number_of_exposures.value()[0]);
+
+    auto particles_per_exposure = loadAttribute<std::uint64_t, 1>(group, "particles_per_exposure");
+    if (particles_per_exposure)
+        dx.setNumberOfParticlesPerExposure(particles_per_exposure.value()[0]);
+
+    auto tube_voltage = loadAttribute<double, 1>(group, "tube_voltage");
+    if (tube_voltage)
+        dx.setTubeVoltage(tube_voltage.value()[0]);
+
+    auto tube_anode_angle = loadAttribute<double, 1>(group, "tube_anode_angle");
+    if (tube_anode_angle)
+        dx.setTubeAnodeAngleDeg(tube_anode_angle.value()[0]);
+
+    auto tube_Al_filtration = loadAttribute<double, 1>(group, "tube_Al_filtration");
+    if (tube_Al_filtration)
+        dx.addTubeFiltrationMaterial(13, tube_Al_filtration.value()[0]);
+
+    auto tube_Cu_filtration = loadAttribute<double, 1>(group, "tube_Cu_filtration");
+    if (tube_Cu_filtration)
+        dx.addTubeFiltrationMaterial(29, tube_Cu_filtration.value()[0]);
+
+    auto tube_Sn_filtration = loadAttribute<double, 1>(group, "tube_Sn_filtration");
+    if (tube_Sn_filtration)
+        dx.addTubeFiltrationMaterial(50, tube_Sn_filtration.value()[0]);
+
+    return beam;
+}
+
+std::shared_ptr<Beam> loadCTSpiralBeam(std::unique_ptr<H5::Group>& group)
+{
+    auto beam = std::make_shared<Beam>(CTSpiralBeam());
+    auto& ct = std::get<CTSpiralBeam>(*beam);
+
+    auto start_position = loadAttribute<double, 3>(group, "start_position");
+    if (start_position)
+        ct.setStartPosition(start_position.value());
+
+    auto stop_position = loadAttribute<double, 3>(group, "stop_position");
+    if (stop_position)
+        ct.setStopPosition(stop_position.value());
+
+    auto scan_field_view = loadAttribute<double, 1>(group, "scan_field_view");
+    if (scan_field_view)
+        ct.setScanFieldOfView(scan_field_view.value()[0]);
+
+    auto source_detector_distance = loadAttribute<double, 1>(group, "source_detector_distance");
+    if (source_detector_distance)
+        ct.setSourceDetectorDistance(source_detector_distance.value()[0]);
+
+    auto collimation = loadAttribute<double, 1>(group, "collimation");
+    if (collimation)
+        ct.setCollimation(collimation.value()[0]);
+
+    auto start_angle = loadAttribute<double, 1>(group, "start_angle");
+    if (start_angle)
+        ct.setStartAngleDeg(start_angle.value()[0]);
+
+    auto step_angle = loadAttribute<double, 1>(group, "step_angle");
+    if (step_angle)
+        ct.setStepAngleDeg(step_angle.value()[0]);
+
+    auto pitch = loadAttribute<double, 1>(group, "pitch");
+    if (pitch)
+        ct.setPitch(pitch.value()[0]);
+
+    auto ctdi = loadAttribute<double, 1>(group, "CTDIvol");
+    if (ctdi)
+        ct.setCTDIvol(ctdi.value()[0]);
+
+    auto ctdid = loadAttribute<double, 1>(group, "CTDIDiameter");
+    if (ctdid)
+        ct.setCTDIdiameter(ctdid.value()[0]);
+
+    auto particles_per_exposure = loadAttribute<std::uint64_t, 1>(group, "particles_per_exposure");
+    if (particles_per_exposure)
+        ct.setNumberOfParticlesPerExposure(particles_per_exposure.value()[0]);
+
+    auto tube_voltage = loadAttribute<double, 1>(group, "tube_voltage");
+    if (tube_voltage)
+        ct.setTubeVoltage(tube_voltage.value()[0]);
+
+    auto tube_anode_angle = loadAttribute<double, 1>(group, "tube_anode_angle");
+    if (tube_anode_angle)
+        ct.setTubeAnodeAngleDeg(tube_anode_angle.value()[0]);
+
+    auto tube_Al_filtration = loadAttribute<double, 1>(group, "tube_Al_filtration");
+    if (tube_Al_filtration)
+        ct.addTubeFiltrationMaterial(13, tube_Al_filtration.value()[0]);
+
+    auto tube_Cu_filtration = loadAttribute<double, 1>(group, "tube_Cu_filtration");
+    if (tube_Cu_filtration)
+        ct.addTubeFiltrationMaterial(29, tube_Cu_filtration.value()[0]);
+
+    auto tube_Sn_filtration = loadAttribute<double, 1>(group, "tube_Sn_filtration");
+    if (tube_Sn_filtration)
+        ct.addTubeFiltrationMaterial(50, tube_Sn_filtration.value()[0]);
+
+    return beam;
+}
+
+std::shared_ptr<Beam> loadCTSpiralDualEnergyBeam(std::unique_ptr<H5::Group>& group)
+{
+    auto beam = std::make_shared<Beam>(CTSpiralDualEnergyBeam());
+    auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
+
+    auto start_position = loadAttribute<double, 3>(group, "start_position");
+    if (start_position)
+        ct.setStartPosition(start_position.value());
+
+    auto stop_position = loadAttribute<double, 3>(group, "stop_position");
+    if (stop_position)
+        ct.setStopPosition(stop_position.value());
+
+    auto scan_field_view = loadAttribute<double, 1>(group, "scan_field_viewA");
+    if (scan_field_view)
+        ct.setScanFieldOfViewA(scan_field_view.value()[0]);
+    scan_field_view = loadAttribute<double, 1>(group, "scan_field_viewB");
+    if (scan_field_view)
+        ct.setScanFieldOfViewB(scan_field_view.value()[0]);
+
+    auto source_detector_distance = loadAttribute<double, 1>(group, "source_detector_distance");
+    if (source_detector_distance)
+        ct.setSourceDetectorDistance(source_detector_distance.value()[0]);
+
+    auto collimation = loadAttribute<double, 1>(group, "collimation");
+    if (collimation)
+        ct.setCollimation(collimation.value()[0]);
+
+    auto start_angle = loadAttribute<double, 1>(group, "start_angle");
+    if (start_angle)
+        ct.setStartAngleDeg(start_angle.value()[0]);
+
+    auto step_angle = loadAttribute<double, 1>(group, "step_angle");
+    if (step_angle)
+        ct.setStepAngleDeg(step_angle.value()[0]);
+
+    auto pitch = loadAttribute<double, 1>(group, "pitch");
+    if (pitch)
+        ct.setPitch(pitch.value()[0]);
+
+    auto ctdi = loadAttribute<double, 1>(group, "CTDIvol");
+    if (ctdi)
+        ct.setCTDIvol(ctdi.value()[0]);
+
+    auto ctdid = loadAttribute<double, 1>(group, "CTDIDiameter");
+    if (ctdid)
+        ct.setCTDIdiameter(ctdid.value()[0]);
+
+    auto particles_per_exposure = loadAttribute<std::uint64_t, 1>(group, "particles_per_exposure");
+    if (particles_per_exposure)
+        ct.setNumberOfParticlesPerExposure(particles_per_exposure.value()[0]);
+
+    auto tube_anode_angle = loadAttribute<double, 1>(group, "tube_anode_angle");
+    if (tube_anode_angle)
+        ct.setTubesAnodeAngleDeg(tube_anode_angle.value()[0]);
+
+    auto tube_voltage = loadAttribute<double, 1>(group, "tube_voltageA");
+    if (tube_voltage)
+        ct.setTubeAVoltage(tube_voltage.value()[0]);
+
+    auto tube_Al_filtration = loadAttribute<double, 1>(group, "tube_Al_filtrationA");
+    if (tube_Al_filtration)
+        ct.addTubeAFiltrationMaterial(13, tube_Al_filtration.value()[0]);
+
+    auto tube_Cu_filtration = loadAttribute<double, 1>(group, "tube_Cu_filtrationA");
+    if (tube_Cu_filtration)
+        ct.addTubeAFiltrationMaterial(29, tube_Cu_filtration.value()[0]);
+
+    auto tube_Sn_filtration = loadAttribute<double, 1>(group, "tube_Sn_filtrationA");
+    if (tube_Sn_filtration)
+        ct.addTubeAFiltrationMaterial(50, tube_Sn_filtration.value()[0]);
+
+    tube_voltage = loadAttribute<double, 1>(group, "tube_voltageB");
+    if (tube_voltage)
+        ct.setTubeBVoltage(tube_voltage.value()[0]);
+
+    tube_Al_filtration = loadAttribute<double, 1>(group, "tube_Al_filtrationB");
+    if (tube_Al_filtration)
+        ct.addTubeBFiltrationMaterial(13, tube_Al_filtration.value()[0]);
+
+    tube_Cu_filtration = loadAttribute<double, 1>(group, "tube_Cu_filtrationB");
+    if (tube_Cu_filtration)
+        ct.addTubeBFiltrationMaterial(29, tube_Cu_filtration.value()[0]);
+
+    tube_Sn_filtration = loadAttribute<double, 1>(group, "tube_Sn_filtrationB");
+    if (tube_Sn_filtration)
+        ct.addTubeBFiltrationMaterial(50, tube_Sn_filtration.value()[0]);
+
+    return beam;
 }
 
 bool HDF5Wrapper::save(std::shared_ptr<BeamActorContainer> beam)
@@ -522,7 +780,6 @@ std::shared_ptr<DataContainer> HDF5Wrapper::load()
                     materials[i].name = material_names[i];
                     materials[i].Z = dxmc::Material<double>::parseCompoundStr(material_comp[i]);
                 }
-
             } else {
                 return nullptr;
             }
@@ -566,6 +823,31 @@ std::shared_ptr<DataContainer> HDF5Wrapper::load()
         auto weights = loadArray<double>(m_file, "weights");
         if (start.size() == 3 && stop.size() == 3 && weights.size() > 2) {
             res->setAecData({ start[0], start[1], start[2] }, { stop[0], stop[1], stop[2] }, weights);
+        }
+    }
+
+    return res;
+}
+
+std::vector<std::shared_ptr<BeamActorContainer>> HDF5Wrapper::loadBeams()
+{
+    std::vector<std::shared_ptr<BeamActorContainer>> res;
+    auto beamgroup = getGroup(m_file, "beams", false);
+    if (!beamgroup)
+        return res;
+
+    auto dxgroup = getGroup(m_file, "beams/DXBeams", false);
+    if (dxgroup) {
+        auto dx = getGroup(m_file, "beams/DXBeams/1");
+        int teller = 1;
+        while (dx) {
+            if (auto beam = loadDXBeam(dx); beam) {
+                auto actor = std::make_shared<BeamActorContainer>(beam);
+                res.push_back(actor);
+            }
+            teller++;
+            auto path = "beams/DXBeams/" + std::to_string(teller);
+            dx = getGroup(m_file, path, false);
         }
     }
 

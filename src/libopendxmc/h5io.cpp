@@ -56,4 +56,15 @@ void H5IO::saveData(QString path)
 
 void H5IO::loadData(QString path)
 {
+    emit dataProcessingStarted();
+
+    HDF5Wrapper s(path.toStdString(), HDF5Wrapper::FileOpenMode::ReadOnly);
+    auto data = s.load();
+    emit imageDataChanged(data);
+    m_beams.clear();
+    auto beams = s.loadBeams();
+    for (auto b : beams)
+        emit beamDataChanged(b);
+
+    emit dataProcessingFinished();
 }

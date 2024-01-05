@@ -31,6 +31,7 @@ BeamSettingsView::BeamSettingsView(QWidget* parent)
     connect(this, &BeamSettingsView::requestAddDXBeam, m_model, &BeamSettingsModel::addDXBeam);
     connect(this, &BeamSettingsView::requestAddCTSpiralBeam, m_model, &BeamSettingsModel::addCTSpiralBeam);
     connect(this, &BeamSettingsView::requestAddCTSpiralDualEnergyBeam, m_model, &BeamSettingsModel::addCTSpiralDualEnergyBeam);
+    connect(this, &BeamSettingsView::requestAddNewBeam, m_model, &BeamSettingsModel::addBeam);
 
     connect(m_model, &BeamSettingsModel::beamActorAdded, [this](auto v) { emit this->beamActorAdded(v); });
     connect(m_model, &BeamSettingsModel::beamActorRemoved, [this](auto v) { emit this->beamActorRemoved(v); });

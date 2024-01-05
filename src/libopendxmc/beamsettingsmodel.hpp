@@ -32,9 +32,10 @@ class BeamSettingsModel : public QStandardItemModel {
     Q_OBJECT
 public:
     BeamSettingsModel(QObject* parent = nullptr);
-    void addDXBeam();
-    void addCTSpiralBeam();
-    void addCTSpiralDualEnergyBeam();
+    void addBeam(std::shared_ptr<BeamActorContainer> beam);
+    void addDXBeam(std::shared_ptr<BeamActorContainer> = nullptr);
+    void addCTSpiralBeam(std::shared_ptr<BeamActorContainer> beam = nullptr);
+    void addCTSpiralDualEnergyBeam(std::shared_ptr<BeamActorContainer> beam = nullptr);
     void updateImageData(std::shared_ptr<DataContainer>);
     void deleteBeam(int index);
     const QMap<QString, BowtieFilter>& bowtieFilters() const;

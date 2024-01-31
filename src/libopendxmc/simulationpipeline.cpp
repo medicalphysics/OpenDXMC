@@ -181,8 +181,8 @@ static void worker(bool deleteAirDose, int nthreads, std::shared_ptr<DataContain
             });
         }
 
-        const auto& [min_idx, max_idx] = std::minmax_element(std::execution::par_unseq, dose.cbegin(), dose.cend());
-        if (*min_idx < 1 && *max_idx < 1) {
+        const auto& max_idx = std::max_element(std::execution::par_unseq, dose.cbegin(), dose.cend());
+        if (*max_idx < 1) {
             std::transform(std::execution::par_unseq, dose.cbegin(), dose.cend(), dose.begin(), [](const auto d) {
                 return d * 1e3;
             });

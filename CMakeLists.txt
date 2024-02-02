@@ -95,7 +95,6 @@ find_package(VTK COMPONENTS
       metaio
       png
       tiff
-      loguru
       doubleconversion
       lz4
       lzma

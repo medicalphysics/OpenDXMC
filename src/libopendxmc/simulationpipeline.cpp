@@ -121,8 +121,8 @@ void SimulationPipeline::timerEvent(QTimerEvent* event)
 
 static void worker(bool deleteAirDose, int nthreads, std::shared_ptr<DataContainer> data, std::vector<std::shared_ptr<Beam>> beams, dxmc::TransportProgress* progress)
 {
-    using VoxelGrid = dxmc::AAVoxelGrid<double, 5, 1, 255>;
-    using World = dxmc::World<double, VoxelGrid>;
+    using VoxelGrid = dxmc::AAVoxelGrid<5, 1, 255>;
+    using World = dxmc::World<VoxelGrid>;
 
     World world;
     auto& vgrid = world.addItem<VoxelGrid>();

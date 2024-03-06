@@ -160,7 +160,7 @@ void CTSegmentationPipeline::updateImageData(std::shared_ptr<DataContainer> data
     std::vector<DataContainer::Material> cont_materials(materials.size());
     for (int i = 0; i < materials.size(); ++i) {
         cont_materials[i].name = mat_names[i];
-        cont_materials[i].Z = dxmc::NISTMaterials<double>::Composition(mat_names[i]);
+        cont_materials[i].Z = dxmc::NISTMaterials::Composition(mat_names[i]);
     }
     data->setMaterials(cont_materials);
     emit imageDataChanged(data);

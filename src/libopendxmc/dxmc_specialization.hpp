@@ -31,16 +31,16 @@ Copyright 2023 Erlend Andersen
 
 // Here we specialize types from the dxmc template library.
 
-using Material = dxmc::Material<double, 5>;
-using Tube = dxmc::Tube<double>;
-using NISTMaterials = dxmc::NISTMaterials<double>;
+using Material = dxmc::Material<5>;
+using Tube = dxmc::Tube;
+using NISTMaterials = dxmc::NISTMaterials;
 
-using CTSpiralBeam = dxmc::CTSpiralBeam<double>;
-using CTSpiralDualEnergyBeam = dxmc::CTSpiralDualEnergyBeam<double>;
-using CTAECFilter = dxmc::CTAECFilter<double>;
-using BowtieFilter = dxmc::BowtieFilter<double>;
+using CTSpiralBeam = dxmc::CTSpiralBeam<true>;
+using CTSpiralDualEnergyBeam = dxmc::CTSpiralDualEnergyBeam<true>;
+using CTAECFilter = dxmc::CTAECFilter;
+using BowtieFilter = dxmc::BowtieFilter;
 
-class DXBeam : public dxmc::DXBeam<double> {
+class DXBeam : public dxmc::DXBeam<true> {
 public:
     DXBeam(const std::map<std::size_t, double>& filtrationMaterials = {});
 

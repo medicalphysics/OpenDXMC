@@ -381,7 +381,7 @@ bool HDF5Wrapper::save(std::shared_ptr<DataContainer> data)
         std::transform(std::execution::par_unseq, v.cbegin(), v.cend(), mat_names.begin(), [](const auto& n) {
             std::string res;
             for (const auto& [Z, frac] : n.Z) {
-                res += dxmc::AtomHandler<double>::toSymbol(Z);
+                res += dxmc::AtomHandler::toSymbol(Z);
                 res += std::to_string(frac);
             }
             return res;
@@ -778,7 +778,7 @@ std::shared_ptr<DataContainer> HDF5Wrapper::load()
                 std::vector<DataContainer::Material> materials(material_names.size());
                 for (std::size_t i = 0; i < material_names.size(); ++i) {
                     materials[i].name = material_names[i];
-                    materials[i].Z = dxmc::Material<double>::parseCompoundStr(material_comp[i]);
+                    materials[i].Z = dxmc::Material<5>::parseCompoundStr(material_comp[i]);
                 }
             } else {
                 return nullptr;

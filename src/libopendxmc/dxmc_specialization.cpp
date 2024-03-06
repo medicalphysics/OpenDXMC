@@ -19,7 +19,7 @@ Copyright 2023 Erlend Andersen
 #include <dxmc_specialization.hpp>
 
 DXBeam::DXBeam(const std::map<std::size_t, double>& filtrationMaterials)
-    : dxmc::DXBeam<double>({ 0, 0, 0 }, { { { 1, 0, 0 }, { 0, -1, 0 } } }, filtrationMaterials)
+    : dxmc::DXBeam<true>({ 0, 0, 0 }, { { { 1, 0, 0 }, { 0, -1, 0 } } }, filtrationMaterials)
 {
     updatePosition();
 }

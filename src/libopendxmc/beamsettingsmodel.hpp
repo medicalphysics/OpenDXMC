@@ -34,6 +34,7 @@ public:
     BeamSettingsModel(QObject* parent = nullptr);
     void addBeam(std::shared_ptr<BeamActorContainer> beam);
     void addDXBeam(std::shared_ptr<BeamActorContainer> = nullptr);
+    void addCBCTBeam(std::shared_ptr<BeamActorContainer> = nullptr);
     void addCTSpiralBeam(std::shared_ptr<BeamActorContainer> beam = nullptr);
     void addCTSpiralDualEnergyBeam(std::shared_ptr<BeamActorContainer> beam = nullptr);
     void updateImageData(std::shared_ptr<DataContainer>);

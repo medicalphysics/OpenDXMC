@@ -19,6 +19,7 @@ Copyright 2023 Erlend Andersen
 #pragma once
 
 #include "dxmc/beams/beamtype.hpp"
+#include "dxmc/beams/cbctbeam.hpp"
 #include "dxmc/beams/ctspiralbeam.hpp"
 #include "dxmc/beams/ctspiraldualenergybeam.hpp"
 #include "dxmc/beams/dxbeam.hpp"
@@ -35,12 +36,13 @@ using Material = dxmc::Material<5>;
 using Tube = dxmc::Tube;
 using NISTMaterials = dxmc::NISTMaterials;
 
-using CTSpiralBeam = dxmc::CTSpiralBeam<true>;
-using CTSpiralDualEnergyBeam = dxmc::CTSpiralDualEnergyBeam<true>;
+using CTSpiralBeam = dxmc::CTSpiralBeam<false>;
+using CTSpiralDualEnergyBeam = dxmc::CTSpiralDualEnergyBeam<false>;
+using CBCTBeam = dxmc::CBCTBeam<false>;
 using CTAECFilter = dxmc::CTAECFilter;
 using BowtieFilter = dxmc::BowtieFilter;
 
-class DXBeam : public dxmc::DXBeam<true> {
+class DXBeam : public dxmc::DXBeam<false> {
 public:
     DXBeam(const std::map<std::size_t, double>& filtrationMaterials = {});
 
@@ -68,4 +70,4 @@ private:
     std::array<double, 2> m_rotAngles = { 0, 0 };
 };
 
-using Beam = std::variant<DXBeam, CTSpiralBeam, CTSpiralDualEnergyBeam>;
+using Beam = std::variant<DXBeam, CTSpiralBeam, CTSpiralDualEnergyBeam, CBCTBeam>;

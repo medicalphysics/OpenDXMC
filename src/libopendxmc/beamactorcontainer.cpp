@@ -80,7 +80,7 @@ void BeamActorContainer::update()
 
     std::visit([points, cells](auto&& arg) {
         using U = std::decay_t<decltype(arg)>;
-        if constexpr (std::is_same_v<U, CTSpiralBeam>) {
+        if constexpr (std::is_same_v<U, CTSpiralBeam> || std::is_same_v<U, CBCTBeam>) {
             const auto N = arg.numberOfExposures();
             cells->InsertNextCell(N);
             const auto exp_0 = arg.exposure(0);
@@ -127,7 +127,6 @@ void BeamActorContainer::update()
             cells->InsertNextCell(polyLineB);
 
         } else if constexpr (std::is_same_v<U, DXBeam>) {
-
             const auto pos = arg.position();
             const auto angles = arg.collimationAngles();
             const auto cosines = arg.directionCosines();

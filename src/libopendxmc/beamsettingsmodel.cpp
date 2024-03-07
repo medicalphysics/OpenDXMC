@@ -487,6 +487,149 @@ void BeamSettingsModel::addDXBeam(std::shared_ptr<BeamActorContainer> actor)
     appendRow(root);
 }
 
+void BeamSettingsModel::addCBCTBeam(std::shared_ptr<BeamActorContainer> actor)
+{
+    auto root = new LabelItem(tr("CBCT Beam"));
+    std::shared_ptr<Beam> beam = nullptr;
+    if (actor) {
+        beam = actor->getBeam();
+        if (beam)
+            if (!std::holds_alternative<CBCTBeam>(*beam))
+                beam = nullptr;
+    }
+    if (!beam) {
+        const std::map<std::size_t, double> filt_init = { { 13, 2.0 }, { 29, 0.1 } };
+        beam = std::make_shared<Beam>(CBCTBeam({ 0, 0, 0 }, { 0, 0, 1 }, filt_init));
+    }
+    auto beamActor = std::make_shared<BeamActorContainer>(beam);
+    m_beams.push_back(std::make_pair(beam, beamActor));
+
+    {
+        auto setter = [=](std::array<double, 3> d) {
+            auto& dx = std::get<CBCTBeam>(*beam);
+            dx.setIsocenter(d);
+            beamActor->update();
+        };
+        auto getter = [=]() -> std::array<double, 3> {
+            auto& dx = std::get<CBCTBeam>(*beam);
+            return dx.isocenter();
+        };
+        addItem(root, "Isocenter [cm]", setter, getter);
+    }
+    {
+        auto setter = [=](double d) {
+            auto& dx = std::get<CBCTBeam>(*beam);
+            dx.setSourceDetectorDistance(d);
+            beamActor->update();
+        };
+        auto getter = [=]() -> double {
+            auto& dx = std::get<CBCTBeam>(*beam);
+            return dx.sourceDetectorDistance();
+        };
+        addItem(root, "Source detector distance [cm]", setter, getter);
+    }
+
+    {
+        auto setter = [=](double d) {
+            auto& ct = std::get<CBCTBeam>(*beam);
+            ct.setStartAngleDeg(d);
+            beamActor->update();
+        };
+        auto getter = [=]() -> double {
+            auto& ct = std::get<CBCTBeam>(*beam);
+            return ct.startAngleDeg();
+        };
+        addItem(root, "Set start angle [deg]", setter, getter);
+    }
+    {
+        auto setter = [=](double d) {
+            auto& ct = std::get<CBCTBeam>(*beam);
+            ct.setStopAngleDeg(d);
+            beamActor->update();
+        };
+        auto getter = [=]() -> double {
+            auto& ct = std::get<CBCTBeam>(*beam);
+            return ct.stopAngleDeg();
+        };
+        addItem(root, "Set stop angle [deg]", setter, getter);
+    }
+    {
+        std::get<CBCTBeam>(*beam).setStepAngleDeg(5);
+        auto setter = [=](double d) {
+            auto& ct = std::get<CBCTBeam>(*beam);
+            ct.setStepAngleDeg(d);
+            beamActor->update();
+        };
+        auto getter = [=]() -> double {
+            auto& ct = std::get<CBCTBeam>(*beam);
+            return ct.stepAngleDeg();
+        };
+        addItem(root, "Set angle step [deg]", setter, getter);
+    }
+
+    {
+        std::get<CBCTBeam>(*beam).setCollimationAnglesDeg({ 5, 5 });
+        auto setter = [=](std::array<double, 2> d) {
+            auto& dx = std::get<CBCTBeam>(*beam);
+            dx.setCollimationAnglesDeg(d);
+            beamActor->update();
+        };
+        auto getter = [=]() -> std::array<double, 2> {
+            auto& dx = std::get<CBCTBeam>(*beam);
+            return dx.collimationAnglesDeg();
+        };
+        addItem(root, "Collimation angles [Deg]", setter, getter);
+    }
+
+    auto tubeItem = new LabelItem(tr("Tube"));
+    root->appendRow(tubeItem);
+    addTubeItems<CBCTBeam>(tubeItem, beam);
+    {
+        auto setter = [=](double d) {
+            auto& dx = std::get<CBCTBeam>(*beam);
+            dx.setDAPvalue(d);
+        };
+        auto getter = [=]() -> double {
+            auto& dx = std::get<CBCTBeam>(*beam);
+            return dx.DAPvalue();
+        };
+
+        addItem(root, "Dose area product [mGycm^2]", setter, getter);
+    }
+
+    {
+        auto getter = [=]() -> std::uint64_t {
+            auto& dx = std::get<CBCTBeam>(*beam);
+            return dx.numberOfExposures();
+        };
+        addItem(root, "Number of exposures", getter);
+    }
+    {
+        std::get<CBCTBeam>(*beam).setNumberOfParticlesPerExposure(1e6);
+
+        auto setter = [=](std::uint64_t d) {
+            auto& dx = std::get<CBCTBeam>(*beam);
+            dx.setNumberOfParticlesPerExposure(d);
+        };
+        auto getter = [=]() -> std::uint64_t {
+            auto& dx = std::get<CBCTBeam>(*beam);
+            return dx.numberOfParticlesPerExposure();
+        };
+        addItem(root, "Particles per exposure", setter, getter);
+    }
+    {
+        auto getter = [=]() -> std::uint64_t {
+            auto& dx = std::get<CBCTBeam>(*beam);
+            return dx.numberOfParticles();
+        };
+        addItem(root, "Total number of particles", getter);
+    }
+
+    beamActor->update();
+    emit beamActorAdded(beamActor);
+    appendRow(root);
+}
+
 void BeamSettingsModel::addCTSpiralBeam(std::shared_ptr<BeamActorContainer> actor)
 {
     auto root = new LabelItem(tr("CT Spiral Beam"));

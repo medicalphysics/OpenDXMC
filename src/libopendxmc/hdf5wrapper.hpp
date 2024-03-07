@@ -44,6 +44,7 @@ protected:
     bool save(DXBeam& beam);
     bool save(CTSpiralBeam& beam);
     bool save(CTSpiralDualEnergyBeam& beam);    
+    bool save(CBCTBeam& beam);
 
 private:
     std::unique_ptr<H5::H5File> m_file = nullptr;

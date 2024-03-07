@@ -41,7 +41,7 @@ public:
     void setNumberOfThreads(int nthreads);
     void setDeleteAirDose(bool on) { m_deleteAirDose = on; };
     void timerEvent(QTimerEvent*);
-
+    void setLowEnergyCorrectionLevel(int level) { m_lowenergyCorrection = level; }
     void startSimulation();
     void stopSimulation();
 

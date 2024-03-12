@@ -392,7 +392,7 @@ void SliceRenderWidget::switchLUTtable(DataContainer::ImageType type)
 
     if (type == DataContainer::ImageType::Material || type == DataContainer::ImageType::Organ) {
         auto vtkimage = m_data->vtkImage(type);
-        auto n_colors = static_cast<int>(vtkimage->GetScalarRange()[1]);
+        auto n_colors = static_cast<int>(vtkimage->GetScalarRange()[1]) + 1;
         if (n_colors > 1 && lut->GetNumberOfColors() != n_colors) {
             lut->SetNumberOfTableValues(n_colors);
             lut->SetTableValue(0, 0, 0, 0, 0);

@@ -135,6 +135,7 @@ MainWindow::MainWindow(QWidget* parent)
     connect(simulationwidget, &SimulationWidget::ignoreAirChanged, simulationpipeline, &SimulationPipeline::setDeleteAirDose);
     connect(simulationwidget, &SimulationWidget::requestStartSimulation, simulationpipeline, &SimulationPipeline::startSimulation);
     connect(simulationwidget, &SimulationWidget::requestStopSimulation, simulationpipeline, &SimulationPipeline::stopSimulation);
+    connect(simulationwidget, &SimulationWidget::lowEnergyCorrectionMethodChanged, simulationpipeline, &SimulationPipeline::setLowEnergyCorrectionLevel);
     connect(simulationpipeline, &SimulationPipeline::simulationReady, simulationwidget, &SimulationWidget::setSimulationReady);
     connect(beamsettingsmodel, &BeamSettingsView::beamActorAdded, simulationpipeline, &SimulationPipeline::addBeamActor);
     connect(beamsettingsmodel, &BeamSettingsView::beamActorRemoved, simulationpipeline, &SimulationPipeline::removeBeamActor);

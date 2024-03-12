@@ -119,9 +119,10 @@ void SimulationPipeline::timerEvent(QTimerEvent* event)
     }
 }
 
-static void worker(bool deleteAirDose, int nthreads, std::shared_ptr<DataContainer> data, std::vector<std::shared_ptr<Beam>> beams, dxmc::TransportProgress* progress)
+template <int CORRECTION = 1>
+void worker(bool deleteAirDose, int nthreads, std::shared_ptr<DataContainer> data, std::vector<std::shared_ptr<Beam>> beams, dxmc::TransportProgress* progress)
 {
-    using VoxelGrid = dxmc::AAVoxelGrid<5, 1, 255>;
+    using VoxelGrid = dxmc::AAVoxelGrid<5, CORRECTION, 255>;
     using World = dxmc::World<VoxelGrid>;
 
     World world;
@@ -206,9 +207,16 @@ void SimulationPipeline::startSimulation()
         emit simulationRunning(false);
         return;
     }
-
-    std::jthread t(worker, m_deleteAirDose, m_threads, m_data, m_beams, &m_progress);
-    t.detach();
+    if (m_lowenergyCorrection == 0) {
+        std::jthread t(worker<0>, m_deleteAirDose, m_threads, m_data, m_beams, &m_progress);
+        t.detach();
+    } else if (m_lowenergyCorrection == 1) {
+        std::jthread t(worker<1>, m_deleteAirDose, m_threads, m_data, m_beams, &m_progress);
+        t.detach();
+    } else {
+        std::jthread t(worker<2>, m_deleteAirDose, m_threads, m_data, m_beams, &m_progress);
+        t.detach();
+    }
 }
 
 void SimulationPipeline::stopSimulation()

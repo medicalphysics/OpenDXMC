@@ -101,12 +101,14 @@ void SimulationPipeline::setNumberOfThreads(int nthreads)
     const auto nthreads_max = 2 * std::max(1, static_cast<int>(std::thread::hardware_concurrency()));
     m_threads = std::clamp(nthreads, 0, nthreads_max);
 }
+
 void SimulationPipeline::finishingSimulation()
 {
     emit imageDataChanged(m_data);
     killTimer(m_timerID);
     emit simulationRunning(false);
 }
+
 void SimulationPipeline::timerEvent(QTimerEvent* event)
 {
     const auto [n, total] = m_progress.progress();
@@ -193,6 +195,40 @@ void worker(bool deleteAirDose, int nthreads, std::shared_ptr<DataContainer> dat
         }
 
         data->setImageArray(DataContainer::ImageType::Dose, dose);
+    }
+
+    // collect number of events
+    {
+        std::vector<double> dose_count_array(N, 0);
+        for (std::size_t i = 0; i < N; ++i)
+            dose_count_array[i] = static_cast<double>(vgrid.doseScored(i).numberOfEvents());
+
+        if (deleteAirDose) {
+            const auto matarr = data->getMaterialArray();
+            std::transform(std::execution::par_unseq, dose_count_array.cbegin(), dose_count_array.cend(), matarr.cbegin(), dose_count_array.begin(), [](const auto d, const auto m) {
+                return m > 0 ? d : 0;
+            });
+        }
+        data->setImageArray(DataContainer::ImageType::DoseCount, dose_count_array);
+    }
+
+    // collect stddev
+    {
+        std::vector<double> dose_var(N, 0.0);
+        for (std::size_t i = 0; i < N; ++i)
+            dose_var[i] = vgrid.doseScored(i).variance();
+
+        if (deleteAirDose) {
+            const auto matarr = data->getMaterialArray();
+            std::transform(std::execution::par_unseq, dose_var.cbegin(), dose_var.cend(), matarr.cbegin(), dose_var.begin(), [](const auto d, const auto m) {
+                return m > 0 ? d : 0.0;
+            });
+        }
+        if (data->units(DataContainer::ImageType::Dose)[0] == 'u') {
+            std::for_each(std::execution::par_unseq, dose_var.begin(), dose_var.end(), [](auto& v) { v *= 1e6; });
+        }
+
+        data->setImageArray(DataContainer::ImageType::DoseVariance, dose_var);
     }
 
     progress->setStopSimulation();

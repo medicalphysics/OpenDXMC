@@ -144,7 +144,7 @@ vtkSmartPointer<vtkImageData> DataContainer::generate_vtkImage(ImageType type)
         break;
     case DataContainer::ImageType::DoseCount:
         data = static_cast<void*>(m_dose_count_array.data());
-        vtkimport->SetDataScalarType(VTK_UNSIGNED_LONG_LONG);
+        vtkimport->SetDataScalarTypeToDouble();
         break;
     default:
         break;
@@ -294,9 +294,13 @@ bool DataContainer::setImageArray(ImageType type, const std::vector<double>& ima
     case DataContainer::ImageType::DoseVariance:
         m_dose_variance_array = image;
         return true;
+    case DataContainer::ImageType::DoseCount:
+        m_dose_count_array = image;
+        return true;
     default:
         return false;
     }
+
     return false;
 }
 
@@ -321,21 +325,6 @@ bool DataContainer::setImageArray(ImageType type, const std::vector<std::uint8_t
     return false;
 }
 
-bool DataContainer::setImageArray(ImageType type, const std::vector<std::uint64_t>& image)
-{
-    const auto N = size();
-    if (N != image.size())
-        return false;
-
-    m_vtk_shallow_buffer.erase(type);
-
-    if (type == ImageType::DoseCount) {
-        m_dose_count_array = image;
-        return true;
-    }
-    return false;
-}
-
 bool DataContainer::setImageArray(ImageType type, vtkSmartPointer<vtkImageData> image)
 {
     if (image == nullptr)
@@ -354,9 +343,6 @@ bool DataContainer::setImageArray(ImageType type, vtkSmartPointer<vtkImageData> 
     // Checking for correct scalar type
     if (type == ImageType::Material || type == ImageType::Organ) {
         if (image->GetScalarType() != VTK_UNSIGNED_CHAR)
-            return false;
-    } else if (type == ImageType::DoseCount) {
-        if (image->GetScalarType() != VTK_UNSIGNED_LONG_LONG)
             return false;
     } else {
         if (image->GetScalarType() != VTK_DOUBLE)
@@ -396,7 +382,7 @@ bool DataContainer::setImageArray(ImageType type, vtkSmartPointer<vtkImageData> 
         return true;
     case DataContainer::ImageType::DoseCount:
         buffer = vtkexport->GetPointerToData();
-        m_dose_count_array = std::vector<std::uint64_t>(static_cast<std::uint64_t*>(buffer), static_cast<std::uint64_t*>(buffer) + size());
+        m_dose_count_array = std::vector<double>(static_cast<double*>(buffer), static_cast<double*>(buffer) + size());
         return true;
     default:
         break;

@@ -903,7 +903,7 @@ std::shared_ptr<DataContainer> HDF5Wrapper::load()
             res->setImageArray(DataContainer::ImageType::DoseVariance, v);
     }
     {
-        auto v = loadArray<std::uint64_t>(m_file, "doseeventcountarray");
+        auto v = loadArray<double>(m_file, "doseeventcountarray");
         if (v.size() == res->size())
             res->setImageArray(DataContainer::ImageType::DoseCount, v);
     }

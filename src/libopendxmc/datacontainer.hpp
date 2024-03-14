@@ -56,8 +56,7 @@ public:
     void setAecData(const std::array<double, 3>& start, const std::array<double, 3>& stop, const std::vector<double>& weights);
     void setAecData(const CTAECFilter&);
     bool setImageArray(ImageType type, const std::vector<double>& image);
-    bool setImageArray(ImageType type, const std::vector<std::uint8_t>& image);
-    bool setImageArray(ImageType type, const std::vector<std::uint64_t>& image);
+    bool setImageArray(ImageType type, const std::vector<std::uint8_t>& image);    
     bool setImageArray(ImageType type, vtkSmartPointer<vtkImageData> image);
 
     std::size_t size() const;
@@ -75,7 +74,7 @@ public:
     const std::vector<double>& getDensityArray() const { return m_density_array; }
     const std::vector<double>& getDoseArray() const { return m_dose_array; }
     const std::vector<double>& getDoseVarianceArray() const { return m_dose_variance_array; }
-    const std::vector<std::uint64_t>& getDoseEventCountArray() const { return m_dose_count_array; }
+    const std::vector<double>& getDoseEventCountArray() const { return m_dose_count_array; }
     const std::vector<std::uint8_t>& getMaterialArray() const { return m_material_array; }
     const std::vector<std::uint8_t>& getOrganArray() const { return m_organ_array; }
 
@@ -102,7 +101,7 @@ private:
     std::vector<double> m_dose_array;
     std::vector<double> m_dose_variance_array;
     CTAECFilter m_aecdata;
-    std::vector<std::uint64_t> m_dose_count_array;
+    std::vector<double> m_dose_count_array;
     std::vector<DataContainer::Material> m_materials;
     std::vector<std::string> m_organ_names;
     std::map<ImageType, vtkSmartPointer<vtkImageData>> m_vtk_shallow_buffer;

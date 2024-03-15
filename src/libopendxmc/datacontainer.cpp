@@ -34,7 +34,7 @@ std::uint64_t generateID(void)
 DataContainer::DataContainer()
 {
     m_uid = generateID();
-    m_aecdata.setData({ 0, 0, 0 }, { 0, 0, 0 }, { 1.0, 1.0 });
+    m_aecdata.setData({ 0, 0, 0 }, { 0, 0, 1 }, { 1.0, 1.0 });
 }
 
 std::uint64_t DataContainer::ID() const { return m_uid; }

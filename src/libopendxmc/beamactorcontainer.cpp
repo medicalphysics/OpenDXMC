@@ -80,7 +80,7 @@ void BeamActorContainer::update()
 
     std::visit([points, cells](auto&& arg) {
         using U = std::decay_t<decltype(arg)>;
-        if constexpr (std::is_same_v<U, CTSpiralBeam> || std::is_same_v<U, CBCTBeam>) {
+        if constexpr (std::is_same_v<U, CTSpiralBeam> || std::is_same_v<U, CBCTBeam> || std::is_same_v<U, CTSequentialBeam>) {
             const auto N = arg.numberOfExposures();
             cells->InsertNextCell(N);
             const auto exp_0 = arg.exposure(0);

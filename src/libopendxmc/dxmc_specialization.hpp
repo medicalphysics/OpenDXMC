@@ -20,6 +20,7 @@ Copyright 2023 Erlend Andersen
 
 #include "dxmc/beams/beamtype.hpp"
 #include "dxmc/beams/cbctbeam.hpp"
+#include "dxmc/beams/ctsequentialbeam.hpp"
 #include "dxmc/beams/ctspiralbeam.hpp"
 #include "dxmc/beams/ctspiraldualenergybeam.hpp"
 #include "dxmc/beams/dxbeam.hpp"
@@ -36,6 +37,7 @@ using Material = dxmc::Material<5>;
 using Tube = dxmc::Tube;
 using NISTMaterials = dxmc::NISTMaterials;
 
+using CTSequentialBeam = dxmc::CTSequentialBeam<false>;
 using CTSpiralBeam = dxmc::CTSpiralBeam<false>;
 using CTSpiralDualEnergyBeam = dxmc::CTSpiralDualEnergyBeam<false>;
 using CBCTBeam = dxmc::CBCTBeam<false>;
@@ -70,4 +72,4 @@ private:
     std::array<double, 2> m_rotAngles = { 0, 0 };
 };
 
-using Beam = std::variant<DXBeam, CTSpiralBeam, CTSpiralDualEnergyBeam, CBCTBeam>;
+using Beam = std::variant<DXBeam, CTSpiralBeam, CTSpiralDualEnergyBeam, CBCTBeam, CTSequentialBeam>;

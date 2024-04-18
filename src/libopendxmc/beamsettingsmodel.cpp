@@ -21,8 +21,6 @@ Copyright 2024 Erlend Andersen
 
 #include <array>
 #include <charconv>
-#include <concepts>
-#include <functional>
 
 class LabelItem : public QStandardItem {
 public:
@@ -309,6 +307,18 @@ void addTubeItems(LabelItem* tubeItem, std::shared_ptr<Beam> beam)
         addItem(tubeItem, "Tube Sn filtration [mm]", setter, getter);
     }
     {
+        auto setter = [=](double d) {
+            auto& dx = std::get<T>(*beam);
+            dx.addTubeFiltrationMaterial(47, d);
+        };
+        auto getter = [=]() -> double {
+            auto& dx = std::get<T>(*beam);
+            const auto& tube = dx.tube();
+            return tube.filtration(47);
+        };
+        addItem(tubeItem, "Tube Ag filtration [mm]", setter, getter);
+    }
+    {
         auto getter = [=]() -> double {
             auto& dx = std::get<T>(*beam);
             return dx.tubeAlHalfValueLayer();
@@ -330,6 +340,10 @@ void BeamSettingsModel::addBeam(std::shared_ptr<BeamActorContainer> actor)
         addCTSpiralBeam(actor);
     } else if (std::holds_alternative<CTSpiralDualEnergyBeam>(*actor->getBeam())) {
         addCTSpiralDualEnergyBeam(actor);
+    } else if (std::holds_alternative<CBCTBeam>(*actor->getBeam())) {
+        addCBCTBeam(actor);
+    } else if (std::holds_alternative<CTSequentialBeam>(*actor->getBeam())) {
+        addCTSequentialBeam(actor);
     }
 }
 
@@ -634,6 +648,229 @@ void BeamSettingsModel::addCBCTBeam(std::shared_ptr<BeamActorContainer> actor)
     appendRow(root);
 }
 
+void BeamSettingsModel::addCTSequentialBeam(std::shared_ptr<BeamActorContainer> actor)
+{
+    auto root = new LabelItem(tr("CT Sequential Beam"));
+
+    std::shared_ptr<Beam> beam = nullptr;
+    if (actor) {
+        beam = actor->getBeam();
+        if (beam)
+            if (!std::holds_alternative<CTSequentialBeam>(*beam))
+                beam = nullptr;
+    }
+
+    if (!beam) {
+        if (m_image) {
+            const auto& s = m_image->spacing();
+            const auto& d = m_image->dimensions();
+            const std::array<double, 3> start_init = { 0, 0, 0 };
+            const std::array<double, 3> normal = { 0, 0, 1 };
+            const std::map<std::size_t, double> filt_init = { { 13, 9.0 } };
+            beam = std::make_shared<Beam>(CTSequentialBeam(start_init, normal, filt_init));
+        } else {
+            constexpr std::array<double, 3> start_init = { 0, 0, 0 };
+            constexpr std::array<double, 3> normal = { 0, 0, 1 };
+            const std::map<std::size_t, double> filt_init = { { 13, 9.0 } };
+            beam = std::make_shared<Beam>(CTSequentialBeam(start_init, normal, filt_init));
+        }
+    }
+    auto beamActor = std::make_shared<BeamActorContainer>(beam);
+    m_beams.push_back(std::make_pair(beam, beamActor));
+
+    {
+        auto setter = [=](std::array<double, 3> d) {
+            auto& ct = std::get<CTSequentialBeam>(*beam);
+            ct.setPosition(d);
+            beamActor->update();
+        };
+        auto getter = [=]() -> std::array<double, 3> {
+            auto& ct = std::get<CTSequentialBeam>(*beam);
+            return ct.position();
+        };
+        addItem(root, "Start position [cm]", setter, getter);
+    }
+    {
+        auto setter = [=](std::array<double, 3> d) {
+            auto& ct = std::get<CTSequentialBeam>(*beam);
+            ct.setScanNormal(d);
+            beamActor->update();
+        };
+        auto getter = [=]() -> std::array<double, 3> {
+            auto& ct = std::get<CTSequentialBeam>(*beam);
+            return ct.scanNormal();
+        };
+        addItem(root, "Direction vector", setter, getter);
+    }
+    {
+        auto setter = [=](std::uint64_t d) {
+            auto& ct = std::get<CTSequentialBeam>(*beam);
+            ct.setNumberOfSlices(d);
+            beamActor->update();
+        };
+        auto getter = [=]() -> std::uint64_t {
+            auto& ct = std::get<CTSequentialBeam>(*beam);
+            return ct.numberOfSlices();
+        };
+        addItem(root, "Number of slices", setter, getter);
+    }
+
+    {
+        auto setter = [=](double d) {
+            auto& ct = std::get<CTSequentialBeam>(*beam);
+            ct.setSliceSpacing(d);
+            beamActor->update();
+        };
+        auto getter = [=]() -> double {
+            auto& ct = std::get<CTSequentialBeam>(*beam);
+            return ct.sliceSpacing();
+        };
+
+        addItem(root, "Slice spacing [cm]", setter, getter);
+    }
+    {
+        auto setter = [=](double d) {
+            auto& ct = std::get<CTSequentialBeam>(*beam);
+            ct.setScanFieldOfView(d);
+            beamActor->update();
+        };
+        auto getter = [=]() -> double {
+            auto& ct = std::get<CTSequentialBeam>(*beam);
+            return ct.scanFieldOfView();
+        };
+        addItem(root, "Scan FOV [cm]", setter, getter);
+    }
+    {
+        std::get<CTSequentialBeam>(*beam).setSourceDetectorDistance(119);
+
+        auto setter = [=](double d) {
+            auto& ct = std::get<CTSequentialBeam>(*beam);
+            ct.setSourceDetectorDistance(d);
+            beamActor->update();
+        };
+        auto getter = [=]() -> double {
+            auto& ct = std::get<CTSequentialBeam>(*beam);
+            return ct.sourceDetectorDistance();
+        };
+        addItem(root, "Source detector distance [cm]", setter, getter);
+    }
+    {
+        std::get<CTSequentialBeam>(*beam).setCollimation(3.84);
+        auto setter = [=](double d) {
+            auto& ct = std::get<CTSequentialBeam>(*beam);
+            ct.setCollimation(d);
+            beamActor->update();
+        };
+        auto getter = [=]() -> double {
+            auto& ct = std::get<CTSequentialBeam>(*beam);
+            return ct.collimation();
+        };
+        addItem(root, "Total collimation [cm]", setter, getter);
+    }
+    {
+        auto bowtiekey = std::make_shared<QString>(m_bowtieFilters.firstKey());
+        auto& ct = std::get<CTSequentialBeam>(*beam);
+        ct.setBowtieFilter(m_bowtieFilters.value(*bowtiekey));
+        auto setter = [=](const BeamSettingsModel::BowtieSelection& d) {
+            if (d.bowtieMap->contains(d.currentKey)) {
+                *bowtiekey = d.currentKey;
+                auto& ct = std::get<CTSequentialBeam>(*beam);
+                ct.setBowtieFilter(d.bowtieMap->value(d.currentKey));
+            }
+        };
+        auto getter = [=, this]() -> BeamSettingsModel::BowtieSelection {
+            BeamSettingsModel::BowtieSelection d { .bowtieMap = &(this->m_bowtieFilters) };
+            d.currentKey = *bowtiekey;
+            return d;
+        };
+        addItem(root, "Bowtie filter", setter, getter);
+    }
+
+    {
+        auto setter = [=](double d) {
+            auto& ct = std::get<CTSequentialBeam>(*beam);
+            ct.setStartAngleDeg(d);
+            beamActor->update();
+        };
+        auto getter = [=]() -> double {
+            auto& ct = std::get<CTSequentialBeam>(*beam);
+            return ct.startAngleDeg();
+        };
+        addItem(root, "Set start angle [deg]", setter, getter);
+    }
+    {
+        std::get<CTSequentialBeam>(*beam).setStepAngleDeg(5);
+        auto setter = [=](double d) {
+            auto& ct = std::get<CTSequentialBeam>(*beam);
+            ct.setStepAngleDeg(d);
+            beamActor->update();
+        };
+        auto getter = [=]() -> double {
+            auto& ct = std::get<CTSequentialBeam>(*beam);
+            return ct.stepAngleDeg();
+        };
+        addItem(root, "Set angle step [deg]", setter, getter);
+    }
+
+    {
+        auto setter = [=](double d) {
+            auto& ct = std::get<CTSequentialBeam>(*beam);
+            ct.setCTDIw(d);
+        };
+        auto getter = [=]() -> double {
+            auto& ct = std::get<CTSequentialBeam>(*beam);
+            return ct.CTDIw();
+        };
+        addItem(root, "CTDIw [mGy]", setter, getter);
+    }
+    {
+        auto setter = [=](double d) {
+            auto& ct = std::get<CTSequentialBeam>(*beam);
+            ct.setCTDIdiameter(d);
+        };
+        auto getter = [=]() -> double {
+            auto& ct = std::get<CTSequentialBeam>(*beam);
+            return ct.CTDIdiameter();
+        };
+        addItem(root, "CTDI phantom diameter [cm]", setter, getter);
+    }
+
+    auto tubeItem = new LabelItem(tr("Tube"));
+    root->appendRow(tubeItem);
+    addTubeItems<CTSequentialBeam>(tubeItem, beam);
+
+    {
+        auto getter = [=]() -> std::uint64_t {
+            auto& ct = std::get<CTSequentialBeam>(*beam);
+            return ct.numberOfExposures();
+        };
+        addItem(root, "Number of exposures", getter);
+    }
+    {
+        std::get<CTSequentialBeam>(*beam).setNumberOfParticlesPerExposure(1e6);
+        auto setter = [=](std::uint64_t d) {
+            auto& ct = std::get<CTSequentialBeam>(*beam);
+            ct.setNumberOfParticlesPerExposure(d);
+        };
+        auto getter = [=]() -> std::uint64_t {
+            auto& ct = std::get<CTSequentialBeam>(*beam);
+            return ct.numberOfParticlesPerExposure();
+        };
+        addItem(root, "Particles per exposure", setter, getter);
+    }
+    {
+        auto getter = [=]() -> std::uint64_t {
+            auto& ct = std::get<CTSequentialBeam>(*beam);
+            return ct.numberOfParticles();
+        };
+        addItem(root, "Total number of particles", getter);
+    }
+
+    beamActor->update();
+    emit beamActorAdded(beamActor);
+    appendRow(root);
+}
+
 void BeamSettingsModel::addCTSpiralBeam(std::shared_ptr<BeamActorContainer> actor)
 {
     auto root = new LabelItem(tr("CT Spiral Beam"));
@@ -796,7 +1033,7 @@ void BeamSettingsModel::addCTSpiralBeam(std::shared_ptr<BeamActorContainer> acto
             auto& ct = std::get<CTSpiralBeam>(*beam);
             return ct.CTDIvol();
         };
-        addItem(root, "CTDIvol [mGycm]", setter, getter);
+        addItem(root, "CTDIvol [mGy]", setter, getter);
     }
     {
         auto setter = [=](double d) {
@@ -1070,7 +1307,7 @@ void BeamSettingsModel::addCTSpiralDualEnergyBeam(std::shared_ptr<BeamActorConta
             auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
             return ct.CTDIvol();
         };
-        addItem(root, "CTDIvol [mGycm]", setter, getter);
+        addItem(root, "CTDIvol [mGy]", setter, getter);
     }
     {
         auto setter = [=](double d) {

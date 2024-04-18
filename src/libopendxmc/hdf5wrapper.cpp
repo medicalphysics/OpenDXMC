@@ -503,6 +503,38 @@ bool HDF5Wrapper::save(CBCTBeam& beam)
     return true;
 }
 
+bool HDF5Wrapper::save(CTSequentialBeam& beam)
+{
+    auto beamgroup = getGroup(m_file, "/beams/CTSequentialBeams/1", false);
+    int teller = 1;
+    while (beamgroup) {
+        teller++;
+
+        auto path = std::string { "/beams/CTSequentialBeams/" } + std::to_string(teller);
+        beamgroup = getGroup(m_file, path, false);
+    }
+    beamgroup = getGroup(m_file, std::string { "/beams/CTSequentialBeams/" } + std::to_string(teller), true);
+
+    saveAttribute<double>(beamgroup, "start_position", beam.position());
+    saveAttribute<double>(beamgroup, "scan_normal", beam.scanNormal());
+    saveAttribute<double>(beamgroup, "scan_field_view", beam.scanFieldOfView());
+    saveAttribute<double>(beamgroup, "source_detector_distance", beam.sourceDetectorDistance());
+    saveAttribute<double>(beamgroup, "collimation", beam.collimation());
+    saveAttribute<double>(beamgroup, "start_angle", beam.startAngleDeg());
+    saveAttribute<double>(beamgroup, "step_angle", beam.stepAngleDeg());
+    saveAttribute<double>(beamgroup, "slice_spacing", beam.sliceSpacing());
+    saveAttribute<double>(beamgroup, "CTDIw", beam.CTDIw());
+    saveAttribute<double>(beamgroup, "CTDIdiameter", beam.CTDIdiameter());
+    saveAttribute<double>(beamgroup, "tube_voltage", beam.tube().voltage());
+    saveAttribute<double>(beamgroup, "tube_anode_angle", beam.tube().anodeAngleDeg());
+    saveAttribute<double>(beamgroup, "tube_Al_filtration", beam.tube().filtration(13));
+    saveAttribute<double>(beamgroup, "tube_Cu_filtration", beam.tube().filtration(29));
+    saveAttribute<double>(beamgroup, "tube_Sn_filtration", beam.tube().filtration(50));
+    saveAttribute<std::uint64_t>(beamgroup, "particles_per_exposure", beam.numberOfParticlesPerExposure());
+    saveAttribute<std::uint64_t>(beamgroup, "number_of_slices", beam.numberOfSlices());
+    return true;
+}
+
 bool HDF5Wrapper::save(CTSpiralBeam& beam)
 {
     auto beamgroup = getGroup(m_file, "/beams/CTSpiralBeams/1", false);
@@ -533,6 +565,7 @@ bool HDF5Wrapper::save(CTSpiralBeam& beam)
     saveAttribute<std::uint64_t>(beamgroup, "particles_per_exposure", beam.numberOfParticlesPerExposure());
     return true;
 }
+
 bool HDF5Wrapper::save(CTSpiralDualEnergyBeam& beam)
 {
     auto beamgroup = getGroup(m_file, "/beams/CTSpiralDualEnergyBeams/1", false);
@@ -686,6 +719,82 @@ std::shared_ptr<Beam> loadCBCTBeam(std::unique_ptr<H5::Group>& group)
     auto tube_Sn_filtration = loadAttribute<double, 1>(group, "tube_Sn_filtration");
     if (tube_Sn_filtration)
         dx.addTubeFiltrationMaterial(50, tube_Sn_filtration.value()[0]);
+
+    return beam;
+}
+
+std::shared_ptr<Beam> loadCTSequentialBeam(std::unique_ptr<H5::Group>& group)
+{
+    auto beam = std::make_shared<Beam>(CTSequentialBeam());
+    auto& ct = std::get<CTSequentialBeam>(*beam);
+
+    auto position = loadAttribute<double, 3>(group, "position");
+    if (position)
+        ct.setPosition(position.value());
+
+    auto scan_normal = loadAttribute<double, 3>(group, "scan_normal");
+    if (scan_normal)
+        ct.setScanNormal(scan_normal.value());
+
+    auto slice_spacing = loadAttribute<double, 1>(group, "slice_spacing");
+    if (slice_spacing)
+        ct.setSliceSpacing(slice_spacing.value()[0]);
+
+    auto number_of_slices = loadAttribute<std::uint64_t, 1>(group, "number_of_slices");
+    if (number_of_slices)
+        ct.setNumberOfSlices(number_of_slices.value()[0]);
+
+    auto scan_field_view = loadAttribute<double, 1>(group, "scan_field_view");
+    if (scan_field_view)
+        ct.setScanFieldOfView(scan_field_view.value()[0]);
+
+    auto source_detector_distance = loadAttribute<double, 1>(group, "source_detector_distance");
+    if (source_detector_distance)
+        ct.setSourceDetectorDistance(source_detector_distance.value()[0]);
+
+    auto collimation = loadAttribute<double, 1>(group, "collimation");
+    if (collimation)
+        ct.setCollimation(collimation.value()[0]);
+
+    auto start_angle = loadAttribute<double, 1>(group, "start_angle");
+    if (start_angle)
+        ct.setStartAngleDeg(start_angle.value()[0]);
+
+    auto step_angle = loadAttribute<double, 1>(group, "step_angle");
+    if (step_angle)
+        ct.setStepAngleDeg(step_angle.value()[0]);
+
+    auto ctdi = loadAttribute<double, 1>(group, "CTDIw");
+    if (ctdi)
+        ct.setCTDIw(ctdi.value()[0]);
+
+    auto ctdid = loadAttribute<double, 1>(group, "CTDIDiameter");
+    if (ctdid)
+        ct.setCTDIdiameter(ctdid.value()[0]);
+
+    auto particles_per_exposure = loadAttribute<std::uint64_t, 1>(group, "particles_per_exposure");
+    if (particles_per_exposure)
+        ct.setNumberOfParticlesPerExposure(particles_per_exposure.value()[0]);
+
+    auto tube_voltage = loadAttribute<double, 1>(group, "tube_voltage");
+    if (tube_voltage)
+        ct.setTubeVoltage(tube_voltage.value()[0]);
+
+    auto tube_anode_angle = loadAttribute<double, 1>(group, "tube_anode_angle");
+    if (tube_anode_angle)
+        ct.setTubeAnodeAngleDeg(tube_anode_angle.value()[0]);
+
+    auto tube_Al_filtration = loadAttribute<double, 1>(group, "tube_Al_filtration");
+    if (tube_Al_filtration)
+        ct.addTubeFiltrationMaterial(13, tube_Al_filtration.value()[0]);
+
+    auto tube_Cu_filtration = loadAttribute<double, 1>(group, "tube_Cu_filtration");
+    if (tube_Cu_filtration)
+        ct.addTubeFiltrationMaterial(29, tube_Cu_filtration.value()[0]);
+
+    auto tube_Sn_filtration = loadAttribute<double, 1>(group, "tube_Sn_filtration");
+    if (tube_Sn_filtration)
+        ct.addTubeFiltrationMaterial(50, tube_Sn_filtration.value()[0]);
 
     return beam;
 }
@@ -866,6 +975,8 @@ bool HDF5Wrapper::save(std::shared_ptr<BeamActorContainer> beam)
         return save(std::get<CTSpiralDualEnergyBeam>(*beam->getBeam()));
     } else if (std::holds_alternative<CBCTBeam>(*beam->getBeam())) {
         return save(std::get<CBCTBeam>(*beam->getBeam()));
+    } else if (std::holds_alternative<CTSequentialBeam>(*beam->getBeam())) {
+        return save(std::get<CTSequentialBeam>(*beam->getBeam()));
     }
 
     return false;
@@ -959,7 +1070,7 @@ std::vector<std::shared_ptr<BeamActorContainer>> HDF5Wrapper::loadBeams()
     if (!beamgroup)
         return res;
 
-    const std::array<std::string, 4> beamnames = { "DXBeams", "CTSpiralBeams", "CTDualEnergySpiralBeams", "CBCTBeams" };
+    const std::array<std::string, 5> beamnames = { "DXBeams", "CTSpiralBeams", "CTDualEnergySpiralBeams", "CBCTBeams", "CTSequentialBeams" };
 
     for (int i = 0; i < beamnames.size(); ++i)
     // for (const auto& beamname : beamnames)
@@ -996,7 +1107,12 @@ std::vector<std::shared_ptr<BeamActorContainer>> HDF5Wrapper::loadBeams()
                         res.push_back(actor);
                     }
                 }
-
+                if (i == 4) {
+                    if (auto beam = loadCTSequentialBeam(dx); beam) {
+                        auto actor = std::make_shared<BeamActorContainer>(beam);
+                        res.push_back(actor);
+                    }
+                }
                 teller++;
                 beampath = beamgroupname + "/" + std::to_string(teller);
                 dx = getGroup(m_file, beampath);

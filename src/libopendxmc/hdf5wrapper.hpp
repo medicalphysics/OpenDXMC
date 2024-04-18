@@ -43,6 +43,7 @@ public:
 protected:
     bool save(DXBeam& beam);
     bool save(CTSpiralBeam& beam);
+    bool save(CTSequentialBeam& beam);
     bool save(CTSpiralDualEnergyBeam& beam);    
     bool save(CBCTBeam& beam);
 

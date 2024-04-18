@@ -37,6 +37,7 @@ BeamSettingsWidget::BeamSettingsWidget(QWidget* parent)
     auto beamselectcombo = new QComboBox(this);
     beamselectlayout->addWidget(beamselectcombo);
     beamselectcombo->addItem(tr("DX Beam"));
+    beamselectcombo->addItem(tr("CT Sequential Beam"));
     beamselectcombo->addItem(tr("CT Spiral Beam"));
     beamselectcombo->addItem(tr("CT Dual Source Beam"));
     beamselectcombo->addItem(tr("CBCT Beam"));
@@ -48,10 +49,12 @@ BeamSettingsWidget::BeamSettingsWidget(QWidget* parent)
         if (idx == 0)
             m_view->addDXBeam();
         else if (idx == 1)
-            m_view->addCTSpiralBeam();
+            m_view->addCTSequentialBeam();
         else if (idx == 2)
-            m_view->addCTSpiralDualEnergyBeam();
+            m_view->addCTSpiralBeam();
         else if (idx == 3)
+            m_view->addCTSpiralDualEnergyBeam();
+        else if (idx == 4)
             m_view->addCBCTBeam();
     });
 

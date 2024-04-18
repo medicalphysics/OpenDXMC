@@ -36,6 +36,7 @@ public:
     void addDXBeam(std::shared_ptr<BeamActorContainer> = nullptr);
     void addCBCTBeam(std::shared_ptr<BeamActorContainer> = nullptr);
     void addCTSpiralBeam(std::shared_ptr<BeamActorContainer> beam = nullptr);
+    void addCTSequentialBeam(std::shared_ptr<BeamActorContainer> beam = nullptr);
     void addCTSpiralDualEnergyBeam(std::shared_ptr<BeamActorContainer> beam = nullptr);
     void updateImageData(std::shared_ptr<DataContainer>);
     void deleteBeam(int index);

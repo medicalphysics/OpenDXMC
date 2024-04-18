@@ -31,6 +31,7 @@ BeamSettingsView::BeamSettingsView(QWidget* parent)
     connect(this, &BeamSettingsView::requestAddDXBeam, m_model, &BeamSettingsModel::addDXBeam);
     connect(this, &BeamSettingsView::requestAddCBCTBeam, m_model, &BeamSettingsModel::addCBCTBeam);
     connect(this, &BeamSettingsView::requestAddCTSpiralBeam, m_model, &BeamSettingsModel::addCTSpiralBeam);
+    connect(this, &BeamSettingsView::requestAddCTSequentialBeam, m_model, &BeamSettingsModel::addCTSequentialBeam);
     connect(this, &BeamSettingsView::requestAddCTSpiralDualEnergyBeam, m_model, &BeamSettingsModel::addCTSpiralDualEnergyBeam);
     connect(this, &BeamSettingsView::requestAddNewBeam, m_model, &BeamSettingsModel::addBeam);
 

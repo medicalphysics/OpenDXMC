@@ -18,7 +18,7 @@ Copyright 2023 Erlend Andersen
 
 #include <icrpphantomimportwidget.hpp>
 
-#include <QCheckbox>
+#include <QCheckBox>
 #include <QComboBox>
 #include <QCoreApplication>
 #include <QDir>

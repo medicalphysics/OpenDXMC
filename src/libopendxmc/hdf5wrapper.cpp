@@ -27,14 +27,47 @@ Copyright 2023 Erlend Andersen
 
 std::vector<std::string> split(const std::string& str, const std::string& sep)
 {
-    std::vector<std::string> s = str | std::ranges::views::split(std::string_view(sep)) | std::ranges::to<std::vector<std::string>>();
-    return s;
+    // This works for std ranges, but std::ranges::to is not in GCC yet :(
+    //    std::vector<std::string> s = str | std::ranges::views::split(std::string_view(sep)) | std::ranges::to<std::vector<std::string>>();
+    //    return s;
+
+    std::vector<std::string> res;
+    std::string token = "";
+    for (int i = 0; i < str.size(); i++) {
+        bool flag = true;
+        for (int j = 0; j < sep.size(); j++) {
+            if (str[i + j] != sep[j]) {
+                flag = false;
+            }
+        }
+        if (flag) {
+            if (token.size() > 0) {
+                res.push_back(token);
+                token = "";
+                i += sep.size() - 1;
+            }
+        } else {
+            token += str[i];
+        }
+    }
+    res.push_back(token);
+    return res;
 }
 
 std::string join(std::span<const std::string> v, const std::string& sep)
 {
-    std::string s = v | std::ranges::views::join_with(std::string_view(sep)) | std::ranges::to<std::string>();
-    return s;
+    // This works for std ranges, but std::ranges::to is not in GCC yet :(
+    // std::string s = v | std::ranges::views::join_with(std::string_view(sep)) | std::ranges::to<std::string>();
+    // return s;
+
+    std::string res;
+    if (v.size() > 0) {
+        for (std::size_t i = 0; i < v.size() - 1; ++i) {
+            res += v[i] + sep;
+        }
+        res += v.back();
+    }
+    return res;
 }
 
 std::unique_ptr<H5::Group> getGroup(std::unique_ptr<H5::H5File>& file, const std::vector<std::string>& names, bool create = false)

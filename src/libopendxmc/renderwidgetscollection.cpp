@@ -24,7 +24,7 @@ Copyright 2023 Erlend Andersen
 #include <QGridLayout>
 #include <QGroupBox>
 #include <QLabel>
-#include <QSLider>
+#include <QSlider>
 #include <QSizePolicy>
 
 RenderWidgetsCollection::RenderWidgetsCollection(QWidget* parent)

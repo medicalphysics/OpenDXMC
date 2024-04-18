@@ -18,6 +18,7 @@ Copyright 2024 Erlend Andersen
 
 #pragma once
 
+
 #include <beamsettingsmodel.hpp>
 
 #include <QStyledItemDelegate>

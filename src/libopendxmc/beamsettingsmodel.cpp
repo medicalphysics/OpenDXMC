@@ -178,7 +178,11 @@ public:
             if constexpr (std::is_convertible_v<T, std::array<double, 3>>) {
                 return arrayToString(m_getter());
             } else {
-                return QVariant(m_getter());
+                if constexpr (std::is_integral_v<T>) {
+                    return QVariant(static_cast<qulonglong>(m_getter()));
+                } else {
+                    return QVariant(m_getter());
+                }
             }
         }
         return QStandardItem::data(role);
@@ -736,8 +740,8 @@ void BeamSettingsModel::addCTSpiralBeam(std::shared_ptr<BeamActorContainer> acto
                 ct.setBowtieFilter(d.bowtieMap->value(d.currentKey));
             }
         };
-        auto getter = [=]() -> BeamSettingsModel::BowtieSelection {
-            BeamSettingsModel::BowtieSelection d { .bowtieMap = &m_bowtieFilters };
+        auto getter = [=, this]() -> BeamSettingsModel::BowtieSelection {
+            BeamSettingsModel::BowtieSelection d { .bowtieMap = &(this->m_bowtieFilters) };
             d.currentKey = *bowtiekey;
             return d;
         };
@@ -807,13 +811,13 @@ void BeamSettingsModel::addCTSpiralBeam(std::shared_ptr<BeamActorContainer> acto
     }
 
     {
-        auto setter = [=](bool d) {
-            if (m_image) {
+        auto setter = [=, this](bool d) {
+            if (this->m_image) {
                 auto& ct = std::get<CTSpiralBeam>(*beam);
                 if (d) {
-                    const auto& ct_aec = m_image->aecData();
+                    const auto& ct_aec = this->m_image->aecData();
                     if (ct_aec.isEmpty())
-                        ct.setAECFilter(m_image->calculateAECfilterFromWaterEquivalentDiameter());
+                        ct.setAECFilter(this->m_image->calculateAECfilterFromWaterEquivalentDiameter());
                     else
                         ct.setAECFilter(ct_aec);
                 } else {
@@ -981,8 +985,8 @@ void BeamSettingsModel::addCTSpiralDualEnergyBeam(std::shared_ptr<BeamActorConta
                 ct.setBowtieFilterA(d.bowtieMap->value(d.currentKey));
             }
         };
-        auto getter = [=]() -> BeamSettingsModel::BowtieSelection {
-            BeamSettingsModel::BowtieSelection d { .bowtieMap = &m_bowtieFilters };
+        auto getter = [=, this]() -> BeamSettingsModel::BowtieSelection {
+            BeamSettingsModel::BowtieSelection d { .bowtieMap = &(this->m_bowtieFilters) };
             d.currentKey = *bowtiekey;
             return d;
         };
@@ -999,8 +1003,8 @@ void BeamSettingsModel::addCTSpiralDualEnergyBeam(std::shared_ptr<BeamActorConta
                 ct.setBowtieFilterB(d.bowtieMap->value(d.currentKey));
             }
         };
-        auto getter = [=]() -> BeamSettingsModel::BowtieSelection {
-            BeamSettingsModel::BowtieSelection d { .bowtieMap = &m_bowtieFilters };
+        auto getter = [=, this]() -> BeamSettingsModel::BowtieSelection {
+            BeamSettingsModel::BowtieSelection d { .bowtieMap = &(this->m_bowtieFilters) };
             d.currentKey = *bowtiekey;
             return d;
         };
@@ -1203,11 +1207,11 @@ void BeamSettingsModel::addCTSpiralDualEnergyBeam(std::shared_ptr<BeamActorConta
     }
 
     {
-        auto setter = [=](bool d) {
+        auto setter = [=, this](bool d) {
             if (m_image) {
                 auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
                 if (d) {
-                    ct.setAECFilter(m_image->aecData());
+                    ct.setAECFilter(this->m_image->aecData());
                 } else {
                     ct.setAECFilter(CTAECFilter {});
                 }

@@ -128,7 +128,7 @@ void worker(bool deleteAirDose, int nthreads, std::shared_ptr<DataContainer> dat
     using World = dxmc::World<VoxelGrid>;
 
     World world;
-    auto& vgrid = world.addItem<VoxelGrid>();
+    auto& vgrid = world.template addItem<VoxelGrid>();
 
     {
         std::vector<Material> materials;

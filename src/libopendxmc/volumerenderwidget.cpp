@@ -21,15 +21,24 @@ Copyright 2023 Erlend Andersen
 #include <volumerenderwidget.hpp>
 
 #include <QChartView>
+#include <QDir>
+#include <QFileDialog>
+#include <QFileInfo>
+#include <QMenu>
+#include <QPushButton>
+#include <QSettings>
+#include <QString>
 #include <QVBoxLayout>
 
 #include <QVTKInteractor.h>
 #include <vtkCamera.h>
 #include <vtkDiscretizableColorTransferFunction.h>
 #include <vtkInteractorStyleTrackballCamera.h>
+#include <vtkPNGWriter.h>
 #include <vtkPiecewiseFunction.h>
 #include <vtkRenderWindow.h>
 #include <vtkVolumeProperty.h>
+#include <vtkWindowToImageFilter.h>
 
 vtkSmartPointer<vtkImageData> generateSampleDataVolume()
 {
@@ -60,6 +69,43 @@ VolumerenderWidget::VolumerenderWidget(QWidget* parent)
 
     setupRenderingPipeline();
     setNewImageData(generateSampleDataVolume());
+
+    // adding settingsbutton
+    auto settingsButton = new QPushButton(QIcon(":icons/settings.png"), QString {}, openGLWidget);
+    settingsButton->setFlat(true);
+    settingsButton->setIconSize(QSize(24, 24));
+    settingsButton->setStyleSheet("QPushButton {background-color:transparent;}");
+    auto menu = new QMenu(settingsButton);
+    settingsButton->setMenu(menu);
+
+    // adding settingsactions
+    menu->addAction(QString(tr("Save image")), [this]() {
+        QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
+        auto dirpath_str = settings.value("saveload/path", ".").value<QString>();
+        QDir dirpath(dirpath_str);
+        auto filename = dirpath.absoluteFilePath("volume.png");
+        filename = QFileDialog::getSaveFileName(this, tr("Save File"), filename, tr("Images (*.png)"));
+
+        if (!filename.isEmpty()) {
+            auto fileinfo = QFileInfo(filename);
+            dirpath_str = fileinfo.absolutePath();
+            settings.setValue("saveload/path", dirpath_str);
+            auto renderWindow = this->openGLWidget->renderWindow();
+            vtkSmartPointer<vtkWindowToImageFilter> windowToImageFilter = vtkSmartPointer<vtkWindowToImageFilter>::New();
+            windowToImageFilter->SetInput(renderWindow);
+            windowToImageFilter->SetScale(3, 3); // set the resolution of the output image (3 times the current resolution of vtk render window)
+            windowToImageFilter->SetFixBoundary(true);
+            windowToImageFilter->ShouldRerenderOn();
+            windowToImageFilter->SetInputBufferTypeToRGBA(); // also record the alpha (transparency) channel
+            windowToImageFilter->ReadFrontBufferOn(); // read from the front buffer
+            windowToImageFilter->Update();
+            vtkSmartPointer<vtkPNGWriter> writer = vtkSmartPointer<vtkPNGWriter>::New();
+            writer->SetFileName(filename.toLatin1().data());
+            writer->SetInputConnection(windowToImageFilter->GetOutputPort());
+            writer->Write();
+            renderWindow->Render();
+        }
+    });
 }
 
 void VolumerenderWidget::setupRenderingPipeline()

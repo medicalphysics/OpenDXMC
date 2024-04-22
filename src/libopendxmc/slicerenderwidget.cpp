@@ -438,6 +438,12 @@ void SliceRenderWidget::setInterpolationType(int type)
     Render();
 }
 
+void SliceRenderWidget::setBackgroundColor(double r, double g, double b)
+{
+    renderer->SetBackground(r, g, b);
+    Render();
+}
+
 void SliceRenderWidget::switchLUTtable(DataContainer::ImageType type)
 {
     auto prop = imageSlice->GetProperty();

@@ -47,6 +47,7 @@ public:
     void setInterpolationType(int type = 1);
     void setInteractionStyleToSlicing();
     void setInteractionStyleTo3D();
+    void setBackgroundColor(double r, double g, double b);
 
     void showData(DataContainer::ImageType type);
     void Render(bool reset_camera = false);

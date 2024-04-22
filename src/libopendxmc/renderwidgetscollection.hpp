@@ -23,6 +23,7 @@ Copyright 2023 Erlend Andersen
 #include <slicerenderwidget.hpp>
 #include <volumerenderwidget.hpp>
 
+#include <QColor>
 #include <QComboBox>
 #include <QWidget>
 
@@ -66,6 +67,7 @@ public:
     void addActor(std::shared_ptr<BeamActorContainer> actor);
     void removeActor(std::shared_ptr<BeamActorContainer> actor);
     void setBeamActorsVisible(int);
+    void setBackgroundColor(const QColor& color);
 
     void Render();
 

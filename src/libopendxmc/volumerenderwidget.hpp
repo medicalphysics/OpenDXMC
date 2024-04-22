@@ -41,6 +41,7 @@ public:
     void addActor(vtkSmartPointer<vtkActor> actor);
     void removeActor(vtkSmartPointer<vtkActor> actor);
     void Render();
+    void setBackgroundColor(double r, double g, double b);
 
 protected:
     void setupRenderingPipeline();

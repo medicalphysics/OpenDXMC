@@ -165,6 +165,12 @@ void VolumerenderWidget::setNewImageData(vtkSmartPointer<vtkImageData> data, boo
     }
 }
 
+void VolumerenderWidget::setBackgroundColor(double r, double g, double b)
+{
+    m_settings->renderer()->SetBackground(r, g, b);
+    Render();
+}
+
 void VolumerenderWidget::Render()
 {
     m_settings->render();

@@ -21,11 +21,13 @@ Copyright 2023 Erlend Andersen
 #include <volumerendersettingswidget.hpp>
 
 #include <QCheckBox>
+#include <QColorDialog>
 #include <QGridLayout>
 #include <QGroupBox>
 #include <QLabel>
-#include <QSlider>
+#include <QPushButton>
 #include <QSizePolicy>
+#include <QSlider>
 
 RenderWidgetsCollection::RenderWidgetsCollection(QWidget* parent)
     : QWidget(parent)
@@ -207,6 +209,16 @@ void RenderWidgetsCollection::setBeamActorsVisible(int state)
     }
 }
 
+void RenderWidgetsCollection::setBackgroundColor(const QColor& c)
+{
+    const double r = c.redF();
+    const double g = c.greenF();
+    const double b = c.blueF();
+    for (auto& w : m_slice_widgets)
+        w->setBackgroundColor(r, g, b);
+    m_volume_widget->setBackgroundColor(r, g, b);
+}
+
 QWidget* RenderWidgetsCollection::createRendersettingsWidget(QWidget* parent)
 {
 
@@ -219,6 +231,22 @@ QWidget* RenderWidgetsCollection::createRendersettingsWidget(QWidget* parent)
     vol_select_label->setAlignment(Qt::AlignHCenter);
     layout->addWidget(vol_select_label);
     layout->addWidget(m_data_type_selector);
+
+    auto color_picker = addWidgetAndLabel<QPushButton>(tr("Background color"), layout, wid);
+    color_picker->setFlat(true);
+    color_picker->setAutoFillBackground(true);
+    {
+        auto pal = color_picker->palette();
+        pal.setColor(QPalette::Button, Qt::black);
+        color_picker->setPalette(pal);
+    }
+    connect(color_picker, &QPushButton::clicked, [this, color_picker]() {
+        auto color = QColorDialog::getColor(Qt::white, nullptr, tr("Select background color"));
+        this->setBackgroundColor(color);
+        auto pal = color_picker->palette();
+        pal.setColor(QPalette::Button, color);
+        color_picker->setPalette(pal);
+    });
 
     auto show_beams = addWidgetAndLabel<QCheckBox>(tr("Show beam outlines"), layout, wid);
     show_beams->setChecked(true);

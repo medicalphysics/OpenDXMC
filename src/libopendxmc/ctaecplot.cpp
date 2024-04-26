@@ -20,7 +20,9 @@ Copyright 2023 Erlend Andersen
 
 #include <QChart>
 #include <QGraphicsLayout>
+#include <QGuiApplication>
 #include <QLineSeries>
+#include <QStyleHints>
 
 CTAECPlot::CTAECPlot(QWidget* parent)
     : QChartView(parent)
@@ -33,7 +35,9 @@ CTAECPlot::CTAECPlot(QWidget* parent)
 
     // chart and axis
     chart()->layout()->setContentsMargins(0, 0, 0, 0);
-    chart()->setTheme(QChart::ChartThemeDark);
+    if (QGuiApplication::styleHints()->colorScheme() == Qt::ColorScheme::Dark) {
+        chart()->setTheme(QChart::ChartThemeDark);
+    }
     chart()->setBackgroundVisible(false);
     chart()->setPlotAreaBackgroundVisible(false);
     chart()->setMargins(QMargins { 0, 0, 0, 0 });
@@ -59,7 +63,6 @@ CTAECPlot::CTAECPlot(QWidget* parent)
 
 double dist(const std::array<double, 3>& v1, const std::array<double, 3>& v2)
 {
-
     double l = 0;
     for (int i = 0; i < 3; ++i) {
         const auto s = v1[i] - v2[i];

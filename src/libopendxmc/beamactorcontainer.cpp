@@ -38,19 +38,17 @@ std::shared_ptr<Beam> BeamActorContainer::getBeam()
     return m_beam;
 }
 
-std::array<std::array<double, 3>, 5> pointsFromCollimations(
+std::array<std::array<double, 3>, 4> pointsFromCollimations(
     const std::array<double, 3>& start,
     const std::array<std::array<double, 3>, 2>& cosines,
     const std::array<double, 2>& angles,
     double scale = 1)
 {
-    std::array<std::array<double, 3>, 5> r;
-    r[0] = start;
+    std::array<std::array<double, 3>, 4> r;
 
     const auto dir = dxmc::vectormath::cross(cosines[0], cosines[1]);
     const auto sinx_r = std::sin(angles[0]);
-    const auto siny_r = std::sin(angles[1]);
-    const auto sinz = std::sqrt(1 - sinx_r * sinx_r - siny_r * siny_r);
+    const auto siny_r = std::sin(angles[1]);    
     constexpr std::array<int, 4> y_sign = { 1, -1, -1, 1 };
 
     for (std::size_t i = 0; i < 4; ++i) {
@@ -62,7 +60,7 @@ std::array<std::array<double, 3>, 5> pointsFromCollimations(
             cosines[0][1] * sinx + cosines[1][1] * siny + dir[1] * sinz,
             cosines[0][2] * sinx + cosines[1][2] * siny + dir[2] * sinz
         };
-        r[i + 1] = dxmc::vectormath::add(start, dxmc::vectormath::scale(raw, scale));
+        r[i] = dxmc::vectormath::add(start, dxmc::vectormath::scale(raw, scale));
     }
     return r;
 }
@@ -83,63 +81,67 @@ void BeamActorContainer::update()
         if constexpr (std::is_same_v<U, CTSpiralBeam> || std::is_same_v<U, CBCTBeam> || std::is_same_v<U, CTSequentialBeam>) {
             const auto N = arg.numberOfExposures();
             cells->InsertNextCell(N);
-            const auto exp_0 = arg.exposure(0);
-            points->InsertNextPoint(exp_0.position().data());
-            cells->InsertCellPoint(0);
-            for (std::size_t i = 1; i < N; ++i) {
+            for (std::size_t i = 0; i < N; ++i) {
                 points->InsertNextPoint(arg.exposure(i).position().data());
                 cells->InsertCellPoint(i);
             }
-            const auto pos = exp_0.position();
-            const auto angles = exp_0.collimationAngles();
-            const auto cosines = exp_0.directionCosines();
-            auto p = pointsFromCollimations(pos, cosines, angles, arg.sourceDetectorDistance());
+            const auto exp = arg.exposure(0);
+            const auto p = pointsFromCollimations(exp.position(), exp.directionCosines(), exp.collimationAngles(), arg.sourceDetectorDistance());
             for (std::size_t i = 0; i < p.size(); ++i) {
-                auto& pi = p[i];
-                points->InsertNextPoint(pi.data());
-                if (i > 0) {
-                    cells->InsertNextCell(2);
-                    cells->InsertCellPoint(N + 0);
-                    cells->InsertCellPoint(N + i);
-                }
+                points->InsertNextPoint(p[i].data());
+                cells->InsertNextCell(2);
+                cells->InsertCellPoint(0);
+                cells->InsertCellPoint(N + i);
             }
             cells->InsertNextCell(5);
+            cells->InsertCellPoint(N);
             cells->InsertCellPoint(N + 1);
             cells->InsertCellPoint(N + 2);
             cells->InsertCellPoint(N + 3);
-            cells->InsertCellPoint(N + 4);
-            cells->InsertCellPoint(N + 1);
-
+            cells->InsertCellPoint(N);
         } else if constexpr (std::is_same_v<U, CTSpiralDualEnergyBeam>) {
-            auto polyLineA = vtkSmartPointer<vtkPolyLine>::New();
-            auto polyLineB = vtkSmartPointer<vtkPolyLine>::New();
-            const auto N = arg.numberOfExposures();
-            polyLineA->GetPointIds()->SetNumberOfIds(N / 2);
-            polyLineB->GetPointIds()->SetNumberOfIds(N / 2);
+            const auto ND = arg.numberOfExposures();
+            const auto N = ND / 2;
+            cells->InsertNextCell(N);
             for (std::size_t i = 0; i < N; ++i) {
-                points->InsertNextPoint(arg.exposure(i).position().data());
-                if (i % 2 == 0)
-                    polyLineA->GetPointIds()->SetId(i / 2, i);
-                else
-                    polyLineB->GetPointIds()->SetId(i / 2, i);
+                points->InsertNextPoint(arg.exposure(i * 2).position().data());
+                cells->InsertCellPoint(i);
             }
-            cells->InsertNextCell(polyLineA);
-            cells->InsertNextCell(polyLineB);
+            cells->InsertNextCell(N);
+            for (std::size_t i = 0; i < N; ++i) {
+                points->InsertNextPoint(arg.exposure(i * 2 + 1).position().data());
+                cells->InsertCellPoint(i + N);
+            }
 
+            for (std::size_t t = 0; t < 2; ++t) {
+                const auto exp = arg.exposure(t);
+                const auto p = pointsFromCollimations(exp.position(), exp.directionCosines(), exp.collimationAngles(), arg.sourceDetectorDistance());
+                const auto offset = t * p.size();
+                for (std::size_t i = 0; i < p.size(); ++i) {
+                    points->InsertNextPoint(p[i].data());
+                    cells->InsertNextCell(2);
+                    cells->InsertCellPoint(t * N);
+                    cells->InsertCellPoint(ND + i + offset);
+                }
+                cells->InsertNextCell(5);
+                cells->InsertCellPoint(ND + offset);
+                cells->InsertCellPoint(ND + offset + 1);
+                cells->InsertCellPoint(ND + offset + 2);
+                cells->InsertCellPoint(ND + offset + 3);
+                cells->InsertCellPoint(ND + offset);
+            }
         } else if constexpr (std::is_same_v<U, DXBeam>) {
             const auto pos = arg.position();
             const auto angles = arg.collimationAngles();
             const auto cosines = arg.directionCosines();
             const auto lenght = arg.sourceDetectorDistance();
-            auto p = pointsFromCollimations(pos, cosines, angles, lenght);
+            const auto p = pointsFromCollimations(pos, cosines, angles, lenght);
+            points->InsertNextPoint(pos.data());
             for (std::size_t i = 0; i < p.size(); ++i) {
-                auto& pi = p[i];
-                points->InsertNextPoint(pi.data());
-                if (i > 0) {
-                    cells->InsertNextCell(2);
-                    cells->InsertCellPoint(0);
-                    cells->InsertCellPoint(i);
-                }
+                points->InsertNextPoint(p[i].data());
+                cells->InsertNextCell(2);
+                cells->InsertCellPoint(0);
+                cells->InsertCellPoint(i + 1);
             }
             cells->InsertNextCell(5);
             cells->InsertCellPoint(1);

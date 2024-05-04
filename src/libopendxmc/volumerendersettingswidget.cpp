@@ -75,7 +75,7 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(VolumeRenderSettings* set
         return;
 
     // Main layout
-    auto layout = new QVBoxLayout(this);
+    auto layout = new QVBoxLayout;
     layout->setContentsMargins(0, 0, 0, 0);
 
     auto blend_mode = getSettingsWidget<QComboBox>(tr("Set blend mode"), this);
@@ -141,7 +141,7 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(VolumeRenderSettings* set
     auto vprop = m_settings->volumeProperty();
     // shadebox
     auto shadebox = new QGroupBox(tr("Shading"), this);
-    auto shade_layout = new QVBoxLayout(this);
+    auto shade_layout = new QVBoxLayout;
     shade_layout->setContentsMargins(0, 0, 0, 0);
     shadebox->setLayout(shade_layout);
     shadebox->setCheckable(true);
@@ -261,7 +261,7 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(VolumeRenderSettings* set
     auto colorcrop = new QCheckBox(tr("Crop colors to opacity"), this);
     colorcrop->setChecked(true);
     connect(colorcrop, &QCheckBox::stateChanged, [this](int state) { m_settings->setCropColorToOpacityRange(state != 0); });
-    auto color_opt_layout = new QHBoxLayout(this);
+    auto color_opt_layout = new QHBoxLayout;
     color_opt_layout->setContentsMargins(0, 0, 0, 0);
     color_opt_layout->addWidget(colorcrop);
     color_opt_layout->addWidget(uselog10);

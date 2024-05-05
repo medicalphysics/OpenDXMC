@@ -48,7 +48,7 @@ std::array<std::array<double, 3>, 4> pointsFromCollimations(
 
     const auto dir = dxmc::vectormath::cross(cosines[0], cosines[1]);
     const auto sinx_r = std::sin(angles[0]);
-    const auto siny_r = std::sin(angles[1]);    
+    const auto siny_r = std::sin(angles[1]);
     constexpr std::array<int, 4> y_sign = { 1, -1, -1, 1 };
 
     for (std::size_t i = 0; i < 4; ++i) {
@@ -184,5 +184,10 @@ vtkSmartPointer<vtkActor> BeamActorContainer::createActor()
     auto actor = vtkSmartPointer<vtkActor>::New();
     mapper->SetInputData(m_polydata);
     actor->SetMapper(mapper);
+    actor->GetProperty()->SetLineWidth(4);
+    actor->GetProperty()->RenderLinesAsTubesOn();
+    auto colors = vtkSmartPointer<vtkNamedColors>::New();
+    actor->GetProperty()->SetColor(colors->GetColor3d("Peacock").GetData());
+    actor->SetDragable(true);
     return actor;
 }

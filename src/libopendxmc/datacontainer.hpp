@@ -56,7 +56,7 @@ public:
     void setAecData(const std::array<double, 3>& start, const std::array<double, 3>& stop, const std::vector<double>& weights);
     void setAecData(const CTAECFilter&);
     bool setImageArray(ImageType type, const std::vector<double>& image);
-    bool setImageArray(ImageType type, const std::vector<std::uint8_t>& image);    
+    bool setImageArray(ImageType type, const std::vector<std::uint8_t>& image);
     bool setImageArray(ImageType type, vtkSmartPointer<vtkImageData> image);
 
     std::size_t size() const;
@@ -89,6 +89,7 @@ public:
 
 protected:
     vtkSmartPointer<vtkImageData> generate_vtkImage(ImageType);
+    void updateIDifImageChanged(ImageType);
 
 private:
     std::uint64_t m_uid = 0;

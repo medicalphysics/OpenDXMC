@@ -275,11 +275,14 @@ void DataContainer::setAecData(const CTAECFilter& d)
 
 bool DataContainer::setImageArray(ImageType type, const std::vector<double>& image)
 {
+    // Might generate a new ID if an existing image is replaced
+
     const auto N = size();
     if (N != image.size())
         return false;
 
     m_vtk_shallow_buffer.erase(type);
+    updateIDifImageChanged(type);
 
     switch (type) {
     case DataContainer::ImageType::CT:
@@ -311,6 +314,7 @@ bool DataContainer::setImageArray(ImageType type, const std::vector<std::uint8_t
         return false;
 
     m_vtk_shallow_buffer.erase(type);
+    updateIDifImageChanged(type);
 
     switch (type) {
     case DataContainer::ImageType::Material:
@@ -325,12 +329,16 @@ bool DataContainer::setImageArray(ImageType type, const std::vector<std::uint8_t
     return false;
 }
 
+void DataContainer::updateIDifImageChanged(ImageType type)
+{
+    if (hasImage(type)) {
+        m_uid = generateID();
+    }
+}
 bool DataContainer::setImageArray(ImageType type, vtkSmartPointer<vtkImageData> image)
 {
     if (image == nullptr)
         return false;
-
-    m_vtk_shallow_buffer.erase(type);
 
     std::array<int, 3> image_dim;
     image->GetDimensions(image_dim.data());
@@ -348,6 +356,9 @@ bool DataContainer::setImageArray(ImageType type, vtkSmartPointer<vtkImageData> 
         if (image->GetScalarType() != VTK_DOUBLE)
             return false;
     }
+
+    m_vtk_shallow_buffer.erase(type);
+    updateIDifImageChanged(type);
 
     // Oh horrors, we must have a void pointer to copy data from vtkImageData
     void* buffer = nullptr;

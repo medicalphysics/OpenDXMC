@@ -25,6 +25,12 @@ DoseTablePipeline::DoseTablePipeline(QObject* parent)
 {
 }
 
+void DoseTablePipeline::clearDoseTable(bool clear)
+{
+    if (clear)
+        emit clearTable();
+}
+
 void DoseTablePipeline::updateImageData(std::shared_ptr<DataContainer> data)
 {
     emit clearTable();
@@ -45,9 +51,9 @@ void DoseTablePipeline::updateImageData(std::shared_ptr<DataContainer> data)
     emit doseDataHeader(header);
 
     const auto& organArray = data->getOrganArray();
-    const auto organNames = data->getOrganNames();
-    const auto doseArray = data->getDoseArray();
-    const auto densityArray = data->getDensityArray();
+    const auto& organNames = data->getOrganNames();
+    const auto& doseArray = data->getDoseArray();
+    const auto& densityArray = data->getDensityArray();
 
     const auto voxelVolume = std::reduce(data->spacing().cbegin(), data->spacing().cend(), 1.0, std::multiplies {});
     std::vector<double> energy_imparted(doseArray.size());

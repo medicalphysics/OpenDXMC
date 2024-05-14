@@ -27,7 +27,7 @@ class DoseTablePipeline : public BasePipeline {
     Q_OBJECT
 public:
     DoseTablePipeline(QObject* parent = nullptr);
-
+    void clearDoseTable(bool clear = true);
     void updateImageData(std::shared_ptr<DataContainer>);
 
 signals:

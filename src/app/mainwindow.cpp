@@ -155,7 +155,7 @@ MainWindow::MainWindow(QWidget* parent)
     connect(dosetablepipeline, &DoseTablePipeline::doseData, dosetable, &DoseTableWidget::setDoseData);
     connect(dosetablepipeline, &DoseTablePipeline::doseDataHeader, dosetable, &DoseTableWidget::setDoseDataHeader);
     connect(simulationpipeline, &SimulationPipeline::imageDataChanged, dosetablepipeline, &DoseTablePipeline::updateImageData);
-    connect(icrppipeline, &ICRPPhantomImportPipeline::imageDataChanged, dosetablepipeline, &DoseTablePipeline::updateImageData);
+    connect(simulationpipeline, &SimulationPipeline::simulationRunning, dosetablepipeline, &DoseTablePipeline::clearDoseTable);
     connect(ctimageimportpipeline, &CTImageImportPipeline::imageDataChanged, dosetablepipeline, &DoseTablePipeline::updateImageData);
 
     // save load

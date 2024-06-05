@@ -166,13 +166,22 @@ void CTImageImportPipeline::readImages(const QStringList& dicomPaths)
         dicomRectifier->SetInputConnection(dicomRescaler->GetOutputPort());
         dicomRectifier->ReleaseDataFlagOn();
 
+        // If the images are an mpr, we align axis to world axis
+        vtkSmartPointer<vtkImageReslice> reslicer = vtkSmartPointer<vtkImageReslice>::New();
+        reslicer->SetInputConnection(dicomRectifier->GetOutputPort());
+        // reslicer->SetInterpolationModeToLinear();
+        reslicer->SetInterpolationModeToCubic();
+        reslicer->ReleaseDataFlagOn();
+        reslicer->AutoCropOutputOn();
+        reslicer->SetBackgroundLevel(-1000);
+
         // image smoothing filter for volume rendering and segmentation
         vtkSmartPointer<vtkImageGaussianSmooth> smoother = vtkSmartPointer<vtkImageGaussianSmooth>::New();
         smoother->SetDimensionality(3);
         smoother->SetStandardDeviations(m_blurRadius[0], m_blurRadius[1], m_blurRadius[2]);
         smoother->SetRadiusFactors(m_blurRadius[0] * 2, m_blurRadius[1] * 2, m_blurRadius[2] * 2);
         smoother->ReleaseDataFlagOn();
-        smoother->SetInputConnection(dicomRectifier->GetOutputPort());
+        smoother->SetInputConnection(reslicer->GetOutputPort());
 
         // rescale if we want to
         vtkSmartPointer<vtkImageResize> rescaler = vtkSmartPointer<vtkImageResize>::New();
@@ -181,23 +190,14 @@ void CTImageImportPipeline::readImages(const QStringList& dicomPaths)
         rescaler->SetOutputSpacing(m_outputSpacing.data());
         rescaler->ReleaseDataFlagOn();
 
-        // If the images are an mpr, we align axis to world axis
-        vtkSmartPointer<vtkImageReslice> reslicer = vtkSmartPointer<vtkImageReslice>::New();
-        reslicer->SetInputConnection(dicomRectifier->GetOutputPort());
-        reslicer->SetInterpolationModeToNearestNeighbor();
-        reslicer->SetInterpolationModeToLinear();
-        reslicer->ReleaseDataFlagOn();
-        reslicer->AutoCropOutputOff();
-        reslicer->SetBackgroundLevel(-1000);
-
         dicomReader->SetFileNames(fileNameArray);
         dicomReader->SortingOn();
         dicomReader->Update();
 
         auto orientationMatrix = dicomReader->GetPatientMatrix();
         dicomRectifier->SetVolumeMatrix(orientationMatrix);
-
         dicomRectifier->Update();
+
         auto rectifiedMatrix = dicomRectifier->GetVolumeMatrix();
         auto resliceMatrix = vtkSmartPointer<vtkMatrix4x4>::New();
         resliceMatrix->DeepCopy(rectifiedMatrix);
@@ -206,24 +206,13 @@ void CTImageImportPipeline::readImages(const QStringList& dicomPaths)
 
         // selecting image data i.e are we rescaling or not
         vtkSmartPointer<vtkImageData> data;
-        if (isIdentity(resliceMatrix)) {
-            if (!m_useOutputSpacing) {
-                smoother->Update();
-                data = smoother->GetOutput();
-            } else {
-                rescaler->Update();
-                data = rescaler->GetOutput();
-            }
-        } else {
-            if (!m_useOutputSpacing) {
 
-                reslicer->SetInputConnection(smoother->GetOutputPort());
-            } else {
-                reslicer->SetInputConnection(rescaler->GetOutputPort());
-            }
-            reslicer->Update();
-            data = reslicer->GetOutput();
-            bool test = true;
+        if (!m_useOutputSpacing) {
+            smoother->Update();
+            data = smoother->GetOutput();
+        } else {
+            rescaler->Update();
+            data = rescaler->GetOutput();
         }
 
         std::array<int, 3> dims_int;

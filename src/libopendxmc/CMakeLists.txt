@@ -8,6 +8,7 @@ qt_add_library(libopendxmc STATIC
 	bowtiefilterreader.cpp
 	datacontainer.cpp	
 	ctimageimportpipeline.cpp
+	ctorgansegmentatorpipeline.cpp
 	ctsegmentationpipeline.cpp
 	ctaecplot.cpp
 	colormaps.cpp
@@ -43,6 +44,7 @@ target_link_libraries(libopendxmc PUBLIC
 	Qt${QT_VERSION_MAJOR}::Gui
 	Qt${QT_VERSION_MAJOR}::Charts	
 	libdxmc
+	libctsegmentator
 	PRIVATE
 	${HDF5_LIBRARIES}		
 	)

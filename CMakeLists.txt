@@ -123,6 +123,14 @@ FetchContent_Declare(
     )
 FetchContent_MakeAvailable(libdxmc)
 
+## Adding CTSegmentator package
+FetchContent_Declare(
+    libctsegmentator
+    GIT_REPOSITORY https://github.com/medicalphysics/ctsegmentation.git
+    GIT_TAG main
+    )
+FetchContent_MakeAvailable(libctsegmentator)
+
 # Build types 
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release;RelWithDebInfo;MinSizeRel") 
 set(CMAKE_CONFIGURATION_TYPES "${CMAKE_CONFIGURATION_TYPES}" CACHE STRING "List of supported configurations.") 

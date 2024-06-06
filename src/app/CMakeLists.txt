@@ -31,6 +31,12 @@ vtk_module_autoinit(
 # adding dxmc physicslist to binary folder
 dxmclib_add_physics_list(opendxmc)
 
+#adding models to binary folder
+copy_ctsegmentator_model_to_binary_dir(opendxmc "freezed_model1")
+
+#adding torch binaries
+copy_torch_binaries(opendxmc)
+
 # Adding icons to binary resource
 qt_add_resources(opendxmc icons
     PREFIX "/icons"

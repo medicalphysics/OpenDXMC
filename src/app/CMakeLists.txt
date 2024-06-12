@@ -32,7 +32,7 @@ vtk_module_autoinit(
 dxmclib_add_physics_list(opendxmc)
 
 #adding models to binary folder
-copy_ctsegmentator_model_to_binary_dir(opendxmc "freezed_model1")
+copy_ctsegmentator_model_to_binary_dir(opendxmc)
 
 #adding torch binaries
 copy_torch_binaries(opendxmc)

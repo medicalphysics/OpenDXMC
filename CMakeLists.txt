@@ -143,10 +143,10 @@ set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "${CMAKE_CONFIGURATION_TYPE
 
 # Targets that we develop here
 # The compiled library code is here
-add_subdirectory(src/app)
+add_subdirectory(src/libopendxmc)
 
 # The executable code is here
-add_subdirectory(src/libopendxmc)
+add_subdirectory(src/app)
 
 # Add helper executable to convert ICRU adult phantoms to binary
 add_subdirectory(utilities)

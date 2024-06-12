@@ -17,7 +17,6 @@ Copyright 2024 Erlend Andersen
 */
 
 #include "ctsegmentator/ctsegmentator.hpp"
-
 #include <ctorgansegmentatorpipeline.hpp>
 
 #include <vector>
@@ -36,9 +35,22 @@ void CTOrganSegmentatorPipeline::updateImageData(std::shared_ptr<DataContainer> 
     emit dataProcessingStarted();
 
     std::vector<std::uint8_t> org_array(data->size(), 0);
+    const auto& ct_array = data->getCTArray();
+    const auto& shape = data->dimensions();
 
-    ctsegmentator::Segmentator S;
-    bool success = S.segment(data->getCTArray(), org_array, data->dimensions());
+    ctsegmentator::Segmentator s;
+
+    const auto jobs = s.segmentJobs(ct_array, org_array, shape);
+    const int nJobs = static_cast<int>(jobs.size());
+    int currentJob = 0;
+    emit progress(currentJob++, nJobs);
+
+    bool success = true;
+    for (const auto& job : jobs) {
+        // success = success && s.segment(job, ct_array, org_array, shape);
+        emit progress(currentJob++, nJobs);
+    }
+
     if (success) {
         data->setImageArray(DataContainer::ImageType::Organ, std::move(org_array));
         std::vector<std::string> names;
@@ -46,7 +58,6 @@ void CTOrganSegmentatorPipeline::updateImageData(std::shared_ptr<DataContainer> 
             names.push_back("test");
         data->setOrganNames(names);
     }
-
     emit imageDataChanged(data);
     emit dataProcessingFinished();
 }

@@ -20,15 +20,13 @@ Copyright 2024 Erlend Andersen
 
 #include <QComboBox>
 #include <QLineEdit>
-#include <QString>
-#include <QStringList>
-#include <QWidget>
+#include <QProgressBar>
+#include <QPushButton>
 
 #include <vtkDICOMDirectory.h>
 #include <vtkSmartPointer.h>
 
 #include <array>
-#include <vector>
 
 #include <basesettingswidget.hpp>
 
@@ -36,6 +34,7 @@ class CTDicomImportWidget : public BaseSettingsWidget {
     Q_OBJECT
 public:
     CTDicomImportWidget(QWidget* parent = nullptr);
+    void setImportProgress(int current, int total, QString fmt = "%p%");
 
 signals:
     void dicomFolderSelectedForBrowsing(QString folderPath);
@@ -43,10 +42,12 @@ signals:
     void blurRadiusChanged(const double*);
     void outputSpacingChanged(const double*);
     void useOutputSpacingChanged(bool value);
+    void useOrganSegmentator(bool value);
     void aqusitionVoltageChanged(double voltage);
     void aqusitionAlFiltrationChanged(double mm);
     void aqusitionSnFiltrationChanged(double mm);
     void segmentationMaterialsChanged();
+    void requestCancelSegmentation();
 
 private:
     void browseForFolder(void);
@@ -57,7 +58,11 @@ private:
     QLineEdit* m_browseLineEdit;
     vtkSmartPointer<vtkDICOMDirectory> m_imageDirectorySnooper = nullptr;
     QComboBox* m_seriesSelector;
+    QProgressBar* m_progressBar = nullptr;
+    QPushButton* m_cancelSegmentationButton = nullptr;
     std::array<double, 3> m_outputSpacing = { 2, 2, 2 };
+    const std::array<double, 3> m_outputSpacingSegmentator = { 1.5, 1.5, 1.5 };
     std::array<double, 3> m_blurRadius = { 1, 1, 0 };
     bool m_useOutputSpacing = false;
+    bool m_useOrganSegmentator = false;
 };

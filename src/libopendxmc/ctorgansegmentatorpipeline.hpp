@@ -24,13 +24,13 @@ class CTOrganSegmentatorPipeline : public BasePipeline {
     Q_OBJECT
 public:
     CTOrganSegmentatorPipeline(QObject* parent = nullptr);
-
     void updateImageData(std::shared_ptr<DataContainer>) override;
+    void setUseOrganSegmentator(bool trigger);
+    void cancelSegmentation();
 signals:
-    void progress(int current, int total);
+    void importProgressChanged(int current, int total, QString fmt = "%p%");
 
 private:
-    double m_kv = 120;
-    double m_Al_filt_mm = 0.9;
-    double m_Sn_filt_mm = 0;
+    bool m_useOrganSegmentator = false;
+    bool m_requestCancel = false;
 };

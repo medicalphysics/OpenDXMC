@@ -93,14 +93,26 @@ CTDicomImportWidget::CTDicomImportWidget(QWidget* parent)
     }
     outputBlurBox->setLayout(outputBlurLayoutButtons);
 
+    auto outputSegmentatorBox = new QGroupBox(tr("Use convnet organ segmentation of CT series"), this);
+    outputSegmentatorBox->setCheckable(true);
+    outputSegmentatorBox->setChecked(false);
+    auto outputSegmentatorLayout = new QHBoxLayout;
+    auto outputSegmentatorLabel = new QLabel(tr("Attempt to segment CT images into various organs (about 60). Voxel size on imported series is forced to be 1.5 mm isotropic."));
+    outputSegmentatorLabel->setWordWrap(true);
+    outputSegmentatorLayout->addWidget(outputSegmentatorLabel);
+    outputSegmentatorBox->setLayout(outputSegmentatorLayout);
+
     // voxel resize selection
     auto outputSpacingBox = new QGroupBox(tr("Resize voxels to this spacing for imported series [XYZ]:"), this);
     outputSpacingBox->setCheckable(true);
     outputSpacingBox->setChecked(false);
     connect(outputSpacingBox, &QGroupBox::toggled, [this](bool value) { emit useOutputSpacingChanged(value); });
     auto outputSpacingLayoutButtons = new QHBoxLayout;
+    QDoubleSpinBox* ouputSpacingSpinBoxes[3];
+
     for (int i = 0; i < 3; ++i) {
         auto spinBox = new QDoubleSpinBox(outputSpacingBox);
+        ouputSpacingSpinBoxes[i] = spinBox;
         spinBox->setMinimum(0.1);
         spinBox->setSuffix(" mm");
         spinBox->setValue(m_outputSpacing[i]);
@@ -112,7 +124,20 @@ CTDicomImportWidget::CTDicomImportWidget(QWidget* parent)
     }
     outputSpacingBox->setLayout(outputSpacingLayoutButtons);
 
-    
+    connect(outputSegmentatorBox, &QGroupBox::toggled, [=, this](bool value) {
+        outputSpacingBox->setChecked(value);
+        outputSpacingBox->setDisabled(value);
+        if (value) {
+            for (int i = 0; i < 3; ++i)
+                ouputSpacingSpinBoxes[i]->setValue(this->m_outputSpacingSegmentator[i]);
+            emit outputSpacingChanged(this->m_outputSpacingSegmentator.data());
+        } else {
+            for (int i = 0; i < 3; ++i)
+                ouputSpacingSpinBoxes[i]->setValue(this->m_outputSpacing[i]);
+            emit outputSpacingChanged(this->m_outputSpacing.data());
+        }
+        emit useOrganSegmentator(value);
+    });
 
     // tube settings
     auto tubeBox = new QGroupBox(tr("Aqusition tube settings: "), this);
@@ -155,12 +180,28 @@ CTDicomImportWidget::CTDicomImportWidget(QWidget* parent)
     tubeLayout->addLayout(tubeSnFiltrationLayout);
     tubeBox->setLayout(tubeLayout);
 
+    // adding progressbar for image import
+    m_progressBar = new QProgressBar(this);
+    m_progressBar->setVisible(false);
+    // adding cancel button for segmentation
+    m_cancelSegmentationButton = new QPushButton(tr("Cancel"), this);
+    m_cancelSegmentationButton->setVisible(false);
+    connect(m_cancelSegmentationButton, &QPushButton::clicked, [this](void) { emit requestCancelSegmentation(); });
+    auto progressLayout = new QHBoxLayout;
+    progressLayout->addWidget(m_progressBar);
+    progressLayout->addWidget(m_cancelSegmentationButton);
+
+
+
     // setting up layout
     mainlayout->addWidget(browseBox);
     mainlayout->addWidget(outputBlurBox);
+    mainlayout->addWidget(outputSegmentatorBox);
     mainlayout->addWidget(outputSpacingBox);
     mainlayout->addWidget(tubeBox);
     mainlayout->addWidget(seriesSelectorBox);
+    mainlayout->addLayout(progressLayout);
+    //mainlayout->addWidget(m_progressBar);
     mainlayout->addStretch();
     this->setLayout(mainlayout);
 
@@ -182,6 +223,20 @@ CTDicomImportWidget::CTDicomImportWidget(QWidget* parent)
         emit aqusitionSnFiltrationChanged(tubeSnFiltrationSpinBox->value());
         emit aqusitionVoltageChanged(tubeVoltageSpinBox->value());
     });
+}
+
+void CTDicomImportWidget::setImportProgress(int current, int total, QString fmt)
+{
+    if (total >= 0) {
+        m_cancelSegmentationButton->setVisible(true);
+        m_progressBar->setVisible(true);
+        m_progressBar->setRange(0, total);
+        m_progressBar->setValue(current);
+        m_progressBar->setFormat(fmt);
+    } else {
+        m_cancelSegmentationButton->setVisible(false);
+        m_progressBar->setVisible(false);
+    }
 }
 
 void CTDicomImportWidget::browseForFolder(void)

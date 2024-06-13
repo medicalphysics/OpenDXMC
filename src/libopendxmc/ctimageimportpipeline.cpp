@@ -232,6 +232,7 @@ void CTImageImportPipeline::readImages(const QStringList& dicomPaths)
     }
 
     emit imageDataChanged(image);
+    
     emit dataProcessingFinished();
 }
 
@@ -245,6 +246,7 @@ void CTImageImportPipeline::setUseOutputSpacing(bool trigger)
 {
     m_useOutputSpacing = trigger;
 }
+
 
 void CTImageImportPipeline::setOutputSpacing(const double* d)
 {

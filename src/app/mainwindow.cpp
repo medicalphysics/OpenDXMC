@@ -29,6 +29,7 @@ Copyright 2024 Erlend Andersen
 #include <beamsettingswidget.hpp>
 #include <ctdicomimportwidget.hpp>
 #include <ctimageimportpipeline.hpp>
+#include <ctorgansegmentatorpipeline.hpp>
 #include <ctsegmentationpipeline.hpp>
 #include <dosetablepipeline.hpp>
 #include <dosetablewidget.hpp>
@@ -93,15 +94,25 @@ MainWindow::MainWindow(QWidget* parent)
     connect(ctdicomimportwidget, &CTDicomImportWidget::useOutputSpacingChanged, ctimageimportpipeline, &CTImageImportPipeline::setUseOutputSpacing);
     connect(ctimageimportpipeline, &CTImageImportPipeline::imageDataChanged, slicerender, &RenderWidgetsCollection::updateImageData);
 
-    // adding ct segmentation pipeline
-    auto ctsegmentationpipelie = new CTSegmentationPipeline;
-    ctsegmentationpipelie->moveToThread(&m_workerThread);
-    pipelineitems.push_back(ctsegmentationpipelie);
-    connect(ctdicomimportwidget, &CTDicomImportWidget::aqusitionAlFiltrationChanged, ctsegmentationpipelie, &CTSegmentationPipeline::setAlFiltration);
-    connect(ctdicomimportwidget, &CTDicomImportWidget::aqusitionSnFiltrationChanged, ctsegmentationpipelie, &CTSegmentationPipeline::setSnFiltration);
-    connect(ctdicomimportwidget, &CTDicomImportWidget::aqusitionVoltageChanged, ctsegmentationpipelie, &CTSegmentationPipeline::setAqusitionVoltage);
-    connect(ctsegmentationpipelie, &CTSegmentationPipeline::imageDataChanged, slicerender, &RenderWidgetsCollection::updateImageData);
-    connect(ctimageimportpipeline, &CTImageImportPipeline::imageDataChanged, ctsegmentationpipelie, &CTSegmentationPipeline::updateImageData);
+    // adding ct material segmentation pipeline
+    auto ctsegmentationpipeline = new CTSegmentationPipeline;
+    ctsegmentationpipeline->moveToThread(&m_workerThread);
+    pipelineitems.push_back(ctsegmentationpipeline);
+    connect(ctdicomimportwidget, &CTDicomImportWidget::aqusitionAlFiltrationChanged, ctsegmentationpipeline, &CTSegmentationPipeline::setAlFiltration);
+    connect(ctdicomimportwidget, &CTDicomImportWidget::aqusitionSnFiltrationChanged, ctsegmentationpipeline, &CTSegmentationPipeline::setSnFiltration);
+    connect(ctdicomimportwidget, &CTDicomImportWidget::aqusitionVoltageChanged, ctsegmentationpipeline, &CTSegmentationPipeline::setAqusitionVoltage);
+    connect(ctsegmentationpipeline, &CTSegmentationPipeline::imageDataChanged, slicerender, &RenderWidgetsCollection::updateImageData);
+    connect(ctimageimportpipeline, &CTImageImportPipeline::imageDataChanged, ctsegmentationpipeline, &CTSegmentationPipeline::updateImageData);
+
+    // adding ct organ segmentation pipeline
+    auto ctorgansegmentationpipeline = new CTOrganSegmentatorPipeline;
+    ctorgansegmentationpipeline->moveToThread(&m_workerThread);
+    pipelineitems.push_back(ctorgansegmentationpipeline);
+    connect(ctdicomimportwidget, &CTDicomImportWidget::useOrganSegmentator, ctorgansegmentationpipeline, &CTOrganSegmentatorPipeline::setUseOrganSegmentator);
+    connect(ctdicomimportwidget, &CTDicomImportWidget::requestCancelSegmentation, ctorgansegmentationpipeline, &CTOrganSegmentatorPipeline::cancelSegmentation);
+    connect(ctorgansegmentationpipeline, &CTOrganSegmentatorPipeline::imageDataChanged, slicerender, &RenderWidgetsCollection::updateImageData);
+    connect(ctorgansegmentationpipeline, &CTOrganSegmentatorPipeline::importProgressChanged, ctdicomimportwidget, &CTDicomImportWidget::setImportProgress);
+    connect(ctimageimportpipeline, &CTImageImportPipeline::imageDataChanged, ctorgansegmentationpipeline, &CTOrganSegmentatorPipeline::updateImageData);
 
     // Adding icrp phantom import widget
     auto icrpimportwidget = new ICRPPhantomImportWidget(importWidgets);
@@ -115,7 +126,8 @@ MainWindow::MainWindow(QWidget* parent)
     // beam settings widget
     auto beamsettingswidget = new BeamSettingsWidget(this);
     menuWidget->addTab(beamsettingswidget, tr("Configure X-ray beams"));
-    connect(ctsegmentationpipelie, &CTSegmentationPipeline::imageDataChanged, beamsettingswidget, &BeamSettingsWidget::updateImageData);
+    connect(ctsegmentationpipeline, &CTSegmentationPipeline::imageDataChanged, beamsettingswidget, &BeamSettingsWidget::updateImageData);
+    connect(ctorgansegmentationpipeline, &CTOrganSegmentatorPipeline::imageDataChanged, beamsettingswidget, &BeamSettingsWidget::updateImageData);
     connect(icrppipeline, &ICRPPhantomImportPipeline::imageDataChanged, beamsettingswidget, &BeamSettingsWidget::updateImageData);
     auto beamsettingsmodel = beamsettingswidget->modelView();
     connect(beamsettingsmodel, &BeamSettingsView::beamActorAdded, slicerender, &RenderWidgetsCollection::addActor);
@@ -129,7 +141,8 @@ MainWindow::MainWindow(QWidget* parent)
     // simulationpipeline
     auto simulationpipeline = new SimulationPipeline;
     simulationpipeline->moveToThread(&m_workerThread);
-    connect(ctsegmentationpipelie, &CTSegmentationPipeline::imageDataChanged, simulationpipeline, &SimulationPipeline::updateImageData);
+    connect(ctsegmentationpipeline, &CTSegmentationPipeline::imageDataChanged, simulationpipeline, &SimulationPipeline::updateImageData);
+    connect(ctorgansegmentationpipeline, &CTOrganSegmentatorPipeline::imageDataChanged, simulationpipeline, &SimulationPipeline::updateImageData);
     connect(icrppipeline, &ICRPPhantomImportPipeline::imageDataChanged, simulationpipeline, &SimulationPipeline::updateImageData);
     connect(simulationwidget, &SimulationWidget::numberOfThreadsChanged, simulationpipeline, &SimulationPipeline::setNumberOfThreads);
     connect(simulationwidget, &SimulationWidget::ignoreAirChanged, simulationpipeline, &SimulationPipeline::setDeleteAirDose);
@@ -161,7 +174,8 @@ MainWindow::MainWindow(QWidget* parent)
     // save load
     auto h5io = new H5IO;
     h5io->moveToThread(&m_workerThread);
-    connect(ctsegmentationpipelie, &CTSegmentationPipeline::imageDataChanged, h5io, &H5IO::updateImageData);
+    connect(ctsegmentationpipeline, &CTSegmentationPipeline::imageDataChanged, h5io, &H5IO::updateImageData);
+    connect(ctorgansegmentationpipeline, &CTOrganSegmentatorPipeline::imageDataChanged, h5io, &H5IO::updateImageData);
     connect(icrppipeline, &ICRPPhantomImportPipeline::imageDataChanged, h5io, &H5IO::updateImageData);
     connect(simulationpipeline, &SimulationPipeline::imageDataChanged, h5io, &H5IO::updateImageData);
     connect(beamsettingsmodel, &BeamSettingsView::beamActorAdded, h5io, &H5IO::addBeamActor);

@@ -19,6 +19,8 @@ Copyright 2024 Erlend Andersen
 #include "ctsegmentator/ctsegmentator.hpp"
 #include <ctorgansegmentatorpipeline.hpp>
 
+#include <algorithm>
+#include <chrono>
 #include <vector>
 
 CTOrganSegmentatorPipeline::CTOrganSegmentatorPipeline(QObject* parent)
@@ -28,6 +30,9 @@ CTOrganSegmentatorPipeline::CTOrganSegmentatorPipeline(QObject* parent)
 
 void CTOrganSegmentatorPipeline::updateImageData(std::shared_ptr<DataContainer> data)
 {
+    m_requestCancel = false;
+    if (!m_useOrganSegmentator)
+        return;
     if (!data)
         return;
     if (!data->hasImage(DataContainer::ImageType::CT))
@@ -42,22 +47,85 @@ void CTOrganSegmentatorPipeline::updateImageData(std::shared_ptr<DataContainer> 
 
     const auto jobs = s.segmentJobs(ct_array, org_array, shape);
     const int nJobs = static_cast<int>(jobs.size());
-    int currentJob = 0;
-    emit progress(currentJob++, nJobs);
+    int currentJob = 1;
+    emit importProgressChanged(0, 0, "Segmentating");
 
     bool success = true;
+
+    const auto start_time = std::chrono::high_resolution_clock::now();
+
     for (const auto& job : jobs) {
-        // success = success && s.segment(job, ct_array, org_array, shape);
-        emit progress(currentJob++, nJobs);
+        if (m_requestCancel) {
+            emit importProgressChanged(-1, -1);
+            emit dataProcessingFinished();
+            return;
+        }
+        success = success && s.segment(job, ct_array, org_array, shape);
+        const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start_time);
+        const auto rest = (duration * (nJobs - currentJob)) / currentJob;
+
+        QString fmt("Segmentating %p% ");
+        if (rest > std::chrono::hours(3))
+            fmt += QString::fromStdString(std::to_string(std::chrono::duration_cast<std::chrono::hours>(rest).count()) + " hrs");
+        else if (rest > std::chrono::minutes(3))
+            fmt += QString::fromStdString(std::to_string(std::chrono::duration_cast<std::chrono::minutes>(rest).count()) + " min");
+        else
+            fmt += QString::fromStdString(std::to_string(std::chrono::duration_cast<std::chrono::seconds>(rest).count()) + " sec");
+        fmt += " remaining";
+        emit importProgressChanged(currentJob++, nJobs, fmt);
     }
 
     if (success) {
-        data->setImageArray(DataContainer::ImageType::Organ, std::move(org_array));
+        /*
+        // only use found organs
+        std::vector<std::uint8_t> unique_organs(org_array.cbegin(), org_array.cend());
+        std::sort(unique_organs.begin(), unique_organs.end());
+        auto last = std::unique(unique_organs.begin(), unique_organs.end());
+        unique_organs.erase(last, unique_organs.end());
+        std::vector<std::uint8_t> reverse_map(unique_organs.back() + 1, 0);
+        for (std::uint8_t i = 0; i < unique_organs.size(); ++i) {
+            reverse_map[unique_organs[i]] = i;
+        }
+        std::transform(unique_organs.cbegin(), unique_organs.cend(), unique_organs.begin(), [&](std::uint8_t i) {
+            return reverse_map[i];
+        });
+
         std::vector<std::string> names;
-        for (int i = 0; i < 60; ++i)
-            names.push_back("test");
+        for (const auto i : unique_organs) {
+            if (i == 0)
+                names.push_back("air");
+            else
+                names.push_back(s.organNames().at(i));
+        }
+        names.push_back("remainder");
+        const auto remainderIdx = static_cast<std::uint8_t>(unique_organs.size());
+        std::transform(org_array.cbegin(), org_array.cend(), ct_array.cbegin(), org_array.begin(), [remainderIdx](const auto o, const auto hu) {
+            return o == 0 && hu > -500 ? remainderIdx : o;
+        });
+        */
+
+        // slett dette
+        std::vector<std::string> names;
+        names.push_back("air");
+        for (const auto& [id, name] : s.organNames()) {
+            names.push_back(name);
+        }
+
+        data->setImageArray(DataContainer::ImageType::Organ, std::move(org_array));
         data->setOrganNames(names);
+        emit imageDataChanged(data);
     }
-    emit imageDataChanged(data);
+
+    emit importProgressChanged(-1, -1);
     emit dataProcessingFinished();
+}
+
+void CTOrganSegmentatorPipeline::setUseOrganSegmentator(bool trigger)
+{
+    m_useOrganSegmentator = trigger;
+}
+
+void CTOrganSegmentatorPipeline::cancelSegmentation()
+{
+    m_requestCancel = true;
 }

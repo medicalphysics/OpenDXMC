@@ -97,7 +97,7 @@ CTDicomImportWidget::CTDicomImportWidget(QWidget* parent)
     outputSegmentatorBox->setCheckable(true);
     outputSegmentatorBox->setChecked(false);
     auto outputSegmentatorLayout = new QHBoxLayout;
-    auto outputSegmentatorLabel = new QLabel(tr("Attempt to segment CT images into various organs (about 60). Voxel size on imported series is forced to be 1.5 mm isotropic."));
+    auto outputSegmentatorLabel = new QLabel(tr("Attempt to segment CT images into various organs (about 60). Voxel size on imported series is forced to be 1.5 mm isotropic. This is quite computationally demanding, expect at least 10 minute processing time on a decent computer."));
     outputSegmentatorLabel->setWordWrap(true);
     outputSegmentatorLayout->addWidget(outputSegmentatorLabel);
     outputSegmentatorBox->setLayout(outputSegmentatorLayout);
@@ -186,12 +186,14 @@ CTDicomImportWidget::CTDicomImportWidget(QWidget* parent)
     // adding cancel button for segmentation
     m_cancelSegmentationButton = new QPushButton(tr("Cancel"), this);
     m_cancelSegmentationButton->setVisible(false);
-    connect(m_cancelSegmentationButton, &QPushButton::clicked, [this](void) { emit requestCancelSegmentation(); });
+    connect(m_cancelSegmentationButton, &QPushButton::clicked, [this](void) {
+        emit requestCancelSegmentation();
+        m_cancelSegmentationButton->setText(tr("Cancelling"));
+        m_cancelSegmentationButton->setDisabled(true);
+    });
     auto progressLayout = new QHBoxLayout;
     progressLayout->addWidget(m_progressBar);
     progressLayout->addWidget(m_cancelSegmentationButton);
-
-
 
     // setting up layout
     mainlayout->addWidget(browseBox);
@@ -201,7 +203,7 @@ CTDicomImportWidget::CTDicomImportWidget(QWidget* parent)
     mainlayout->addWidget(tubeBox);
     mainlayout->addWidget(seriesSelectorBox);
     mainlayout->addLayout(progressLayout);
-    //mainlayout->addWidget(m_progressBar);
+    // mainlayout->addWidget(m_progressBar);
     mainlayout->addStretch();
     this->setLayout(mainlayout);
 
@@ -228,6 +230,8 @@ CTDicomImportWidget::CTDicomImportWidget(QWidget* parent)
 void CTDicomImportWidget::setImportProgress(int current, int total, QString fmt)
 {
     if (total >= 0) {
+        m_cancelSegmentationButton->setEnabled(true);
+        m_cancelSegmentationButton->setText(tr("Cancel"));
         m_cancelSegmentationButton->setVisible(true);
         m_progressBar->setVisible(true);
         m_progressBar->setRange(0, total);

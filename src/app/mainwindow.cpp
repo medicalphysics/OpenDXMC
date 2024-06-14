@@ -109,7 +109,8 @@ MainWindow::MainWindow(QWidget* parent)
     ctorgansegmentationpipeline->moveToThread(&m_workerThread);
     pipelineitems.push_back(ctorgansegmentationpipeline);
     connect(ctdicomimportwidget, &CTDicomImportWidget::useOrganSegmentator, ctorgansegmentationpipeline, &CTOrganSegmentatorPipeline::setUseOrganSegmentator);
-    connect(ctdicomimportwidget, &CTDicomImportWidget::requestCancelSegmentation, ctorgansegmentationpipeline, &CTOrganSegmentatorPipeline::cancelSegmentation);
+    connect(ctdicomimportwidget, &CTDicomImportWidget::requestCancelSegmentation, ctorgansegmentationpipeline,
+        &CTOrganSegmentatorPipeline::cancelSegmentation, Qt::DirectConnection); // Not a threadsafe connection, but reciver is threadsafe
     connect(ctorgansegmentationpipeline, &CTOrganSegmentatorPipeline::imageDataChanged, slicerender, &RenderWidgetsCollection::updateImageData);
     connect(ctorgansegmentationpipeline, &CTOrganSegmentatorPipeline::importProgressChanged, ctdicomimportwidget, &CTDicomImportWidget::setImportProgress);
     connect(ctimageimportpipeline, &CTImageImportPipeline::imageDataChanged, ctorgansegmentationpipeline, &CTOrganSegmentatorPipeline::updateImageData);

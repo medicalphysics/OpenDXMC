@@ -20,6 +20,7 @@ Copyright 2024 Erlend Andersen
 #include <ctorgansegmentatorpipeline.hpp>
 
 #include <algorithm>
+#include <atomic>
 #include <chrono>
 #include <vector>
 
@@ -60,7 +61,8 @@ void CTOrganSegmentatorPipeline::updateImageData(std::shared_ptr<DataContainer> 
             emit dataProcessingFinished();
             return;
         }
-        success = success && s.segment(job, ct_array, org_array, shape);
+        if (job.part == ctsegmentator::ModelPart::Model1)
+            success = success && s.segment(job, ct_array, org_array, shape);
         const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start_time);
         const auto rest = (duration * (nJobs - currentJob)) / currentJob;
 
@@ -127,5 +129,7 @@ void CTOrganSegmentatorPipeline::setUseOrganSegmentator(bool trigger)
 
 void CTOrganSegmentatorPipeline::cancelSegmentation()
 {
-    m_requestCancel = true;
+    // making threadsafe
+    auto ref = std::atomic_ref(m_requestCancel);
+    ref.store(true);
 }

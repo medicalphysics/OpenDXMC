@@ -37,19 +37,19 @@ target_include_directories(libopendxmc PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(libopendxmc PRIVATE ${HDF5_INCLUDE_DIRS})
 target_compile_definitions(libopendxmc PRIVATE ${HDF5_DEFINITIONS})
 
-target_link_libraries(libopendxmc PUBLIC
-	${VTK_LIBRARIES}
+target_link_libraries(libopendxmc PUBLIC	
 	Qt${QT_VERSION_MAJOR}::Widgets
 	Qt${QT_VERSION_MAJOR}::Core
 	Qt${QT_VERSION_MAJOR}::Gui
-	Qt${QT_VERSION_MAJOR}::Charts	
-	libdxmc
+	Qt${QT_VERSION_MAJOR}::Charts
+	${VTK_LIBRARIES}
+	libdxmc	
+	PRIVATE	
+	${HDF5_LIBRARIES}
 	libctsegmentator
-	PRIVATE
-	${HDF5_LIBRARIES}		
 	)
 
-vtk_module_autoinit(
-    TARGETS libopendxmc
-    MODULES ${VTK_LIBRARIES}
-    )
+#vtk_module_autoinit(
+#    TARGETS libopendxmc
+#    MODULES ${VTK_LIBRARIES}
+#    )

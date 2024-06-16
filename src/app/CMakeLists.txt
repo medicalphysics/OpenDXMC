@@ -22,10 +22,9 @@ set_target_properties(opendxmc PROPERTIES
     MACOSX_BUNDLE ON
 )
 
-vtk_module_autoinit(
-    TARGETS opendxmc
-    MODULES ${VTK_LIBRARIES}
-    )
+#vtk_module_autoinit(  TARGETS opendxmc
+#    MODULES ${VTK_LIBRARIES}
+#    )
 
 
 # adding dxmc physicslist to binary folder

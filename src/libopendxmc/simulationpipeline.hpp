@@ -40,7 +40,7 @@ public:
     void removeBeamActor(std::shared_ptr<BeamActorContainer> actor);    
     void setNumberOfThreads(int nthreads);
     void setDeleteAirDose(bool on) { m_deleteAirDose = on; };
-    void timerEvent(QTimerEvent*);
+    void timerEvent(QTimerEvent*) override;
     void setLowEnergyCorrectionLevel(int level) { m_lowenergyCorrection = level; }
     void startSimulation();
     void stopSimulation();

@@ -22,6 +22,7 @@ Copyright 2024 Erlend Andersen
 #include <algorithm>
 #include <atomic>
 #include <chrono>
+#include <execution>
 #include <vector>
 
 CTOrganSegmentatorPipeline::CTOrganSegmentatorPipeline(QObject* parent)
@@ -61,8 +62,8 @@ void CTOrganSegmentatorPipeline::updateImageData(std::shared_ptr<DataContainer> 
             emit dataProcessingFinished();
             return;
         }
-        if (job.part == ctsegmentator::ModelPart::Model1)
-            success = success && s.segment(job, ct_array, org_array, shape);
+
+        success = success && s.segment(job, ct_array, org_array, shape);
         const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start_time);
         const auto rest = (duration * (nJobs - currentJob)) / currentJob;
 
@@ -78,17 +79,18 @@ void CTOrganSegmentatorPipeline::updateImageData(std::shared_ptr<DataContainer> 
     }
 
     if (success) {
-        /*
+
         // only use found organs
         std::vector<std::uint8_t> unique_organs(org_array.cbegin(), org_array.cend());
         std::sort(unique_organs.begin(), unique_organs.end());
         auto last = std::unique(unique_organs.begin(), unique_organs.end());
         unique_organs.erase(last, unique_organs.end());
+
         std::vector<std::uint8_t> reverse_map(unique_organs.back() + 1, 0);
         for (std::uint8_t i = 0; i < unique_organs.size(); ++i) {
             reverse_map[unique_organs[i]] = i;
         }
-        std::transform(unique_organs.cbegin(), unique_organs.cend(), unique_organs.begin(), [&](std::uint8_t i) {
+        std::transform(std::execution::par_unseq, org_array.cbegin(), org_array.cend(), org_array.begin(), [&](std::uint8_t i) {
             return reverse_map[i];
         });
 
@@ -104,14 +106,6 @@ void CTOrganSegmentatorPipeline::updateImageData(std::shared_ptr<DataContainer> 
         std::transform(org_array.cbegin(), org_array.cend(), ct_array.cbegin(), org_array.begin(), [remainderIdx](const auto o, const auto hu) {
             return o == 0 && hu > -500 ? remainderIdx : o;
         });
-        */
-
-        // slett dette
-        std::vector<std::string> names;
-        names.push_back("air");
-        for (const auto& [id, name] : s.organNames()) {
-            names.push_back(name);
-        }
 
         data->setImageArray(DataContainer::ImageType::Organ, std::move(org_array));
         data->setOrganNames(names);

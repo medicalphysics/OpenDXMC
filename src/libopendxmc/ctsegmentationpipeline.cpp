@@ -116,7 +116,7 @@ void CTSegmentationPipeline::updateImageData(std::shared_ptr<DataContainer> data
         return;
     if (!data->hasImage(DataContainer::ImageType::CT))
         return;
-    emit dataProcessingStarted();
+    emit dataProcessingStarted(ProgressWorkType::Segmentating);
     std::vector<std::string> mat_names = { "Air, Dry (near sea level)", "Adipose Tissue (ICRP)", "Tissue, Soft (ICRP)", "Muscle, Skeletal", "Bone, Cortical (ICRP)" };
 
     std::vector<MatDens> materials;
@@ -164,5 +164,5 @@ void CTSegmentationPipeline::updateImageData(std::shared_ptr<DataContainer> data
     }
     data->setMaterials(cont_materials);
     emit imageDataChanged(data);
-    emit dataProcessingFinished();
+    emit dataProcessingFinished(ProgressWorkType::Segmentating);
 }

@@ -261,7 +261,7 @@ std::vector<T> loadArray(std::unique_ptr<H5::H5File>& file, const std::string& p
         auto h5type = H5::PredType::NATIVE_DOUBLE;
         if constexpr (std::is_same_v<T, std::uint8_t>)
             h5type = H5::PredType::NATIVE_UINT8;
-        else if constexpr (std::is_same_v<T, std::uint8_t>)
+        else if constexpr (std::is_same_v<T, std::uint64_t>)
             h5type = H5::PredType::NATIVE_UINT64;
 
         if constexpr (std::is_same_v<T, std::string>) {
@@ -388,11 +388,11 @@ bool HDF5Wrapper::save(std::shared_ptr<DataContainer> data)
         success = success && saveArray<double, 1>(m_file, names, std::span { spacing }, { 3 });
     }
     if (const auto& v = data->getDensityArray(); v.size() > 0) {
-        names[0] = "density";
+        names[0] = "densityarray";
         success = success && saveArray(m_file, names, std::span { v }, dim, true);
     }
     if (const auto& v = data->getCTArray(); v.size() > 0) {
-        names[0] = "ct";
+        names[0] = "ctarray";
         success = success && saveArray(m_file, names, std::span { v }, dim, true);
     }
     if (const auto& v = data->getMaterialArray(); v.size() > 0) {
@@ -1007,13 +1007,14 @@ std::shared_ptr<DataContainer> HDF5Wrapper::load()
         if (v.size() == res->size()) {
             res->setImageArray(DataContainer::ImageType::Material, v);
             auto material_names = loadArray<std::string>(m_file, "materialnames");
-            auto material_comp = loadArray<std::string>(m_file, "materialnames");
+            auto material_comp = loadArray<std::string>(m_file, "materialcomposition");
             if (material_names.size() == material_comp.size()) {
                 std::vector<DataContainer::Material> materials(material_names.size());
                 for (std::size_t i = 0; i < material_names.size(); ++i) {
                     materials[i].name = material_names[i];
                     materials[i].Z = dxmc::Material<5>::parseCompoundStr(material_comp[i]);
                 }
+                res->setMaterials(materials);
             } else {
                 return nullptr;
             }

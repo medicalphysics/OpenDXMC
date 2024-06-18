@@ -137,7 +137,7 @@ bool isIdentity(vtkMatrix4x4* matrix)
 
 void CTImageImportPipeline::readImages(const QStringList& dicomPaths)
 {
-    emit dataProcessingStarted();
+    emit dataProcessingStarted(ProgressWorkType::Importing);
 
     auto image = std::make_shared<DataContainer>();
 
@@ -232,8 +232,7 @@ void CTImageImportPipeline::readImages(const QStringList& dicomPaths)
     }
 
     emit imageDataChanged(image);
-    
-    emit dataProcessingFinished();
+    emit dataProcessingFinished(ProgressWorkType::Importing);
 }
 
 void CTImageImportPipeline::setBlurRadius(const double* d)
@@ -246,7 +245,6 @@ void CTImageImportPipeline::setUseOutputSpacing(bool trigger)
 {
     m_useOutputSpacing = trigger;
 }
-
 
 void CTImageImportPipeline::setOutputSpacing(const double* d)
 {

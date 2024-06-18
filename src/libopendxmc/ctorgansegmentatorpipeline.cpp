@@ -39,7 +39,7 @@ void CTOrganSegmentatorPipeline::updateImageData(std::shared_ptr<DataContainer> 
         return;
     if (!data->hasImage(DataContainer::ImageType::CT))
         return;
-    emit dataProcessingStarted();
+    emit dataProcessingStarted(ProgressWorkType::Segmentating);
 
     std::vector<std::uint8_t> org_array(data->size(), 0);
     const auto& ct_array = data->getCTArray();
@@ -59,7 +59,7 @@ void CTOrganSegmentatorPipeline::updateImageData(std::shared_ptr<DataContainer> 
     for (const auto& job : jobs) {
         if (m_requestCancel) {
             emit importProgressChanged(-1, -1);
-            emit dataProcessingFinished();
+            emit dataProcessingFinished(ProgressWorkType::Segmentating);
             return;
         }
 
@@ -113,7 +113,7 @@ void CTOrganSegmentatorPipeline::updateImageData(std::shared_ptr<DataContainer> 
     }
 
     emit importProgressChanged(-1, -1);
-    emit dataProcessingFinished();
+    emit dataProcessingFinished(ProgressWorkType::Segmentating);
 }
 
 void CTOrganSegmentatorPipeline::setUseOrganSegmentator(bool trigger)

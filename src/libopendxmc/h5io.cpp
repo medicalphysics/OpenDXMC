@@ -44,19 +44,19 @@ void H5IO::removeBeamActor(std::shared_ptr<BeamActorContainer> beam)
 
 void H5IO::saveData(QString path)
 {
-    emit dataProcessingStarted();
+    emit dataProcessingStarted(ProgressWorkType::SavingFile);
 
     HDF5Wrapper s(path.toStdString(), HDF5Wrapper::FileOpenMode::WriteOver);
     bool success = s.save(m_data);
     bool beam_success = true;
     for (auto beam : m_beams)
         beam_success = beam_success && s.save(beam);
-    emit dataProcessingFinished();
+    emit dataProcessingFinished(ProgressWorkType::SavingFile);
 }
 
 void H5IO::loadData(QString path)
 {
-    emit dataProcessingStarted();
+    emit dataProcessingStarted(ProgressWorkType::LoadingFile);
 
     HDF5Wrapper s(path.toStdString(), HDF5Wrapper::FileOpenMode::ReadOnly);
     auto data = s.load();
@@ -66,5 +66,5 @@ void H5IO::loadData(QString path)
     for (auto b : beams)
         emit beamDataChanged(b);
 
-    emit dataProcessingFinished();
+    emit dataProcessingFinished(ProgressWorkType::LoadingFile);
 }

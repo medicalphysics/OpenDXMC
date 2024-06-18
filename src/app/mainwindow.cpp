@@ -23,7 +23,6 @@ Copyright 2024 Erlend Andersen
 #include <QMenuBar>
 #include <QSettings>
 #include <QSplitter>
-#include <QStatusBar>
 #include <QTabWidget>
 
 #include <beamsettingswidget.hpp>
@@ -39,7 +38,8 @@ Copyright 2024 Erlend Andersen
 #include <renderwidgetscollection.hpp>
 #include <simulationpipeline.hpp>
 #include <simulationwidget.hpp>
-#include <volumerendersettingswidget.hpp>
+#include <statusbar.hpp>
+// include <volumerendersettingswidget.hpp>
 
 #include <mainwindow.hpp>
 
@@ -48,6 +48,9 @@ Copyright 2024 Erlend Andersen
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
 {
+    auto statusBar = new StatusBar;
+    setStatusBar(statusBar);
+
     QSplitter* splitter = new QSplitter(Qt::Horizontal);
     setCentralWidget(splitter);
     splitter->setOpaqueResize(false);
@@ -77,6 +80,7 @@ MainWindow::MainWindow(QWidget* parent)
     dockWidget->setContentsMargins(0, 0, 0, 0);
     auto dockWidget_layout = new QVBoxLayout;
     dockWidget->setLayout(dockWidget_layout);
+    dockWidget->layout()->setContentsMargins(0, 0, 0, 0);
     dockWidget_layout->addWidget(slicerender->createRendersettingsWidget(dockWidget));
     rightDock->setWidget(dockWidget);
     addDockWidget(Qt::DockWidgetArea::RightDockWidgetArea, rightDock);
@@ -87,6 +91,7 @@ MainWindow::MainWindow(QWidget* parent)
     pipelineitems.push_back(ctimageimportpipeline);
     auto ctdicomimportwidget = new CTDicomImportWidget(importWidgets);
     importWidgets->addTab(ctdicomimportwidget, tr("CT DiCOM import"));
+    statusBar->registerPipeline(ctimageimportpipeline);
     // setting up signals for ct image import
     connect(ctdicomimportwidget, &CTDicomImportWidget::dicomSeriesActivated, ctimageimportpipeline, &CTImageImportPipeline::readImages);
     connect(ctdicomimportwidget, &CTDicomImportWidget::blurRadiusChanged, ctimageimportpipeline, &CTImageImportPipeline::setBlurRadius);
@@ -98,6 +103,7 @@ MainWindow::MainWindow(QWidget* parent)
     auto ctsegmentationpipeline = new CTSegmentationPipeline;
     ctsegmentationpipeline->moveToThread(&m_workerThread);
     pipelineitems.push_back(ctsegmentationpipeline);
+    statusBar->registerPipeline(ctsegmentationpipeline);
     connect(ctdicomimportwidget, &CTDicomImportWidget::aqusitionAlFiltrationChanged, ctsegmentationpipeline, &CTSegmentationPipeline::setAlFiltration);
     connect(ctdicomimportwidget, &CTDicomImportWidget::aqusitionSnFiltrationChanged, ctsegmentationpipeline, &CTSegmentationPipeline::setSnFiltration);
     connect(ctdicomimportwidget, &CTDicomImportWidget::aqusitionVoltageChanged, ctsegmentationpipeline, &CTSegmentationPipeline::setAqusitionVoltage);
@@ -108,6 +114,7 @@ MainWindow::MainWindow(QWidget* parent)
     auto ctorgansegmentationpipeline = new CTOrganSegmentatorPipeline;
     ctorgansegmentationpipeline->moveToThread(&m_workerThread);
     pipelineitems.push_back(ctorgansegmentationpipeline);
+    statusBar->registerPipeline(ctorgansegmentationpipeline);
     connect(ctdicomimportwidget, &CTDicomImportWidget::useOrganSegmentator, ctorgansegmentationpipeline, &CTOrganSegmentatorPipeline::setUseOrganSegmentator);
     connect(ctdicomimportwidget, &CTDicomImportWidget::requestCancelSegmentation, ctorgansegmentationpipeline,
         &CTOrganSegmentatorPipeline::cancelSegmentation, Qt::DirectConnection); // Not a threadsafe connection, but reciver is threadsafe
@@ -120,6 +127,7 @@ MainWindow::MainWindow(QWidget* parent)
     importWidgets->addTab(icrpimportwidget, tr("ICRP phantom import"));
     auto icrppipeline = new ICRPPhantomImportPipeline;
     icrppipeline->moveToThread(&m_workerThread);
+    statusBar->registerPipeline(icrppipeline);
     connect(icrpimportwidget, &ICRPPhantomImportWidget::setRemoveArms, icrppipeline, &ICRPPhantomImportPipeline::setRemoveArms);
     connect(icrpimportwidget, &ICRPPhantomImportWidget::requestImportPhantom, icrppipeline, &ICRPPhantomImportPipeline::importPhantom);
     connect(icrppipeline, &ICRPPhantomImportPipeline::imageDataChanged, slicerender, &RenderWidgetsCollection::updateImageData);
@@ -142,6 +150,7 @@ MainWindow::MainWindow(QWidget* parent)
     // simulationpipeline
     auto simulationpipeline = new SimulationPipeline;
     simulationpipeline->moveToThread(&m_workerThread);
+    statusBar->registerPipeline(simulationpipeline);
     connect(ctsegmentationpipeline, &CTSegmentationPipeline::imageDataChanged, simulationpipeline, &SimulationPipeline::updateImageData);
     connect(ctorgansegmentationpipeline, &CTOrganSegmentatorPipeline::imageDataChanged, simulationpipeline, &SimulationPipeline::updateImageData);
     connect(icrppipeline, &ICRPPhantomImportPipeline::imageDataChanged, simulationpipeline, &SimulationPipeline::updateImageData);
@@ -175,6 +184,7 @@ MainWindow::MainWindow(QWidget* parent)
     // save load
     auto h5io = new H5IO;
     h5io->moveToThread(&m_workerThread);
+    statusBar->registerPipeline(h5io);
     connect(ctsegmentationpipeline, &CTSegmentationPipeline::imageDataChanged, h5io, &H5IO::updateImageData);
     connect(ctorgansegmentationpipeline, &CTOrganSegmentatorPipeline::imageDataChanged, h5io, &H5IO::updateImageData);
     connect(icrppipeline, &ICRPPhantomImportPipeline::imageDataChanged, h5io, &H5IO::updateImageData);

@@ -257,6 +257,7 @@ void pruneMedia(std::vector<Organ>& organs, std::vector<Media>& media)
 
 void ICRPPhantomImportPipeline::importPhantom(QString organArrayPath, QString organMediaPath, QString mediaPath, double sx, double sy, double sz, int x, int y, int z)
 {
+    emit dataProcessingStarted(ProgressWorkType::Importing);
 
     auto container = std::make_shared<DataContainer>();
     const std::array spacing_mm = { sx, sy, sz };
@@ -346,4 +347,5 @@ void ICRPPhantomImportPipeline::importPhantom(QString organArrayPath, QString or
         container->setMaterials(mats);
     }
     emit imageDataChanged(container);
+    emit dataProcessingFinished(ProgressWorkType::Importing);
 }

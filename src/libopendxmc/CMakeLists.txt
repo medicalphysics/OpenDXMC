@@ -48,8 +48,3 @@ target_link_libraries(libopendxmc PUBLIC
 	${HDF5_LIBRARIES}
 	libctsegmentator
 	)
-
-#vtk_module_autoinit(
-#    TARGETS libopendxmc
-#    MODULES ${VTK_LIBRARIES}
-#    )

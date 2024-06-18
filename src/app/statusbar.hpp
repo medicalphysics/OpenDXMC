@@ -18,29 +18,25 @@ Copyright 2024 Erlend Andersen
 
 #pragma once
 
-#include <datacontainer.hpp>
+#include <QProgressBar>
+#include <QStatusBar>
 
-#include <QObject>
+#include <basepipeline.hpp>
 
-#include <memory>
+#include <map>
 
-enum class ProgressWorkType {
-    Importing,
-    SavingFile,
-    LoadingFile,
-    Simulating,
-    Segmentating,
-    Arbitrary
-};
-
-class BasePipeline : public QObject {
-    Q_OBJECT
+class StatusBar : public QStatusBar {
 public:
-    BasePipeline(QObject* parent = nullptr);
-    virtual void updateImageData(std::shared_ptr<DataContainer>) = 0;
+    StatusBar(QWidget* parent = nullptr);
+    void processingStarted(ProgressWorkType);
+    void processingFinished(ProgressWorkType);
+    void registerPipeline(BasePipeline* pipline);
 
-signals:
-    void imageDataChanged(std::shared_ptr<DataContainer>);
-    void dataProcessingStarted(ProgressWorkType);
-    void dataProcessingFinished(ProgressWorkType);
+protected:
+    void updateInfoText();
+
+private:
+    QProgressBar* m_bar = nullptr;
+    std::map<ProgressWorkType, int> m_currentProcessing;
+    int m_numberOfJobs = 0;
 };

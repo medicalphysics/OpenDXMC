@@ -107,6 +107,7 @@ void SimulationPipeline::finishingSimulation()
     emit imageDataChanged(m_data);
     killTimer(m_timerID);
     emit simulationRunning(false);
+    emit dataProcessingFinished(ProgressWorkType::Simulating);
 }
 
 void SimulationPipeline::timerEvent(QTimerEvent* event)
@@ -236,6 +237,7 @@ void worker(bool deleteAirDose, int nthreads, std::shared_ptr<DataContainer> dat
 
 void SimulationPipeline::startSimulation()
 {
+    emit dataProcessingStarted(ProgressWorkType::Simulating);
     emit simulationRunning(true);
     m_timerID = startTimer(3000, Qt::VeryCoarseTimer);
 

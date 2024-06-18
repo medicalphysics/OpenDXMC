@@ -21,7 +21,6 @@ Copyright 2019 Erlend Andersen
 #include <QApplication>
 #include <QDir>
 #include <QSplashScreen>
-#include <QStyle>
 #include <QSurfaceFormat>
 #include <QVTKOpenGLNativeWidget.h>
 
@@ -32,7 +31,6 @@ Copyright 2019 Erlend Andersen
 
 int main(int argc, char* argv[])
 {
-
     // before initializing QApplication, set the default surface format.
     QSurfaceFormat::setDefaultFormat(QVTKOpenGLNativeWidget::defaultFormat());
 
@@ -46,6 +44,7 @@ int main(int argc, char* argv[])
     QSplashScreen splash(splashMap);
     splash.show();
     app.setStyle("fusion");
+
     app.processEvents();
     splash.showMessage("Starting OpenDXMC", Qt::AlignCenter, Qt::white);
     app.processEvents();

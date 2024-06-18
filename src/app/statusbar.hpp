@@ -31,7 +31,7 @@ public:
     void processingStarted(ProgressWorkType);
     void processingFinished(ProgressWorkType);
     void registerPipeline(BasePipeline* pipline);
-
+    void resizeEvent(QResizeEvent*) override;
 protected:
     void updateInfoText();
 

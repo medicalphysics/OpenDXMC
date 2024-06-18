@@ -75,12 +75,12 @@ MainWindow::MainWindow(QWidget* parent)
     splitter->setStretchFactor(1, 10);
 
     auto rightDock = new QDockWidget(this);
+    rightDock->setFeatures(QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetMovable);
     rightDock->setAllowedAreas(Qt::DockWidgetArea::RightDockWidgetArea);
     auto dockWidget = new QWidget(rightDock);
     dockWidget->setContentsMargins(0, 0, 0, 0);
     auto dockWidget_layout = new QVBoxLayout;
     dockWidget->setLayout(dockWidget_layout);
-    dockWidget->layout()->setContentsMargins(0, 0, 0, 0);
     dockWidget_layout->addWidget(slicerender->createRendersettingsWidget(dockWidget));
     rightDock->setWidget(dockWidget);
     addDockWidget(Qt::DockWidgetArea::RightDockWidgetArea, rightDock);

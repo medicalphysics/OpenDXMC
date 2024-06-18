@@ -230,9 +230,9 @@ void CTImageImportPipeline::readImages(const QStringList& dicomPaths)
 
         image->setAecData(readExposureData(dicomReader));
     }
-
-    emit imageDataChanged(image);
+    
     emit dataProcessingFinished(ProgressWorkType::Importing);
+    emit imageDataChanged(image);
 }
 
 void CTImageImportPipeline::setBlurRadius(const double* d)

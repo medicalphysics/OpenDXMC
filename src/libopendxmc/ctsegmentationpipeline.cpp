@@ -163,6 +163,7 @@ void CTSegmentationPipeline::updateImageData(std::shared_ptr<DataContainer> data
         cont_materials[i].Z = dxmc::NISTMaterials::Composition(mat_names[i]);
     }
     data->setMaterials(cont_materials);
-    emit imageDataChanged(data);
+
     emit dataProcessingFinished(ProgressWorkType::Segmentating);
+    emit imageDataChanged(data);    
 }

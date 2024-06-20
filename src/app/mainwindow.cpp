@@ -39,7 +39,6 @@ Copyright 2024 Erlend Andersen
 #include <simulationpipeline.hpp>
 #include <simulationwidget.hpp>
 #include <statusbar.hpp>
-// include <volumerendersettingswidget.hpp>
 
 #include <mainwindow.hpp>
 

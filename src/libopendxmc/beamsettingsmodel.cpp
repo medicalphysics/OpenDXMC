@@ -767,24 +767,6 @@ void BeamSettingsModel::addCTSequentialBeam(std::shared_ptr<BeamActorContainer> 
         };
         addItem(root, "Total collimation [cm]", setter, getter);
     }
-    {
-        auto bowtiekey = std::make_shared<QString>(m_bowtieFilters.firstKey());
-        auto& ct = std::get<CTSequentialBeam>(*beam);
-        ct.setBowtieFilter(m_bowtieFilters.value(*bowtiekey));
-        auto setter = [=](const BeamSettingsModel::BowtieSelection& d) {
-            if (d.bowtieMap->contains(d.currentKey)) {
-                *bowtiekey = d.currentKey;
-                auto& ct = std::get<CTSequentialBeam>(*beam);
-                ct.setBowtieFilter(d.bowtieMap->value(d.currentKey));
-            }
-        };
-        auto getter = [=, this]() -> BeamSettingsModel::BowtieSelection {
-            BeamSettingsModel::BowtieSelection d { .bowtieMap = &(this->m_bowtieFilters) };
-            d.currentKey = *bowtiekey;
-            return d;
-        };
-        addItem(root, "Bowtie filter", setter, getter);
-    }
 
     {
         auto setter = [=](double d) {
@@ -837,6 +819,32 @@ void BeamSettingsModel::addCTSequentialBeam(std::shared_ptr<BeamActorContainer> 
 
     auto tubeItem = new LabelItem(tr("Tube"));
     root->appendRow(tubeItem);
+    {
+
+        std::shared_ptr<QString> bowtiekey = nullptr;
+        QString searchKey("Siemens Definition Flash W1 120kV");
+        if (m_bowtieFilters.contains(searchKey)) {
+            bowtiekey = std::make_shared<QString>(searchKey);
+        } else {
+            bowtiekey = std::make_shared<QString>(m_bowtieFilters.firstKey());
+        }
+
+        auto& ct = std::get<CTSequentialBeam>(*beam);
+        ct.setBowtieFilter(m_bowtieFilters.value(*bowtiekey));
+        auto setter = [=](const BeamSettingsModel::BowtieSelection& d) {
+            if (d.bowtieMap->contains(d.currentKey)) {
+                *bowtiekey = d.currentKey;
+                auto& ct = std::get<CTSequentialBeam>(*beam);
+                ct.setBowtieFilter(d.bowtieMap->value(d.currentKey));
+            }
+        };
+        auto getter = [=, this]() -> BeamSettingsModel::BowtieSelection {
+            BeamSettingsModel::BowtieSelection d { .bowtieMap = &(this->m_bowtieFilters) };
+            d.currentKey = *bowtiekey;
+            return d;
+        };
+        addItem(tubeItem, "Bowtie filter", setter, getter);
+    }
     addTubeItems<CTSequentialBeam>(tubeItem, beam);
 
     {
@@ -966,24 +974,6 @@ void BeamSettingsModel::addCTSpiralBeam(std::shared_ptr<BeamActorContainer> acto
         };
         addItem(root, "Total collimation [cm]", setter, getter);
     }
-    {
-        auto bowtiekey = std::make_shared<QString>(m_bowtieFilters.firstKey());
-        auto& ct = std::get<CTSpiralBeam>(*beam);
-        ct.setBowtieFilter(m_bowtieFilters.value(*bowtiekey));
-        auto setter = [=](const BeamSettingsModel::BowtieSelection& d) {
-            if (d.bowtieMap->contains(d.currentKey)) {
-                *bowtiekey = d.currentKey;
-                auto& ct = std::get<CTSpiralBeam>(*beam);
-                ct.setBowtieFilter(d.bowtieMap->value(d.currentKey));
-            }
-        };
-        auto getter = [=, this]() -> BeamSettingsModel::BowtieSelection {
-            BeamSettingsModel::BowtieSelection d { .bowtieMap = &(this->m_bowtieFilters) };
-            d.currentKey = *bowtiekey;
-            return d;
-        };
-        addItem(root, "Bowtie filter", setter, getter);
-    }
 
     {
         auto setter = [=](double d) {
@@ -1072,6 +1062,32 @@ void BeamSettingsModel::addCTSpiralBeam(std::shared_ptr<BeamActorContainer> acto
 
     auto tubeItem = new LabelItem(tr("Tube"));
     root->appendRow(tubeItem);
+
+    {
+        std::shared_ptr<QString> bowtiekey = nullptr;
+        QString searchKey("Siemens Definition Flash W1 120kV");
+        if (m_bowtieFilters.contains(searchKey)) {
+            bowtiekey = std::make_shared<QString>(searchKey);
+        } else {
+            bowtiekey = std::make_shared<QString>(m_bowtieFilters.firstKey());
+        }
+
+        auto& ct = std::get<CTSpiralBeam>(*beam);
+        ct.setBowtieFilter(m_bowtieFilters.value(*bowtiekey));
+        auto setter = [=](const BeamSettingsModel::BowtieSelection& d) {
+            if (d.bowtieMap->contains(d.currentKey)) {
+                *bowtiekey = d.currentKey;
+                auto& ct = std::get<CTSpiralBeam>(*beam);
+                ct.setBowtieFilter(d.bowtieMap->value(d.currentKey));
+            }
+        };
+        auto getter = [=, this]() -> BeamSettingsModel::BowtieSelection {
+            BeamSettingsModel::BowtieSelection d { .bowtieMap = &(this->m_bowtieFilters) };
+            d.currentKey = *bowtiekey;
+            return d;
+        };
+        addItem(tubeItem, "Bowtie filter", setter, getter);
+    }
     addTubeItems<CTSpiralBeam>(tubeItem, beam);
 
     {
@@ -1211,42 +1227,6 @@ void BeamSettingsModel::addCTSpiralDualEnergyBeam(std::shared_ptr<BeamActorConta
         };
         addItem(root, "Total collimation [cm]", setter, getter);
     }
-    {
-        auto bowtiekey = std::make_shared<QString>(m_bowtieFilters.firstKey());
-        auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
-        ct.setBowtieFilterA(m_bowtieFilters.value(*bowtiekey));
-        auto setter = [=](const BeamSettingsModel::BowtieSelection& d) {
-            if (d.bowtieMap->contains(d.currentKey)) {
-                *bowtiekey = d.currentKey;
-                auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
-                ct.setBowtieFilterA(d.bowtieMap->value(d.currentKey));
-            }
-        };
-        auto getter = [=, this]() -> BeamSettingsModel::BowtieSelection {
-            BeamSettingsModel::BowtieSelection d { .bowtieMap = &(this->m_bowtieFilters) };
-            d.currentKey = *bowtiekey;
-            return d;
-        };
-        addItem(root, "Bowtie filter Tube A", setter, getter);
-    }
-    {
-        auto bowtiekey = std::make_shared<QString>(m_bowtieFilters.firstKey());
-        auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
-        ct.setBowtieFilterB(m_bowtieFilters.value(*bowtiekey));
-        auto setter = [=](const BeamSettingsModel::BowtieSelection& d) {
-            if (d.bowtieMap->contains(d.currentKey)) {
-                *bowtiekey = d.currentKey;
-                auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
-                ct.setBowtieFilterB(d.bowtieMap->value(d.currentKey));
-            }
-        };
-        auto getter = [=, this]() -> BeamSettingsModel::BowtieSelection {
-            BeamSettingsModel::BowtieSelection d { .bowtieMap = &(this->m_bowtieFilters) };
-            d.currentKey = *bowtiekey;
-            return d;
-        };
-        addItem(root, "Bowtie filter Tube B", setter, getter);
-    }
 
     {
         auto setter = [=](double d) {
@@ -1327,6 +1307,55 @@ void BeamSettingsModel::addCTSpiralDualEnergyBeam(std::shared_ptr<BeamActorConta
     auto tubeBItem = new LabelItem(tr("Tube B"));
     root->appendRow(tubeBItem);
     std::get<CTSpiralDualEnergyBeam>(*beam).addTubeBFiltrationMaterial(13, 9);
+
+    {
+        std::shared_ptr<QString> bowtiekey = nullptr;
+        QString searchKey("Siemens Definition Flash W1 120kV");
+        if (m_bowtieFilters.contains(searchKey)) {
+            bowtiekey = std::make_shared<QString>(searchKey);
+        } else {
+            bowtiekey = std::make_shared<QString>(m_bowtieFilters.firstKey());
+        }
+        auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
+        ct.setBowtieFilterA(m_bowtieFilters.value(*bowtiekey));
+        auto setter = [=](const BeamSettingsModel::BowtieSelection& d) {
+            if (d.bowtieMap->contains(d.currentKey)) {
+                *bowtiekey = d.currentKey;
+                auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
+                ct.setBowtieFilterA(d.bowtieMap->value(d.currentKey));
+            }
+        };
+        auto getter = [=, this]() -> BeamSettingsModel::BowtieSelection {
+            BeamSettingsModel::BowtieSelection d { .bowtieMap = &(this->m_bowtieFilters) };
+            d.currentKey = *bowtiekey;
+            return d;
+        };
+        addItem(tubeAItem, "Bowtie filter", setter, getter);
+    }
+    {
+        std::shared_ptr<QString> bowtiekey = nullptr;
+        QString searchKey("Siemens Definition Flash W1 120kV");
+        if (m_bowtieFilters.contains(searchKey)) {
+            bowtiekey = std::make_shared<QString>(searchKey);
+        } else {
+            bowtiekey = std::make_shared<QString>(m_bowtieFilters.firstKey());
+        }
+        auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
+        ct.setBowtieFilterB(m_bowtieFilters.value(*bowtiekey));
+        auto setter = [=](const BeamSettingsModel::BowtieSelection& d) {
+            if (d.bowtieMap->contains(d.currentKey)) {
+                *bowtiekey = d.currentKey;
+                auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
+                ct.setBowtieFilterB(d.bowtieMap->value(d.currentKey));
+            }
+        };
+        auto getter = [=, this]() -> BeamSettingsModel::BowtieSelection {
+            BeamSettingsModel::BowtieSelection d { .bowtieMap = &(this->m_bowtieFilters) };
+            d.currentKey = *bowtiekey;
+            return d;
+        };
+        addItem(tubeBItem, "Bowtie filter", setter, getter);
+    }
     {
         auto setter = [=](double d) {
             auto& dx = std::get<CTSpiralDualEnergyBeam>(*beam);
@@ -1348,6 +1377,27 @@ void BeamSettingsModel::addCTSpiralDualEnergyBeam(std::shared_ptr<BeamActorConta
         };
         addItem(tubeAItem, "Tube A potential [kV]", setter, getter);
         addItem(tubeBItem, "Tube B potential [kV]", setterB, getterB);
+    }
+    {
+        auto setter = [=](double d) {
+            auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
+            ct.setRelativeMasTubeA(d);
+        };
+        auto getter = [=]() -> double {
+            auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
+            return ct.relativeMasTubeA();
+        };
+        addItem(tubeAItem, "Relative tube current", setter, getter);
+
+        auto setterB = [=](double d) {
+            auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
+            ct.setRelativeMasTubeB(d);
+        };
+        auto getterB = [=]() -> double {
+            auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
+            return ct.relativeMasTubeB();
+        };
+        addItem(tubeBItem, "Relative tube current", setterB, getterB);
     }
     {
         auto setter = [=](double d) {
@@ -1382,8 +1432,8 @@ void BeamSettingsModel::addCTSpiralDualEnergyBeam(std::shared_ptr<BeamActorConta
             const auto& tube = dx.tubeB();
             return tube.filtration(13);
         };
-        addItem(tubeAItem, "Tube A Al filtration [mm]", setter, getter);
-        addItem(tubeBItem, "Tube B Al filtration [mm]", setterB, getterB);
+        addItem(tubeAItem, "Tube Al filtration [mm]", setter, getter);
+        addItem(tubeBItem, "Tube Al filtration [mm]", setterB, getterB);
     }
     {
         auto setter = [=](double d) {
@@ -1404,8 +1454,8 @@ void BeamSettingsModel::addCTSpiralDualEnergyBeam(std::shared_ptr<BeamActorConta
             const auto& tube = dx.tubeB();
             return tube.filtration(29);
         };
-        addItem(tubeAItem, "Tube A Cu filtration [mm]", setter, getter);
-        addItem(tubeBItem, "Tube B Cu filtration [mm]", setterB, getterB);
+        addItem(tubeAItem, "Tube Cu filtration [mm]", setter, getter);
+        addItem(tubeBItem, "Tube Cu filtration [mm]", setterB, getterB);
     }
     {
         auto setter = [=](double d) {
@@ -1426,8 +1476,8 @@ void BeamSettingsModel::addCTSpiralDualEnergyBeam(std::shared_ptr<BeamActorConta
             const auto& tube = dx.tubeB();
             return tube.filtration(50);
         };
-        addItem(tubeAItem, "Tube A Sn filtration [mm]", setter, getter);
-        addItem(tubeBItem, "Tube B Sn filtration [mm]", setterB, getterB);
+        addItem(tubeAItem, "Tube Sn filtration [mm]", setter, getter);
+        addItem(tubeBItem, "Tube Sn filtration [mm]", setterB, getterB);
     }
     {
         auto getter = [=]() -> double {
@@ -1441,6 +1491,20 @@ void BeamSettingsModel::addCTSpiralDualEnergyBeam(std::shared_ptr<BeamActorConta
 
         addItem(tubeAItem, "Tube half value layer [mmAl]", getter);
         addItem(tubeBItem, "Tube half value layer [mmAl]", getterB);
+    }
+
+    {
+        auto getter = [=]() -> double {
+            auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
+            return ct.tubeRelativeWeightA();
+        };
+        addItem(tubeAItem, "Relative photon count weight", getter);
+
+        auto getterB = [=]() -> double {
+            auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
+            return ct.tubeRelativeWeightB();
+        };
+        addItem(tubeBItem, "Relative photon count weight", getterB);
     }
 
     {

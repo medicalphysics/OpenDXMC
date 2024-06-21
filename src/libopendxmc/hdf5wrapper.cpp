@@ -597,6 +597,8 @@ bool HDF5Wrapper::save(CTSpiralDualEnergyBeam& beam)
     saveAttribute<double>(beamgroup, "tube_Al_filtrationA", beam.tubeA().filtration(13));
     saveAttribute<double>(beamgroup, "tube_Cu_filtrationA", beam.tubeA().filtration(29));
     saveAttribute<double>(beamgroup, "tube_Sn_filtrationA", beam.tubeA().filtration(50));
+    saveAttribute<double>(beamgroup, "tube_masA", beam.relativeMasTubeA());
+    saveAttribute<double>(beamgroup, "tube_masB", beam.relativeMasTubeB());
     saveAttribute<std::uint64_t>(beamgroup, "particles_per_exposure", beam.numberOfParticlesPerExposure());
     return true;
 }
@@ -958,6 +960,13 @@ std::shared_ptr<Beam> loadCTSpiralDualEnergyBeam(std::unique_ptr<H5::Group>& gro
     tube_Sn_filtration = loadAttribute<double, 1>(group, "tube_Sn_filtrationB");
     if (tube_Sn_filtration)
         ct.addTubeBFiltrationMaterial(50, tube_Sn_filtration.value()[0]);
+
+    auto tube_mas = loadAttribute<double, 1>(group, "tube_masA");
+    if (tube_mas)
+        ct.setRelativeMasTubeA(tube_mas.value()[0]);
+    tube_mas = loadAttribute<double, 1>(group, "tube_masB");
+    if (tube_mas)
+        ct.setRelativeMasTubeB(tube_mas.value()[0]);
 
     return beam;
 }

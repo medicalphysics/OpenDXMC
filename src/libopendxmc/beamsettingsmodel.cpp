@@ -1375,8 +1375,8 @@ void BeamSettingsModel::addCTSpiralDualEnergyBeam(std::shared_ptr<BeamActorConta
             const auto& tube = dx.tubeB();
             return tube.voltage();
         };
-        addItem(tubeAItem, "Tube A potential [kV]", setter, getter);
-        addItem(tubeBItem, "Tube B potential [kV]", setterB, getterB);
+        addItem(tubeAItem, "Tube potential [kV]", setter, getter);
+        addItem(tubeBItem, "Tube potential [kV]", setterB, getterB);
     }
     {
         auto setter = [=](double d) {

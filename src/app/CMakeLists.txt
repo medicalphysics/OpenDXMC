@@ -6,6 +6,7 @@ qt_add_executable(opendxmc
 	basesettingswidget.cpp
 	mainwindow.cpp
 	ctdicomimportwidget.cpp
+    icrpphantomimportwidget.cpp
     statusbar.cpp
 )
 
@@ -44,7 +45,7 @@ qt_add_resources(opendxmc icons
     "${CMAKE_SOURCE_DIR}/data/icons/settings.png"
 )
 
-# Adding base bowtiefilters to binary resource
+# Adding base bowtiefilters to binary resource (this should be moved to data folder)
 qt_add_resources(opendxmc bowtiefilters
     PREFIX "/bowtiefilters"
     BASE "${CMAKE_SOURCE_DIR}/data/bowtiefilters"
@@ -62,5 +63,45 @@ add_custom_command(
 )
 
 # Install data folder
-install(DIRECTORY "${CMAKE_SOURCE_DIR}/data/" DESTINATION "bin/resources")
+install(DIRECTORY "${CMAKE_SOURCE_DIR}/data/phantoms" DESTINATION "data/phantoms")
+
+# Generate QT deployment script for the target opendxmc.
+qt_generate_deploy_app_script(
+    TARGET opendxmc
+    OUTPUT_SCRIPT deploy_script
+    NO_UNSUPPORTED_PLATFORM_ERROR
+)
+# Call the deployment script on "cmake --install".
+install(SCRIPT ${deploy_script})
+
+
+# Install targets
+include(InstallRequiredSystemLibraries)
+install(TARGETS opendxmc
+    EXPORT libopendxmc 
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+    RUNTIME DESTINATION bin
+    INCLUDES DESTINATION include
+    PROGRAMS ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS} DESTINATION bin
+    )
+
+# Packaging
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Monte carlo dose application for diagnostic x-ray")
+set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_SOURCE_DIR}/README.md")
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/COPYING.txt")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "${CMAKE_PROJECT_NAME}")
+set(CPACK_PACKAGE_VENDOR "Erlend Andersen")
+if(WIN32)
+    set(CPACK_SOURCE_GENERATOR "TGZ")
+    set(CPACK_NSIS_MODIFY_PATH "ON")
+    set(CPACK_NSIS_CREATE_ICONS_EXTRA
+    "CreateShortCut '$SMPROGRAMS\\\\$STARTMENU_FOLDER\\\\OpenDXMC.lnk' '$INSTDIR\\\\bin\\\\OpenDXMC.exe'"
+    )
+    set(CPACK_NSIS_DELETE_ICONS_EXTRA
+    "Delete '$SMPROGRAMS\\\\$START_MENU\\\\OpenDXMC.lnk'"
+)
+endif()
+include(CPack)
+
 

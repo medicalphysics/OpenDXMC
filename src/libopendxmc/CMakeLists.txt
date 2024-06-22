@@ -17,8 +17,7 @@ qt_add_library(libopendxmc STATIC
 	dosetablewidget.cpp
 	dxmc_specialization.cpp
 	hdf5wrapper.cpp
-	h5io.cpp
-	icrpphantomimportwidget.cpp
+	h5io.cpp	
 	icrpphantomimportpipeline.cpp
 	renderwidgetscollection.cpp	
 	slicerenderwidget.cpp		

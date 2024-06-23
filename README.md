@@ -18,7 +18,8 @@ OpenDXMC is build with CMake and depends on the following libraries:
 * VTK Visualization Toolkit: https://vtk.org/. OpenDXMC is tested with VTK version 9.3. When building VTK set the flag VTK_MODULE_ENABLE_vtkDICOM to WANT, since OpenDXMC require this module.
 * Qt: https://www.qt.io/, version >= 6.7.
 * HDF5: https://www.hdfgroup.org/.
-* LibTorch: https://pytorch.org/get-started/locally/, version >= 2.3.1 for basic CT organ segmentation, 
+* LibTorch: https://pytorch.org/get-started/locally/, version >= 2.3.1 for basic CT organ segmentation.
+
 These libraries must be installed. Running cmake with standard settings should suffice to generate makefiles for your platform. The application is currently only tested for Windows 11 and Linux, but should compile on Mac. Errors when building for Windows, Linux and Mac are considered bugs. 
 
 

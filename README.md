@@ -6,7 +6,7 @@ OpenDXMC is an application for calculation and visualization of dose distributio
 Dose calculations are done by a Monte Carlo method optimized for a voxelized geometry. However only photons are modelled and essentially only KERMA is scored. The application supports dose calculations on CT series of individiual patients and standard human reference phantoms made by ICRP (see report [110](https://www.icrp.org/publication.asp?id=ICRP%20Publication%20110) and [143](https://journals.sagepub.com/doi/full/10.1177/0146645320915031)). Implementation details for the monte carlo code can be found at https://dxmclib.readthedocs.io/ and source code for the simulation library at https://github.com/medicalphysics/DXMClib.    
 
 ![Dose calculation of dual source Flash scan](docs/screenshot/dethorax.png?raw=true)
-Screenshot of dose calculation from a dual source CT scanner. The simulation shows radiation dose deposited in patient from a dual source Flash scan technique.
+Screenshot of dose calculation from a dual source CT scanner. The simulation shows radiation dose deposited in patient from a dual source coronary angiography scan technique.
 
 Please do not hesitate if you encounter bugs or errors in the application, or simply missing a feature. The easiest way to report bugs or feature requests is to open an issue: https://github.com/medicalphysics/OpenDXMC/issues. 
 

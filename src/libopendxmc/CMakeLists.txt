@@ -36,8 +36,6 @@ target_include_directories(libopendxmc PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(libopendxmc PRIVATE ${HDF5_INCLUDE_DIRS})
 target_compile_definitions(libopendxmc PRIVATE ${HDF5_DEFINITIONS})
 
-
-
 target_link_libraries(libopendxmc PUBLIC	
 	Qt${QT_VERSION_MAJOR}::Widgets
 	Qt${QT_VERSION_MAJOR}::Core
@@ -51,6 +49,11 @@ target_link_libraries(libopendxmc PUBLIC
 	VTK::ImagingStatistics
 	VTK::IOExodus
 	VTK::jsoncpp
+	VTK::InteractionImage
+	VTK::InteractionStyle
+	VTK::ImagingGeneral
+	VTK::CommonColor
+	VTK::RenderingAnnotation
 	PRIVATE	
 	${HDF5_LIBRARIES}
 	libctsegmentator
@@ -70,4 +73,9 @@ vtk_module_autoinit(
 	VTK::ImagingStatistics
 	VTK::IOExodus	
 	VTK::jsoncpp
+	VTK::InteractionImage
+	VTK::InteractionStyle
+	VTK::ImagingGeneral
+	VTK::CommonColor
+	VTK::RenderingAnnotation
 )

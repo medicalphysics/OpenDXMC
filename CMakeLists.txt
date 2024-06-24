@@ -40,7 +40,12 @@ find_package(VTK
      RenderingImage
      RenderingOpenGL2
      DICOM
+     InteractionImage
+     InteractionStyle
      RenderingVolume
+     RenderingAnnotation
+     ImagingGeneral
+     CommonColor
      RenderingVolumeOpenGL2    
      IOExodus    
      jsoncpp

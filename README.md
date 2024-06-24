@@ -15,7 +15,8 @@ Precompiled binaries are distributed for Windows 64 bits only and may be obtaine
 
 ## Build from source
 OpenDXMC is build with CMake and depends on the following libraries:
-* VTK Visualization Toolkit: https://vtk.org/. OpenDXMC is tested with VTK version 9.3. When building VTK set the flag VTK_MODULE_ENABLE_vtkDICOM to WANT, since OpenDXMC require this module.
+* VTK Visualization Toolkit: https://vtk.org/. OpenDXMC is tested with VTK version 9.3. When building VTK set the flag VTK_MODULE_ENABLE_vtkDICOM to YES, since OpenDXMC require this module. VTK is built with current configuration Commandline options:
+-DVTK_SMP_ENABLE_SEQUENTIAL:BOOL="0" -DVTK_SMP_IMPLEMENTATION_TYPE:STRING="STDThread" -DCMAKE_CXX_MP_FLAG:BOOL="1" -DVTK_ENABLE_KITS:BOOL="1" -DVTK_MODULE_ENABLE_VTK_vtkDICOM:STRING="YES" -DVTK_MODULE_ENABLE_VTK_GUISupportQt:STRING="YES"  
 * Qt: https://www.qt.io/, version >= 6.7.
 * HDF5: https://www.hdfgroup.org/.
 * LibTorch: https://pytorch.org/get-started/locally/, version >= 2.3.1 for basic CT organ segmentation.

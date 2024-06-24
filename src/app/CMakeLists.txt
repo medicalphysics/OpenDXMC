@@ -45,14 +45,6 @@ qt_add_resources(opendxmc icons
     "${CMAKE_SOURCE_DIR}/data/icons/settings.png"
 )
 
-# Adding base bowtiefilters to binary resource (this should be moved to data folder)
-qt_add_resources(opendxmc bowtiefilters
-    PREFIX "/bowtiefilters"
-    BASE "${CMAKE_SOURCE_DIR}/data/bowtiefilters"
-    FILES 
-    "${CMAKE_SOURCE_DIR}/data/bowtiefilters/bowtiefilters.json"     
-)
-
 # adding phantoms to be available in binary folder
 add_custom_command(
   TARGET opendxmc
@@ -61,10 +53,21 @@ add_custom_command(
   ARGS -E copy_directory_if_different "${PROJECT_SOURCE_DIR}/data/phantoms" "$<TARGET_FILE_DIR:opendxmc>/data/phantoms"
   COMMENT "Copying ICRP phantoms to build folder"
 )
+# adding bowtiefilters to be available in binary folder
+add_custom_command(
+  TARGET opendxmc
+  POST_BUILD
+  COMMAND ${CMAKE_COMMAND}
+  ARGS -E copy_directory_if_different "${PROJECT_SOURCE_DIR}/data/bowtiefilters" "$<TARGET_FILE_DIR:opendxmc>/data/bowtiefilters"
+  COMMENT "Copying bowtie filters to build folder"
+)
 
-# Install data folder
-install(DIRECTORY "${CMAKE_SOURCE_DIR}/data/phantoms" DESTINATION "data/phantoms")
 
+# Install targets
+include(InstallRequiredSystemLibraries)
+install(TARGETS opendxmc
+    EXPORT libopendxmc    
+    )
 # Generate QT deployment script for the target opendxmc.
 qt_generate_deploy_app_script(
     TARGET opendxmc
@@ -74,17 +77,12 @@ qt_generate_deploy_app_script(
 # Call the deployment script on "cmake --install".
 install(SCRIPT ${deploy_script})
 
+# Install data folder
+install(DIRECTORY "${CMAKE_SOURCE_DIR}/data/phantoms" DESTINATION "${CMAKE_INSTALL_BINDIR}/data")
+install(DIRECTORY "${CMAKE_SOURCE_DIR}/data/bowtiefilters" DESTINATION "${CMAKE_INSTALL_BINDIR}/data")
 
-# Install targets
-include(InstallRequiredSystemLibraries)
-install(TARGETS opendxmc
-    EXPORT libopendxmc 
-    LIBRARY DESTINATION lib
-    ARCHIVE DESTINATION lib
-    RUNTIME DESTINATION bin
-    INCLUDES DESTINATION include
-    PROGRAMS ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS} DESTINATION bin
-    )
+# Install dependent runtime
+install(FILES $<TARGET_RUNTIME_DLLS:opendxmc> TYPE BIN)
 
 # Packaging
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Monte carlo dose application for diagnostic x-ray")
@@ -94,7 +92,7 @@ set(CPACK_PACKAGE_INSTALL_DIRECTORY "${CMAKE_PROJECT_NAME}")
 set(CPACK_PACKAGE_VENDOR "Erlend Andersen")
 if(WIN32)
     set(CPACK_SOURCE_GENERATOR "TGZ")
-    set(CPACK_NSIS_MODIFY_PATH "ON")
+    set(CPACK_NSIS_MODIFY_PATH "OFF")
     set(CPACK_NSIS_CREATE_ICONS_EXTRA
     "CreateShortCut '$SMPROGRAMS\\\\$STARTMENU_FOLDER\\\\OpenDXMC.lnk' '$INSTDIR\\\\bin\\\\OpenDXMC.exe'"
     )

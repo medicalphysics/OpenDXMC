@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.21)
 
 project(OpenDXMC VERSION 1.1.0 DESCRIPTION "OpenDXMC description" LANGUAGES CXX)
 
@@ -33,77 +33,17 @@ find_package(Qt6 REQUIRED COMPONENTS Core Widgets Charts)
 qt_standard_project_setup()
 
 # Adding VTK package
-find_package(VTK COMPONENTS
-      CommonColor
-      CommonComputationalGeometry
-      CommonCore
-      CommonDataModel
-      CommonExecutionModel
-      CommonMath
-      CommonMisc
-      CommonSystem
-      CommonTransforms
-      FiltersCore
-      FiltersGeneral
-      FiltersSources
-      FiltersGeometry
-      FiltersStatistics
-      FiltersModeling
-      FiltersHybrid
-      FiltersHyperTree
-      FiltersTexture
-      ParallelDIY
-      ParallelCore
-      GUISupportQt
-      ImagingCore
-      ImagingMath
-      ImagingGeneral
-      ImagingStatistics
-      ImagingHybrid
-      ImagingFourier
-      InteractionStyle
-      InteractionImage
-      RenderingCore
-      RenderingImage
-      RenderingOpenGL2
-      RenderingQt
-      RenderingUI
-      ViewsQt
-      glew
-      zlib
-      ImagingSources
-      DICOM
-      RenderingVolume
-      RenderingAnnotation
-      RenderingVolumeOpenGL2
-      RenderingContext2D
-      IOCore
-      IOMovie
-      IOXML
-      IOXMLParser
-      IOImage
-      IOLegacy
-      FiltersExtraction
-      ImagingColor
-      InteractionImage
-      InteractionWidgets
-      RenderingFreeType
-      DICOMParser
-      jpeg
-      pugixml
-      freetype
-      metaio
-      png
-      tiff
-      doubleconversion
-      lz4
-      lzma
-      expat
-      OPTIONAL_COMPONENTS
-      RenderingRayTracing
-      RenderingSceneGraph
-      RenderingHyperTreeGrid
-      jsoncpp
+find_package(VTK 
+     COMPONENTS
+     GUISupportQt
+     ImagingStatistics
+     RenderingImage
+     RenderingOpenGL2
+     DICOM
+     RenderingVolume
+     RenderingVolumeOpenGL2    
+     IOExodus    
+     jsoncpp
   )
 
 #include HDF5

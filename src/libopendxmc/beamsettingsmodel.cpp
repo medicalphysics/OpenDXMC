@@ -200,7 +200,7 @@ BeamSettingsModel::BeamSettingsModel(QObject* parent)
     connect(this, &QStandardItemModel::dataChanged, [this](const auto& arg) { emit this->requestRender(); });
 
     // reading bowtiefilters
-    m_bowtieFilters = BowtieFilterReader::read(":bowtiefilters/bowtiefilters.json");
+    m_bowtieFilters = BowtieFilterReader::read("data/bowtiefilters/bowtiefilters.json");
 }
 
 void BeamSettingsModel::updateImageData(std::shared_ptr<DataContainer> data)

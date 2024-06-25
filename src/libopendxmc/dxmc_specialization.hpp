@@ -24,6 +24,7 @@ Copyright 2023 Erlend Andersen
 #include "dxmc/beams/ctspiralbeam.hpp"
 #include "dxmc/beams/ctspiraldualenergybeam.hpp"
 #include "dxmc/beams/dxbeam.hpp"
+#include "dxmc/beams/pencilbeam.hpp"
 #include "dxmc/beams/tube/tube.hpp"
 #include "dxmc/material/material.hpp"
 #include "dxmc/material/nistmaterials.hpp"
@@ -43,6 +44,7 @@ using CTSpiralDualEnergyBeam = dxmc::CTSpiralDualEnergyBeam<false>;
 using CBCTBeam = dxmc::CBCTBeam<false>;
 using CTAECFilter = dxmc::CTAECFilter;
 using BowtieFilter = dxmc::BowtieFilter;
+using PencilBeam = dxmc::PencilBeam<false>;
 
 class DXBeam : public dxmc::DXBeam<false> {
 public:
@@ -72,4 +74,4 @@ private:
     std::array<double, 2> m_rotAngles = { 0, 0 };
 };
 
-using Beam = std::variant<DXBeam, CTSpiralBeam, CTSpiralDualEnergyBeam, CBCTBeam, CTSequentialBeam>;
+using Beam = std::variant<DXBeam, CTSpiralBeam, CTSpiralDualEnergyBeam, CBCTBeam, CTSequentialBeam, PencilBeam>;

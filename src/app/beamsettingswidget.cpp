@@ -41,6 +41,8 @@ BeamSettingsWidget::BeamSettingsWidget(QWidget* parent)
     beamselectcombo->addItem(tr("CT Spiral Beam"));
     beamselectcombo->addItem(tr("CT Dual Source Beam"));
     beamselectcombo->addItem(tr("CBCT Beam"));
+    beamselectcombo->addItem(tr("Pencil Beam"));
+
     auto beamaddbutton = new QPushButton(tr("Add"), this);
     beamselectlayout->addWidget(beamaddbutton);
     layout->addLayout(beamselectlayout, 1);
@@ -56,6 +58,8 @@ BeamSettingsWidget::BeamSettingsWidget(QWidget* parent)
             m_view->addCTSpiralDualEnergyBeam();
         else if (idx == 4)
             m_view->addCBCTBeam();
+        else if (idx == 5)
+            m_view->addPencilBeam();
     });
 
     layout->addWidget(m_view, 300);

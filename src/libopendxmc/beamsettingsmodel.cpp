@@ -505,6 +505,106 @@ void BeamSettingsModel::addDXBeam(std::shared_ptr<BeamActorContainer> actor)
     appendRow(root);
 }
 
+void BeamSettingsModel::addPencilBeam(std::shared_ptr<BeamActorContainer> actor)
+{
+    auto root = new LabelItem(tr("Pencil Beam"));
+    std::shared_ptr<Beam> beam = nullptr;
+    if (actor) {
+        beam = actor->getBeam();
+        if (beam)
+            if (!std::holds_alternative<PencilBeam>(*beam))
+                beam = nullptr;
+    }
+    if (!beam) {
+        beam = std::make_shared<Beam>(PencilBeam());
+    }
+    auto beamActor = std::make_shared<BeamActorContainer>(beam);
+    m_beams.push_back(std::make_pair(beam, beamActor));
+
+    {
+        auto setter = [=](const std::array<double, 3>& d) {
+            auto& dx = std::get<PencilBeam>(*beam);
+            dx.setPosition(d);
+            beamActor->update();
+        };
+        auto getter = [=]() -> std::array<double, 3> {
+            auto& dx = std::get<PencilBeam>(*beam);
+            return dx.position();
+        };
+        addItem(root, "Position (x, y, z) [cm]", setter, getter);
+    }
+    {
+        auto setter = [=](const std::array<double, 3>& d) {
+            auto& dx = std::get<PencilBeam>(*beam);
+            dx.setDirection(d);
+            beamActor->update();
+        };
+        auto getter = [=]() -> std::array<double, 3> {
+            auto& dx = std::get<PencilBeam>(*beam);
+            return dx.direction();
+        };
+        addItem(root, "Direction normal (x, y, z)", setter, getter);
+    }
+    {
+        auto setter = [=](double d) {
+            auto& dx = std::get<PencilBeam>(*beam);
+            dx.setEnergy(std::clamp(d, 20.0, 150.0));
+        };
+        auto getter = [=]() -> double {
+            auto& dx = std::get<PencilBeam>(*beam);
+            return dx.energy();
+        };
+        addItem(root, "Photon energy [keV]", setter, getter);
+    }
+    {
+        auto setter = [=](double d) {
+            auto& dx = std::get<PencilBeam>(*beam);
+            dx.setAirKerma(d);
+        };
+        auto getter = [=]() -> double {
+            auto& dx = std::get<PencilBeam>(*beam);
+            return dx.airKerma();
+        };
+        addItem(root, "Air KERMA [mGy]", setter, getter);
+    }
+    {
+        std::get<PencilBeam>(*beam).setNumberOfExposures(64);
+        auto setter = [=](std::uint64_t d) {
+            auto& dx = std::get<PencilBeam>(*beam);
+            dx.setNumberOfExposures(d);
+        };
+        auto getter = [=]() -> std::uint64_t {
+            auto& dx = std::get<PencilBeam>(*beam);
+            return dx.numberOfExposures();
+        };
+        addItem(root, "Number of exposures", setter, getter);
+    }
+    {
+        std::get<PencilBeam>(*beam).setNumberOfParticlesPerExposure(1e6);
+
+        auto setter = [=](std::uint64_t d) {
+            auto& dx = std::get<PencilBeam>(*beam);
+            dx.setNumberOfParticlesPerExposure(d);
+        };
+        auto getter = [=]() -> std::uint64_t {
+            auto& dx = std::get<PencilBeam>(*beam);
+            return dx.numberOfParticlesPerExposure();
+        };
+        addItem(root, "Particles per exposure", setter, getter);
+    }
+    {
+        auto getter = [=]() -> std::uint64_t {
+            auto& dx = std::get<PencilBeam>(*beam);
+            return dx.numberOfParticles();
+        };
+        addItem(root, "Total number of particles", getter);
+    }
+
+    beamActor->update();
+    emit beamActorAdded(beamActor);
+    appendRow(root);
+}
+
 void BeamSettingsModel::addCBCTBeam(std::shared_ptr<BeamActorContainer> actor)
 {
     auto root = new LabelItem(tr("CBCT Beam"));

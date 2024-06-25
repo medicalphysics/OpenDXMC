@@ -23,7 +23,6 @@ Copyright 2024 Erlend Andersen
 #include <vtkNamedColors.h>
 #include <vtkPoints.h>
 #include <vtkPolyDataMapper.h>
-#include <vtkPolyLine.h>
 #include <vtkProperty.h>
 #include <vtkSmartPointer.h>
 
@@ -148,6 +147,16 @@ void BeamActorContainer::update()
             cells->InsertCellPoint(2);
             cells->InsertCellPoint(3);
             cells->InsertCellPoint(4);
+            cells->InsertCellPoint(1);
+        } else if constexpr (std::is_same_v<U, PencilBeam>) {
+            const auto& start = arg.position();
+            const auto& dir = arg.direction();
+            constexpr double lenght = 20;
+            const auto stop = dxmc::vectormath::add(start, dxmc::vectormath::scale(dir, lenght));
+            points->InsertNextPoint(start.data());
+            points->InsertNextPoint(stop.data());
+            cells->InsertNextCell(2);
+            cells->InsertCellPoint(0);
             cells->InsertCellPoint(1);
         }
     },

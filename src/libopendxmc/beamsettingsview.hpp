@@ -35,6 +35,7 @@ public:
     void addCTSpiralBeam() { emit requestAddCTSpiralBeam(); }
     void addCTSequentialBeam() { emit requestAddCTSequentialBeam(); }
     void addCTSpiralDualEnergyBeam() { emit requestAddCTSpiralDualEnergyBeam(); }
+    void addPencilBeam() { emit requestAddPencilBeam(); }
     void keyPressEvent(QKeyEvent*) override;
 signals:
     void requestAddNewBeam(std::shared_ptr<BeamActorContainer> beam);
@@ -43,6 +44,7 @@ signals:
     void requestAddCTSpiralBeam(std::shared_ptr<BeamActorContainer> beam = nullptr);
     void requestAddCTSequentialBeam(std::shared_ptr<BeamActorContainer> beam = nullptr);
     void requestAddCTSpiralDualEnergyBeam(std::shared_ptr<BeamActorContainer> beam = nullptr);
+    void requestAddPencilBeam(std::shared_ptr<BeamActorContainer> beam = nullptr);
     void beamActorAdded(std::shared_ptr<BeamActorContainer>);
     void beamActorRemoved(std::shared_ptr<BeamActorContainer>);
     void requestRender();

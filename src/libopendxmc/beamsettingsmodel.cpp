@@ -325,6 +325,13 @@ void addTubeItems(LabelItem* tubeItem, std::shared_ptr<Beam> beam)
         };
         addItem(tubeItem, "Tube half value layer [mmAl]", getter);
     }
+    {
+        auto getter = [=]() -> double {
+            auto& dx = std::get<T>(*beam);
+            return dx.tubeMeanSpecterEnergy();
+        };
+        addItem(tubeItem, "Tube mean energy [keV]", getter);
+    }
 }
 
 void BeamSettingsModel::addBeam(std::shared_ptr<BeamActorContainer> actor)
@@ -1605,6 +1612,19 @@ void BeamSettingsModel::addCTSpiralDualEnergyBeam(std::shared_ptr<BeamActorConta
             return ct.tubeRelativeWeightB();
         };
         addItem(tubeBItem, "Relative photon count weight", getterB);
+    }
+
+    {
+        auto getterA = [=]() -> double {
+            auto& dx = std::get<CTSpiralDualEnergyBeam>(*beam);
+            return dx.tubeAMeanSpecterEnergy();
+        };
+        addItem(tubeAItem, "Tube mean energy [keV]", getterA);
+        auto getterB = [=]() -> double {
+            auto& dx = std::get<CTSpiralDualEnergyBeam>(*beam);
+            return dx.tubeBMeanSpecterEnergy();
+        };
+        addItem(tubeBItem, "Tube mean energy [keV]", getterB);
     }
 
     {

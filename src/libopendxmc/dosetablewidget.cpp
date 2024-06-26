@@ -41,6 +41,8 @@ void DoseTableWidget::setDoseDataHeader(QStringList header)
 
 void DoseTableWidget::setDoseData(int col, int row, QVariant data)
 {
+    setSortingEnabled(false);
+
     if (columnCount() <= col) {
         setColumnCount(col + 1);
     }
@@ -55,6 +57,7 @@ void DoseTableWidget::setDoseData(int col, int row, QVariant data)
         nitem->setData(Qt::DisplayRole, data);
         setItem(row, col, nitem);
     }
+    setSortingEnabled(true);
 }
 
 void DoseTableWidget::keyPressEvent(QKeyEvent* event)

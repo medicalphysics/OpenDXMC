@@ -55,10 +55,8 @@ CTAECPlot::CTAECPlot(QWidget* parent)
     chart()->addAxis(m_yaxis, Qt::AlignLeft);
     m_yaxis->setGridLineVisible(false);
     m_yaxis->setRange(-.1, 1.1);
-    m_yaxis->setLabelsVisible(false);
     m_yaxis->setMinorGridLineVisible(false);
     m_yaxis->setTickCount(2);
-    m_yaxis->setLabelsVisible(false);
 }
 
 double dist(const std::array<double, 3>& v1, const std::array<double, 3>& v2)
@@ -91,6 +89,8 @@ void CTAECPlot::updatePlot()
         return;
     }
 
+    chart()->removeAllSeries();
+
     auto series_aec = new QLineSeries(this);
     const auto length = aec.length();
     const auto& weights = aec.weights();
@@ -104,12 +104,24 @@ void CTAECPlot::updatePlot()
     m_xaxis->setRange(-length / 2, length / 2);
     const auto max = *std::max_element(weights.cbegin(), weights.cend());
     m_yaxis->setRange(0.0, max * 1.1);
-
-    chart()->removeAllSeries();
     chart()->addSeries(series_aec);
-
     series_aec->attachAxis(m_xaxis);
     series_aec->attachAxis(m_yaxis);
+
+    auto series_one = new QLineSeries(this);
+    QList<QPointF> one_qt(2);
+    one_qt[0].setX(-length / 2);
+    one_qt[0].setY(1);
+    one_qt[1].setX(length / 2);
+    one_qt[1].setY(1);
+    series_one->append(one_qt);    
+    chart()->addSeries(series_one);
+    auto pen = series_one->pen();
+    pen.setStyle(Qt::PenStyle::DotLine);
+    pen.setWidthF(pen.widthF() / 2);
+    series_one->setPen(pen);
+    series_one->attachAxis(m_xaxis);
+    series_one->attachAxis(m_yaxis);
 
     m_xaxis->setLabelsVisible(true);
 }

@@ -67,22 +67,26 @@ add_custom_command(
 include(InstallRequiredSystemLibraries)
 install(TARGETS opendxmc
     EXPORT libopendxmc    
-    )
+)
+
 # Generate QT deployment script for the target opendxmc.
-qt_generate_deploy_app_script(
-    TARGET opendxmc
-    OUTPUT_SCRIPT deploy_script
+qt6_generate_deploy_app_script(
+    TARGET opendxmc    
+    OUTPUT_SCRIPT qt_deploy_script
     NO_UNSUPPORTED_PLATFORM_ERROR
 )
 # Call the deployment script on "cmake --install".
-install(SCRIPT ${deploy_script})
+install(SCRIPT ${qt_deploy_script})
 
 # Install data folder
 install(DIRECTORY "${CMAKE_SOURCE_DIR}/data/phantoms" DESTINATION "${CMAKE_INSTALL_BINDIR}/data")
 install(DIRECTORY "${CMAKE_SOURCE_DIR}/data/bowtiefilters" DESTINATION "${CMAKE_INSTALL_BINDIR}/data")
 
-# Install dependent runtime
-install(FILES $<TARGET_RUNTIME_DLLS:opendxmc> TYPE BIN)
+if(WIN32)
+    # Install dependent runtime
+    install(FILES $<TARGET_RUNTIME_DLLS:opendxmc> TYPE BIN)
+endif()
+
 
 # Packaging
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Monte carlo dose application for diagnostic x-ray")
@@ -98,7 +102,7 @@ if(WIN32)
     )
     set(CPACK_NSIS_DELETE_ICONS_EXTRA
     "Delete '$SMPROGRAMS\\\\$START_MENU\\\\OpenDXMC.lnk'"
-)
+    )
 endif()
 include(CPack)
 

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 3.26)
 
 project(OpenDXMC VERSION 1.1.0 DESCRIPTION "OpenDXMC description" LANGUAGES CXX)
 
@@ -33,7 +33,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core Widgets Charts)
 qt_standard_project_setup()
 
 # Adding VTK package
-find_package(VTK 
+find_package(VTK REQUIRED
      COMPONENTS
      GUISupportQt
      ImagingStatistics

@@ -25,11 +25,13 @@ Copyright 2024 Erlend Andersen
 #include <vtkPolyDataMapper.h>
 #include <vtkProperty.h>
 #include <vtkSmartPointer.h>
+#include <vtkTubeFilter.h>
 
 BeamActorContainer::BeamActorContainer(std::shared_ptr<Beam> beam_ptr)
     : m_beam(beam_ptr)
 {
     m_polydata = vtkSmartPointer<vtkPolyData>::New();
+    m_colorIdx++;
 }
 
 std::shared_ptr<Beam> BeamActorContainer::getBeam()
@@ -186,17 +188,41 @@ void BeamActorContainer::update()
     // colors->InsertNextTypedTuple(namedColors->GetColor3ub("Tomato").GetData());
     // colors->InsertNextTypedTuple(namedColors->GetColor3ub("Mint").GetData());
 }
-
+/*
 vtkSmartPointer<vtkActor> BeamActorContainer::createActor()
 {
     auto mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
     auto actor = vtkSmartPointer<vtkActor>::New();
     mapper->SetInputData(m_polydata);
     actor->SetMapper(mapper);
-    actor->GetProperty()->SetLineWidth(4);
+    actor->GetProperty()->SetLineWidth(m_lineThickness);
     actor->GetProperty()->RenderLinesAsTubesOn();
     auto colors = vtkSmartPointer<vtkNamedColors>::New();
     actor->GetProperty()->SetColor(colors->GetColor3d("Peacock").GetData());
     actor->SetDragable(true);
+    return actor;
+}*/
+
+vtkSmartPointer<vtkActor> BeamActorContainer::createActor()
+{
+    auto mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+    auto tubeFilter = vtkSmartPointer<vtkTubeFilter>::New();
+    auto actor = vtkSmartPointer<vtkActor>::New();
+    tubeFilter->SetInputData(m_polydata);
+    tubeFilter->SetRadius(m_lineThickness);
+    tubeFilter->SetNumberOfSides(16);
+    mapper->SetInputConnection(tubeFilter->GetOutputPort());
+    actor->SetMapper(mapper);
+    auto colors = vtkSmartPointer<vtkNamedColors>::New();
+    if (const auto cind = m_colorIdx % 3; cind == 0)
+        actor->GetProperty()->SetColor(colors->GetColor3d("Mint").GetData());
+    else if (cind == 1)
+        actor->GetProperty()->SetColor(colors->GetColor3d("Peacock").GetData());
+    else
+        actor->GetProperty()->SetColor(colors->GetColor3d("Tomato").GetData());
+
+    actor->GetProperty()->SetOpacity(1.0);
+    actor->SetDragable(true);
+
     return actor;
 }

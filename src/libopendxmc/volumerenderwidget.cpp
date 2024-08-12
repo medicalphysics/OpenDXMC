@@ -63,6 +63,7 @@ VolumerenderWidget::VolumerenderWidget(QWidget* parent)
 
     openGLWidget = new QVTKOpenGLNativeWidget(this);
     auto window = openGLWidget->renderWindow();
+    window->SetLineSmoothing(true);
     layout->addWidget(openGLWidget);
 
     this->setLayout(layout);
@@ -93,7 +94,11 @@ VolumerenderWidget::VolumerenderWidget(QWidget* parent)
             auto renderWindow = this->openGLWidget->renderWindow();
             vtkSmartPointer<vtkWindowToImageFilter> windowToImageFilter = vtkSmartPointer<vtkWindowToImageFilter>::New();
             windowToImageFilter->SetInput(renderWindow);
-            windowToImageFilter->SetScale(3, 3); // set the resolution of the output image (3 times the current resolution of vtk render window)
+            auto size = renderWindow->GetSize();
+            int N = 1;
+            while (size[0] * N < 2048 || size[1] * N < 2048)
+                N++;
+            windowToImageFilter->SetScale(N, N); // set the resolution of the output image (3 times the current resolution of vtk render window)
             windowToImageFilter->SetFixBoundary(true);
             windowToImageFilter->ShouldRerenderOn();
             windowToImageFilter->SetInputBufferTypeToRGBA(); // also record the alpha (transparency) channel

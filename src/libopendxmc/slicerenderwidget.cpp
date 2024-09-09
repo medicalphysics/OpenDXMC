@@ -22,11 +22,9 @@ Copyright 2023 Erlend Andersen
 
 #include <QDir>
 #include <QFileDialog>
-#include <QFileInfo>
 #include <QMenu>
 #include <QPushButton>
 #include <QSettings>
-#include <QString>
 #include <QVBoxLayout>
 
 #include <QVTKOpenGLNativeWidget.h>
@@ -35,7 +33,7 @@ Copyright 2023 Erlend Andersen
 #include <vtkCamera.h>
 #include <vtkCellPicker.h>
 #include <vtkImageProperty.h>
-#include <vtkImageSliceMapper.h>
+#include <vtkImageResliceMapper.h>
 #include <vtkPNGWriter.h>
 #include <vtkRenderWindow.h>
 #include <vtkRendererCollection.h>
@@ -285,10 +283,11 @@ void SliceRenderWidget::setupSlicePipeline(int orientation)
     renWin->AddRenderer(renderer);
 
     // reslice mapper
-    auto imageMapper = vtkSmartPointer<vtkImageSliceMapper>::New();
+    auto imageMapper = vtkSmartPointer<vtkImageResliceMapper>::New();
     imageMapper->SliceFacesCameraOn();
     imageMapper->SliceAtFocalPointOn();
     imageMapper->ReleaseDataFlagOn();
+    imageMapper->ResampleToScreenPixelsOn();
 
     // image slice
     imageSlice = vtkSmartPointer<vtkImageActor>::New();

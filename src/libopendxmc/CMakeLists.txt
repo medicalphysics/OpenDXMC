@@ -45,6 +45,7 @@ target_link_libraries(libopendxmc PUBLIC
 	VTK::CommonCore
 	VTK::GUISupportQt
 	VTK::DICOM
+	VTK::RenderingImage
 	VTK::RenderingVolumeOpenGL2
 	VTK::ImagingStatistics
 	VTK::IOExodus
@@ -76,6 +77,7 @@ vtk_module_autoinit(
 	VTK::InteractionImage
 	VTK::InteractionStyle
 	VTK::ImagingGeneral
+	VTK::RenderingImage
 	VTK::CommonColor
 	VTK::RenderingAnnotation
 )

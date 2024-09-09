@@ -33,22 +33,26 @@ find_package(Qt6 REQUIRED COMPONENTS Core Widgets Charts)
 qt_standard_project_setup()
 
 # Adding VTK package
-find_package(VTK REQUIRED
-     COMPONENTS
-     GUISupportQt
-     ImagingStatistics
-     RenderingImage
-     RenderingOpenGL2
+find_package(VTK REQUIRED COMPONENTS          
+     CommonColor
+     CommonCore
      DICOM
+     GUISupportQt
      InteractionImage
      InteractionStyle
-     RenderingVolume
-     RenderingAnnotation
      ImagingGeneral
-     CommonColor
-     RenderingVolumeOpenGL2    
+     ImagingStatistics
      IOExodus    
      jsoncpp
+     RenderingAnnotation
+     RenderingContextOpenGL2
+     RenderingCore
+     RenderingFreeType
+     RenderingGL2PSOpenGL2
+     RenderingImage
+     RenderingOpenGL2
+     RenderingVolume
+     RenderingVolumeOpenGL2            
   )
 
 #include HDF5

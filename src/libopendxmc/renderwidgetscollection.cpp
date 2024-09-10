@@ -264,7 +264,7 @@ QWidget* RenderWidgetsCollection::createRendersettingsWidget(QWidget* parent)
     sliceg->setLayout(sliceg_layout);
     layout->addWidget(sliceg);
 
-    auto ctbackground = addWidgetAndLabel<QCheckBox>(tr("Use CT background"), layout, wid);
+    auto ctbackground = addWidgetAndLabel<QCheckBox>(tr("Use CT background"), sliceg_layout, parent);
     ctbackground->setChecked(false);
     connect(ctbackground, &QCheckBox::stateChanged, this, &RenderWidgetsCollection::setUseCTBackground);
 

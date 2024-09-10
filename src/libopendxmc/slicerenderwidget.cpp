@@ -32,8 +32,10 @@ Copyright 2023 Erlend Andersen
 #include <vtkCallbackCommand.h>
 #include <vtkCamera.h>
 #include <vtkCellPicker.h>
+#include <vtkImageActor.h>
 #include <vtkImageProperty.h>
 #include <vtkImageResliceMapper.h>
+#include <vtkImageSliceCollection.h>
 #include <vtkPNGWriter.h>
 #include <vtkRenderWindow.h>
 #include <vtkRendererCollection.h>
@@ -267,34 +269,42 @@ SliceRenderWidget::SliceRenderWidget(int orientation, QWidget* parent)
 void SliceRenderWidget::setupSlicePipeline(int orientation)
 {
     // renderers
-    renderer = vtkSmartPointer<vtkRenderer>::New();
-    renderer->GetActiveCamera()->ParallelProjectionOn();
-    renderer->SetBackground(0, 0, 0);
+    m_renderer = vtkSmartPointer<vtkRenderer>::New();
+    m_renderer->GetActiveCamera()->ParallelProjectionOn();
+    m_renderer->SetBackground(0, 0, 0);
 
     // interaction style
     interactorStyle = vtkSmartPointer<CustomInteractorStyleImage>::New();
-    interactorStyle->SetDefaultRenderer(renderer);
+    interactorStyle->SetDefaultRenderer(m_renderer);
     interactorStyle->SetInteractionModeToImageSlicing();
     interactorStyle->AutoAdjustCameraClippingRangeOn();
 
     auto renderWindowInteractor = openGLWidget->interactor();
     renderWindowInteractor->SetInteractorStyle(interactorStyle);
     auto renWin = openGLWidget->renderWindow();
-    renWin->AddRenderer(renderer);
+    renWin->AddRenderer(m_renderer);
 
-    // reslice mapper
-    auto imageMapper = vtkSmartPointer<vtkImageResliceMapper>::New();
-    imageMapper->SliceFacesCameraOn();
-    imageMapper->SliceAtFocalPointOn();
-    imageMapper->ReleaseDataFlagOn();
-    imageMapper->ResampleToScreenPixelsOn();
+    m_imageStack = vtkSmartPointer<vtkImageStack>::New();
+    m_imageSliceFront = vtkSmartPointer<vtkImageActor>::New();
+    m_imageSliceBack = vtkSmartPointer<vtkImageActor>::New();
 
-    // image slice
-    imageSlice = vtkSmartPointer<vtkImageActor>::New();
-    imageSlice->SetMapper(imageMapper);
-    renderer->AddActor(imageSlice);
+    std::array slices = { m_imageSliceFront, m_imageSliceBack };
+    for (auto s : slices) {
+        auto imageMapper = vtkSmartPointer<vtkImageResliceMapper>::New();
+        imageMapper->SliceFacesCameraOn();
+        imageMapper->SliceAtFocalPointOn();
+        imageMapper->ReleaseDataFlagOn();
+        imageMapper->ResampleToScreenPixelsOn();
+        s->SetMapper(imageMapper);
+    }
+    m_imageSliceFront->GetProperty()->SetLayerNumber(1);
+    m_imageSliceBack->GetProperty()->SetLayerNumber(0);
+    m_imageStack->AddImage(m_imageSliceFront);
+    m_imageStack->SetActiveLayer(1);
 
-    if (auto cam = renderer->GetActiveCamera(); orientation == 0) {
+    m_renderer->AddActor(m_imageStack);
+
+    if (auto cam = m_renderer->GetActiveCamera(); orientation == 0) {
         cam->SetFocalPoint(0, 0, 0);
         cam->SetPosition(0, 0, -1);
         cam->SetViewUp(0, -1, 0);
@@ -309,19 +319,35 @@ void SliceRenderWidget::setupSlicePipeline(int orientation)
         cam->SetViewUp(0, 0, 1);
     }
 
-    auto sliceProperty = imageSlice->GetProperty();
-    sliceProperty->SetLookupTable(lut);
-    sliceProperty->UseLookupTableScalarRangeOff();
-    lut->SetMinimumTableValue(0, 0, 0, 1);
-    lut->SetMaximumTableValue(1, 1, 1, 1);
-    lut->UseBelowRangeColorOn();
-    lut->SetBelowRangeColor(0, 0, 0, 0);
-    lut->Build();
-    sliceProperty->SetColorLevel(lut_windowing[DataContainer::ImageType::CT].first);
-    sliceProperty->SetColorWindow(lut_windowing[DataContainer::ImageType::CT].second);
+    { // setting up foreground lut
+        auto sliceProperty = m_imageSliceFront->GetProperty();
+        sliceProperty->SetLookupTable(lut);
+        sliceProperty->UseLookupTableScalarRangeOff();
+        lut->SetMinimumTableValue(0, 0, 0, 1);
+        lut->SetMaximumTableValue(1, 1, 1, 1);
+        lut->UseBelowRangeColorOn();
+        lut->SetBelowRangeColor(0, 0, 0, 0);
+        lut->Build();
+        sliceProperty->SetColorLevel(lut_windowing[DataContainer::ImageType::CT].first);
+        sliceProperty->SetColorWindow(lut_windowing[DataContainer::ImageType::CT].second);
+    }
+
+    { // adding background lut
+        auto blut = vtkSmartPointer<vtkWindowLevelLookupTable>::New();
+        auto sliceProperty = m_imageSliceBack->GetProperty();
+        sliceProperty->SetLookupTable(blut);
+        sliceProperty->UseLookupTableScalarRangeOff();
+        blut->SetMinimumTableValue(0, 0, 0, 1);
+        blut->SetMaximumTableValue(1, 1, 1, 1);
+        blut->UseBelowRangeColorOn();
+        blut->SetBelowRangeColor(0, 0, 0, 0);
+        blut->Build();
+        sliceProperty->SetColorLevel(lut_windowing[DataContainer::ImageType::CT].first);
+        sliceProperty->SetColorWindow(lut_windowing[DataContainer::ImageType::CT].second);
+    }
 
     lowerLeftText = vtkSmartPointer<vtkTextActor>::New();
-    renderer->AddActor2D(lowerLeftText);
+    m_renderer->AddActor2D(lowerLeftText);
     auto txtStyle = lowerLeftText->GetTextProperty();
     txtStyle->SetColor(TEXT_COLOR.data());
     txtStyle->BoldOn();
@@ -337,8 +363,8 @@ void SliceRenderWidget::updateTextPositions(bool render)
 {
     if (lowerLeftText) {
         double size[2];
-        lowerLeftText->GetSize(renderer, size);
-        auto rsize = renderer->GetSize();
+        lowerLeftText->GetSize(m_renderer, size);
+        auto rsize = m_renderer->GetSize();
         lowerLeftText->SetPosition(rsize[0] - size[0] - 5, 5);
         if (render)
             Render();
@@ -351,7 +377,7 @@ void SliceRenderWidget::sharedViews(std::vector<SliceRenderWidget*> wids)
     // setting same lut
     for (auto& w : wids) {
         w->lut = this->lut;
-        w->imageSlice->GetProperty()->SetLookupTable(lut);
+        w->m_imageSliceFront->GetProperty()->SetLookupTable(lut);
     }
 
     for (std::size_t i = 0; i < wids.size(); ++i) {
@@ -360,7 +386,7 @@ void SliceRenderWidget::sharedViews(std::vector<SliceRenderWidget*> wids)
         auto style = w->interactorStyle;
         for (std::size_t j = 0; j < 3; ++j) {
             if (i != j) {
-                callback->imageSlices.push_back(wids[j]->imageSlice);
+                callback->imageSlices.push_back(wids[j]->m_imageStack);
                 callback->widgets.push_back(wids[j]->openGLWidget);
             }
         }
@@ -381,7 +407,7 @@ void SliceRenderWidget::sharedViews(std::vector<SliceRenderWidget*> wids)
             for (auto ev : callback->eventTypes())
                 style->AddObserver(ev, callback);
             if (i == 0)
-                wids[i]->renderer->AddActor(callback->textActorCorner);
+                wids[i]->m_renderer->AddActor(callback->textActorCorner);
         }
     }
 
@@ -395,7 +421,7 @@ void SliceRenderWidget::sharedViews(std::vector<SliceRenderWidget*> wids)
         scalarColorBar->SetLabelTextProperty(txtStyle);
         scalarColorBar->SetTextPositionToPrecedeScalarBar();
         scalarColorBar->AnnotationTextScalingOff();
-        wids[0]->renderer->AddActor(scalarColorBar);
+        wids[0]->m_renderer->AddActor(scalarColorBar);
     }
 
     // remove all but one lower left text actor
@@ -422,7 +448,7 @@ void SliceRenderWidget::setInteractionStyleToSlicing()
 
 void SliceRenderWidget::useFXAA(bool use)
 {
-    renderer->SetUseFXAA(use);
+    m_renderer->SetUseFXAA(use);
 }
 
 void SliceRenderWidget::setMultisampleAA(int samples)
@@ -433,19 +459,37 @@ void SliceRenderWidget::setMultisampleAA(int samples)
 
 void SliceRenderWidget::setInterpolationType(int type)
 {
-    imageSlice->GetProperty()->SetInterpolationType(type);
+    m_imageSliceFront->GetProperty()->SetInterpolationType(type);
+    m_imageSliceBack->GetProperty()->SetInterpolationType(type);
     Render();
 }
 
 void SliceRenderWidget::setBackgroundColor(double r, double g, double b)
 {
-    renderer->SetBackground(r, g, b);
+    m_renderer->SetBackground(r, g, b);
     Render();
+}
+
+void SliceRenderWidget::setUseCTDataBackground(bool on)
+{
+    m_useCTBackground = on;
+    // setup background
+    if (m_data->hasImage(DataContainer::ImageType::CT)) {
+        bool currentTypeIsNotCt = m_imageSliceFront->GetMapper()->GetInput() != m_imageSliceBack->GetMapper()->GetInput();
+        if (m_useCTBackground && currentTypeIsNotCt) {
+            if (!m_imageStack->HasImage(m_imageSliceBack))
+                m_imageStack->AddImage(m_imageSliceBack);
+        } else {
+            if (m_imageStack->HasImage(m_imageSliceBack))
+                m_imageStack->RemoveImage(m_imageSliceBack);
+        }
+        Render();
+    }
 }
 
 void SliceRenderWidget::switchLUTtable(DataContainer::ImageType type)
 {
-    auto prop = imageSlice->GetProperty();
+    auto prop = m_imageSliceFront->GetProperty();
     lut_windowing[lut_current_type] = std::make_pair(prop->GetColorLevel(), prop->GetColorWindow());
 
     if (type == DataContainer::ImageType::Material || type == DataContainer::ImageType::Organ) {
@@ -500,7 +544,7 @@ void SliceRenderWidget::switchLUTtable(DataContainer::ImageType type)
             prop->SetColorWindow(ww);
         }
     }
-    imageSlice->Update();
+    m_imageStack->Update();
     lut_current_type = type;
 }
 
@@ -511,6 +555,15 @@ void SliceRenderWidget::showData(DataContainer::ImageType type)
     if (m_data->hasImage(type)) {
         auto vtkimage = m_data->vtkImage(type);
         switchLUTtable(type);
+
+        // setup background
+        if (m_useCTBackground && type != DataContainer::ImageType::CT && m_data->hasImage(DataContainer::ImageType::CT)) {
+            if (!m_imageStack->HasImage(m_imageSliceBack))
+                m_imageStack->AddImage(m_imageSliceBack);
+        } else {
+            if (m_imageStack->HasImage(m_imageSliceBack))
+                m_imageStack->RemoveImage(m_imageSliceBack);
+        }
 
         setNewImageData(vtkimage, false);
         if (lowerLeftText) {
@@ -532,8 +585,8 @@ int argmax3(double v[3])
 
 void SliceRenderWidget::resetCamera()
 {
-    renderer->ResetCamera();
-    auto camera = renderer->GetActiveCamera();
+    m_renderer->ResetCamera();
+    auto camera = m_renderer->GetActiveCamera();
     double dir[3];
     camera->GetDirectionOfProjection(dir);
     int dIdx = argmax3(dir);
@@ -562,8 +615,8 @@ void SliceRenderWidget::Render(bool reset_camera)
 void SliceRenderWidget::setNewImageData(vtkSmartPointer<vtkImageData> data, bool rezoom_camera)
 {
     if (data) {
-        imageSlice->GetMapper()->SetInputData(data);
-        imageSlice->SetDisplayExtent(data->GetExtent());
+        m_imageSliceFront->GetMapper()->SetInputData(data);
+        m_imageSliceFront->SetDisplayExtent(data->GetExtent());
         Render(rezoom_camera);
     }
 }
@@ -584,6 +637,8 @@ void SliceRenderWidget::updateImageData(std::shared_ptr<DataContainer> data)
         m_data = data;
         if (data->hasImage(DataContainer::ImageType::CT) && uid_is_new) {
             auto vtkimage = data->vtkImage(DataContainer::ImageType::CT);
+            m_imageSliceFront->GetMapper()->SetInputData(vtkimage);
+            m_imageSliceBack->GetMapper()->SetInputData(vtkimage);
             showData(DataContainer::ImageType::CT);
         } else if (data->hasImage(DataContainer::ImageType::Density) && uid_is_new) {
             auto vtkimage = data->vtkImage(DataContainer::ImageType::Density);
@@ -595,12 +650,12 @@ void SliceRenderWidget::updateImageData(std::shared_ptr<DataContainer> data)
 
 void SliceRenderWidget::addActor(vtkSmartPointer<vtkActor> actor)
 {
-    renderer->AddActor(actor);
+    m_renderer->AddActor(actor);
     Render();
 }
 
 void SliceRenderWidget::removeActor(vtkSmartPointer<vtkActor> actor)
 {
-    renderer->RemoveActor(actor);
+    m_renderer->RemoveActor(actor);
     Render();
 }

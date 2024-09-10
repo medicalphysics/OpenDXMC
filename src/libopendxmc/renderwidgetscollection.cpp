@@ -219,6 +219,12 @@ void RenderWidgetsCollection::setBackgroundColor(const QColor& c)
     m_volume_widget->setBackgroundColor(r, g, b);
 }
 
+void RenderWidgetsCollection::setUseCTBackground(bool on)
+{
+    for (auto& w : m_slice_widgets)
+        w->setUseCTDataBackground(on);
+}
+
 QWidget* RenderWidgetsCollection::createRendersettingsWidget(QWidget* parent)
 {
 
@@ -257,6 +263,10 @@ QWidget* RenderWidgetsCollection::createRendersettingsWidget(QWidget* parent)
     sliceg_layout->setContentsMargins(0, 0, 0, 0);
     sliceg->setLayout(sliceg_layout);
     layout->addWidget(sliceg);
+
+    auto ctbackground = addWidgetAndLabel<QCheckBox>(tr("Use CT background"), layout, wid);
+    ctbackground->setChecked(false);
+    connect(ctbackground, &QCheckBox::stateChanged, this, &RenderWidgetsCollection::setUseCTBackground);
 
     auto inter_type = addWidgetAndLabel<QComboBox>(tr("Set interpolation type"), sliceg_layout, parent);
     inter_type->addItem(tr("Nearest"));

@@ -27,6 +27,7 @@ Copyright 2023 Erlend Andersen
 
 #include <vtkImageActor.h>
 #include <vtkImageGaussianSmooth.h>
+#include <vtkImageStack.h>
 #include <vtkRenderer.h>
 #include <vtkSmartPointer.h>
 #include <vtkTextActor.h>
@@ -48,6 +49,7 @@ public:
     void setInteractionStyleToSlicing();
     void setInteractionStyleTo3D();
     void setBackgroundColor(double r, double g, double b);
+    void setUseCTDataBackground(bool on);
 
     void showData(DataContainer::ImageType type);
     void Render(bool reset_camera = false);
@@ -67,12 +69,15 @@ protected:
 
 private:
     std::shared_ptr<DataContainer> m_data = nullptr;
-    vtkSmartPointer<vtkImageActor> imageSlice = nullptr;
-    vtkSmartPointer<vtkRenderer> renderer = nullptr;
+    vtkSmartPointer<vtkImageStack> m_imageStack = nullptr;
+    vtkSmartPointer<vtkImageActor> m_imageSliceFront = nullptr;
+    vtkSmartPointer<vtkImageActor> m_imageSliceBack = nullptr;
+    vtkSmartPointer<vtkRenderer> m_renderer = nullptr;
     QVTKOpenGLNativeWidget* openGLWidget = nullptr;
     vtkSmartPointer<vtkTextActor> lowerLeftText = nullptr;
     vtkSmartPointer<CustomInteractorStyleImage> interactorStyle = nullptr;
     vtkSmartPointer<vtkWindowLevelLookupTable> lut = nullptr;
     std::map<DataContainer::ImageType, std::pair<double, double>> lut_windowing;
     DataContainer::ImageType lut_current_type = DataContainer::ImageType::CT;
+    bool m_useCTBackground = false;
 };

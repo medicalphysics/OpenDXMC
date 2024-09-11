@@ -35,7 +35,6 @@ Copyright 2023 Erlend Andersen
 #include <vtkImageActor.h>
 #include <vtkImageProperty.h>
 #include <vtkImageResliceMapper.h>
-#include <vtkImageSliceCollection.h>
 #include <vtkPNGWriter.h>
 #include <vtkRenderWindow.h>
 #include <vtkRendererCollection.h>
@@ -288,15 +287,24 @@ void SliceRenderWidget::setupSlicePipeline(int orientation)
     m_imageSliceFront = vtkSmartPointer<vtkImageActor>::New();
     m_imageSliceBack = vtkSmartPointer<vtkImageActor>::New();
 
+    // sinc interpolator
+    m_interpolatorSinc = vtkSmartPointer<vtkImageSincInterpolator>::New();
+    m_interpolatorSinc->AntialiasingOn();
+
     std::array slices = { m_imageSliceFront, m_imageSliceBack };
     for (auto s : slices) {
         auto imageMapper = vtkSmartPointer<vtkImageResliceMapper>::New();
         imageMapper->SliceFacesCameraOn();
         imageMapper->SliceAtFocalPointOn();
+        imageMapper->JumpToNearestSliceOn();
         imageMapper->ReleaseDataFlagOn();
         imageMapper->ResampleToScreenPixelsOn();
+        imageMapper->AutoAdjustImageQualityOff();
+        imageMapper->SetInterpolator(m_interpolatorSinc);
         s->SetMapper(imageMapper);
+        s->InterpolateOn();
     }
+
     m_imageSliceFront->GetProperty()->SetLayerNumber(1);
     m_imageSliceBack->GetProperty()->SetLayerNumber(0);
     m_imageStack->AddImage(m_imageSliceFront);
@@ -459,8 +467,23 @@ void SliceRenderWidget::setMultisampleAA(int samples)
 
 void SliceRenderWidget::setInterpolationType(int type)
 {
-    m_imageSliceFront->GetProperty()->SetInterpolationType(type);
-    m_imageSliceBack->GetProperty()->SetInterpolationType(type);
+    auto mapperFront = static_cast<vtkImageResliceMapper*>(m_imageSliceFront->GetMapper());
+    auto mapperBack = static_cast<vtkImageResliceMapper*>(m_imageSliceBack->GetMapper());
+
+    if (type < 3) {
+        mapperFront->SetInterpolator(nullptr);
+        mapperBack->SetInterpolator(nullptr);
+        m_imageSliceFront->InterpolateOn();
+        m_imageSliceBack->InterpolateOn();
+        m_imageSliceFront->GetProperty()->SetInterpolationType(type);
+        m_imageSliceBack->GetProperty()->SetInterpolationType(type);
+    } else {
+        mapperFront->SetInterpolator(m_interpolatorSinc);
+        mapperBack->SetInterpolator(m_interpolatorSinc);
+        m_imageSliceFront->InterpolateOff();
+        m_imageSliceBack->InterpolateOff();
+    }
+
     Render();
 }
 

@@ -27,6 +27,7 @@ Copyright 2023 Erlend Andersen
 
 #include <vtkImageActor.h>
 #include <vtkImageGaussianSmooth.h>
+#include <vtkImageSincInterpolator.h>
 #include <vtkImageStack.h>
 #include <vtkRenderer.h>
 #include <vtkSmartPointer.h>
@@ -72,6 +73,7 @@ private:
     vtkSmartPointer<vtkImageStack> m_imageStack = nullptr;
     vtkSmartPointer<vtkImageActor> m_imageSliceFront = nullptr;
     vtkSmartPointer<vtkImageActor> m_imageSliceBack = nullptr;
+    vtkSmartPointer<vtkImageSincInterpolator> m_interpolatorSinc = nullptr;
     vtkSmartPointer<vtkRenderer> m_renderer = nullptr;
     QVTKOpenGLNativeWidget* openGLWidget = nullptr;
     vtkSmartPointer<vtkTextActor> lowerLeftText = nullptr;

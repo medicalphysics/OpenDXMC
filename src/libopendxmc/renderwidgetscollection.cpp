@@ -26,8 +26,6 @@ Copyright 2023 Erlend Andersen
 #include <QGroupBox>
 #include <QLabel>
 #include <QPushButton>
-#include <QSizePolicy>
-#include <QSlider>
 
 RenderWidgetsCollection::RenderWidgetsCollection(QWidget* parent)
     : QWidget(parent)
@@ -272,7 +270,9 @@ QWidget* RenderWidgetsCollection::createRendersettingsWidget(QWidget* parent)
     inter_type->addItem(tr("Nearest"));
     inter_type->addItem(tr("Linear"));
     inter_type->addItem(tr("Cubic"));
-    inter_type->setCurrentIndex(1);
+    inter_type->addItem(tr("Sinc"));
+    inter_type->setCurrentIndex(3);
+
     connect(inter_type, &QComboBox::currentIndexChanged, this, &RenderWidgetsCollection::setInterpolationType);
 
     // These settings are unusable per now

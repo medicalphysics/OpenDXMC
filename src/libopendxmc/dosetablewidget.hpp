@@ -27,7 +27,7 @@ public:
     DoseTableWidget(QWidget* parent = nullptr);
     void setDoseData(int col, int row, QVariant);
     void setDoseDataHeader(QStringList header);
-
+    void enableSorting(bool on);
     void keyPressEvent(QKeyEvent* event);
 
 protected:

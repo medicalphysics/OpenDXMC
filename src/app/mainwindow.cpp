@@ -173,7 +173,8 @@ MainWindow::MainWindow(QWidget* parent)
     menuWidget->addTab(dosetable, tr("Organ Doses"));
     auto dosetablepipeline = new DoseTablePipeline;
     dosetablepipeline->moveToThread(&m_workerThread);
-    connect(dosetablepipeline, &DoseTablePipeline::clearTable, dosetable, &DoseTableWidget::clearContents);
+    connect(dosetablepipeline, &DoseTablePipeline::clearTable, dosetable, &DoseTableWidget::clear);
+    connect(dosetablepipeline, &DoseTablePipeline::enableSorting, dosetable, &DoseTableWidget::enableSorting);
     connect(dosetablepipeline, &DoseTablePipeline::doseData, dosetable, &DoseTableWidget::setDoseData);
     connect(dosetablepipeline, &DoseTablePipeline::doseDataHeader, dosetable, &DoseTableWidget::setDoseDataHeader);
     connect(simulationpipeline, &SimulationPipeline::imageDataChanged, dosetablepipeline, &DoseTablePipeline::updateImageData);

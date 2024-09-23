@@ -40,6 +40,8 @@ void DoseTablePipeline::updateImageData(std::shared_ptr<DataContainer> data)
         return;
     }
 
+    emit enableSorting(false);
+
     QStringList header;
     header.append(QString(tr("Name")));
     header.append(QString(tr("# Voxels")));
@@ -81,4 +83,5 @@ void DoseTablePipeline::updateImageData(std::shared_ptr<DataContainer> data)
             emit doseData(4, i, QVariant { energy / mass });
         }
     }
+    emit enableSorting(true);
 }

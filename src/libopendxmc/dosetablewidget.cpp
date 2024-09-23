@@ -31,6 +31,11 @@ DoseTableWidget::DoseTableWidget(QWidget* parent)
     setSortingEnabled(true);
 }
 
+void DoseTableWidget::enableSorting(bool on)
+{
+    setSortingEnabled(on);
+}
+
 void DoseTableWidget::setDoseDataHeader(QStringList header)
 {
     if (columnCount() < header.size()) {
@@ -41,8 +46,6 @@ void DoseTableWidget::setDoseDataHeader(QStringList header)
 
 void DoseTableWidget::setDoseData(int col, int row, QVariant data)
 {
-    setSortingEnabled(false);
-
     if (columnCount() <= col) {
         setColumnCount(col + 1);
     }
@@ -53,11 +56,10 @@ void DoseTableWidget::setDoseData(int col, int row, QVariant data)
     if (auto citem = item(row, col); citem) {
         citem->setData(Qt::DisplayRole, data);
     } else {
-        auto nitem = new QTableWidgetItem;
+        auto nitem = new QTableWidgetItem();
         nitem->setData(Qt::DisplayRole, data);
         setItem(row, col, nitem);
     }
-    setSortingEnabled(true);
 }
 
 void DoseTableWidget::keyPressEvent(QKeyEvent* event)

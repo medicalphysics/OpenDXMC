@@ -32,6 +32,7 @@ public:
 
 signals:
     void clearTable();
+    void enableSorting(bool);
     void doseData(int col, int row, QVariant data);
     void doseDataHeader(QStringList);
 };

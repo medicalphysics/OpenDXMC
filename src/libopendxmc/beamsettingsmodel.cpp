@@ -641,6 +641,20 @@ void BeamSettingsModel::addCBCTBeam(std::shared_ptr<BeamActorContainer> actor)
         };
         addItem(root, "Isocenter [cm]", setter, getter);
     }
+
+    {
+        auto setter = [=](std::array<double, 3> d) {
+            auto& dx = std::get<CBCTBeam>(*beam);
+            dx.setRotationAxis(d);
+            beamActor->update();
+        };
+        auto getter = [=]() -> std::array<double, 3> {
+            auto& dx = std::get<CBCTBeam>(*beam);
+            return dx.rotationAxis();
+        };
+        addItem(root, "Rotation axis", setter, getter);
+    }
+
     {
         auto setter = [=](double d) {
             auto& dx = std::get<CBCTBeam>(*beam);

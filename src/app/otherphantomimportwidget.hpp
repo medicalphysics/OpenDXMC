@@ -16,6 +16,8 @@ along with OpenDXMC. If not, see < https://www.gnu.org/licenses/>.
 Copyright 2024 Erlend Andersen
 */
 
+#include <QWidget>
+
 #pragma once
 
 class OtherPhantomImportWidget : public QWidget {
@@ -25,5 +27,4 @@ public:
 signals:
     void requestImportPhantom(int, double, double, double, int, int, int);
 
-private:
 };

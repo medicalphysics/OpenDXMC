@@ -334,6 +334,97 @@ void addTubeItems(LabelItem* tubeItem, std::shared_ptr<Beam> beam)
     }
 }
 
+template <typename T>
+void addCTAecItem(LabelItem* organaecItem, std::shared_ptr<Beam> beam)
+{
+    {
+        auto setter = [=](bool d) {
+            auto& ct = std::get<T>(*beam);
+            auto& oaec = ct.organAECFilter();
+            oaec.setUseFilter(d);
+        };
+        auto getter = [=]() -> bool {
+            auto& ct = std::get<T>(*beam);
+            auto& oaec = ct.organAECFilter();
+            return oaec.useFilter();
+        };
+        addItem(organaecItem, "Use Organ AEC", setter, getter);
+    }
+    {
+        auto setter = [=](double d) {
+            auto& ct = std::get<T>(*beam);
+            auto& oaec = ct.organAECFilter();
+            oaec.setStartAngleDeg(d);
+        };
+        auto getter = [=]() -> double {
+            auto& ct = std::get<T>(*beam);
+            auto& oaec = ct.organAECFilter();
+            return oaec.startAngleDeg();
+        };
+        addItem(organaecItem, "Start angle [deg]", setter, getter);
+    }
+    {
+        auto setter = [=](double d) {
+            auto& ct = std::get<T>(*beam);
+            auto& oaec = ct.organAECFilter();
+            oaec.setStopAngleDeg(d);
+        };
+        auto getter = [=]() -> double {
+            auto& ct = std::get<T>(*beam);
+            auto& oaec = ct.organAECFilter();
+            return oaec.stopAngleDeg();
+        };
+        addItem(organaecItem, "Stop angle [deg]", setter, getter);
+    }
+    {
+        auto setter = [=](double d) {
+            auto& ct = std::get<T>(*beam);
+            auto& oaec = ct.organAECFilter();
+            oaec.setRampAngleDeg(d);
+        };
+        auto getter = [=]() -> double {
+            auto& ct = std::get<T>(*beam);
+            auto& oaec = ct.organAECFilter();
+            return oaec.rampAngleDeg();
+        };
+        addItem(organaecItem, "Ramp angle [deg]", setter, getter);
+    }
+    {
+        auto setter = [=](double d) {
+            auto& ct = std::get<T>(*beam);
+            auto& oaec = ct.organAECFilter();
+            oaec.setLowWeightFactor(d);
+        };
+        auto getter = [=]() -> double {
+            auto& ct = std::get<T>(*beam);
+            auto& oaec = ct.organAECFilter();
+            return oaec.lowWeight();
+        };
+        addItem(organaecItem, "Low weight [0-1]", setter, getter);
+    }
+    {
+        auto getter = [=]() -> double {
+            auto& ct = std::get<T>(*beam);
+            auto& oaec = ct.organAECFilter();
+            return oaec.maxWeight();
+        };
+        addItem(organaecItem, "High weight", getter);
+    }
+    {
+        auto setter = [=](bool d) {
+            auto& ct = std::get<T>(*beam);
+            auto& oaec = ct.organAECFilter();
+            oaec.setCompensateOutside(d);
+        };
+        auto getter = [=]() -> bool {
+            auto& ct = std::get<T>(*beam);
+            auto& oaec = ct.organAECFilter();
+            return oaec.compensateOutside();
+        };
+        addItem(organaecItem, "Compensate outside beam", setter, getter);
+    }
+}
+
 void BeamSettingsModel::addBeam(std::shared_ptr<BeamActorContainer> actor)
 {
     if (!actor)
@@ -969,94 +1060,7 @@ void BeamSettingsModel::addCTSequentialBeam(std::shared_ptr<BeamActorContainer> 
 
     auto organaecItem = new LabelItem(tr("Organ AEC"));
     root->appendRow(organaecItem);
-    {
-        {
-            auto setter = [=](bool d) {
-                auto& ct = std::get<CTSequentialBeam>(*beam);
-                auto& oaec = ct.organAECFilter();
-                oaec.setUseFilter(d);
-            };
-            auto getter = [=]() -> bool {
-                auto& ct = std::get<CTSequentialBeam>(*beam);
-                auto& oaec = ct.organAECFilter();
-                return oaec.useFilter();
-            };
-            addItem(organaecItem, "Use Organ AEC", setter, getter);
-        }
-        {
-            auto setter = [=](double d) {
-                auto& ct = std::get<CTSequentialBeam>(*beam);
-                auto& oaec = ct.organAECFilter();
-                oaec.setStartAngleDeg(d);
-            };
-            auto getter = [=]() -> double {
-                auto& ct = std::get<CTSequentialBeam>(*beam);
-                auto& oaec = ct.organAECFilter();
-                return oaec.startAngleDeg();
-            };
-            addItem(organaecItem, "Start angle [deg]", setter, getter);
-        }
-        {
-            auto setter = [=](double d) {
-                auto& ct = std::get<CTSequentialBeam>(*beam);
-                auto& oaec = ct.organAECFilter();
-                oaec.setStopAngleDeg(d);
-            };
-            auto getter = [=]() -> double {
-                auto& ct = std::get<CTSequentialBeam>(*beam);
-                auto& oaec = ct.organAECFilter();
-                return oaec.stopAngleDeg();
-            };
-            addItem(organaecItem, "Stop angle [deg]", setter, getter);
-        }
-        {
-            auto setter = [=](double d) {
-                auto& ct = std::get<CTSequentialBeam>(*beam);
-                auto& oaec = ct.organAECFilter();
-                oaec.setRampAngleDeg(d);
-            };
-            auto getter = [=]() -> double {
-                auto& ct = std::get<CTSequentialBeam>(*beam);
-                auto& oaec = ct.organAECFilter();
-                return oaec.rampAngleDeg();
-            };
-            addItem(organaecItem, "Ramp angle [deg]", setter, getter);
-        }
-        {
-            auto setter = [=](double d) {
-                auto& ct = std::get<CTSequentialBeam>(*beam);
-                auto& oaec = ct.organAECFilter();
-                oaec.setLowWeightFactor(d);
-            };
-            auto getter = [=]() -> double {
-                auto& ct = std::get<CTSequentialBeam>(*beam);
-                auto& oaec = ct.organAECFilter();
-                return oaec.lowWeight();
-            };
-            addItem(organaecItem, "Low weight [0-1]", setter, getter);
-        }
-        {
-            auto getter = [=]() -> double {
-                auto& ct = std::get<CTSequentialBeam>(*beam);
-                auto& oaec = ct.organAECFilter();
-                return oaec.maxWeight();
-            };
-            addItem(organaecItem, "High weight", getter);
-        }
-        {
-            auto setter = [=](bool d) {
-                auto& ct = std::get<CTSequentialBeam>(*beam);
-                auto& oaec = ct.organAECFilter();
-                oaec.setCompensateOutside(d);
-            };
-            auto getter = [=]() -> bool {
-                auto& ct = std::get<CTSequentialBeam>(*beam);
-                auto& oaec = ct.organAECFilter();
-                return oaec.compensateOutside();
-            };
-            addItem(organaecItem, "Compensate outside beam", setter, getter);
-        }
-    }
+    addCTAecItem<CTSequentialBeam>(organaecItem, beam);
 
     {
         auto getter = [=]() -> std::uint64_t {
@@ -1248,29 +1252,6 @@ void BeamSettingsModel::addCTSpiralBeam(std::shared_ptr<BeamActorContainer> acto
         addItem(root, "CTDI phantom diameter [cm]", setter, getter);
     }
 
-    {
-        auto setter = [=, this](bool d) {
-            if (this->m_image) {
-                auto& ct = std::get<CTSpiralBeam>(*beam);
-                if (d) {
-                    const auto& ct_aec = this->m_image->aecData();
-                    if (ct_aec.isEmpty())
-                        ct.setAECFilter(this->m_image->calculateAECfilterFromWaterEquivalentDiameter());
-                    else
-                        ct.setAECFilter(ct_aec);
-                } else {
-                    ct.setAECFilter(CTAECFilter {});
-                }
-            }
-        };
-        auto getter = [=]() -> bool {
-            auto& ct = std::get<CTSpiralBeam>(*beam);
-            const auto& aec = ct.AECFilter();
-            return !aec.isEmpty();
-        };
-        addItem(root, "Use current AEC profile", setter, getter);
-    }
-
     auto tubeItem = new LabelItem(tr("Tube"));
     root->appendRow(tubeItem);
 
@@ -1300,6 +1281,33 @@ void BeamSettingsModel::addCTSpiralBeam(std::shared_ptr<BeamActorContainer> acto
         addItem(tubeItem, "Bowtie filter", setter, getter);
     }
     addTubeItems<CTSpiralBeam>(tubeItem, beam);
+
+    {
+        auto setter = [=, this](bool d) {
+            if (this->m_image) {
+                auto& ct = std::get<CTSpiralBeam>(*beam);
+                if (d) {
+                    const auto& ct_aec = this->m_image->aecData();
+                    if (ct_aec.isEmpty())
+                        ct.setAECFilter(this->m_image->calculateAECfilterFromWaterEquivalentDiameter());
+                    else
+                        ct.setAECFilter(ct_aec);
+                } else {
+                    ct.setAECFilter(CTAECFilter {});
+                }
+            }
+        };
+        auto getter = [=]() -> bool {
+            auto& ct = std::get<CTSpiralBeam>(*beam);
+            const auto& aec = ct.AECFilter();
+            return !aec.isEmpty();
+        };
+        addItem(root, "Use current AEC profile", setter, getter);
+    }
+
+    auto organaecItem = new LabelItem(tr("Organ AEC"));
+    root->appendRow(organaecItem);
+    addCTAecItem<CTSpiralBeam>(organaecItem, beam);
 
     {
         auto getter = [=]() -> std::uint64_t {
@@ -1749,6 +1757,10 @@ void BeamSettingsModel::addCTSpiralDualEnergyBeam(std::shared_ptr<BeamActorConta
         };
         addItem(root, "Use current AEC profile", setter, getter);
     }
+
+    auto organaecItem = new LabelItem(tr("Organ AEC"));
+    root->appendRow(organaecItem);
+    addCTAecItem<CTSpiralDualEnergyBeam>(organaecItem, beam);
 
     {
         auto getter = [=]() -> std::uint64_t {

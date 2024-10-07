@@ -35,6 +35,8 @@ Copyright 2024 Erlend Andersen
 #include <h5io.hpp>
 #include <icrpphantomimportpipeline.hpp>
 #include <icrpphantomimportwidget.hpp>
+#include <otherphantomimportpipeline.hpp>
+#include <otherphantomimportwidget.hpp>
 #include <renderwidgetscollection.hpp>
 #include <simulationpipeline.hpp>
 #include <simulationwidget.hpp>
@@ -131,12 +133,22 @@ MainWindow::MainWindow(QWidget* parent)
     connect(icrpimportwidget, &ICRPPhantomImportWidget::requestImportPhantom, icrppipeline, &ICRPPhantomImportPipeline::importPhantom);
     connect(icrppipeline, &ICRPPhantomImportPipeline::imageDataChanged, slicerender, &RenderWidgetsCollection::updateImageData);
 
+    // Adding other phantom import widget
+    auto otherimportwidget = new OtherPhantomImportWidget(importWidgets);
+    importWidgets->addTab(otherimportwidget, tr("Other"));
+    auto otherphantompipeline = new OtherPhantomImportPipeline;
+    otherphantompipeline->moveToThread(&m_workerThread);
+    statusBar->registerPipeline(otherphantompipeline);
+    connect(otherimportwidget, &OtherPhantomImportWidget::requestImportPhantom, otherphantompipeline, &OtherPhantomImportPipeline::importPhantom);
+    connect(otherphantompipeline, &OtherPhantomImportPipeline::imageDataChanged, slicerender, &RenderWidgetsCollection::updateImageData);
+
     // beam settings widget
     auto beamsettingswidget = new BeamSettingsWidget(this);
     menuWidget->addTab(beamsettingswidget, tr("Configure X-ray beams"));
     connect(ctsegmentationpipeline, &CTSegmentationPipeline::imageDataChanged, beamsettingswidget, &BeamSettingsWidget::updateImageData);
     connect(ctorgansegmentationpipeline, &CTOrganSegmentatorPipeline::imageDataChanged, beamsettingswidget, &BeamSettingsWidget::updateImageData);
     connect(icrppipeline, &ICRPPhantomImportPipeline::imageDataChanged, beamsettingswidget, &BeamSettingsWidget::updateImageData);
+    connect(otherphantompipeline, &OtherPhantomImportPipeline::imageDataChanged, beamsettingswidget, &BeamSettingsWidget::updateImageData);
     auto beamsettingsmodel = beamsettingswidget->modelView();
     connect(beamsettingsmodel, &BeamSettingsView::beamActorAdded, slicerender, &RenderWidgetsCollection::addActor);
     connect(beamsettingsmodel, &BeamSettingsView::beamActorRemoved, slicerender, &RenderWidgetsCollection::removeActor);
@@ -153,6 +165,7 @@ MainWindow::MainWindow(QWidget* parent)
     connect(ctsegmentationpipeline, &CTSegmentationPipeline::imageDataChanged, simulationpipeline, &SimulationPipeline::updateImageData);
     connect(ctorgansegmentationpipeline, &CTOrganSegmentatorPipeline::imageDataChanged, simulationpipeline, &SimulationPipeline::updateImageData);
     connect(icrppipeline, &ICRPPhantomImportPipeline::imageDataChanged, simulationpipeline, &SimulationPipeline::updateImageData);
+    connect(otherphantompipeline, &OtherPhantomImportPipeline::imageDataChanged, simulationpipeline, &SimulationPipeline::updateImageData);
     connect(simulationwidget, &SimulationWidget::numberOfThreadsChanged, simulationpipeline, &SimulationPipeline::setNumberOfThreads);
     connect(simulationwidget, &SimulationWidget::ignoreAirChanged, simulationpipeline, &SimulationPipeline::setDeleteAirDose);
     connect(simulationwidget, &SimulationWidget::requestStartSimulation, simulationpipeline, &SimulationPipeline::startSimulation);
@@ -188,6 +201,7 @@ MainWindow::MainWindow(QWidget* parent)
     connect(ctsegmentationpipeline, &CTSegmentationPipeline::imageDataChanged, h5io, &H5IO::updateImageData);
     connect(ctorgansegmentationpipeline, &CTOrganSegmentatorPipeline::imageDataChanged, h5io, &H5IO::updateImageData);
     connect(icrppipeline, &ICRPPhantomImportPipeline::imageDataChanged, h5io, &H5IO::updateImageData);
+    connect(otherphantompipeline, &OtherPhantomImportPipeline::imageDataChanged, h5io, &H5IO::updateImageData);
     connect(simulationpipeline, &SimulationPipeline::imageDataChanged, h5io, &H5IO::updateImageData);
     connect(beamsettingsmodel, &BeamSettingsView::beamActorAdded, h5io, &H5IO::addBeamActor);
     connect(beamsettingsmodel, &BeamSettingsView::beamActorRemoved, h5io, &H5IO::removeBeamActor);

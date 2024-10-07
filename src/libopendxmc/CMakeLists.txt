@@ -19,6 +19,7 @@ qt_add_library(libopendxmc STATIC
 	hdf5wrapper.cpp
 	h5io.cpp	
 	icrpphantomimportpipeline.cpp
+	otherphantomimportpipeline.cpp
 	renderwidgetscollection.cpp	
 	slicerenderwidget.cpp		
 	simulationpipeline.cpp

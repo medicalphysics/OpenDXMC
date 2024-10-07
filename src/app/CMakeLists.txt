@@ -7,6 +7,7 @@ qt_add_executable(opendxmc
 	mainwindow.cpp
 	ctdicomimportwidget.cpp
     icrpphantomimportwidget.cpp
+    otherphantomimportwidget.cpp
     statusbar.cpp
 )
 

@@ -941,7 +941,6 @@ void BeamSettingsModel::addCTSequentialBeam(std::shared_ptr<BeamActorContainer> 
     auto tubeItem = new LabelItem(tr("Tube"));
     root->appendRow(tubeItem);
     {
-
         std::shared_ptr<QString> bowtiekey = nullptr;
         QString searchKey("Siemens Definition Flash W1 120kV");
         if (m_bowtieFilters.contains(searchKey)) {
@@ -967,6 +966,97 @@ void BeamSettingsModel::addCTSequentialBeam(std::shared_ptr<BeamActorContainer> 
         addItem(tubeItem, "Bowtie filter", setter, getter);
     }
     addTubeItems<CTSequentialBeam>(tubeItem, beam);
+
+    auto organaecItem = new LabelItem(tr("Organ AEC"));
+    root->appendRow(organaecItem);
+    {
+        {
+            auto setter = [=](bool d) {
+                auto& ct = std::get<CTSequentialBeam>(*beam);
+                auto& oaec = ct.organAECFilter();
+                oaec.setUseFilter(d);
+            };
+            auto getter = [=]() -> bool {
+                auto& ct = std::get<CTSequentialBeam>(*beam);
+                auto& oaec = ct.organAECFilter();
+                return oaec.useFilter();
+            };
+            addItem(organaecItem, "Use Organ AEC", setter, getter);
+        }
+        {
+            auto setter = [=](double d) {
+                auto& ct = std::get<CTSequentialBeam>(*beam);
+                auto& oaec = ct.organAECFilter();
+                oaec.setStartAngleDeg(d);
+            };
+            auto getter = [=]() -> double {
+                auto& ct = std::get<CTSequentialBeam>(*beam);
+                auto& oaec = ct.organAECFilter();
+                return oaec.startAngleDeg();
+            };
+            addItem(organaecItem, "Start angle [deg]", setter, getter);
+        }
+        {
+            auto setter = [=](double d) {
+                auto& ct = std::get<CTSequentialBeam>(*beam);
+                auto& oaec = ct.organAECFilter();
+                oaec.setStopAngleDeg(d);
+            };
+            auto getter = [=]() -> double {
+                auto& ct = std::get<CTSequentialBeam>(*beam);
+                auto& oaec = ct.organAECFilter();
+                return oaec.stopAngleDeg();
+            };
+            addItem(organaecItem, "Stop angle [deg]", setter, getter);
+        }
+        {
+            auto setter = [=](double d) {
+                auto& ct = std::get<CTSequentialBeam>(*beam);
+                auto& oaec = ct.organAECFilter();
+                oaec.setRampAngleDeg(d);
+            };
+            auto getter = [=]() -> double {
+                auto& ct = std::get<CTSequentialBeam>(*beam);
+                auto& oaec = ct.organAECFilter();
+                return oaec.rampAngleDeg();
+            };
+            addItem(organaecItem, "Ramp angle [deg]", setter, getter);
+        }
+        {
+            auto setter = [=](double d) {
+                auto& ct = std::get<CTSequentialBeam>(*beam);
+                auto& oaec = ct.organAECFilter();
+                oaec.setLowWeightFactor(d);
+            };
+            auto getter = [=]() -> double {
+                auto& ct = std::get<CTSequentialBeam>(*beam);
+                auto& oaec = ct.organAECFilter();
+                return oaec.lowWeight();
+            };
+            addItem(organaecItem, "Low weight [0-1]", setter, getter);
+        }
+        {
+            auto getter = [=]() -> double {
+                auto& ct = std::get<CTSequentialBeam>(*beam);
+                auto& oaec = ct.organAECFilter();
+                return oaec.maxWeight();
+            };
+            addItem(organaecItem, "High weight", getter);
+        }
+        {
+            auto setter = [=](bool d) {
+                auto& ct = std::get<CTSequentialBeam>(*beam);
+                auto& oaec = ct.organAECFilter();
+                oaec.setCompensateOutside(d);
+            };
+            auto getter = [=]() -> bool {
+                auto& ct = std::get<CTSequentialBeam>(*beam);
+                auto& oaec = ct.organAECFilter();
+                return oaec.compensateOutside();
+            };
+            addItem(organaecItem, "Compensate outside beam", setter, getter);
+        }
+    }
 
     {
         auto getter = [=]() -> std::uint64_t {

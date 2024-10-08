@@ -26,6 +26,7 @@ Copyright 2023 Erlend Andersen
 #include <QVTKOpenGLNativeWidget.h>
 
 #include <vtkImageActor.h>
+#include <vtkImageGaussianSmooth.h>
 #include <vtkImageSincInterpolator.h>
 #include <vtkImageStack.h>
 #include <vtkRenderer.h>
@@ -50,6 +51,7 @@ public:
     void setInteractionStyleTo3D();
     void setBackgroundColor(double r, double g, double b);
     void setUseCTDataBackground(bool on);
+    void setImageSmoothing(int pixels);
 
     void showData(DataContainer::ImageType type);
     void Render(bool reset_camera = false);
@@ -73,6 +75,7 @@ private:
     vtkSmartPointer<vtkImageActor> m_imageSliceFront = nullptr;
     vtkSmartPointer<vtkImageActor> m_imageSliceBack = nullptr;
     vtkSmartPointer<vtkImageSincInterpolator> m_interpolatorSinc = nullptr;
+    vtkSmartPointer<vtkImageGaussianSmooth> m_smoother = nullptr;
     vtkSmartPointer<vtkRenderer> m_renderer = nullptr;
     QVTKOpenGLNativeWidget* openGLWidget = nullptr;
     vtkSmartPointer<vtkTextActor> lowerLeftText = nullptr;

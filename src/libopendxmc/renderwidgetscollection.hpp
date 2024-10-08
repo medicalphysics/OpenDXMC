@@ -69,6 +69,7 @@ public:
     void setBeamActorsVisible(int);
     void setBackgroundColor(const QColor& color);
     void setUseCTBackground(bool on);
+    void setImageSmoothing(int);
 
     void Render();
 

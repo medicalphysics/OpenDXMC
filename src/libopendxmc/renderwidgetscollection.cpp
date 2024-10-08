@@ -149,6 +149,12 @@ void RenderWidgetsCollection::setInteractionStyleTo3D()
         w->setInteractionStyleTo3D();
 }
 
+void RenderWidgetsCollection::setImageSmoothing(int pixels)
+{
+    for (auto& w : m_slice_widgets)
+        w->setImageSmoothing(pixels);
+}
+
 void RenderWidgetsCollection::Render()
 {
     m_volume_widget->Render();
@@ -272,8 +278,12 @@ QWidget* RenderWidgetsCollection::createRendersettingsWidget(QWidget* parent)
     inter_type->addItem(tr("Cubic"));
     inter_type->addItem(tr("Sinc"));
     inter_type->setCurrentIndex(3);
-
     connect(inter_type, &QComboBox::currentIndexChanged, this, &RenderWidgetsCollection::setInterpolationType);
+
+    auto smoother = addWidgetAndLabel<QSlider>(tr("Image smoothing"), sliceg_layout, parent);
+    smoother->setRange(0, 10);
+    smoother->setValue(0);
+    connect(smoother, &QSlider::valueChanged, this, &RenderWidgetsCollection::setImageSmoothing);
 
     // These settings are unusable per now
     /*

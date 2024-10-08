@@ -291,6 +291,12 @@ void SliceRenderWidget::setupSlicePipeline(int orientation)
     m_interpolatorSinc = vtkSmartPointer<vtkImageSincInterpolator>::New();
     m_interpolatorSinc->AntialiasingOn();
 
+    // smoother
+    m_smoother = vtkSmartPointer<vtkImageGaussianSmooth>::New();
+    m_smoother->SetDimensionality(2);
+    m_smoother->SetRadiusFactor(0.0);
+    m_smoother->SetStandardDeviation(0.0);
+
     std::array slices = { m_imageSliceFront, m_imageSliceBack };
     for (auto s : slices) {
         auto imageMapper = vtkSmartPointer<vtkImageResliceMapper>::New();
@@ -301,6 +307,9 @@ void SliceRenderWidget::setupSlicePipeline(int orientation)
         imageMapper->ResampleToScreenPixelsOn();
         imageMapper->AutoAdjustImageQualityOff();
         imageMapper->SetInterpolator(m_interpolatorSinc);
+        if (s == m_imageSliceFront) {
+            imageMapper->SetInputConnection(m_smoother->GetOutputPort());
+        }
         s->SetMapper(imageMapper);
         s->InterpolateOn();
     }
@@ -316,7 +325,6 @@ void SliceRenderWidget::setupSlicePipeline(int orientation)
         cam->SetFocalPoint(0, 0, 0);
         cam->SetPosition(0, 0, -1);
         cam->SetViewUp(0, -1, 0);
-
     } else if (orientation == 1) {
         cam->SetFocalPoint(0, 0, 0);
         cam->SetPosition(0, -1, 0);
@@ -457,6 +465,13 @@ void SliceRenderWidget::setInteractionStyleToSlicing()
 void SliceRenderWidget::useFXAA(bool use)
 {
     m_renderer->SetUseFXAA(use);
+}
+
+void SliceRenderWidget::setImageSmoothing(int pixels)
+{
+    m_smoother->SetStandardDeviation(static_cast<double>(pixels) / 2.0);
+    m_smoother->SetRadiusFactor(static_cast<double>(pixels) * 2.0);
+    Render();
 }
 
 void SliceRenderWidget::setMultisampleAA(int samples)
@@ -638,7 +653,8 @@ void SliceRenderWidget::Render(bool reset_camera)
 void SliceRenderWidget::setNewImageData(vtkSmartPointer<vtkImageData> data, bool rezoom_camera)
 {
     if (data) {
-        m_imageSliceFront->GetMapper()->SetInputData(data);
+        m_smoother->SetInputData(data);
+        // m_imageSliceFront->GetMapper()->SetInputData(data);
         m_imageSliceFront->SetDisplayExtent(data->GetExtent());
         Render(rezoom_camera);
     }
@@ -660,7 +676,6 @@ void SliceRenderWidget::updateImageData(std::shared_ptr<DataContainer> data)
         m_data = data;
         if (data->hasImage(DataContainer::ImageType::CT) && uid_is_new) {
             auto vtkimage = data->vtkImage(DataContainer::ImageType::CT);
-            m_imageSliceFront->GetMapper()->SetInputData(vtkimage);
             m_imageSliceBack->GetMapper()->SetInputData(vtkimage);
             showData(DataContainer::ImageType::CT);
         } else if (data->hasImage(DataContainer::ImageType::Density) && uid_is_new) {

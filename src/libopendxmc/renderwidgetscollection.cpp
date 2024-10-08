@@ -151,8 +151,9 @@ void RenderWidgetsCollection::setInteractionStyleTo3D()
 
 void RenderWidgetsCollection::setImageSmoothing(int pixels)
 {
+    auto pix = static_cast<double>(pixels) / 4 + .5;
     for (auto& w : m_slice_widgets)
-        w->setImageSmoothing(pixels);
+        w->setImageSmoothing(pix);
 }
 
 void RenderWidgetsCollection::Render()
@@ -280,9 +281,19 @@ QWidget* RenderWidgetsCollection::createRendersettingsWidget(QWidget* parent)
     inter_type->setCurrentIndex(3);
     connect(inter_type, &QComboBox::currentIndexChanged, this, &RenderWidgetsCollection::setInterpolationType);
 
-    auto smoother = addWidgetAndLabel<QSlider>(tr("Image smoothing"), sliceg_layout, parent);
-    smoother->setRange(0, 10);
+    /* auto smoother = addWidgetAndLabel<QDoubleSpinBox>(tr("Image smoothing"), sliceg_layout, parent);
+     smoother->setRange(0, 10);
+     smoother->setValue(0);
+     smoother->setSingleStep(0.2);
+     smoother->setDecimals(2);
+     connect(smoother, &QDoubleSpinBox::valueChanged, this, &RenderWidgetsCollection::setImageSmoothing);
+     */
+    auto smoother = addWidgetAndLabel<QSlider>(tr("Image display smoothing "), sliceg_layout, parent);
+    smoother->setRange(0, 5);
     smoother->setValue(0);
+    smoother->setSingleStep(1);
+    smoother->setTracking(false);
+    // smoother->setDecimals(2);
     connect(smoother, &QSlider::valueChanged, this, &RenderWidgetsCollection::setImageSmoothing);
 
     // These settings are unusable per now

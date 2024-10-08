@@ -51,7 +51,7 @@ public:
     void setInteractionStyleTo3D();
     void setBackgroundColor(double r, double g, double b);
     void setUseCTDataBackground(bool on);
-    void setImageSmoothing(int pixels);
+    void setImageSmoothing(double pixels);
 
     void showData(DataContainer::ImageType type);
     void Render(bool reset_camera = false);

@@ -293,7 +293,7 @@ void SliceRenderWidget::setupSlicePipeline(int orientation)
 
     // smoother
     m_smoother = vtkSmartPointer<vtkImageGaussianSmooth>::New();
-    m_smoother->SetDimensionality(2);
+    m_smoother->SetDimensionality(3);
     m_smoother->SetRadiusFactor(0.0);
     m_smoother->SetStandardDeviation(0.0);
 
@@ -303,7 +303,8 @@ void SliceRenderWidget::setupSlicePipeline(int orientation)
         imageMapper->SliceFacesCameraOn();
         imageMapper->SliceAtFocalPointOn();
         imageMapper->JumpToNearestSliceOn();
-        imageMapper->ReleaseDataFlagOn();
+        imageMapper->ReleaseDataFlagOff();
+        imageMapper->StreamingOn();
         imageMapper->ResampleToScreenPixelsOn();
         imageMapper->AutoAdjustImageQualityOff();
         imageMapper->SetInterpolator(m_interpolatorSinc);
@@ -396,6 +397,12 @@ void SliceRenderWidget::sharedViews(std::vector<SliceRenderWidget*> wids)
         w->m_imageSliceFront->GetProperty()->SetLookupTable(lut);
     }
 
+    // setting same image smoother
+    for (auto& w : wids) {
+        w->m_smoother = this->m_smoother;
+        w->m_imageSliceFront->GetMapper()->SetInputConnection(w->m_smoother->GetOutputPort());
+    }
+
     for (std::size_t i = 0; i < wids.size(); ++i) {
         auto w = wids[i];
         auto callback = vtkSmartPointer<WindowLevelSlicingModifiedCallback>::New();
@@ -467,10 +474,10 @@ void SliceRenderWidget::useFXAA(bool use)
     m_renderer->SetUseFXAA(use);
 }
 
-void SliceRenderWidget::setImageSmoothing(int pixels)
+void SliceRenderWidget::setImageSmoothing(double pixels)
 {
-    m_smoother->SetStandardDeviation(static_cast<double>(pixels) / 2.0);
-    m_smoother->SetRadiusFactor(static_cast<double>(pixels) * 2.0);
+    m_smoother->SetStandardDeviation(pixels);
+    m_smoother->SetRadiusFactor(std::max(1.0, pixels * 2));
     Render();
 }
 

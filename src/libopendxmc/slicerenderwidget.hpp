@@ -26,7 +26,6 @@ Copyright 2023 Erlend Andersen
 #include <QVTKOpenGLNativeWidget.h>
 
 #include <vtkImageActor.h>
-#include <vtkImageGaussianSmooth.h>
 #include <vtkImageSincInterpolator.h>
 #include <vtkImageStack.h>
 #include <vtkRenderer.h>

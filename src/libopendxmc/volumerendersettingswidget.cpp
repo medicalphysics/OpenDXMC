@@ -165,7 +165,7 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(VolumeRenderSettings* set
     auto gir = getSettingsWidget<QSlider>(tr("Global illumination reach"), shadebox);
     gir.widget->setValue(static_cast<int>(m_settings->mapper()->GetGlobalIlluminationReach() * 100));
     connect(gir.widget, &QSlider::valueChanged, [this](int value) {
-        const float g = value / float { 100 };
+        const float g = static_cast<float>(value) / float { 100 };
         m_settings->mapper()->SetGlobalIlluminationReach(std::clamp(g, 0.f, 1.f));
         m_settings->render();
     });
@@ -175,7 +175,7 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(VolumeRenderSettings* set
     auto vsb = getSettingsWidget<QSlider>(tr("Volumetric scattering blending"), this);
     vsb.widget->setValue(static_cast<int>(m_settings->mapper()->GetGlobalIlluminationReach() * 50));
     connect(vsb.widget, &QSlider::valueChanged, [this](int value) {
-        const float g = value / float { 50 };
+        const float g = static_cast<float>(value) / float { 50 };
         m_settings->mapper()->SetVolumetricScatteringBlending(std::clamp(g, 0.f, 2.f));
         m_settings->render();
     });
@@ -185,7 +185,7 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(VolumeRenderSettings* set
     auto ambient = getSettingsWidget<QSlider>(tr("Ambient"), this);
     ambient.widget->setValue(static_cast<int>(vprop->GetAmbient() * 100));
     connect(ambient.widget, &QSlider::valueChanged, [vprop, this](int value) {
-        const float g = value / float { 100 };
+        const float g = static_cast<float>(value) / float { 100 };
         vprop->SetAmbient(std::clamp(g, 0.f, 1.f));
         m_settings->render();
     });
@@ -195,7 +195,7 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(VolumeRenderSettings* set
     auto diffuse = getSettingsWidget<QSlider>(tr("Diffuse"), this);
     diffuse.widget->setValue(static_cast<int>(vprop->GetDiffuse() * 100));
     connect(diffuse.widget, &QSlider::valueChanged, [vprop, this](int value) {
-        const float g = value / float { 100 };
+        const float g = static_cast<float>(value) / float { 100 };
         vprop->SetDiffuse(std::clamp(g, 0.f, 1.f));
         m_settings->render();
     });
@@ -205,7 +205,7 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(VolumeRenderSettings* set
     auto specular = getSettingsWidget<QSlider>(tr("Specular"), this);
     specular.widget->setValue(static_cast<int>(vprop->GetSpecular() * 100));
     connect(specular.widget, &QSlider::valueChanged, [vprop, this](int value) {
-        const float g = value / float { 100 };
+        const float g = static_cast<float>(value) / float { 100 };
         vprop->SetSpecular(std::clamp(g, 0.f, 1.f));
         m_settings->render();
     });
@@ -215,7 +215,7 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(VolumeRenderSettings* set
     auto specularpower = getSettingsWidget<QSlider>(tr("Specular power"), this);
     specularpower.widget->setValue(static_cast<int>(vprop->GetSpecularPower()));
     connect(specularpower.widget, &QSlider::valueChanged, [vprop, this](int value) {
-        const float g = value;
+        const float g = static_cast<float>(value);
         vprop->SetSpecularPower(g);
         m_settings->render();
     });
@@ -225,7 +225,7 @@ VolumerenderSettingsWidget::VolumerenderSettingsWidget(VolumeRenderSettings* set
     auto sa = getSettingsWidget<QSlider>(tr("Scattering anisotropy"), this);
     sa.widget->setValue(static_cast<int>(vprop->GetScatteringAnisotropy() * 50) + 50);
     connect(sa.widget, &QSlider::valueChanged, [vprop, this](int value) {
-        const float g = value / float { 50 } - 1;
+        const float g = static_cast<float>(value) / float { 50 } - 1;
         vprop->SetScatteringAnisotropy(std::clamp(g, -1.f, 1.f));
         m_settings->render();
     });

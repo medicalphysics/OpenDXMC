@@ -85,6 +85,7 @@ CTDicomImportWidget::CTDicomImportWidget(QWidget* parent)
         spinBox->setMinimum(0.0);
         spinBox->setSuffix(" voxels");
         spinBox->setValue(m_blurRadius[i]);
+        spinBox->setSingleStep(0.5);
         connect(spinBox, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [this, i](auto value) {
             this->m_blurRadius[i] = value;
             emit blurRadiusChanged(this->m_blurRadius.data());
@@ -116,6 +117,7 @@ CTDicomImportWidget::CTDicomImportWidget(QWidget* parent)
         spinBox->setMinimum(0.1);
         spinBox->setSuffix(" mm");
         spinBox->setValue(m_outputSpacing[i]);
+        spinBox->setSingleStep(0.5);
         connect(spinBox, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [this, i](auto value) {
             this->m_outputSpacing[i] = value;
             emit outputSpacingChanged(this->m_outputSpacing.data());

@@ -58,9 +58,12 @@ target_link_libraries(libopendxmc PUBLIC
 	VTK::RenderingAnnotation
 	PRIVATE	
 	${HDF5_LIBRARIES}
-	libctsegmentator
 	)
 
+if(${OPENDXMC_USECTSEGMENTATOR})
+	target_link_libraries(libopendxmc PRIVATE libctsegmentator)
+	target_compile_definitions(libopendxmc PRIVATE USECTSEGMENTATOR=1)
+endif()
 
 # Rather than defining a single `VTK_DEFINITIONS` for use by all relevant
 # targets, the definitions are made as needed with the exact set needed for the

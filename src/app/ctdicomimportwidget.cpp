@@ -94,7 +94,8 @@ CTDicomImportWidget::CTDicomImportWidget(QWidget* parent)
     }
     outputBlurBox->setLayout(outputBlurLayoutButtons);
 
-    auto outputSegmentatorBox = new QGroupBox(tr("Use convnet organ segmentation of CT series"), this);
+#ifdef USECTSEGMENTATOR
+    auto outputSegmentatorBox = new QGroupBox(tr("[Experimental] DL organ segmentation"), this);
     outputSegmentatorBox->setCheckable(true);
     outputSegmentatorBox->setChecked(false);
     auto outputSegmentatorLayout = new QHBoxLayout;
@@ -102,6 +103,7 @@ CTDicomImportWidget::CTDicomImportWidget(QWidget* parent)
     outputSegmentatorLabel->setWordWrap(true);
     outputSegmentatorLayout->addWidget(outputSegmentatorLabel);
     outputSegmentatorBox->setLayout(outputSegmentatorLayout);
+#endif // USECTSEGMENTATOR
 
     // voxel resize selection
     auto outputSpacingBox = new QGroupBox(tr("Resize voxels to this spacing for imported series [XYZ]:"), this);
@@ -126,6 +128,7 @@ CTDicomImportWidget::CTDicomImportWidget(QWidget* parent)
     }
     outputSpacingBox->setLayout(outputSpacingLayoutButtons);
 
+#ifdef USECTSEGMENTATOR
     connect(outputSegmentatorBox, &QGroupBox::toggled, [=, this](bool value) {
         outputSpacingBox->setChecked(value);
         outputSpacingBox->setDisabled(value);
@@ -140,6 +143,7 @@ CTDicomImportWidget::CTDicomImportWidget(QWidget* parent)
         }
         emit useOrganSegmentator(value);
     });
+#endif
 
     // tube settings
     auto tubeBox = new QGroupBox(tr("Aqusition tube settings: "), this);
@@ -200,7 +204,9 @@ CTDicomImportWidget::CTDicomImportWidget(QWidget* parent)
     // setting up layout
     mainlayout->addWidget(browseBox);
     mainlayout->addWidget(outputBlurBox);
+#ifdef USECTSEGMENTATOR
     mainlayout->addWidget(outputSegmentatorBox);
+#endif
     mainlayout->addWidget(outputSpacingBox);
     mainlayout->addWidget(tubeBox);
     mainlayout->addWidget(seriesSelectorBox);

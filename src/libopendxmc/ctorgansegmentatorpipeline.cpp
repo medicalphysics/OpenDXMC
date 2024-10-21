@@ -16,6 +16,8 @@ along with OpenDXMC. If not, see < https://www.gnu.org/licenses/>.
 Copyright 2024 Erlend Andersen
 */
 
+#ifdef USECTSEGMENTATOR
+
 #include "ctsegmentator/ctsegmentator.hpp"
 #include <ctorgansegmentatorpipeline.hpp>
 
@@ -127,3 +129,5 @@ void CTOrganSegmentatorPipeline::cancelSegmentation()
     auto ref = std::atomic_ref(m_requestCancel);
     ref.store(true);
 }
+
+#endif

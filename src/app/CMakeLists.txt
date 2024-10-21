@@ -30,11 +30,14 @@ set_target_properties(opendxmc PROPERTIES
 # adding dxmc physicslist to binary folder
 dxmclib_add_physics_list(opendxmc)
 
-#adding models to binary folder
-copy_ctsegmentator_model_to_binary_dir(opendxmc)
+if(${OPENDXMC_USECTSEGMENTATOR})
+    #adding models to binary folder
+    copy_ctsegmentator_model_to_binary_dir(opendxmc)
+    #adding torch binaries
+    copy_torch_binaries(opendxmc)
 
-#adding torch binaries
-copy_torch_binaries(opendxmc)
+    target_compile_definitions(opendxmc PRIVATE USECTSEGMENTATOR=1)
+endif()
 
 # Adding icons to binary resource
 qt_add_resources(opendxmc icons
@@ -104,6 +107,8 @@ if(WIN32)
     set(CPACK_NSIS_DELETE_ICONS_EXTRA
     "Delete '$SMPROGRAMS\\\\$START_MENU\\\\OpenDXMC.lnk'"
     )
+    #Allow non UAC installs
+    set(CPACK_NSIS_DEFINES "RequestExecutionLevel user") 
 endif()
 include(CPack)
 

@@ -28,7 +28,6 @@ Copyright 2024 Erlend Andersen
 #include <beamsettingswidget.hpp>
 #include <ctdicomimportwidget.hpp>
 #include <ctimageimportpipeline.hpp>
-#include <ctorgansegmentatorpipeline.hpp>
 #include <ctsegmentationpipeline.hpp>
 #include <dosetablepipeline.hpp>
 #include <dosetablewidget.hpp>
@@ -41,6 +40,10 @@ Copyright 2024 Erlend Andersen
 #include <simulationpipeline.hpp>
 #include <simulationwidget.hpp>
 #include <statusbar.hpp>
+
+#ifdef USECTSEGMENTATOR
+#include <ctorgansegmentatorpipeline.hpp>
+#endif
 
 #include <mainwindow.hpp>
 
@@ -111,6 +114,7 @@ MainWindow::MainWindow(QWidget* parent)
     connect(ctsegmentationpipeline, &CTSegmentationPipeline::imageDataChanged, slicerender, &RenderWidgetsCollection::updateImageData);
     connect(ctimageimportpipeline, &CTImageImportPipeline::imageDataChanged, ctsegmentationpipeline, &CTSegmentationPipeline::updateImageData);
 
+#ifdef USECTSEGMENTATOR
     // adding ct organ segmentation pipeline
     auto ctorgansegmentationpipeline = new CTOrganSegmentatorPipeline;
     ctorgansegmentationpipeline->moveToThread(&m_workerThread);
@@ -122,7 +126,7 @@ MainWindow::MainWindow(QWidget* parent)
     connect(ctorgansegmentationpipeline, &CTOrganSegmentatorPipeline::imageDataChanged, slicerender, &RenderWidgetsCollection::updateImageData);
     connect(ctorgansegmentationpipeline, &CTOrganSegmentatorPipeline::importProgressChanged, ctdicomimportwidget, &CTDicomImportWidget::setImportProgress);
     connect(ctimageimportpipeline, &CTImageImportPipeline::imageDataChanged, ctorgansegmentationpipeline, &CTOrganSegmentatorPipeline::updateImageData);
-
+#endif
     // Adding icrp phantom import widget
     auto icrpimportwidget = new ICRPPhantomImportWidget(importWidgets);
     importWidgets->addTab(icrpimportwidget, tr("ICRP phantom import"));
@@ -146,7 +150,9 @@ MainWindow::MainWindow(QWidget* parent)
     auto beamsettingswidget = new BeamSettingsWidget(this);
     menuWidget->addTab(beamsettingswidget, tr("Configure X-ray beams"));
     connect(ctsegmentationpipeline, &CTSegmentationPipeline::imageDataChanged, beamsettingswidget, &BeamSettingsWidget::updateImageData);
+#ifdef USECTSEGMENTATOR
     connect(ctorgansegmentationpipeline, &CTOrganSegmentatorPipeline::imageDataChanged, beamsettingswidget, &BeamSettingsWidget::updateImageData);
+#endif
     connect(icrppipeline, &ICRPPhantomImportPipeline::imageDataChanged, beamsettingswidget, &BeamSettingsWidget::updateImageData);
     connect(otherphantompipeline, &OtherPhantomImportPipeline::imageDataChanged, beamsettingswidget, &BeamSettingsWidget::updateImageData);
     auto beamsettingsmodel = beamsettingswidget->modelView();
@@ -163,7 +169,9 @@ MainWindow::MainWindow(QWidget* parent)
     simulationpipeline->moveToThread(&m_workerThread);
     statusBar->registerPipeline(simulationpipeline);
     connect(ctsegmentationpipeline, &CTSegmentationPipeline::imageDataChanged, simulationpipeline, &SimulationPipeline::updateImageData);
+#ifdef USECTSEGMENTATOR
     connect(ctorgansegmentationpipeline, &CTOrganSegmentatorPipeline::imageDataChanged, simulationpipeline, &SimulationPipeline::updateImageData);
+#endif
     connect(icrppipeline, &ICRPPhantomImportPipeline::imageDataChanged, simulationpipeline, &SimulationPipeline::updateImageData);
     connect(otherphantompipeline, &OtherPhantomImportPipeline::imageDataChanged, simulationpipeline, &SimulationPipeline::updateImageData);
     connect(simulationwidget, &SimulationWidget::numberOfThreadsChanged, simulationpipeline, &SimulationPipeline::setNumberOfThreads);
@@ -199,7 +207,9 @@ MainWindow::MainWindow(QWidget* parent)
     h5io->moveToThread(&m_workerThread);
     statusBar->registerPipeline(h5io);
     connect(ctsegmentationpipeline, &CTSegmentationPipeline::imageDataChanged, h5io, &H5IO::updateImageData);
+#ifdef USECTSEGMENTATOR
     connect(ctorgansegmentationpipeline, &CTOrganSegmentatorPipeline::imageDataChanged, h5io, &H5IO::updateImageData);
+#endif
     connect(icrppipeline, &ICRPPhantomImportPipeline::imageDataChanged, h5io, &H5IO::updateImageData);
     connect(otherphantompipeline, &OtherPhantomImportPipeline::imageDataChanged, h5io, &H5IO::updateImageData);
     connect(simulationpipeline, &SimulationPipeline::imageDataChanged, h5io, &H5IO::updateImageData);

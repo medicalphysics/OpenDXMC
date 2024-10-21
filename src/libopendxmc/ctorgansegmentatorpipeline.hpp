@@ -18,6 +18,7 @@ Copyright 2024 Erlend Andersen
 
 #pragma once
 
+#ifdef USECTSEGMENTATOR
 #include <basepipeline.hpp>
 
 class CTOrganSegmentatorPipeline : public BasePipeline {
@@ -34,3 +35,4 @@ private:
     bool m_useOrganSegmentator = false;
     bool m_requestCancel = false;
 };
+#endif

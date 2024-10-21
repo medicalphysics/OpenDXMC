@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.26)
 
-project(OpenDXMC VERSION 1.1.0 DESCRIPTION "OpenDXMC description" LANGUAGES CXX)
+project(OpenDXMC VERSION 1.2.0 DESCRIPTION "OpenDXMC description" LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -26,6 +26,9 @@ if(Doxygen_FOUND)
 else()
 	message(STATUS "Doxygen not found, not building docs")
 endif()
+
+#Settings to use DL organ segmentator
+set(OPENDXMC_USECTSEGMENTATOR Off CACHE BOOL "Use DL organ segmentation for CT")
 
 ## Include QT
 ## QT specifics for CMake (https://doc.qt.io/qt-6/cmake-get-started.html)
@@ -72,13 +75,15 @@ FetchContent_Declare(
     )
 FetchContent_MakeAvailable(libdxmc)
 
-## Adding CTSegmentator package
-FetchContent_Declare(
-    libctsegmentator
-    GIT_REPOSITORY https://github.com/medicalphysics/ctsegmentation.git
-    GIT_TAG main
-    )
-FetchContent_MakeAvailable(libctsegmentator)
+if(${OPENDXMC_USECTSEGMENTATOR})
+    ## Adding CTSegmentator package
+    FetchContent_Declare(
+        libctsegmentator
+        GIT_REPOSITORY https://github.com/medicalphysics/ctsegmentation.git
+        GIT_TAG main
+        )
+    FetchContent_MakeAvailable(libctsegmentator)
+endif()
 
 # Build types 
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release;RelWithDebInfo;MinSizeRel") 

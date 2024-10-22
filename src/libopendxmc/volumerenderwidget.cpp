@@ -45,7 +45,7 @@ vtkSmartPointer<vtkImageData> generateSampleDataVolume()
     auto data = std::make_shared<DataContainer>();
     data->setDimensions({ 8, 8, 8 });
     data->setSpacing({ 1, 1, 1 });
-    std::vector<double> im(8 * 8 * 8, -10000.0);
+    std::vector<double> im(8 * 8 * 8, 0);
 
     data->setImageArray(DataContainer::ImageType::CT, im);
     auto image = data->vtkImage(DataContainer::ImageType::CT);

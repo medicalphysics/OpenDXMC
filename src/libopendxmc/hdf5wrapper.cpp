@@ -562,6 +562,13 @@ bool HDF5Wrapper::save(CTSpiralBeam& beam)
     saveAttribute<double>(beamgroup, "tube_Al_filtration", beam.tube().filtration(13));
     saveAttribute<double>(beamgroup, "tube_Cu_filtration", beam.tube().filtration(29));
     saveAttribute<double>(beamgroup, "tube_Sn_filtration", beam.tube().filtration(50));
+
+    saveAttribute<std::uint64_t>(beamgroup, "use_organ_aec", static_cast<std::uint64_t>(beam.organAECFilter().useFilter()));
+    saveAttribute<std::uint64_t>(beamgroup, "compensate_weight_organ_aec", static_cast<std::uint64_t>(beam.organAECFilter().compensateOutside()));
+    saveAttribute<double>(beamgroup, "low_weight_organ_aec", beam.organAECFilter().lowWeight());
+    std::array<double, 3> organ_aec_angles = { beam.organAECFilter().startAngle(), beam.organAECFilter().stopAngle(), beam.organAECFilter().rampAngle() };
+    saveAttribute<double>(beamgroup, "start_stop_ramp_angle_organ_aec", organ_aec_angles);
+
     saveAttribute<std::uint64_t>(beamgroup, "particles_per_exposure", beam.numberOfParticlesPerExposure());
     return true;
 }
@@ -599,6 +606,13 @@ bool HDF5Wrapper::save(CTSpiralDualEnergyBeam& beam)
     saveAttribute<double>(beamgroup, "tube_Sn_filtrationA", beam.tubeA().filtration(50));
     saveAttribute<double>(beamgroup, "tube_masA", beam.relativeMasTubeA());
     saveAttribute<double>(beamgroup, "tube_masB", beam.relativeMasTubeB());
+
+    saveAttribute<std::uint64_t>(beamgroup, "use_organ_aec", static_cast<std::uint64_t>(beam.organAECFilter().useFilter()));
+    saveAttribute<std::uint64_t>(beamgroup, "compensate_weight_organ_aec", static_cast<std::uint64_t>(beam.organAECFilter().compensateOutside()));
+    saveAttribute<double>(beamgroup, "low_weight_organ_aec", beam.organAECFilter().lowWeight());
+    std::array<double, 3> organ_aec_angles = { beam.organAECFilter().startAngle(), beam.organAECFilter().stopAngle(), beam.organAECFilter().rampAngle() };
+    saveAttribute<double>(beamgroup, "start_stop_ramp_angle_organ_aec", organ_aec_angles);
+
     saveAttribute<std::uint64_t>(beamgroup, "particles_per_exposure", beam.numberOfParticlesPerExposure());
     return true;
 }
@@ -870,6 +884,32 @@ std::shared_ptr<Beam> loadCTSpiralBeam(std::unique_ptr<H5::Group>& group)
     if (tube_Sn_filtration)
         ct.addTubeFiltrationMaterial(50, tube_Sn_filtration.value()[0]);
 
+    auto use_organ_AEC = loadAttribute<std::uint64_t, 1>(group, "use_organ_aec");
+    if (use_organ_AEC) {
+        auto& aec = ct.organAECFilter();
+        aec.setUseFilter(use_organ_AEC.value()[0] == 1);
+    }
+
+    auto angles_organ_AEC = loadAttribute<double, 3>(group, "start_stop_ramp_angle_organ_aec");
+    if (angles_organ_AEC) {
+        auto& aec = ct.organAECFilter();
+        aec.setStartAngle(angles_organ_AEC.value()[0]);
+        aec.setStopAngle(angles_organ_AEC.value()[1]);
+        aec.setRampAngle(angles_organ_AEC.value()[2]);
+    }
+
+    auto compensate_weight_organ_AEC = loadAttribute<std::uint64_t, 1>(group, "compensate_weight_organ_aec");
+    if (compensate_weight_organ_AEC) {
+        auto& aec = ct.organAECFilter();
+        aec.setCompensateOutside(compensate_weight_organ_AEC.value()[0] == 1);
+    }
+
+    auto low_weight_organ_AEC = loadAttribute<double, 1>(group, "low_weight_organ_aec");
+    if (low_weight_organ_AEC) {
+        auto& aec = ct.organAECFilter();
+        aec.setLowWeightFactor(low_weight_organ_AEC.value()[0]);
+    }
+
     return beam;
 }
 
@@ -967,6 +1007,32 @@ std::shared_ptr<Beam> loadCTSpiralDualEnergyBeam(std::unique_ptr<H5::Group>& gro
     tube_mas = loadAttribute<double, 1>(group, "tube_masB");
     if (tube_mas)
         ct.setRelativeMasTubeB(tube_mas.value()[0]);
+
+    auto use_organ_AEC = loadAttribute<std::uint64_t, 1>(group, "use_organ_aec");
+    if (use_organ_AEC) {
+        auto& aec = ct.organAECFilter();
+        aec.setUseFilter(use_organ_AEC.value()[0] == 1);
+    }
+
+    auto angles_organ_AEC = loadAttribute<double, 3>(group, "start_stop_ramp_angle_organ_aec");
+    if (angles_organ_AEC) {
+        auto& aec = ct.organAECFilter();
+        aec.setStartAngle(angles_organ_AEC.value()[0]);
+        aec.setStopAngle(angles_organ_AEC.value()[1]);
+        aec.setRampAngle(angles_organ_AEC.value()[2]);
+    }
+
+    auto compensate_weight_organ_AEC = loadAttribute<std::uint64_t, 1>(group, "compensate_weight_organ_aec");
+    if (compensate_weight_organ_AEC) {
+        auto& aec = ct.organAECFilter();
+        aec.setCompensateOutside(compensate_weight_organ_AEC.value()[0] == 1);
+    }
+
+    auto low_weight_organ_AEC = loadAttribute<double, 1>(group, "low_weight_organ_aec");
+    if (low_weight_organ_AEC) {
+        auto& aec = ct.organAECFilter();
+        aec.setLowWeightFactor(low_weight_organ_AEC.value()[0]);
+    }
 
     return beam;
 }

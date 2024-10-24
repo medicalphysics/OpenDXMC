@@ -287,7 +287,6 @@ void CTDicomImportWidget::lookInFolder(const QString folderPath)
     // restricts images to axial CT images
     vtkDICOMItem query;
     query.SetAttributeValue(DC::Modality, " CT ");
-    query.SetAttributeValue(DC::ImageType, " AXIAL ");
     query.SetAttributeValue(DC::SOPClassUID, " 1.2.840.10008.5.1.4.1.1.2 ");
     m_imageDirectorySnooper->SetFindQuery(query);
 

@@ -314,8 +314,9 @@ void CTDicomImportWidget::lookInFolder(const QString folderPath)
             std::string desc = seriesDescriptionValue.GetString(0);
             descQ.append(QString::fromStdString(desc));
         }
+        descQ = descQ.trimmed();
         if (descQ.size() == 0) {
-            descQ = QString("Series ") + QString::number(i);
+            descQ = QString("Series ") + QString::number(i + 1);
         }
         m_seriesSelector->addItem(descQ);
         m_seriesSelector->setEnabled(true);

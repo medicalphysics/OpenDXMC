@@ -66,6 +66,10 @@ void CustomInteractorStyleImage::OnLeftButtonDown()
         this->StartSlice();
     }
 
+    else if (this->Interactor->GetShiftKey() || this->Interactor->GetControlKey()) {
+        this->StartPan();
+    }
+    /*
     else if (this->InteractionMode == VTKIS_IMAGE_SLICING && this->Interactor->GetShiftKey()) {
         this->StartDolly();
     }
@@ -87,6 +91,7 @@ void CustomInteractorStyleImage::OnLeftButtonDown()
         this->WindowLevelStartPosition[1] = y;
         this->StartWindowLevel();
     }
+    */
 
     // The rest of the button + key combinations remain the same
 
@@ -117,6 +122,11 @@ void CustomInteractorStyleImage::OnLeftButtonUp()
         this->EndSlice();
         if (this->Interactor) {
             this->ReleaseFocus();
+        }
+        break;
+    case VTKIS_PAN:
+        if (this->Interactor) {
+            this->EndPan();
         }
         break;
     }
@@ -174,7 +184,6 @@ void CustomInteractorStyleImage::OnMiddleButtonUp()
 
 void CustomInteractorStyleImage::OnRightButtonDown()
 {
-    // vtkInteractorStyleImage::OnRightButtonDown();
     int x = this->Interactor->GetEventPosition()[0];
     int y = this->Interactor->GetEventPosition()[1];
 
@@ -192,15 +201,16 @@ void CustomInteractorStyleImage::OnRightButtonDown()
         this->StartWindowLevel();
     }
 
-    else if (this->Interactor->GetShiftKey()) {
+    else if (this->Interactor->GetShiftKey() || this->Interactor->GetControlKey()) {
         this->StartPan();
     }
-
+    /*
     else if (this->InteractionMode == VTKIS_IMAGE3D && this->Interactor->GetControlKey()) {
         this->StartSlice();
     } else if (this->InteractionMode == VTKIS_IMAGE_SLICING && this->Interactor->GetControlKey()) {
         this->StartSpin();
     }
+    */
 
     // The rest of the button + key combinations remain the same
     else {

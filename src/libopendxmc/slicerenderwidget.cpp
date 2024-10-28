@@ -79,17 +79,21 @@ public:
             if (this->picker->Pick(eventPos[0], eventPos[1], 0, currentRenderer) > 0) {
                 std::array<double, 3> pos;
                 picker->GetPickPosition(pos.data());
-                for (auto& wid : widgets) {
-                    auto renderer = wid->renderWindow()->GetRenderers()->GetFirstRenderer();
-                    auto camera = renderer->GetActiveCamera();
-                    std::array<double, 3> normal;
-                    camera->GetViewPlaneNormal(normal.data());
-                    auto posIdx = argmax(normal);
-                    std::array<double, 3> focalPoint;
-                    camera->GetFocalPoint(focalPoint.data());
-                    focalPoint[posIdx] = pos[posIdx];
-                    camera->SetFocalPoint(focalPoint.data());
-                    wid->renderWindow()->Render();
+
+                auto actor = picker->GetActor();
+                if (!actor) {
+                    for (auto& wid : widgets) {
+                        auto renderer = wid->renderWindow()->GetRenderers()->GetFirstRenderer();
+                        auto camera = renderer->GetActiveCamera();
+                        std::array<double, 3> normal;
+                        camera->GetViewPlaneNormal(normal.data());
+                        auto posIdx = argmax(normal);
+                        std::array<double, 3> focalPoint;
+                        camera->GetFocalPoint(focalPoint.data());
+                        focalPoint[posIdx] = pos[posIdx];
+                        camera->SetFocalPoint(focalPoint.data());
+                        wid->renderWindow()->Render();
+                    }
                 }
             }
         }
@@ -453,7 +457,7 @@ void SliceRenderWidget::sharedViews(std::vector<SliceRenderWidget*> wids)
 }
 void SliceRenderWidget::sharedViews(SliceRenderWidget* other1, SliceRenderWidget* other2)
 {
-    std::vector<SliceRenderWidget*> w = { other1, other2 };
+    std::vector<SliceRenderWidget*> w;
     w.push_back(other1);
     w.push_back(other2);
     sharedViews(w);

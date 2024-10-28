@@ -472,7 +472,7 @@ void BeamSettingsModel::addDXBeam(std::shared_ptr<BeamActorContainer> actor)
             auto& dx = std::get<DXBeam>(*beam);
             return dx.rotationCenter();
         };
-        addItem(root, "Rotation center [cm]", setter, getter);
+        addItem(root, "Rotation center (x, y, z) [cm]", setter, getter);
     }
     {
         auto setter = [=](double d) {
@@ -575,7 +575,7 @@ void BeamSettingsModel::addDXBeam(std::shared_ptr<BeamActorContainer> actor)
             auto& dx = std::get<DXBeam>(*beam);
             return dx.numberOfExposures();
         };
-        addItem(root, "Number of exposures", setter, getter);
+        addItem(root, "Number of jobs", setter, getter);
     }
     {
         std::get<DXBeam>(*beam).setNumberOfParticlesPerExposure(1e6);
@@ -588,7 +588,7 @@ void BeamSettingsModel::addDXBeam(std::shared_ptr<BeamActorContainer> actor)
             auto& dx = std::get<DXBeam>(*beam);
             return dx.numberOfParticlesPerExposure();
         };
-        addItem(root, "Particles per exposure", setter, getter);
+        addItem(root, "Particles per job", setter, getter);
     }
     {
         auto getter = [=]() -> std::uint64_t {
@@ -675,7 +675,7 @@ void BeamSettingsModel::addPencilBeam(std::shared_ptr<BeamActorContainer> actor)
             auto& dx = std::get<PencilBeam>(*beam);
             return dx.numberOfExposures();
         };
-        addItem(root, "Number of exposures", setter, getter);
+        addItem(root, "Number of jobs", setter, getter);
     }
     {
         std::get<PencilBeam>(*beam).setNumberOfParticlesPerExposure(1e6);
@@ -688,7 +688,7 @@ void BeamSettingsModel::addPencilBeam(std::shared_ptr<BeamActorContainer> actor)
             auto& dx = std::get<PencilBeam>(*beam);
             return dx.numberOfParticlesPerExposure();
         };
-        addItem(root, "Particles per exposure", setter, getter);
+        addItem(root, "Particles per job", setter, getter);
     }
     {
         auto getter = [=]() -> std::uint64_t {

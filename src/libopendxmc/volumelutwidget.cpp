@@ -32,6 +32,7 @@ Copyright 2023 Erlend Andersen
 #include <QLabel>
 #include <QLineSeries>
 #include <QLinearGradient>
+#include <QList>
 #include <QPointF>
 #include <QScatterSeries>
 #include <QVBoxLayout>
@@ -177,24 +178,42 @@ protected:
                 hseries->attachAxis(axis);
 
             auto hist_pipe = vtkSmartPointer<vtkImageHistogram>::New();
-            hist_pipe->SetMaximumNumberOfBins(128);
-            hist_pipe->AutomaticBinningOn();
+            if (data->GetScalarType() == VTK_UNSIGNED_CHAR) {
+                hist_pipe->AutomaticBinningOff();
+                hist_pipe->SetBinOrigin(0.0);
+                hist_pipe->SetBinSpacing(1.0);
+                std::array<double, 2> minmax;
+                data->GetScalarRange(minmax.data());
+                const auto max_val = static_cast<int>(minmax[1]);
+                hist_pipe->SetNumberOfBins(max_val + 1);
+            } else {
+                hist_pipe->SetMaximumNumberOfBins(128);
+                hist_pipe->AutomaticBinningOn();
+            }
             hist_pipe->SetInputData(data);
             hist_pipe->ReleaseDataFlagOn();
             hist_pipe->Update();
 
+            QList<QPointF> data_points;
             const auto start = hist_pipe->GetBinOrigin();
             const auto step = hist_pipe->GetBinSpacing();
-            const auto N = hist_pipe->GetNumberOfBins();
-            const auto range = N * step;
             auto hist = hist_pipe->GetHistogram();
-            const auto norm = 10 * static_cast<double>(hist_pipe->GetTotal()) / (hist_pipe->GetNumberOfBins());
+            const auto N = hist->GetSize();
+            const auto N_inv = 1.0 / (N - 1);
+            double max_y_1 = 1;
+            double max_y_2 = 1;
             for (int i = 0; i < N; ++i) {
                 auto y = hist->GetTuple(i);
-                const auto x_orig = start + step * i;
-                const auto x = (x_orig - start) / range;
-                hseries->append(x, y[0] / norm);
+                if (y[0] > max_y_1)
+                    max_y_1 = y[0];
+                else
+                    max_y_2 = std::max(y[0], max_y_2);
+                data_points.append({ i * N_inv, y[0] });
             }
+            for (auto& p : data_points) {
+                p.setY(p.y() / max_y_2);
+            }
+            hseries->append(data_points);
         }
     }
 

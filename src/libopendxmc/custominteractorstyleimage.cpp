@@ -125,8 +125,9 @@ void CustomInteractorStyleImage::OnLeftButtonUp()
         }
         break;
     case VTKIS_PAN:
+        this->EndPan();
         if (this->Interactor) {
-            this->EndPan();
+            this->ReleaseFocus();
         }
         break;
     }

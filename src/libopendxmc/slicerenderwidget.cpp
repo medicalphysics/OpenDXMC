@@ -143,7 +143,7 @@ public:
     // Here we Create a vtkCallbackCommand and reimplement it.
     void Execute(vtkObject* caller, unsigned long evId, void*) override
     {
-        if (vtkCommand::WindowLevelEvent) {
+        if (evId == vtkCommand::WindowLevelEvent) {
             // Note the use of reinterpret_cast to cast the caller to the expected type.
             auto style = reinterpret_cast<vtkInteractorStyleImage*>(caller);
             auto property = style->GetCurrentImageProperty();

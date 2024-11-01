@@ -156,8 +156,8 @@ MainWindow::MainWindow(QWidget* parent)
     connect(icrppipeline, &ICRPPhantomImportPipeline::imageDataChanged, beamsettingswidget, &BeamSettingsWidget::updateImageData);
     connect(otherphantompipeline, &OtherPhantomImportPipeline::imageDataChanged, beamsettingswidget, &BeamSettingsWidget::updateImageData);
     auto beamsettingsmodel = beamsettingswidget->modelView();
-    connect(beamsettingsmodel, &BeamSettingsView::beamActorAdded, slicerender, &RenderWidgetsCollection::addActor);
-    connect(beamsettingsmodel, &BeamSettingsView::beamActorRemoved, slicerender, &RenderWidgetsCollection::removeActor);
+    connect(beamsettingsmodel, &BeamSettingsView::beamActorAdded, slicerender, &RenderWidgetsCollection::addBeam);
+    connect(beamsettingsmodel, &BeamSettingsView::beamActorRemoved, slicerender, &RenderWidgetsCollection::removeBeam);
     connect(beamsettingsmodel, &BeamSettingsView::requestRender, slicerender, &RenderWidgetsCollection::Render);
 
     // simulationwidget

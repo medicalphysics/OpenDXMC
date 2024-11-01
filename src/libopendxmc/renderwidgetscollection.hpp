@@ -41,21 +41,6 @@ class RendersettingsWidget;
 class RenderWidgetsCollection : public QWidget {
     Q_OBJECT
 
-    struct BeamActorMonitor {
-        BeamActorMonitor(std::shared_ptr<BeamActorContainer> v)
-            : beamActorContainer(v)
-        {
-        }
-        std::shared_ptr<BeamActorContainer> beamActorContainer = nullptr;
-        std::vector<vtkSmartPointer<vtkActor>> actors;
-        vtkSmartPointer<vtkActor> getNewActor()
-        {
-            auto actor = beamActorContainer->createActor();
-            actors.push_back(actor);
-            return actors.back();
-        }
-    };
-
 public:
     RenderWidgetsCollection(QWidget* parent = nullptr);
     void updateImageData(std::shared_ptr<DataContainer>);
@@ -64,8 +49,8 @@ public:
     void setInteractionStyleToSlicing();
     void setInteractionStyleTo3D();
     void setInterpolationType(int type = 1);
-    void addActor(std::shared_ptr<BeamActorContainer> actor);
-    void removeActor(std::shared_ptr<BeamActorContainer> actor);
+    void addBeam(std::shared_ptr<BeamActorContainer> actor);
+    void removeBeam(std::shared_ptr<BeamActorContainer> actor);
     void setBeamActorsVisible(int);
     void setBackgroundColor(const QColor& color);
     void setUseCTBackground(bool on);
@@ -81,9 +66,22 @@ protected:
     VolumerenderSettingsWidget* volumerenderSettingsWidget(QWidget* parent = nullptr);
 
 private:
+    struct BeamBufferItem {
+        BeamBufferItem(std::shared_ptr<BeamActorContainer> b)
+            : beam(b)
+        {
+            volumeActor = beam->createActor();
+            for (std::size_t i = 0; i < windowActors.size(); ++i)
+                windowActors[i] = beam->createActor();
+        }
+        std::shared_ptr<BeamActorContainer> beam = nullptr;
+        vtkSmartPointer<vtkActor> volumeActor = nullptr;
+        std::array<vtkSmartPointer<vtkActor>, 3> windowActors = { nullptr, nullptr, nullptr };
+    };
+
     std::array<SliceRenderWidget*, 3> m_slice_widgets = { nullptr, nullptr, nullptr };
     VolumerenderWidget* m_volume_widget = nullptr;
     QComboBox* m_data_type_selector = nullptr;
-    std::vector<BeamActorMonitor> m_beamActorsBuffer;
+    std::vector<BeamBufferItem> m_beamBuffer;
     bool m_show_beam_actors = true;
 };

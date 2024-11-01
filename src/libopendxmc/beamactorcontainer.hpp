@@ -39,7 +39,7 @@ private:
     std::shared_ptr<Beam> m_beam = nullptr;
     vtkSmartPointer<vtkPolyData> m_polydata = nullptr;
     double m_lineThickness = 0.5;
-    inline static unsigned int m_colorIdx = 0;
+    unsigned int m_colorIdx = 0;
 };
 
 #include <QMetaType>

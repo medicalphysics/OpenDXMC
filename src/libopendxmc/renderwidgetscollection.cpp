@@ -58,41 +58,37 @@ RenderWidgetsCollection::RenderWidgetsCollection(QWidget* parent)
     this->setLayout(layout);
 }
 
-void RenderWidgetsCollection::addActor(std::shared_ptr<BeamActorContainer> actor)
+void RenderWidgetsCollection::addBeam(std::shared_ptr<BeamActorContainer> beam)
 {
-    for (auto& bm : m_beamActorsBuffer) {
-        if (bm.beamActorContainer == actor) {
+    for (auto& bm : m_beamBuffer) {
+        if (bm.beam == beam) {
             return;
         }
     }
 
-    m_beamActorsBuffer.push_back({ actor });
+    m_beamBuffer.push_back({ beam });
+
     if (m_show_beam_actors) {
-        auto& a = m_beamActorsBuffer.back();
-        m_volume_widget->addActor(a.getNewActor());
-        for (auto& w : m_slice_widgets)
-            w->addActor(a.getNewActor());
+        auto& b = m_beamBuffer.back();
+        m_volume_widget->addActor(b.volumeActor);
+        for (std::size_t i = 0; i < b.windowActors.size(); ++i)
+            m_slice_widgets[i]->addActor(b.windowActors[i]);
     }
 }
 
-void RenderWidgetsCollection::removeActor(std::shared_ptr<BeamActorContainer> actor)
+void RenderWidgetsCollection::removeBeam(std::shared_ptr<BeamActorContainer> beam)
 {
-    std::size_t idx = m_beamActorsBuffer.size();
-    for (std::size_t i = 0; i < m_beamActorsBuffer.size(); ++i) {
-        auto& buf = m_beamActorsBuffer[i];
-        auto cact = buf.beamActorContainer;
-        if (cact == actor) {
-            idx = i;
-            for (auto vtkactor : buf.actors) {
-                m_volume_widget->removeActor(vtkactor);
-                for (auto& w : m_slice_widgets)
-                    w->removeActor(vtkactor);
-            }
+    std::size_t i = 0;
+    while (i < m_beamBuffer.size()) {
+        if (m_beamBuffer[i].beam == beam) {
+            m_volume_widget->removeActor(m_beamBuffer[i].volumeActor);
+            for (std::size_t i = 0; i < m_beamBuffer[i].windowActors.size(); ++i)
+                m_slice_widgets[i]->removeActor(m_beamBuffer[i].windowActors[i]);
+            m_beamBuffer.erase(m_beamBuffer.begin() + i);
+        } else {
+            ++i;
         }
     }
-
-    if (idx != m_beamActorsBuffer.size())
-        m_beamActorsBuffer.erase(m_beamActorsBuffer.begin() + idx);
 }
 
 void RenderWidgetsCollection::updateImageData(std::shared_ptr<DataContainer> data)
@@ -196,20 +192,15 @@ T* addWidgetAndLabel(const QString& txt, QVBoxLayout* layout, QWidget* parent = 
 void RenderWidgetsCollection::setBeamActorsVisible(int state)
 {
     m_show_beam_actors = state != 0;
-    if (state == 0) {
-        for (auto& coll : m_beamActorsBuffer) {
-            for (auto& vtkactor : coll.actors) {
-                m_volume_widget->removeActor(vtkactor);
-                for (auto& w : m_slice_widgets)
-                    w->removeActor(vtkactor);
-            }
-            coll.actors.clear();
-        }
-    } else {
-        for (auto& coll : m_beamActorsBuffer) {
-            m_volume_widget->addActor(coll.getNewActor());
-            for (auto& w : m_slice_widgets)
-                w->addActor(coll.getNewActor());
+    for (auto& b : m_beamBuffer) {
+        if (m_show_beam_actors) {
+            m_volume_widget->addActor(b.volumeActor);
+            for (std::size_t i = 0; i < b.windowActors.size(); ++i)
+                m_slice_widgets[i]->addActor(b.windowActors[i]);
+        } else {
+            m_volume_widget->removeActor(b.volumeActor);
+            for (std::size_t i = 0; i < b.windowActors.size(); ++i)
+                m_slice_widgets[i]->removeActor(b.windowActors[i]);
         }
     }
 }

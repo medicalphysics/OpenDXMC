@@ -31,7 +31,9 @@ BeamActorContainer::BeamActorContainer(std::shared_ptr<Beam> beam_ptr)
     : m_beam(beam_ptr)
 {
     m_polydata = vtkSmartPointer<vtkPolyData>::New();
-    m_colorIdx++;
+    static unsigned int color = 0;
+    m_colorIdx = color;
+    ++color;
 }
 
 std::shared_ptr<Beam> BeamActorContainer::getBeam()

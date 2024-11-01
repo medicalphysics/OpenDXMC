@@ -31,6 +31,7 @@ class BeamActorContainer {
 public:
     BeamActorContainer(std::shared_ptr<Beam> beam);
     void update();
+    void translate(const std::array<double, 3> dist);
     vtkSmartPointer<vtkActor> createActor();
     std::shared_ptr<Beam> getBeam();
 

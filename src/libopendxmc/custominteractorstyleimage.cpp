@@ -203,7 +203,7 @@ void CustomInteractorStyleImage::OnRightButtonDown()
     }
 
     else if (this->Interactor->GetShiftKey() || this->Interactor->GetControlKey()) {
-        this->StartPan();
+        this->StartPick();
     }
     /*
     else if (this->InteractionMode == VTKIS_IMAGE3D && this->Interactor->GetControlKey()) {

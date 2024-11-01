@@ -18,6 +18,7 @@ Copyright 2023 Erlend Andersen
 
 #include <beamactorcontainer.hpp>
 #include <colormaps.hpp>
+#include <custominteractorstyleimage.hpp>
 #include <slicerenderwidget.hpp>
 
 #include <QDir>
@@ -31,108 +32,21 @@ Copyright 2023 Erlend Andersen
 
 #include <vtkCallbackCommand.h>
 #include <vtkCamera.h>
-#include <vtkCellPicker.h>
+#include <vtkCommand.h>
 #include <vtkImageActor.h>
 #include <vtkImageProperty.h>
 #include <vtkImageResliceMapper.h>
 #include <vtkPNGWriter.h>
 #include <vtkRenderWindow.h>
-#include <vtkRendererCollection.h>
 #include <vtkScalarBarActor.h>
 #include <vtkTextProperty.h>
 #include <vtkWindowToImageFilter.h>
 
 #include <charconv>
+#include <span>
 #include <string>
 
 constexpr std::array<double, 3> TEXT_COLOR = { 0.6, 0.5, 0.1 };
-
-class WindowLevelSlicingModifiedCallback : public vtkCallbackCommand {
-public:
-    static WindowLevelSlicingModifiedCallback* New()
-    {
-        return new WindowLevelSlicingModifiedCallback;
-    }
-    // Here we Create a vtkCallbackCommand and reimplement it.
-    void Execute(vtkObject* caller, unsigned long evId, void*) override
-    {
-        if (evId == vtkCommand::EndWindowLevelEvent || evId == vtkCommand::WindowLevelEvent) {
-            // Note the use of reinterpret_cast to cast the caller to the expected type.
-            auto style = reinterpret_cast<vtkInteractorStyleImage*>(caller);
-
-            auto property = style->GetCurrentImageProperty();
-            if (property) {
-                for (auto& slice : imageSlices) {
-                    auto p = slice->GetProperty();
-                    p->SetColorWindow(property->GetColorWindow());
-                    p->SetColorLevel(property->GetColorLevel());
-                }
-                for (auto& wid : widgets)
-                    wid->renderWindow()->Render();
-            }
-        } else if (evId == vtkCommand::PickEvent) {
-            auto style = reinterpret_cast<vtkInteractorStyleImage*>(caller);
-            auto currentRenderer = style->GetCurrentRenderer();
-
-            std::array<int, 2> eventPos;
-            style->GetInteractor()->GetLastEventPosition(eventPos.data());
-            if (this->picker->Pick(eventPos[0], eventPos[1], 0, currentRenderer) > 0) {
-                std::array<double, 3> pos;
-                picker->GetPickPosition(pos.data());
-
-                auto actor = picker->GetActor();
-                if (!actor) {
-                    for (auto& wid : widgets) {
-                        auto renderer = wid->renderWindow()->GetRenderers()->GetFirstRenderer();
-                        auto camera = renderer->GetActiveCamera();
-                        std::array<double, 3> normal;
-                        camera->GetViewPlaneNormal(normal.data());
-                        auto posIdx = argmax(normal);
-                        std::array<double, 3> focalPoint;
-                        camera->GetFocalPoint(focalPoint.data());
-                        focalPoint[posIdx] = pos[posIdx];
-                        camera->SetFocalPoint(focalPoint.data());
-                        wid->renderWindow()->Render();
-                    }
-                }
-            }
-        }
-    }
-
-    // Convinietn function to get commands this callback is intended for
-    constexpr static std::vector<vtkCommand::EventIds> eventTypes()
-    {
-        std::vector<vtkCommand::EventIds> cmds;
-        cmds.push_back(vtkCommand::EndWindowLevelEvent);
-        cmds.push_back(vtkCommand::WindowLevelEvent);
-        cmds.push_back(vtkCommand::PickEvent);
-        return cmds;
-    }
-
-    // Set pointers to any clientData or callData here.
-    std::vector<vtkSmartPointer<vtkImageSlice>> imageSlices;
-    std::vector<QVTKOpenGLNativeWidget*> widgets;
-
-protected:
-    int argmax(const std::array<double, 3>& v)
-    {
-        if (std::abs(v[0]) > std::abs(v[1])) {
-            return std::abs(v[0]) > std::abs(v[2]) ? 0 : 2;
-        } else {
-            return std::abs(v[1]) > std::abs(v[2]) ? 1 : 2;
-        }
-    }
-
-private:
-    WindowLevelSlicingModifiedCallback()
-    {
-        picker = vtkSmartPointer<vtkCellPicker>::New();
-    }
-
-    vtkSmartPointer<vtkCellPicker> picker = nullptr;
-    WindowLevelSlicingModifiedCallback(const WindowLevelSlicingModifiedCallback&) = delete;
-    void operator=(const WindowLevelSlicingModifiedCallback&) = delete;
-};
 
 class TextModifiedCallback : public vtkCallbackCommand {
 public:
@@ -143,7 +57,7 @@ public:
     // Here we Create a vtkCallbackCommand and reimplement it.
     void Execute(vtkObject* caller, unsigned long evId, void*) override
     {
-        if (evId == vtkCommand::WindowLevelEvent) {
+        if (evId == vtkCommand::WindowLevelEvent || evId == vtkCommand::EndWindowLevelEvent) {
             // Note the use of reinterpret_cast to cast the caller to the expected type.
             auto style = reinterpret_cast<vtkInteractorStyleImage*>(caller);
             auto property = style->GetCurrentImageProperty();
@@ -170,6 +84,7 @@ public:
     {
         std::vector<vtkCommand::EventIds> cmds;
         cmds.push_back(vtkCommand::WindowLevelEvent);
+        cmds.push_back(vtkCommand::EndWindowLevelEvent);
         return cmds;
     }
 
@@ -183,8 +98,6 @@ private:
         textActorCorner = vtkSmartPointer<vtkTextActor>::New();
         textActorCorner->GetTextProperty()->SetColor(1.0, 1.0, 1.0);
     }
-
-    vtkSmartPointer<vtkCellPicker> picker = nullptr;
     TextModifiedCallback(const TextModifiedCallback&) = delete;
     void operator=(const TextModifiedCallback&) = delete;
 };
@@ -201,7 +114,7 @@ vtkSmartPointer<vtkImageData> generateSampleData()
     return image;
 }
 
-SliceRenderWidget::SliceRenderWidget(int orientation, QWidget* parent)
+SliceRenderWidget::SliceRenderWidget(int orientation, bool lowerLeftText, bool colorbar, QWidget* parent)
     : QWidget(parent)
 {
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -215,12 +128,12 @@ SliceRenderWidget::SliceRenderWidget(int orientation, QWidget* parent)
     this->setLayout(layout);
 
     // lut
-    lut = vtkSmartPointer<vtkWindowLevelLookupTable>::New();
+    m_lut = vtkSmartPointer<vtkWindowLevelLookupTable>::New();
 
     lut_windowing[DataContainer::ImageType::CT] = std::make_pair(100, 800);
     lut_windowing[DataContainer::ImageType::Density] = std::make_pair(1.0, 1.0);
 
-    setupSlicePipeline(orientation);
+    setupSlicePipeline(orientation, lowerLeftText, colorbar);
     setNewImageData(generateSampleData());
 
     // adding settingsbutton
@@ -269,7 +182,7 @@ SliceRenderWidget::SliceRenderWidget(int orientation, QWidget* parent)
     });
 }
 
-void SliceRenderWidget::setupSlicePipeline(int orientation)
+void SliceRenderWidget::setupSlicePipeline(int orientation, bool lowerLeftText, bool colorbar)
 {
     // renderers
     m_renderer = vtkSmartPointer<vtkRenderer>::New();
@@ -277,7 +190,7 @@ void SliceRenderWidget::setupSlicePipeline(int orientation)
     m_renderer->SetBackground(0, 0, 0);
 
     // interaction style
-    interactorStyle = vtkSmartPointer<CustomInteractorStyleImage>::New();
+    auto interactorStyle = vtkSmartPointer<CustomInteractorStyleImage>::New();
     interactorStyle->SetDefaultRenderer(m_renderer);
     interactorStyle->SetInteractionModeToImageSlicing();
     interactorStyle->AutoAdjustCameraClippingRangeOn();
@@ -342,13 +255,13 @@ void SliceRenderWidget::setupSlicePipeline(int orientation)
 
     { // setting up foreground lut
         auto sliceProperty = m_imageSliceFront->GetProperty();
-        sliceProperty->SetLookupTable(lut);
+        sliceProperty->SetLookupTable(m_lut);
         sliceProperty->UseLookupTableScalarRangeOff();
-        lut->SetMinimumTableValue(0, 0, 0, 1);
-        lut->SetMaximumTableValue(1, 1, 1, 1);
-        lut->UseBelowRangeColorOn();
-        lut->SetBelowRangeColor(0, 0, 0, 0);
-        lut->Build();
+        m_lut->SetMinimumTableValue(0, 0, 0, 1);
+        m_lut->SetMaximumTableValue(1, 1, 1, 1);
+        m_lut->UseBelowRangeColorOn();
+        m_lut->SetBelowRangeColor(0, 0, 0, 0);
+        m_lut->Build();
         sliceProperty->SetColorLevel(lut_windowing[DataContainer::ImageType::CT].first);
         sliceProperty->SetColorWindow(lut_windowing[DataContainer::ImageType::CT].second);
     }
@@ -367,11 +280,46 @@ void SliceRenderWidget::setupSlicePipeline(int orientation)
         sliceProperty->SetColorWindow(lut_windowing[DataContainer::ImageType::CT].second);
     }
 
-    lowerLeftText = vtkSmartPointer<vtkTextActor>::New();
-    m_renderer->AddActor2D(lowerLeftText);
-    auto txtStyle = lowerLeftText->GetTextProperty();
-    txtStyle->SetColor(TEXT_COLOR.data());
-    txtStyle->BoldOn();
+    // colorbar
+    if (colorbar) {
+        auto scalarColorBar = vtkSmartPointer<vtkScalarBarActor>::New();
+        scalarColorBar->SetNumberOfLabels(2);
+        scalarColorBar->SetLookupTable(m_lut);
+        scalarColorBar->SetUnconstrainedFontSize(true);
+        scalarColorBar->SetBarRatio(0.1);
+        auto txtStyle = vtkSmartPointer<vtkTextProperty>::New();
+        txtStyle->SetColor(TEXT_COLOR.data());
+        txtStyle->BoldOn();
+        scalarColorBar->SetLabelTextProperty(txtStyle);
+        scalarColorBar->SetTextPositionToPrecedeScalarBar();
+        scalarColorBar->AnnotationTextScalingOff();
+        m_renderer->AddActor(scalarColorBar);
+    }
+
+    if (lowerLeftText) {
+        // unit txt
+        m_unitText = vtkSmartPointer<vtkTextActor>::New();
+        m_renderer->AddActor2D(m_unitText);
+        auto txtStyle = m_unitText->GetTextProperty();
+        txtStyle->SetColor(TEXT_COLOR.data());
+        txtStyle->BoldOn();
+
+        // window txt
+        auto callback = vtkSmartPointer<TextModifiedCallback>::New();
+        m_windowText = callback->textActorCorner;
+        callback->textActorCorner->SetTextProperty(txtStyle);
+        for (auto ev : callback->eventTypes())
+            interactorStyle->AddObserver(ev, callback);
+        m_renderer->AddActor2D(callback->textActorCorner);
+    }
+}
+
+void SliceRenderWidget::registerStyleCallback(vtkSmartPointer<vtkCallbackCommand> cmd, const std::vector<vtkCommand::EventIds>& events)
+{
+    auto renderWindowInteractor = openGLWidget->interactor();
+    auto style = renderWindowInteractor->GetInteractorStyle();
+    for (auto ev : events)
+        style->AddObserver(ev, cmd);
 }
 
 void SliceRenderWidget::resizeEvent(QResizeEvent* event)
@@ -382,19 +330,20 @@ void SliceRenderWidget::resizeEvent(QResizeEvent* event)
 
 void SliceRenderWidget::updateTextPositions(bool render)
 {
-    if (lowerLeftText) {
+    if (m_unitText) {
         double size[2];
-        lowerLeftText->GetSize(m_renderer, size);
+        m_unitText->GetSize(m_renderer, size);
         auto rsize = m_renderer->GetSize();
-        lowerLeftText->SetPosition(rsize[0] - size[0] - 5, 5);
+        m_unitText->SetPosition(rsize[0] - size[0] - 5, 5);
         if (render)
             Render();
     }
 }
 
+/*
 void SliceRenderWidget::sharedViews(std::vector<SliceRenderWidget*> wids)
 {
-    wids.insert(wids.begin(), this);
+     wids.insert(wids.begin(), this);
     // setting same lut
     for (auto& w : wids) {
         w->lut = this->lut;
@@ -438,40 +387,21 @@ void SliceRenderWidget::sharedViews(std::vector<SliceRenderWidget*> wids)
         }
     }
 
-    // colorbar
-    {
-        auto scalarColorBar = vtkSmartPointer<vtkScalarBarActor>::New();
-        scalarColorBar->SetNumberOfLabels(2);
-        scalarColorBar->SetLookupTable(wids[0]->lut);
-        scalarColorBar->SetUnconstrainedFontSize(true);
-        scalarColorBar->SetBarRatio(0.1);
-        scalarColorBar->SetLabelTextProperty(txtStyle);
-        scalarColorBar->SetTextPositionToPrecedeScalarBar();
-        scalarColorBar->AnnotationTextScalingOff();
-        wids[0]->m_renderer->AddActor(scalarColorBar);
-    }
+
 
     // remove all but one lower left text actor
     for (std::size_t i = 1; i < wids.size(); ++i)
         wids[i]->lowerLeftText = nullptr;
-}
-void SliceRenderWidget::sharedViews(SliceRenderWidget* other1, SliceRenderWidget* other2)
+
+
+}*/
+/* void SliceRenderWidget::sharedViews(SliceRenderWidget* other1, SliceRenderWidget* other2)
 {
     std::vector<SliceRenderWidget*> w;
     w.push_back(other1);
     w.push_back(other2);
     sharedViews(w);
-}
-
-void SliceRenderWidget::setInteractionStyleTo3D()
-{
-    interactorStyle->SetInteractionModeToImage3D();
-}
-
-void SliceRenderWidget::setInteractionStyleToSlicing()
-{
-    interactorStyle->SetInteractionModeToImageSlicing();
-}
+}*/
 
 void SliceRenderWidget::useFXAA(bool use)
 {
@@ -544,39 +474,39 @@ void SliceRenderWidget::switchLUTtable(DataContainer::ImageType type)
     if (type == DataContainer::ImageType::Material || type == DataContainer::ImageType::Organ) {
         auto vtkimage = m_data->vtkImage(type);
         auto n_colors = static_cast<int>(vtkimage->GetScalarRange()[1]) + 1;
-        if (n_colors > 1 && lut->GetNumberOfColors() != n_colors) {
-            lut->SetNumberOfTableValues(n_colors);
-            lut->SetTableValue(0, 0, 0, 0, 0);
+        if (n_colors > 1 && m_lut->GetNumberOfColors() != n_colors) {
+            m_lut->SetNumberOfTableValues(n_colors);
+            m_lut->SetTableValue(0, 0, 0, 0, 0);
             for (int i = 1; i < n_colors; ++i) {
                 auto rgba = Colormaps::discreetColor(i);
-                lut->SetTableValue(i, rgba.data());
+                m_lut->SetTableValue(i, rgba.data());
             }
 
-            lut->SetTableRange(0, n_colors - 1);
-            lut->Build();
+            m_lut->SetTableRange(0, n_colors - 1);
+            m_lut->Build();
         }
         prop->UseLookupTableScalarRangeOn();
     } else {
         prop->UseLookupTableScalarRangeOff();
-        lut->SetNumberOfTableValues(256);
-        lut->SetValueRange(0, 1);
-        lut->SetMinimumTableValue(0, 0, 0, 1);
-        lut->SetMaximumTableValue(1, 1, 1, 1);
-        lut->ForceBuild();
+        m_lut->SetNumberOfTableValues(256);
+        m_lut->SetValueRange(0, 1);
+        m_lut->SetMinimumTableValue(0, 0, 0, 1);
+        m_lut->SetMaximumTableValue(1, 1, 1, 1);
+        m_lut->ForceBuild();
 
         if (type == DataContainer::ImageType::Density) {
             // replacing with turbo cmap
             const auto map = Colormaps::colormapLongForm("TURBO");
             for (int i = 0; i < map.size() / 3; ++i) {
                 const auto ii = i * 3;
-                lut->SetTableValue(i, map[ii], map[ii + 1], map[ii + 2], 1.0);
+                m_lut->SetTableValue(i, map[ii], map[ii + 1], map[ii + 2], 1.0);
             }
         } else if (type == DataContainer::ImageType::Dose) {
             // replacing with turbo cmap
             const auto map = Colormaps::colormapLongForm("TURBO");
             for (int i = 0; i < map.size() / 3; ++i) {
                 const auto ii = i * 3;
-                lut->SetTableValue(i, map[ii], map[ii + 1], map[ii + 2], 1.0);
+                m_lut->SetTableValue(i, map[ii], map[ii + 1], map[ii + 2], 1.0);
             }
         }
 
@@ -615,8 +545,8 @@ void SliceRenderWidget::showData(DataContainer::ImageType type)
         }
 
         setNewImageData(vtkimage, false);
-        if (lowerLeftText) {
-            lowerLeftText->SetInput(m_data->units(type).c_str());
+        if (m_unitText) {
+            m_unitText->SetInput(m_data->units(type).c_str());
             updateTextPositions();
         }
         Render();

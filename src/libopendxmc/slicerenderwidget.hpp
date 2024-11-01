@@ -18,7 +18,6 @@ Copyright 2023 Erlend Andersen
 
 #pragma once
 
-#include <custominteractorstyleimage.hpp>
 #include <datacontainer.hpp>
 
 #include <QWidget>
@@ -36,34 +35,36 @@ Copyright 2023 Erlend Andersen
 
 #include <map>
 #include <memory>
+#include <vector>
 
 class BeamActorContainer;
+class vtkCallbackCommand;
+class vtkCommand;
 
 class SliceRenderWidget : public QWidget {
     Q_OBJECT
 public:
-    SliceRenderWidget(int orientation = 0, QWidget* parent = nullptr);
+    SliceRenderWidget(int orientation, bool lowerLeftText, bool colorbar, QWidget* parent = nullptr);
     void updateImageData(std::shared_ptr<DataContainer>);
     void useFXAA(bool on);
     void setMultisampleAA(int samples);
     void setInterpolationType(int type = 1);
-    void setInteractionStyleToSlicing();
-    void setInteractionStyleTo3D();
     void setBackgroundColor(double r, double g, double b);
     void setUseCTDataBackground(bool on);
     void setImageSmoothing(double pixels);
-
+    void registerStyleCallback(vtkSmartPointer<vtkCallbackCommand> cmd, const std::vector<vtkCommand::EventIds>& events);
     void showData(DataContainer::ImageType type);
     void Render(bool reset_camera = false);
-    void sharedViews(SliceRenderWidget* other1, SliceRenderWidget* other2);
-    void sharedViews(std::vector<SliceRenderWidget*> others);
 
     void addActor(vtkSmartPointer<vtkActor> actor);
     void removeActor(vtkSmartPointer<vtkActor> actor);
 
+    vtkSmartPointer<vtkImageActor> imageSlice() { return m_imageSliceFront; }
+    vtkSmartPointer<vtkRenderer> renderer() { return m_renderer; }
+
 protected:
     void setNewImageData(vtkSmartPointer<vtkImageData> data, bool rezoom_camera = false);
-    void setupSlicePipeline(int orientation);
+    void setupSlicePipeline(int orientation, bool lowerLeftText, bool colorbar);
     void switchLUTtable(DataContainer::ImageType type);
     void resizeEvent(QResizeEvent* event) override;
     void updateTextPositions(bool render = false);
@@ -78,9 +79,9 @@ private:
     vtkSmartPointer<vtkImageGaussianSmooth> m_smoother = nullptr;
     vtkSmartPointer<vtkRenderer> m_renderer = nullptr;
     QVTKOpenGLNativeWidget* openGLWidget = nullptr;
-    vtkSmartPointer<vtkTextActor> lowerLeftText = nullptr;
-    vtkSmartPointer<CustomInteractorStyleImage> interactorStyle = nullptr;
-    vtkSmartPointer<vtkWindowLevelLookupTable> lut = nullptr;
+    vtkSmartPointer<vtkTextActor> m_unitText = nullptr;
+    vtkSmartPointer<vtkTextActor> m_windowText = nullptr;
+    vtkSmartPointer<vtkWindowLevelLookupTable> m_lut = nullptr;
     std::map<DataContainer::ImageType, std::pair<double, double>> lut_windowing;
     DataContainer::ImageType lut_current_type = DataContainer::ImageType::CT;
     bool m_useCTBackground = false;

@@ -42,6 +42,20 @@ class RenderWidgetsCollection : public QWidget {
     Q_OBJECT
 
 public:
+    struct BeamBufferItem {
+        BeamBufferItem() = delete;
+        BeamBufferItem(std::shared_ptr<BeamActorContainer> b)
+            : beam(b)
+        {
+            volumeActor = beam->createActor();
+            for (std::size_t i = 0; i < windowActors.size(); ++i)
+                windowActors[i] = beam->createActor();
+        }
+        std::shared_ptr<BeamActorContainer> beam = nullptr;
+        vtkSmartPointer<vtkActor> volumeActor = nullptr;
+        std::array<vtkSmartPointer<vtkActor>, 3> windowActors = { nullptr, nullptr, nullptr };
+    };
+
     RenderWidgetsCollection(QWidget* parent = nullptr);
     void updateImageData(std::shared_ptr<DataContainer>);
     void useFXAA(bool on);
@@ -66,19 +80,6 @@ protected:
     VolumerenderSettingsWidget* volumerenderSettingsWidget(QWidget* parent = nullptr);
 
 private:
-    struct BeamBufferItem {
-        BeamBufferItem(std::shared_ptr<BeamActorContainer> b)
-            : beam(b)
-        {
-            volumeActor = beam->createActor();
-            for (std::size_t i = 0; i < windowActors.size(); ++i)
-                windowActors[i] = beam->createActor();
-        }
-        std::shared_ptr<BeamActorContainer> beam = nullptr;
-        vtkSmartPointer<vtkActor> volumeActor = nullptr;
-        std::array<vtkSmartPointer<vtkActor>, 3> windowActors = { nullptr, nullptr, nullptr };
-    };
-
     std::array<SliceRenderWidget*, 3> m_slice_widgets = { nullptr, nullptr, nullptr };
     VolumerenderWidget* m_volume_widget = nullptr;
     QComboBox* m_data_type_selector = nullptr;

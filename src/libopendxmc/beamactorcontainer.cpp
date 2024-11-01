@@ -68,6 +68,35 @@ std::array<std::array<double, 3>, 4> pointsFromCollimations(
     return r;
 }
 
+std::array<double, 3> add(const std::array<double, 3>& v1, const std::array<double, 3>& v2)
+{
+    std::array<double, 3> v = {
+        v1[0] + v2[0],
+        v1[1] + v2[1],
+        v1[2] + v2[2]
+    };
+    return v;
+}
+
+void BeamActorContainer::translate(const std::array<double, 3> dist)
+{
+
+    std::visit([&dist](auto&& arg) {
+        using U = std::decay_t<decltype(arg)>;
+        if constexpr (std::is_same_v<U, CBCTBeam>) {
+            arg.setIsocenter(add(arg.isocenter(), dist));
+        } else if constexpr (std::is_same_v<U, CTSpiralBeam> || std::is_same_v<U, CTSpiralDualEnergyBeam>) {
+            arg.setStartPosition(add(arg.startPosition(), dist));
+            arg.setStopPosition(add(arg.stopPosition(), dist));
+        } else if constexpr (std::is_same_v<U, DXBeam>) {
+            arg.setRotationCenter(add(dist, arg.rotationCenter()));
+        } else if constexpr (std::is_same_v<U, CTSequentialBeam> || std::is_same_v<U, PencilBeam>) {
+            arg.setPosition(add(dist, arg.position()));
+        }
+    },
+        *m_beam);
+    update();
+}
 void BeamActorContainer::update()
 {
     if (!m_beam)

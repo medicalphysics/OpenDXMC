@@ -523,7 +523,6 @@ void BeamSettingsModel::addDXBeam(std::shared_ptr<BeamActorContainer> actor)
         addItem(root, "Source detector distance [cm]", setter, getter);
     }
     {
-        std::get<DXBeam>(*beam).setCollimation({ 20., 20. });
         auto setter = [=](std::array<double, 2> d) {
             auto& dx = std::get<DXBeam>(*beam);
             dx.setCollimation(d);
@@ -566,7 +565,6 @@ void BeamSettingsModel::addDXBeam(std::shared_ptr<BeamActorContainer> actor)
     }
 
     {
-        std::get<DXBeam>(*beam).setNumberOfExposures(64);
         auto setter = [=](std::uint64_t d) {
             auto& dx = std::get<DXBeam>(*beam);
             dx.setNumberOfExposures(d);
@@ -578,8 +576,6 @@ void BeamSettingsModel::addDXBeam(std::shared_ptr<BeamActorContainer> actor)
         addItem(root, "Number of jobs", setter, getter);
     }
     {
-        std::get<DXBeam>(*beam).setNumberOfParticlesPerExposure(1e6);
-
         auto setter = [=](std::uint64_t d) {
             auto& dx = std::get<DXBeam>(*beam);
             dx.setNumberOfParticlesPerExposure(d);
@@ -666,7 +662,6 @@ void BeamSettingsModel::addPencilBeam(std::shared_ptr<BeamActorContainer> actor)
         addItem(root, "Air KERMA [mGy]", setter, getter);
     }
     {
-        std::get<PencilBeam>(*beam).setNumberOfExposures(64);
         auto setter = [=](std::uint64_t d) {
             auto& dx = std::get<PencilBeam>(*beam);
             dx.setNumberOfExposures(d);
@@ -678,8 +673,6 @@ void BeamSettingsModel::addPencilBeam(std::shared_ptr<BeamActorContainer> actor)
         addItem(root, "Number of jobs", setter, getter);
     }
     {
-        std::get<PencilBeam>(*beam).setNumberOfParticlesPerExposure(1e6);
-
         auto setter = [=](std::uint64_t d) {
             auto& dx = std::get<PencilBeam>(*beam);
             dx.setNumberOfParticlesPerExposure(d);
@@ -784,7 +777,6 @@ void BeamSettingsModel::addCBCTBeam(std::shared_ptr<BeamActorContainer> actor)
         addItem(root, "Set stop angle [deg]", setter, getter);
     }
     {
-        std::get<CBCTBeam>(*beam).setStepAngleDeg(5);
         auto setter = [=](double d) {
             auto& ct = std::get<CBCTBeam>(*beam);
             ct.setStepAngleDeg(d);
@@ -798,7 +790,6 @@ void BeamSettingsModel::addCBCTBeam(std::shared_ptr<BeamActorContainer> actor)
     }
 
     {
-        std::get<CBCTBeam>(*beam).setCollimationAnglesDeg({ 5, 5 });
         auto setter = [=](std::array<double, 2> d) {
             auto& dx = std::get<CBCTBeam>(*beam);
             dx.setCollimationAnglesDeg(d);
@@ -835,8 +826,6 @@ void BeamSettingsModel::addCBCTBeam(std::shared_ptr<BeamActorContainer> actor)
         addItem(root, "Number of exposures", getter);
     }
     {
-        std::get<CBCTBeam>(*beam).setNumberOfParticlesPerExposure(1e6);
-
         auto setter = [=](std::uint64_t d) {
             auto& dx = std::get<CBCTBeam>(*beam);
             dx.setNumberOfParticlesPerExposure(d);
@@ -886,6 +875,12 @@ void BeamSettingsModel::addCTSequentialBeam(std::shared_ptr<BeamActorContainer> 
             const std::map<std::size_t, double> filt_init = { { 13, 9.0 } };
             beam = std::make_shared<Beam>(CTSequentialBeam(start_init, normal, filt_init));
         }
+
+        // setting defaults if we create beam
+        std::get<CTSequentialBeam>(*beam).setSourceDetectorDistance(119);
+        std::get<CTSequentialBeam>(*beam).setCollimation(3.84);
+        std::get<CTSequentialBeam>(*beam).setStepAngleDeg(5);
+        std::get<CTSequentialBeam>(*beam).setNumberOfParticlesPerExposure(1e6);
     }
     auto beamActor = std::make_shared<BeamActorContainer>(beam);
     m_beams.push_back(std::make_pair(beam, beamActor));
@@ -953,8 +948,6 @@ void BeamSettingsModel::addCTSequentialBeam(std::shared_ptr<BeamActorContainer> 
         addItem(root, "Scan FOV [cm]", setter, getter);
     }
     {
-        std::get<CTSequentialBeam>(*beam).setSourceDetectorDistance(119);
-
         auto setter = [=](double d) {
             auto& ct = std::get<CTSequentialBeam>(*beam);
             ct.setSourceDetectorDistance(d);
@@ -967,7 +960,6 @@ void BeamSettingsModel::addCTSequentialBeam(std::shared_ptr<BeamActorContainer> 
         addItem(root, "Source detector distance [cm]", setter, getter);
     }
     {
-        std::get<CTSequentialBeam>(*beam).setCollimation(3.84);
         auto setter = [=](double d) {
             auto& ct = std::get<CTSequentialBeam>(*beam);
             ct.setCollimation(d);
@@ -993,7 +985,7 @@ void BeamSettingsModel::addCTSequentialBeam(std::shared_ptr<BeamActorContainer> 
         addItem(root, "Set start angle [deg]", setter, getter);
     }
     {
-        std::get<CTSequentialBeam>(*beam).setStepAngleDeg(5);
+
         auto setter = [=](double d) {
             auto& ct = std::get<CTSequentialBeam>(*beam);
             ct.setStepAngleDeg(d);
@@ -1070,7 +1062,7 @@ void BeamSettingsModel::addCTSequentialBeam(std::shared_ptr<BeamActorContainer> 
         addItem(root, "Number of exposures", getter);
     }
     {
-        std::get<CTSequentialBeam>(*beam).setNumberOfParticlesPerExposure(1e6);
+
         auto setter = [=](std::uint64_t d) {
             auto& ct = std::get<CTSequentialBeam>(*beam);
             ct.setNumberOfParticlesPerExposure(d);
@@ -1120,6 +1112,12 @@ void BeamSettingsModel::addCTSpiralBeam(std::shared_ptr<BeamActorContainer> acto
             const std::map<std::size_t, double> filt_init = { { 13, 9.0 } };
             beam = std::make_shared<Beam>(CTSpiralBeam(start_init, stop_init, filt_init));
         }
+
+        // setting defaults if we create beam
+        std::get<CTSpiralBeam>(*beam).setSourceDetectorDistance(119);
+        std::get<CTSpiralBeam>(*beam).setCollimation(3.84);
+        std::get<CTSpiralBeam>(*beam).setStepAngleDeg(5);
+        std::get<CTSpiralBeam>(*beam).setNumberOfParticlesPerExposure(1e6);
     }
     auto beamActor = std::make_shared<BeamActorContainer>(beam);
     m_beams.push_back(std::make_pair(beam, beamActor));
@@ -1134,7 +1132,6 @@ void BeamSettingsModel::addCTSpiralBeam(std::shared_ptr<BeamActorContainer> acto
             auto& ct = std::get<CTSpiralBeam>(*beam);
             return ct.startPosition();
         };
-
         addItem(root, "Start position [cm]", setter, getter);
     }
     {
@@ -1163,8 +1160,6 @@ void BeamSettingsModel::addCTSpiralBeam(std::shared_ptr<BeamActorContainer> acto
         addItem(root, "Scan FOV [cm]", setter, getter);
     }
     {
-        std::get<CTSpiralBeam>(*beam).setSourceDetectorDistance(119);
-
         auto setter = [=](double d) {
             auto& ct = std::get<CTSpiralBeam>(*beam);
             ct.setSourceDetectorDistance(d);
@@ -1177,7 +1172,6 @@ void BeamSettingsModel::addCTSpiralBeam(std::shared_ptr<BeamActorContainer> acto
         addItem(root, "Source detector distance [cm]", setter, getter);
     }
     {
-        std::get<CTSpiralBeam>(*beam).setCollimation(3.84);
         auto setter = [=](double d) {
             auto& ct = std::get<CTSpiralBeam>(*beam);
             ct.setCollimation(d);
@@ -1203,7 +1197,6 @@ void BeamSettingsModel::addCTSpiralBeam(std::shared_ptr<BeamActorContainer> acto
         addItem(root, "Set start angle [deg]", setter, getter);
     }
     {
-        std::get<CTSpiralBeam>(*beam).setStepAngleDeg(5);
         auto setter = [=](double d) {
             auto& ct = std::get<CTSpiralBeam>(*beam);
             ct.setStepAngleDeg(d);
@@ -1317,7 +1310,6 @@ void BeamSettingsModel::addCTSpiralBeam(std::shared_ptr<BeamActorContainer> acto
         addItem(root, "Number of exposures", getter);
     }
     {
-        std::get<CTSpiralBeam>(*beam).setNumberOfParticlesPerExposure(1e6);
         auto setter = [=](std::uint64_t d) {
             auto& ct = std::get<CTSpiralBeam>(*beam);
             ct.setNumberOfParticlesPerExposure(d);
@@ -1367,6 +1359,11 @@ void BeamSettingsModel::addCTSpiralDualEnergyBeam(std::shared_ptr<BeamActorConta
             const std::map<std::size_t, double> filt_init = { { 13, 9.0 } };
             beam = std::make_shared<Beam>(CTSpiralDualEnergyBeam(start_init, stop_init, filt_init));
         }
+        // setting defaults if we create beam
+        std::get<CTSpiralDualEnergyBeam>(*beam).setSourceDetectorDistance(119);
+        std::get<CTSpiralDualEnergyBeam>(*beam).setCollimation(3.84);
+        std::get<CTSpiralDualEnergyBeam>(*beam).setStepAngleDeg(5);
+        std::get<CTSpiralDualEnergyBeam>(*beam).setNumberOfParticlesPerExposure(1e6);
     }
 
     auto beamActor = std::make_shared<BeamActorContainer>(beam);
@@ -1421,7 +1418,6 @@ void BeamSettingsModel::addCTSpiralDualEnergyBeam(std::shared_ptr<BeamActorConta
         addItem(root, "Scan FOV Tube B [cm]", setterB, getterB);
     }
     {
-        std::get<CTSpiralDualEnergyBeam>(*beam).setSourceDetectorDistance(119);
         auto setter = [=](double d) {
             auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
             ct.setSourceDetectorDistance(d);
@@ -1434,7 +1430,6 @@ void BeamSettingsModel::addCTSpiralDualEnergyBeam(std::shared_ptr<BeamActorConta
         addItem(root, "Source detector distance [cm]", setter, getter);
     }
     {
-        std::get<CTSpiralDualEnergyBeam>(*beam).setCollimation(3.84);
         auto setter = [=](double d) {
             auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
             ct.setCollimation(d);
@@ -1460,7 +1455,6 @@ void BeamSettingsModel::addCTSpiralDualEnergyBeam(std::shared_ptr<BeamActorConta
         addItem(root, "Set start angle [deg]", setter, getter);
     }
     {
-        std::get<CTSpiralDualEnergyBeam>(*beam).setStepAngleDeg(5);
         auto setter = [=](double d) {
             auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
             ct.setStepAngleDeg(d);
@@ -1770,7 +1764,6 @@ void BeamSettingsModel::addCTSpiralDualEnergyBeam(std::shared_ptr<BeamActorConta
         addItem(root, "Number of exposures", getter);
     }
     {
-        std::get<CTSpiralDualEnergyBeam>(*beam).setNumberOfParticlesPerExposure(1e6);
         auto setter = [=](std::uint64_t d) {
             auto& ct = std::get<CTSpiralDualEnergyBeam>(*beam);
             ct.setNumberOfParticlesPerExposure(d);

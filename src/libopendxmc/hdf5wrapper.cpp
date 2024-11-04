@@ -1148,10 +1148,8 @@ std::vector<std::shared_ptr<BeamActorContainer>> HDF5Wrapper::loadBeams()
 
     const std::array<std::string, 5> beamnames = { "DXBeams", "CTSpiralBeams", "CTDualEnergySpiralBeams", "CBCTBeams", "CTSequentialBeams" };
 
-    for (int i = 0; i < beamnames.size(); ++i)
-    // for (const auto& beamname : beamnames)
-    {
-        const auto beamname = beamnames[i];
+    for (int i = 0; i < beamnames.size(); ++i) {
+        const auto& beamname = beamnames[i];
         const std::string beamgroupname = "beams/" + beamname;
         auto bgroup = getGroup(m_file, beamgroupname, false);
         if (bgroup) {

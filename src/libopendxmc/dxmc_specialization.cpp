@@ -22,6 +22,7 @@ DXBeam::DXBeam(const std::map<std::size_t, double>& filtrationMaterials)
     : dxmc::DXBeam<false>({ 0, 0, 0 }, { { { 1, 0, 0 }, { 0, -1, 0 } } }, filtrationMaterials)
 {
     updatePosition();
+    setCollimation({ 20, 20 });
 }
 
 const std::array<double, 3>& DXBeam::rotationCenter() const { return m_rotation_center; }

@@ -61,14 +61,30 @@ public:
             auto style = reinterpret_cast<vtkInteractorStyleImage*>(caller);
             auto property = style->GetCurrentImageProperty();
             if (property) {
+
+                auto ww = property->GetColorWindow();
+                auto wl = property->GetColorLevel();
+                if (windowLevelText) {
+                    std::array<char, 10> buffer;
+                    std::string txt = "WL: ";
+                    if (auto [ptr, ec] = std::to_chars(buffer.data(), buffer.data() + buffer.size(), wl, std::chars_format::general, 3); ec == std::errc()) {
+                        txt += std::string_view(buffer.data(), ptr);
+                    }
+                    txt += " WW: ";
+                    if (auto [ptr, ec] = std::to_chars(buffer.data(), buffer.data() + buffer.size(), ww, std::chars_format::general, 3); ec == std::errc()) {
+                        txt += std::string_view(buffer.data(), ptr);
+                    }
+                    windowLevelText->SetInput(txt.c_str());
+                }
                 for (auto wid : widgets) {
                     auto slice = wid->imageSlice();
                     auto p = slice->GetProperty();
-                    p->SetColorWindow(property->GetColorWindow());
-                    p->SetColorLevel(property->GetColorLevel());
+                    p->SetColorWindow(ww);
+                    p->SetColorLevel(wl);
                     wid->Render();
                 }
             }
+
         } else if (evId == vtkCommand::StartPickEvent) {
             auto style = reinterpret_cast<vtkInteractorStyleImage*>(caller);
             auto currentRenderer = style->GetCurrentRenderer();
@@ -169,6 +185,7 @@ public:
     std::array<SliceRenderWidget*, 3> widgets = { nullptr, nullptr, nullptr };
     VolumerenderWidget* volumeWidget = nullptr;
     std::vector<RenderWidgetsCollection::BeamBufferItem>* beamItems = nullptr;
+    vtkSmartPointer<vtkTextActor> windowLevelText = nullptr;
 
 protected:
     int argmax(const std::array<double, 3>& v)
@@ -218,11 +235,10 @@ RenderWidgetsCollection::RenderWidgetsCollection(QWidget* parent)
     sliceCollectionCmd->widgets = m_slice_widgets;
     sliceCollectionCmd->volumeWidget = m_volume_widget;
     sliceCollectionCmd->beamItems = &m_beamBuffer;
+    sliceCollectionCmd->windowLevelText = m_slice_widgets[0]->windowTextItem();
     for (auto w : m_slice_widgets) {
         w->registerStyleCallback(sliceCollectionCmd, sliceCollectionCmd->eventTypes());
     }
-
-    // m_slice_widgets[0]->sharedViews(m_slice_widgets[1], m_slice_widgets[2]);
 
     // data type selector
     m_data_type_selector = new QComboBox(this);

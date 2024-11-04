@@ -48,60 +48,6 @@ Copyright 2023 Erlend Andersen
 
 constexpr std::array<double, 3> TEXT_COLOR = { 0.6, 0.5, 0.1 };
 
-class TextModifiedCallback : public vtkCallbackCommand {
-public:
-    static TextModifiedCallback* New()
-    {
-        return new TextModifiedCallback;
-    }
-    // Here we Create a vtkCallbackCommand and reimplement it.
-    void Execute(vtkObject* caller, unsigned long evId, void*) override
-    {
-        if (evId == vtkCommand::WindowLevelEvent || evId == vtkCommand::EndWindowLevelEvent) {
-            // Note the use of reinterpret_cast to cast the caller to the expected type.
-            auto style = reinterpret_cast<vtkInteractorStyleImage*>(caller);
-            auto property = style->GetCurrentImageProperty();
-            if (property) {
-                auto ww = property->GetColorWindow();
-                auto wl = property->GetColorLevel();
-
-                std::array<char, 10> buffer;
-                std::string txt = "WL: ";
-                if (auto [ptr, ec] = std::to_chars(buffer.data(), buffer.data() + buffer.size(), wl, std::chars_format::general, 3); ec == std::errc()) {
-                    txt += std::string_view(buffer.data(), ptr);
-                }
-                txt += " WW: ";
-                if (auto [ptr, ec] = std::to_chars(buffer.data(), buffer.data() + buffer.size(), ww, std::chars_format::general, 3); ec == std::errc()) {
-                    txt += std::string_view(buffer.data(), ptr);
-                }
-                textActorCorner->SetInput(txt.c_str());
-            }
-        }
-    }
-
-    // Convinietn function to get commands this callback is intended for
-    constexpr static std::vector<vtkCommand::EventIds> eventTypes()
-    {
-        std::vector<vtkCommand::EventIds> cmds;
-        cmds.push_back(vtkCommand::WindowLevelEvent);
-        cmds.push_back(vtkCommand::EndWindowLevelEvent);
-        return cmds;
-    }
-
-    // Set pointers to any clientData or callData here.
-    vtkSmartPointer<vtkTextActor> textActorCorner = nullptr;
-
-protected:
-private:
-    TextModifiedCallback()
-    {
-        textActorCorner = vtkSmartPointer<vtkTextActor>::New();
-        textActorCorner->GetTextProperty()->SetColor(1.0, 1.0, 1.0);
-    }
-    TextModifiedCallback(const TextModifiedCallback&) = delete;
-    void operator=(const TextModifiedCallback&) = delete;
-};
-
 vtkSmartPointer<vtkImageData> generateSampleData()
 {
     auto data = std::make_shared<DataContainer>();
@@ -305,12 +251,9 @@ void SliceRenderWidget::setupSlicePipeline(int orientation, bool lowerLeftText, 
         txtStyle->BoldOn();
 
         // window txt
-        auto callback = vtkSmartPointer<TextModifiedCallback>::New();
-        m_windowText = callback->textActorCorner;
-        callback->textActorCorner->SetTextProperty(txtStyle);
-        for (auto ev : callback->eventTypes())
-            interactorStyle->AddObserver(ev, callback);
-        m_renderer->AddActor2D(callback->textActorCorner);
+        m_windowText = vtkSmartPointer<vtkTextActor>::New();
+        m_windowText->SetTextProperty(txtStyle);
+        m_renderer->AddActor2D(m_windowText);
     }
 }
 

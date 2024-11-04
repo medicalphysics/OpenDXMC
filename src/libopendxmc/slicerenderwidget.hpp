@@ -61,6 +61,7 @@ public:
 
     vtkSmartPointer<vtkImageActor> imageSlice() { return m_imageSliceFront; }
     vtkSmartPointer<vtkRenderer> renderer() { return m_renderer; }
+    vtkSmartPointer<vtkTextActor> windowTextItem() { return m_windowText; }
 
 protected:
     void setNewImageData(vtkSmartPointer<vtkImageData> data, bool rezoom_camera = false);

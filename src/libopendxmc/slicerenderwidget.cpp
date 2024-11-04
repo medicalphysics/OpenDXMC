@@ -513,17 +513,20 @@ void SliceRenderWidget::resetCamera()
     camera->GetDirectionOfProjection(dir);
     int dIdx = argmax3(dir);
 
-    double fpoint[3], pos[3];
+    double pos[3];
     camera->GetPosition(pos);
-    camera->GetFocalPoint(fpoint);
     for (int i = 0; i < 3; ++i) {
         if (i != dIdx) {
-            fpoint[i] = 0;
             pos[i] = 0;
         }
     }
     camera->SetPosition(pos);
-    camera->SetFocalPoint(fpoint);
+    camera->SetFocalPoint(0.0, 0.0, 0.0);
+    if (m_data) {
+        const auto span = (m_data->dimensions()[dIdx] * m_data->spacing()[dIdx]) / 2;
+        const auto dist = std::abs(pos[dIdx]);
+        camera->SetClippingRange(dist - span, dist + span);
+    }
 }
 
 void SliceRenderWidget::Render(bool reset_camera)

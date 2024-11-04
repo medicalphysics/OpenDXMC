@@ -21,6 +21,7 @@ Copyright 2024 Erlend Andersen
 
 #include <QVTKInteractor.h>
 #include <vtkCallbackCommand.h>
+#include <vtkCamera.h>
 #include <vtkImageProperty.h>
 #include <vtkInteractorObserver.h>
 #include <vtkObjectFactory.h>
@@ -264,6 +265,46 @@ void CustomInteractorStyleImage::OnRightButtonUp()
 void CustomInteractorStyleImage::OnChar()
 {
     vtkInteractorStyleImage::OnChar();
+}
+
+void CustomInteractorStyleImage::Slice()
+{
+    if (this->CurrentRenderer == nullptr) {
+        return;
+    }
+
+    vtkRenderWindowInteractor* rwi = this->Interactor;
+    int dy = rwi->GetEventPosition()[1] - rwi->GetLastEventPosition()[1];
+
+    vtkCamera* camera = this->CurrentRenderer->GetActiveCamera();
+    double* range = camera->GetClippingRange();
+    double distance = camera->GetDistance();
+
+    // scale the interaction by the height of the viewport
+    double viewportHeight = 0.0;
+    if (camera->GetParallelProjection()) {
+        viewportHeight = camera->GetParallelScale();
+    } else {
+        double angle = vtkMath::RadiansFromDegrees(camera->GetViewAngle());
+        viewportHeight = 2.0 * distance * std::tan(0.5 * angle);
+    }
+
+    const int* size = this->CurrentRenderer->GetSize();
+    double delta = dy * viewportHeight / size[1];
+    distance += delta;
+
+    // clamp the distance to the clipping range
+    if (distance < range[0]) {
+        const auto diff = range[0] - distance;
+        distance = range[1] - diff;
+    }
+    if (distance > range[1]) {
+        const auto diff = distance - range[1];
+        distance = range[0] + diff;
+    }
+    camera->SetDistance(distance);
+
+    rwi->Render();
 }
 
 void CustomInteractorStyleImage::WindowLevel()

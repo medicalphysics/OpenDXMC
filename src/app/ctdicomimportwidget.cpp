@@ -286,8 +286,9 @@ void CTDicomImportWidget::lookInFolder(const QString folderPath)
 
     // restricts images to axial CT images
     vtkDICOMItem query;
-    query.SetAttributeValue(DC::Modality, " CT ");
-    query.SetAttributeValue(DC::SOPClassUID, " 1.2.840.10008.5.1.4.1.1.2 ");
+    query.SetAttributeValue(DC::Modality, "CT");
+    query.SetAttributeValue(DC::SOPClassUID, "1.2.840.10008.5.1.4.1.1.2");
+    query.SetAttributeValue(DC::ImageType, "AXIAL");
     m_imageDirectorySnooper->SetFindQuery(query);
 
     m_imageDirectorySnooper->Update();
@@ -298,8 +299,8 @@ void CTDicomImportWidget::lookInFolder(const QString folderPath)
         return;
     }
 
-    vtkDICOMTag seriesDescriptionTag(8, 0x103E);
-    vtkDICOMTag studyDescriptionTag(8, 0x1030);
+    vtkDICOMTag seriesDescriptionTag(DC::SeriesDescription);
+    vtkDICOMTag studyDescriptionTag(DC::StudyDescription);
     for (int i = 0; i < n_series; i++) {
         vtkDICOMItem seriesRecord = m_imageDirectorySnooper->GetSeriesRecord(i);
         vtkDICOMValue seriesDescriptionValue = seriesRecord.GetAttributeValue(seriesDescriptionTag);

@@ -67,7 +67,6 @@ public:
         });
         connect(this, &QXYSeries::released, [this](const QPointF& point) {
             m_pIdx_edit = -1;
-            updateLUTfromPoints();
         });
         connect(this, &QXYSeries::doubleClicked, [this](const QPointF& point) {
             if (this->count() > 2) {
@@ -323,21 +322,31 @@ public:
                         m_lut_series->setCurrentClickedPoint(pIdx + 1);
                     }
                 }
+                m_lut_series->updateLUTfromPoints();
             }
         } else if (event->buttons() == Qt::RightButton && m_point_pressed >= 0) {
             const int pIdx = m_lut_series->currentClickedPoint();
-            QPointF pos_scene = this->mapToScene(event->pos());
-            QPointF pos = chart()->mapToValue(pos_scene, m_lut_series);
+            const auto n = m_lut_series->count();
+            if ((pIdx >= 0) && (pIdx < n)) {
+                QPointF pos_scene = this->mapToScene(event->pos());
+                QPointF pos = chart()->mapToValue(pos_scene, m_lut_series);
 
-            pos_scene = this->mapToScene(m_point_pressed_pos);
-            QPointF pos_pre = chart()->mapToValue(pos_scene, m_lut_series);
-            auto delta = pos.x() - pos_pre.x();
-            m_point_pressed_pos = event->pos();
+                pos_scene = this->mapToScene(m_point_pressed_pos);
+                QPointF pos_pre = chart()->mapToValue(pos_scene, m_lut_series);
+                auto delta = pos.x() - pos_pre.x();
+                m_point_pressed_pos = event->pos();
 
-            for (int i = 0; i < m_lut_series->count(); ++i) {
-                auto p = m_lut_series->at(i);
-                p.setX(std::clamp(p.x() + delta, 0.0, 1.0));
-                m_lut_series->replace(i, p);
+                // testing endings
+                const auto start = m_lut_series->at(0).x();
+                const auto end = m_lut_series->at(n - 1).x();
+                if (start + delta > 0.0 && end + delta < 1.0) {
+                    for (int i = 0; i < n; ++i) {
+                        auto p = m_lut_series->at(i);
+                        p.setX(std::clamp(p.x() + delta, 0.0, 1.0));
+                        m_lut_series->replace(i, p);
+                    }
+                    m_lut_series->updateLUTfromPoints();
+                }
             }
         }
     }

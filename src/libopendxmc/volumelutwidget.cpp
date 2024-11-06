@@ -324,12 +324,42 @@ public:
                     }
                 }
             }
+        } else if (event->buttons() == Qt::RightButton && m_point_pressed >= 0) {
+            const int pIdx = m_lut_series->currentClickedPoint();
+            QPointF pos_scene = this->mapToScene(event->pos());
+            QPointF pos = chart()->mapToValue(pos_scene, m_lut_series);
+
+            pos_scene = this->mapToScene(m_point_pressed_pos);
+            QPointF pos_pre = chart()->mapToValue(pos_scene, m_lut_series);
+            auto delta = pos.x() - pos_pre.x();
+            m_point_pressed_pos = event->pos();
+
+            for (int i = 0; i < m_lut_series->count(); ++i) {
+                auto p = m_lut_series->at(i);
+                p.setX(std::clamp(p.x() + delta, 0.0, 1.0));
+                m_lut_series->replace(i, p);
+            }
         }
     }
 
     void mouseReleaseEvent(QMouseEvent* event)
     {
         QChartView::mouseReleaseEvent(event);
+    }
+
+    void mousePressEvent(QMouseEvent* event)
+    {
+        QChartView::mousePressEvent(event);
+        if (event->button() == Qt::RightButton) {
+            const auto n = m_lut_series->count();
+            int pIdx = m_lut_series->currentClickedPoint();
+            if ((pIdx >= 0) && (pIdx < n)) {
+                m_point_pressed = pIdx;
+                m_point_pressed_pos = event->pos();
+            } else {
+                m_point_pressed = -1;
+            }
+        }
     }
 
     void mouseDoubleClickEvent(QMouseEvent* event)
@@ -353,6 +383,8 @@ private:
     VolumeRenderSettings* m_settings = nullptr;
     LUTSeries* m_lut_series = nullptr;
     QValueAxis* m_axisx = nullptr;
+    QPoint m_point_pressed_pos;
+    int m_point_pressed = -1;
 };
 
 VolumeLUTWidget::VolumeLUTWidget(VolumeRenderSettings* settings, VolumeLUTWidget::LUTType type, QWidget* parent)

@@ -709,6 +709,9 @@ void BeamSettingsModel::addCBCTBeam(std::shared_ptr<BeamActorContainer> actor)
     if (!beam) {
         const std::map<std::size_t, double> filt_init = { { 13, 2.0 }, { 29, 0.1 } };
         beam = std::make_shared<Beam>(CBCTBeam({ 0, 0, 0 }, { 0, 0, 1 }, filt_init));
+        // setting some nice default values
+        auto& dx = std::get<CBCTBeam>(*beam);
+        dx.setCollimationAnglesDeg(10, 10);
     }
     auto beamActor = std::make_shared<BeamActorContainer>(beam);
     m_beams.push_back(std::make_pair(beam, beamActor));
@@ -799,7 +802,29 @@ void BeamSettingsModel::addCBCTBeam(std::shared_ptr<BeamActorContainer> actor)
             auto& dx = std::get<CBCTBeam>(*beam);
             return dx.collimationAnglesDeg();
         };
-        addItem(root, "Collimation angles [Deg]", setter, getter);
+        addItem(root, "Collimation angles [deg]", setter, getter);
+    }
+
+    {
+        auto setter = [=](std::array<double, 2> d) {
+            auto& dx = std::get<CBCTBeam>(*beam);
+            const auto ssd = dx.sourceDetectorDistance();
+            const auto ang_x = std::atan(d[0] / (2 * ssd)) * 2;
+            const auto ang_y = std::atan(d[1] / (2 * ssd)) * 2;
+            dx.setCollimationAngles(ang_x, ang_y);
+            beamActor->update();
+        };
+        auto getter = [=]() -> std::array<double, 2> {
+            auto& dx = std::get<CBCTBeam>(*beam);
+            const auto ssd = dx.sourceDetectorDistance();
+            const auto ang = dx.collimationAngles();
+            std::array<double, 2> size = {
+                std::tan(ang[0] / 2) * ssd * 2,
+                std::tan(ang[1] / 2) * ssd * 2,
+            };
+            return size;
+        };
+        addItem(root, "Collimation [cm x cm]", setter, getter);
     }
 
     auto tubeItem = new LabelItem(tr("Tube"));

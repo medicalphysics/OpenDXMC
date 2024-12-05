@@ -726,6 +726,7 @@ void BeamSettingsModel::addCBCTBeam(std::shared_ptr<BeamActorContainer> actor)
         // setting some nice default values
         auto& dx = std::get<CBCTBeam>(*beam);
         dx.setCollimationAnglesDeg(10, 10);
+        dx.setNumberOfParticlesPerExposure(1E6);
     }
     auto beamActor = std::make_shared<BeamActorContainer>(beam);
     m_beams.push_back(std::make_pair(beam, beamActor));

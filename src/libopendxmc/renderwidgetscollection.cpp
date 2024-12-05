@@ -155,10 +155,7 @@ public:
                                 camera->GetViewPlaneNormal(normal.data());
                                 std::array<double, 3> focalPoint;
                                 camera->GetFocalPoint(focalPoint.data());
-
                                 translateFocalPoint(focalPoint, normal, pos);
-                                const auto dist = pointPlaneDistance(focalPoint, normal, pos);
-
                                 camera->SetFocalPoint(focalPoint.data());
                                 wid->Render();
                             }
@@ -462,13 +459,6 @@ QWidget* RenderWidgetsCollection::createRendersettingsWidget(QWidget* parent)
     inter_type->setCurrentIndex(3);
     connect(inter_type, &QComboBox::currentIndexChanged, this, &RenderWidgetsCollection::setInterpolationType);
 
-    /* auto smoother = addWidgetAndLabel<QDoubleSpinBox>(tr("Image smoothing"), sliceg_layout, parent);
-     smoother->setRange(0, 10);
-     smoother->setValue(0);
-     smoother->setSingleStep(0.2);
-     smoother->setDecimals(2);
-     connect(smoother, &QDoubleSpinBox::valueChanged, this, &RenderWidgetsCollection::setImageSmoothing);
-     */
     auto smoother = addWidgetAndLabel<QSlider>(tr("Image display smoothing "), sliceg_layout, parent);
     smoother->setRange(0, 5);
     smoother->setValue(0);

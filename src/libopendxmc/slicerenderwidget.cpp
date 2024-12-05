@@ -42,8 +42,6 @@ Copyright 2023 Erlend Andersen
 #include <vtkTextProperty.h>
 #include <vtkWindowToImageFilter.h>
 
-#include <charconv>
-#include <span>
 #include <string>
 
 constexpr std::array<double, 3> TEXT_COLOR = { 0.6, 0.5, 0.1 };
@@ -283,69 +281,6 @@ void SliceRenderWidget::updateTextPositions(bool render)
     }
 }
 
-/*
-void SliceRenderWidget::sharedViews(std::vector<SliceRenderWidget*> wids)
-{
-     wids.insert(wids.begin(), this);
-    // setting same lut
-    for (auto& w : wids) {
-        w->lut = this->lut;
-        w->m_imageSliceFront->GetProperty()->SetLookupTable(lut);
-    }
-
-    // setting same image smoother
-    for (auto& w : wids) {
-        w->m_smoother = this->m_smoother;
-        w->m_imageSliceFront->GetMapper()->SetInputConnection(w->m_smoother->GetOutputPort());
-    }
-
-    for (std::size_t i = 0; i < wids.size(); ++i) {
-        auto w = wids[i];
-        auto callback = vtkSmartPointer<WindowLevelSlicingModifiedCallback>::New();
-        auto style = w->interactorStyle;
-        for (std::size_t j = 0; j < 3; ++j) {
-            if (i != j) {
-                callback->imageSlices.push_back(wids[j]->m_imageStack);
-                callback->widgets.push_back(wids[j]->openGLWidget);
-            }
-        }
-        for (auto ev : callback->eventTypes())
-            style->AddObserver(ev, callback);
-    }
-
-    auto txtStyle = vtkSmartPointer<vtkTextProperty>::New();
-    txtStyle->SetColor(TEXT_COLOR.data());
-    txtStyle->BoldOn();
-
-    // windowlevel text
-    {
-        auto callback = vtkSmartPointer<TextModifiedCallback>::New();
-        callback->textActorCorner->SetTextProperty(txtStyle);
-        for (std::size_t i = 0; i < wids.size(); ++i) {
-            auto style = wids[i]->interactorStyle;
-            for (auto ev : callback->eventTypes())
-                style->AddObserver(ev, callback);
-            if (i == 0)
-                wids[i]->m_renderer->AddActor(callback->textActorCorner);
-        }
-    }
-
-
-
-    // remove all but one lower left text actor
-    for (std::size_t i = 1; i < wids.size(); ++i)
-        wids[i]->lowerLeftText = nullptr;
-
-
-}*/
-/* void SliceRenderWidget::sharedViews(SliceRenderWidget* other1, SliceRenderWidget* other2)
-{
-    std::vector<SliceRenderWidget*> w;
-    w.push_back(other1);
-    w.push_back(other2);
-    sharedViews(w);
-}*/
-
 void SliceRenderWidget::useFXAA(bool use)
 {
     m_renderer->SetUseFXAA(use);
@@ -541,7 +476,6 @@ void SliceRenderWidget::setNewImageData(vtkSmartPointer<vtkImageData> data, bool
 {
     if (data) {
         m_smoother->SetInputData(data);
-        // m_imageSliceFront->GetMapper()->SetInputData(data);
         m_imageSliceFront->SetDisplayExtent(data->GetExtent());
         Render(rezoom_camera);
     }

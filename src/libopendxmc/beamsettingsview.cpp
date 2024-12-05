@@ -42,6 +42,7 @@ BeamSettingsView::BeamSettingsView(QWidget* parent)
 
     connect(this, &BeamSettingsView::imageDataChanged, m_model, &BeamSettingsModel::updateImageData);
     connect(this, &BeamSettingsView::requestDeleteBeamIndex, m_model, &BeamSettingsModel::deleteBeam);
+    connect(this, &BeamSettingsView::requestDeleteAllBeams, m_model, &BeamSettingsModel::deleteAllBeams);
 
     auto itemdelegate = new BeamSettingsDelegate(m_model, this);
     setItemDelegate(itemdelegate);

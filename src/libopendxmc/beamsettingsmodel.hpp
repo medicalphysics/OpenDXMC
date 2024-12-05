@@ -41,6 +41,7 @@ public:
     void addCTSpiralDualEnergyBeam(std::shared_ptr<BeamActorContainer> beam = nullptr);
     void updateImageData(std::shared_ptr<DataContainer>);
     void deleteBeam(int index);
+    void deleteAllBeams();
     const QMap<QString, BowtieFilter>& bowtieFilters() const;
     const QMap<QString, BowtieFilter>* bowtieFiltersPtr() const { return &m_bowtieFilters; }
     // selectedbowtietype

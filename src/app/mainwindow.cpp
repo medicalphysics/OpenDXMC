@@ -224,6 +224,7 @@ MainWindow::MainWindow(QWidget* parent)
     connect(h5io, &H5IO::imageDataChanged, simulationpipeline, &SimulationPipeline::updateImageData);
     connect(h5io, &H5IO::imageDataChanged, simulationpipeline, &SimulationPipeline::updateImageData);
     connect(h5io, &H5IO::beamDataChanged, beamsettingsmodel, &BeamSettingsView::addBeam);
+    connect(h5io, &H5IO::requestDeleteAllBeams, beamsettingsmodel, &BeamSettingsView::deleteAllBeams);
 
     // setting up window menu
     createMenu();

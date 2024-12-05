@@ -224,6 +224,17 @@ void BeamSettingsModel::deleteBeam(int index)
     }
 }
 
+void BeamSettingsModel::deleteAllBeams()
+{
+    auto root = invisibleRootItem();
+    const auto nrows = root->rowCount();
+    root->removeRows(0, nrows);
+    for (auto [beam, actor] : m_beams) {
+        emit beamActorRemoved(actor);
+    }
+    m_beams.clear();
+}
+
 void addItem(QStandardItem* parent, QString label, auto setter, auto getter, bool editable = true)
 {
     QList<QStandardItem*> row(2);
@@ -458,6 +469,9 @@ void BeamSettingsModel::addDXBeam(std::shared_ptr<BeamActorContainer> actor)
     if (!beam) {
         const std::map<std::size_t, double> filt_init = { { 13, 2.0 }, { 29, 0.1 } };
         beam = std::make_shared<Beam>(DXBeam(filt_init));
+        // setting some nice defaults
+        auto& dx = std::get<DXBeam>(*beam);
+        dx.setNumberOfParticlesPerExposure(1E6);
     }
     auto beamActor = std::make_shared<BeamActorContainer>(beam);
     m_beams.push_back(std::make_pair(beam, beamActor));

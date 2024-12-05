@@ -36,6 +36,7 @@ public:
     void addCTSequentialBeam() { emit requestAddCTSequentialBeam(); }
     void addCTSpiralDualEnergyBeam() { emit requestAddCTSpiralDualEnergyBeam(); }
     void addPencilBeam() { emit requestAddPencilBeam(); }
+    void deleteAllBeams() { emit requestDeleteAllBeams(); }
     void keyPressEvent(QKeyEvent*) override;
 signals:
     void requestAddNewBeam(std::shared_ptr<BeamActorContainer> beam);
@@ -50,6 +51,7 @@ signals:
     void requestRender();
     void imageDataChanged(std::shared_ptr<DataContainer> data);
     void requestDeleteBeamIndex(int);
+    void requestDeleteAllBeams();
 
 private:
     QThread m_workerThread;

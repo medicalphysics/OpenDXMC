@@ -62,6 +62,7 @@ void H5IO::loadData(QString path)
     auto data = s.load();
     emit imageDataChanged(data);
     m_beams.clear();
+    emit requestDeleteAllBeams();
     auto beams = s.loadBeams();
     for (auto b : beams)
         emit beamDataChanged(b);

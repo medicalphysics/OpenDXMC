@@ -37,6 +37,7 @@ public:
 
 signals:
     void beamDataChanged(std::shared_ptr<BeamActorContainer> beam);
+    void requestDeleteAllBeams();
 
 protected:
 private:

@@ -118,7 +118,7 @@ void BeamActorContainer::update()
                 cells->InsertCellPoint(i);
             }
             const auto exp = arg.exposure(0);
-            const auto p = pointsFromCollimations(exp.position(), exp.directionCosines(), exp.collimationAngles(), arg.sourceDetectorDistance());
+            const auto p = pointsFromCollimations(exp.position(), exp.directionCosines(), exp.collimationHalfAngles(), arg.sourceDetectorDistance());
             for (std::size_t i = 0; i < p.size(); ++i) {
                 points->InsertNextPoint(p[i].data());
                 cells->InsertNextCell(2);
@@ -147,7 +147,7 @@ void BeamActorContainer::update()
 
             for (std::size_t t = 0; t < 2; ++t) {
                 const auto exp = arg.exposure(t);
-                const auto p = pointsFromCollimations(exp.position(), exp.directionCosines(), exp.collimationAngles(), arg.sourceDetectorDistance());
+                const auto p = pointsFromCollimations(exp.position(), exp.directionCosines(), exp.collimationHalfAngles(), arg.sourceDetectorDistance());
                 const auto offset = t * p.size();
                 for (std::size_t i = 0; i < p.size(); ++i) {
                     points->InsertNextPoint(p[i].data());
@@ -164,7 +164,7 @@ void BeamActorContainer::update()
             }
         } else if constexpr (std::is_same_v<U, DXBeam>) {
             const auto pos = arg.position();
-            const auto angles = arg.collimationAngles();
+            const auto angles = arg.collimationHalfAngles();
             const auto cosines = arg.directionCosines();
             const auto lenght = arg.sourceDetectorDistance();
             const auto p = pointsFromCollimations(pos, cosines, angles, lenght);

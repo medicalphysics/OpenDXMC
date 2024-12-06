@@ -464,7 +464,7 @@ bool HDF5Wrapper::save(DXBeam& beam)
     saveAttribute<double>(beamgroup, "primary_angle", beam.primaryAngleDeg());
     saveAttribute<double>(beamgroup, "secondary_angle", beam.secondaryAngleDeg());
     saveAttribute<double>(beamgroup, "source_detector_distance", beam.sourceDetectorDistance());
-    saveAttribute<double>(beamgroup, "collimation_angles", beam.collimationAnglesDeg());
+    saveAttribute<double>(beamgroup, "collimation_half_angles", beam.collimationHalfAnglesDeg());
     saveAttribute<double>(beamgroup, "DAPvalue", beam.DAPvalue());
     saveAttribute<std::uint64_t>(beamgroup, "number_of_exposures", beam.numberOfExposures());
     saveAttribute<std::uint64_t>(beamgroup, "particles_per_exposure", beam.numberOfParticlesPerExposure());
@@ -492,7 +492,7 @@ bool HDF5Wrapper::save(CBCTBeam& beam)
     saveAttribute<double>(beamgroup, "start_angle", beam.startAngle());
     saveAttribute<double>(beamgroup, "stop_angle", beam.stopAngle());
     saveAttribute<double>(beamgroup, "step_angle", beam.stepAngle());
-    saveAttribute<double>(beamgroup, "collimation_angles", beam.collimationAnglesDeg());
+    saveAttribute<double>(beamgroup, "collimation_half_angles", beam.collimationHalfAnglesDeg());
     saveAttribute<double>(beamgroup, "DAPvalue", beam.DAPvalue());
     saveAttribute<std::uint64_t>(beamgroup, "particles_per_exposure", beam.numberOfParticlesPerExposure());
     saveAttribute<double>(beamgroup, "tube_voltage", beam.tube().voltage());
@@ -642,9 +642,9 @@ std::shared_ptr<Beam> loadDXBeam(std::unique_ptr<H5::Group>& group)
     if (source_detector_distance)
         dx.setSourceDetectorDistance(source_detector_distance.value()[0]);
 
-    auto collimation_angles = loadAttribute<double, 2>(group, "collimation_angles");
-    if (collimation_angles)
-        dx.setCollimationAnglesDeg(collimation_angles.value());
+    auto collimation_half_angles = loadAttribute<double, 2>(group, "collimation_half_angles");
+    if (collimation_half_angles)
+        dx.setCollimationHalfAnglesDeg(collimation_half_angles.value());
 
     auto DAPvalue = loadAttribute<double, 1>(group, "DAPvalue");
     if (DAPvalue)
@@ -704,9 +704,9 @@ std::shared_ptr<Beam> loadCBCTBeam(std::unique_ptr<H5::Group>& group)
     if (step_angle)
         dx.setStepAngle(step_angle.value()[0]);
 
-    auto collimation_angles = loadAttribute<double, 2>(group, "collimation_angles");
-    if (collimation_angles)
-        dx.setCollimationAnglesDeg(collimation_angles.value());
+    auto collimation_half_angles = loadAttribute<double, 2>(group, "collimation_half_angles");
+    if (collimation_half_angles)
+        dx.setCollimationHalfAnglesDeg(collimation_half_angles.value());
 
     auto DAPvalue = loadAttribute<double, 1>(group, "DAPvalue");
     if (DAPvalue)

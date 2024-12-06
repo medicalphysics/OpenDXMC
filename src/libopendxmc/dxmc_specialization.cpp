@@ -48,11 +48,11 @@ void DXBeam::setCollimation(const std::array<double, 2>& coll)
     const std::array<double, 2> ang = {
         std::tan(0.5 * std::abs(coll[0]) / m_SDD), std::tan(0.5 * std::abs(coll[1]) / m_SDD)
     };
-    setCollimationAngles(ang);
+    setCollimationHalfAngles(ang);
 }
 std::array<double, 2> DXBeam::collimation() const
 {
-    const auto& ang = collimationAngles();
+    const auto& ang = collimationHalfAngles();
     std::array<double, 2> coll = {
         2 * m_SDD * std::atan(ang[0]), 2 * m_SDD * std::atan(ang[1])
     };

@@ -53,8 +53,7 @@ bool SimulationPipeline::testIfReadyForSimulation(bool test_image) const
         if (ready && test_image) {
             // check if materials is satisfied
             const auto& marr = m_data->getMaterialArray();
-            const auto& [min_iter, max_iter] = std::minmax_element(std::execution::par_unseq, marr.cbegin(), marr.cend());
-            ready = ready && *min_iter == 0;
+            const auto& max_iter = std::max_element(std::execution::par_unseq, marr.cbegin(), marr.cend());
             ready = ready && *max_iter < n_materials;
         }
     }

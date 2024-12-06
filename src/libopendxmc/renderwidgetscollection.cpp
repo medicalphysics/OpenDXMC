@@ -239,7 +239,7 @@ RenderWidgetsCollection::RenderWidgetsCollection(QWidget* parent)
 
     // data type selector
     m_data_type_selector = new QComboBox(this);
-    connect(m_data_type_selector, &QComboBox::activated, [this](int idx) {
+    connect(m_data_type_selector, &QComboBox::currentIndexChanged, [this](int idx) {
         auto type = static_cast<DataContainer::ImageType>(m_data_type_selector->currentData().toInt());
         this->showData(type);
     });
@@ -282,19 +282,35 @@ void RenderWidgetsCollection::removeBeam(std::shared_ptr<BeamActorContainer> bea
 
 void RenderWidgetsCollection::updateImageData(std::shared_ptr<DataContainer> data)
 {
+    // we subtract one from current index since qt is stupid
     const auto current_data = m_data_type_selector->currentData().toInt();
     m_data_type_selector->clear();
     if (data) {
+        const auto current_image = static_cast<DataContainer::ImageType>(current_data);
+        bool newdata_have_current = false;
         auto types = data->getAvailableImages();
-        for (auto t : types) {
+        int index = -1;
+        for (int i = 0; i < types.size(); ++i) {
+            auto t = types[i];
             auto d = QVariant(static_cast<int>(t));
             auto name = QString::fromStdString(data->getImageAsString(t));
             m_data_type_selector->addItem(name, d);
+            if (t == DataContainer::ImageType::Dose)
+                index = i;
+            if (t == current_image && index == -1)
+                index = i;
         }
+
+        // setting data on viewers
+        for (auto& w : m_slice_widgets)
+            w->updateImageData(data);
+        m_volume_widget->updateImageData(data);
+        if (index >= 0)
+            m_data_type_selector->setCurrentIndex(index);
     }
     for (auto& w : m_slice_widgets)
-        w->updateImageData(data);
-    m_volume_widget->updateImageData(data);
+        w->updateImageData(nullptr);
+    m_volume_widget->updateImageData(nullptr);
 }
 
 void RenderWidgetsCollection::showData(DataContainer::ImageType type)
@@ -410,7 +426,6 @@ void RenderWidgetsCollection::setUseCTBackground(bool on)
 
 QWidget* RenderWidgetsCollection::createRendersettingsWidget(QWidget* parent)
 {
-
     auto wid = new QWidget(parent);
     auto layout = new QVBoxLayout;
     wid->setLayout(layout);

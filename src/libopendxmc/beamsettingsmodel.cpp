@@ -844,8 +844,8 @@ void BeamSettingsModel::addCBCTBeam(std::shared_ptr<BeamActorContainer> actor)
             const auto ssd = dx.sourceDetectorDistance();
             const auto ang = dx.collimationHalfAngles();
             std::array<double, 2> size = {
-                std::tan(ang[0] / 2) * ssd * 2,
-                std::tan(ang[1] / 2) * ssd * 2,
+                std::tan(ang[0]) * ssd * 2,
+                std::tan(ang[1]) * ssd * 2,
             };
             return size;
         };

@@ -307,10 +307,11 @@ void RenderWidgetsCollection::updateImageData(std::shared_ptr<DataContainer> dat
         m_volume_widget->updateImageData(data);
         if (index >= 0)
             m_data_type_selector->setCurrentIndex(index);
+    } else {
+        for (auto& w : m_slice_widgets)
+            w->updateImageData(nullptr);
+        m_volume_widget->updateImageData(nullptr);
     }
-    for (auto& w : m_slice_widgets)
-        w->updateImageData(nullptr);
-    m_volume_widget->updateImageData(nullptr);
 }
 
 void RenderWidgetsCollection::showData(DataContainer::ImageType type)

@@ -25,6 +25,7 @@ Copyright 2023 Erlend Andersen
 #include <QGridLayout>
 #include <QGroupBox>
 #include <QLabel>
+#include <QMouseEvent>
 #include <QPushButton>
 
 #include <vtkCallbackCommand.h>
@@ -511,4 +512,32 @@ QWidget* RenderWidgetsCollection::createRendersettingsWidget(QWidget* parent)
     volumeg_layout->addWidget(volumerenderettings);
 
     return wid;
+}
+
+void RenderWidgetsCollection::mouseDoubleClickEvent(QMouseEvent* event)
+{
+    if (event) {
+        if (m_focusWidget >= 0) {
+            for (auto w : m_slice_widgets)
+                w->show();
+            m_volume_widget->show();
+            m_focusWidget = -1;
+        } else {
+            std::array<QWidget*, 4> wids;
+            for (int i = 0; i < m_slice_widgets.size(); ++i)
+                wids[i] = m_slice_widgets[i];
+            wids[3] = m_volume_widget;
+
+            const auto pos = event->position().toPoint();
+            for (int i = 0; i < 4; ++i) {
+                auto rect = wids[i]->geometry();
+                if (rect.contains(pos)) {
+                    m_focusWidget = i;
+                    wids[i]->setVisible(true);
+                } else {
+                    wids[i]->setVisible(false);
+                }
+            }
+        }
+    }
 }

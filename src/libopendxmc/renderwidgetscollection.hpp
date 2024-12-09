@@ -76,6 +76,8 @@ public:
 
     void showData(DataContainer::ImageType type);
 
+    void mouseDoubleClickEvent(QMouseEvent* event) override;
+
 protected:
     VolumerenderSettingsWidget* volumerenderSettingsWidget(QWidget* parent = nullptr);
 
@@ -84,5 +86,6 @@ private:
     VolumerenderWidget* m_volume_widget = nullptr;
     QComboBox* m_data_type_selector = nullptr;
     std::vector<BeamBufferItem> m_beamBuffer;
+    int m_focusWidget = -1;
     bool m_show_beam_actors = true;
 };

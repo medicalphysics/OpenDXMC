@@ -122,6 +122,8 @@ if(WIN32)
     
     set(CPACK_WIX_UPGRADE_GUID "aee28b68-bbb9-0f61-a782-3ab32ebdccae")
     set(CPACK_WIX_INSTALL_SCOPE "perUser")
+    set(CPACK_WIX_VERSION "4")
+    set(CPACK_WIX_PROGRAM_MENU_FOLDER "OpenDXMC")
 
     set(CPACK_INNOSETUP_ICON_FILE "${PROJECT_SOURCE_DIR}/data/icons/icon.ico")
     set(CPACK_INNOSETUP_SETUP_PrivilegesRequired "lowest")

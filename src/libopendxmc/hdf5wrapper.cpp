@@ -116,9 +116,19 @@ bool saveArray(std::unique_ptr<H5::H5File>& file, const std::vector<std::string>
     }
 
     constexpr int rank = static_cast<int>(N);
-
     std::array<hsize_t, N> h5dims;
-    std::copy(dims.cbegin(), dims.cend(), h5dims.begin());
+
+    if constexpr (rank == 3) {
+        h5dims[0] = dims[2];
+        h5dims[1] = dims[1];
+        h5dims[2] = dims[0];
+    } else if constexpr (rank == 2) {
+        h5dims[0] = dims[1];
+        h5dims[1] = dims[0];
+    } else {
+        std::copy(dims.cbegin(), dims.cend(), h5dims.begin());
+    }
+
     H5::DataSpace dataspace(rank, h5dims.data());
 
     H5::PredType h5type = H5::PredType::NATIVE_DOUBLE;

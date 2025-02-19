@@ -19,6 +19,7 @@ Copyright 2023 Erlend Andersen
 #include <beamactorcontainer.hpp>
 #include <colormaps.hpp>
 #include <custominteractorstyleimage.hpp>
+#include <niftiwrapper.hpp>
 #include <slicerenderwidget.hpp>
 
 #include <QDir>
@@ -89,7 +90,7 @@ SliceRenderWidget::SliceRenderWidget(int orientation, bool lowerLeftText, bool c
     settingsButton->setMenu(menu);
 
     // adding settingsactions
-    menu->addAction(QString(tr("Save image")), [this, orientation]() {
+    menu->addAction(QString(tr("Save slice (png)")), [this, orientation]() {
         QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
         auto dirpath_str = settings.value("saveload/path", ".").value<QString>();
         QDir dirpath(dirpath_str);
@@ -122,6 +123,31 @@ SliceRenderWidget::SliceRenderWidget(int orientation, bool lowerLeftText, bool c
             writer->SetInputConnection(windowToImageFilter->GetOutputPort());
             writer->Write();
             renderWindow->Render();
+        }
+    });
+    menu->addAction(QString(tr("Export volume (nifti)")), [this]() {
+        QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
+        auto dirpath_str = settings.value("saveload/path", ".").value<QString>();
+        QDir dirpath(dirpath_str);
+
+        const auto imagetype = this->lut_current_type;
+        const auto image_desc = DataContainer::getImageAsString(imagetype);
+
+        auto filename = QString::fromStdString(image_desc) + QString(".nii.gz");
+
+        filename = QFileDialog::getSaveFileName(this, tr("Save File"), filename, tr("Nifti (*.nii.gz)"));
+
+        if (!filename.isEmpty()) {
+            auto fileinfo = QFileInfo(filename);
+            dirpath_str = fileinfo.absolutePath();
+            settings.setValue("saveload/path", dirpath_str);
+
+            auto std_path = filename.toStdString();
+
+            if (this->m_data){
+                auto image = this->m_data->vtkImage(imagetype);
+                NiftiWrapper writer;
+                auto success = writer.save(std_path, image, imagetype);}
         }
     });
 }

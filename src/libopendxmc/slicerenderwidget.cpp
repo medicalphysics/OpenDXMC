@@ -163,7 +163,7 @@ SliceRenderWidget::SliceRenderWidget(int orientation, bool lowerLeftText, bool c
                 progress.setMinimumDuration(0);
                 progress.setValue(0);
                 progress.setValue(1);
-                QFuture<void> future = QtConcurrent::run(writer, data, std_path, imagetype);                  
+                QFuture<void> future = QtConcurrent::run(writer, data, std_path, imagetype);
                 QCoreApplication::processEvents();
                 future.waitForFinished();
                 progress.setValue(2);

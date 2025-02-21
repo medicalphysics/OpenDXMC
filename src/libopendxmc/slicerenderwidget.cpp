@@ -24,10 +24,13 @@ Copyright 2023 Erlend Andersen
 
 #include <QDir>
 #include <QFileDialog>
+#include <QFuture>
 #include <QMenu>
+#include <QProgressDialog>
 #include <QPushButton>
 #include <QSettings>
 #include <QVBoxLayout>
+#include <QtConcurrent>
 
 #include <QVTKOpenGLNativeWidget.h>
 
@@ -44,7 +47,6 @@ Copyright 2023 Erlend Andersen
 #include <vtkWindowToImageFilter.h>
 
 #include <string>
-#include <thread>
 
 constexpr std::array<double, 3> TEXT_COLOR = { 0.6, 0.5, 0.1 };
 
@@ -126,6 +128,7 @@ SliceRenderWidget::SliceRenderWidget(int orientation, bool lowerLeftText, bool c
             renderWindow->Render();
         }
     });
+
     menu->addAction(QString(tr("Export volume (nifti)")), [this]() {
         QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
         auto dirpath_str = settings.value("saveload/path", ".").toString();
@@ -143,7 +146,6 @@ SliceRenderWidget::SliceRenderWidget(int orientation, bool lowerLeftText, bool c
             auto fileinfo = QFileInfo(filename);
             dirpath_str = fileinfo.absolutePath();
             settings.setValue("saveload/path", dirpath_str);
-            settings.sync();
 
             auto std_path = filename.toStdString();
             auto data = this->m_data; // copy of shared ptr
@@ -155,8 +157,16 @@ SliceRenderWidget::SliceRenderWidget(int orientation, bool lowerLeftText, bool c
             };
 
             if (data) {
-                std::jthread worker_thread(writer, data, std_path, imagetype);
-                worker_thread.detach();
+                QProgressDialog progress(tr("Exporting Nifti file"), "", 0, 2, this);
+                progress.setWindowModality(Qt::WindowModal);
+                progress.setCancelButtonText(nullptr);
+                progress.setMinimumDuration(0);
+                progress.setValue(0);
+                progress.setValue(1);
+                QFuture<void> future = QtConcurrent::run(writer, data, std_path, imagetype);                  
+                QCoreApplication::processEvents();
+                future.waitForFinished();
+                progress.setValue(2);
             }
         }
     });

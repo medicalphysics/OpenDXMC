@@ -42,7 +42,8 @@ target_link_libraries(libopendxmc PUBLIC
 	Qt${QT_VERSION_MAJOR}::Widgets
 	Qt${QT_VERSION_MAJOR}::Core
 	Qt${QT_VERSION_MAJOR}::Gui
-	Qt${QT_VERSION_MAJOR}::Charts	
+	Qt${QT_VERSION_MAJOR}::Charts
+	Qt${QT_VERSION_MAJOR}::Concurrent
 	libdxmc		
 	VTK::CommonCore
 	VTK::GUISupportQt

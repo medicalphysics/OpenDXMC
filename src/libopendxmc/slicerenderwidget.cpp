@@ -44,6 +44,7 @@ Copyright 2023 Erlend Andersen
 #include <vtkWindowToImageFilter.h>
 
 #include <string>
+#include <thread>
 
 constexpr std::array<double, 3> TEXT_COLOR = { 0.6, 0.5, 0.1 };
 
@@ -127,13 +128,14 @@ SliceRenderWidget::SliceRenderWidget(int orientation, bool lowerLeftText, bool c
     });
     menu->addAction(QString(tr("Export volume (nifti)")), [this]() {
         QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
-        auto dirpath_str = settings.value("saveload/path", ".").value<QString>();
-        QDir dirpath(dirpath_str);
+        auto dirpath_str = settings.value("saveload/path", ".").toString();
 
         const auto imagetype = this->lut_current_type;
         const auto image_desc = DataContainer::getImageAsString(imagetype);
 
         auto filename = QString::fromStdString(image_desc) + QString(".nii.gz");
+        QDir dirpath(dirpath_str);
+        filename = dirpath.absoluteFilePath(filename);
 
         filename = QFileDialog::getSaveFileName(this, tr("Save File"), filename, tr("Nifti (*.nii.gz)"));
 
@@ -141,13 +143,21 @@ SliceRenderWidget::SliceRenderWidget(int orientation, bool lowerLeftText, bool c
             auto fileinfo = QFileInfo(filename);
             dirpath_str = fileinfo.absolutePath();
             settings.setValue("saveload/path", dirpath_str);
+            settings.sync();
 
             auto std_path = filename.toStdString();
+            auto data = this->m_data; // copy of shared ptr
 
-            if (this->m_data){
-                auto image = this->m_data->vtkImage(imagetype);
+            auto writer = [](std::shared_ptr<DataContainer> data, std::string path, DataContainer::ImageType type) {
+                auto image = data->vtkImage(type);
                 NiftiWrapper writer;
-                auto success = writer.save(std_path, image, imagetype);}
+                auto success = writer.save(path, image, type);
+            };
+
+            if (data) {
+                std::jthread worker_thread(writer, data, std_path, imagetype);
+                worker_thread.detach();
+            }
         }
     });
 }

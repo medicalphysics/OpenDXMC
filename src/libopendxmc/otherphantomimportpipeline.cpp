@@ -100,3 +100,15 @@ void OtherPhantomImportPipeline::importPhantom(int type, double dx, double dy, d
     emit imageDataChanged(vol);
     emit dataProcessingFinished(ProgressWorkType::Importing);
 }
+void OtherPhantomImportPipeline::importHMGUPhantom(QString path)
+{
+    emit dataProcessingStarted(ProgressWorkType::Importing);
+    // TODO
+    //Identify phantom
+    //import phantom
+    //generate CT image?
+    
+    //emit imageDataChanged(vol);
+    
+    emit dataProcessingFinished(ProgressWorkType::Importing);
+}

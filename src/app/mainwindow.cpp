@@ -144,6 +144,7 @@ MainWindow::MainWindow(QWidget* parent)
     otherphantompipeline->moveToThread(&m_workerThread);
     statusBar->registerPipeline(otherphantompipeline);
     connect(otherimportwidget, &OtherPhantomImportWidget::requestImportPhantom, otherphantompipeline, &OtherPhantomImportPipeline::importPhantom);
+    connect(otherimportwidget, &OtherPhantomImportWidget::requestImportHMGUPhantom, otherphantompipeline, &OtherPhantomImportPipeline::importHMGUPhantom);
     connect(otherphantompipeline, &OtherPhantomImportPipeline::imageDataChanged, slicerender, &RenderWidgetsCollection::updateImageData);
 
     // beam settings widget

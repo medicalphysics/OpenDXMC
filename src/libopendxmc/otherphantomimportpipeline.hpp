@@ -31,6 +31,7 @@ public:
     OtherPhantomImportPipeline(QObject* parent = nullptr);
     void updateImageData(std::shared_ptr<DataContainer>);
     void importPhantom(int, double, double, double, int, int, int);
+    void importHMGUPhantom(QString path);
 
 signals:
     void errorMessage(QString);

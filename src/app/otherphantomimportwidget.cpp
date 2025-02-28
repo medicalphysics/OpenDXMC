@@ -22,9 +22,12 @@ Copyright 2023 Erlend Andersen
 #include <QComboBox>
 #include <QCoreApplication>
 #include <QDir>
+#include <QFileDialog>
 #include <QGroupBox>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QPushButton>
+#include <QSettings>
 #include <QVBoxLayout>
 
 #include <array>
@@ -55,5 +58,31 @@ OtherPhantomImportWidget::OtherPhantomImportWidget(QWidget* parent)
         }
     });
     lay->addWidget(p_box);
+
+    auto hmg_box = new QGroupBox(tr("Select HMGU phantom to import"), this);
+    auto hmg_lay = new QVBoxLayout;
+    hmg_box->setLayout(hmg_lay);
+    auto hmg_label = new QLabel(tr("HMGU could previously be licensed from Helmholtz-Zentrum. If you have one the phantoms select the raw file here. NOT IMPLEMENTED YET"), hmg_box);
+    hmg_label->setWordWrap(true);
+    hmg_lay->addWidget(hmg_label);
+    auto hmg_button = new QPushButton(tr("Browse"), hmg_box);
+    hmg_lay->addWidget(hmg_button);
+
+    connect(hmg_button, &QPushButton::clicked, this, &OtherPhantomImportWidget::queryHMGUPhantom);
+
+    lay->addWidget(hmg_box);
     lay->addStretch(100);
+}
+
+void OtherPhantomImportWidget::queryHMGUPhantom()
+{
+    QSettings settings(QSettings::NativeFormat, QSettings::UserScope, "OpenDXMC", "app");
+
+    auto dir = settings.value("hmguimport/browsepath").value<QString>();
+    auto path = QFileDialog::getOpenFileName(this, tr("Select HMGU phantom file"), dir);
+
+    if (!path.isEmpty()) {
+        settings.setValue("hmguimport/browsepath", path);
+        emit requestImportHMGUPhantom(path);        
+    }
 }

@@ -24,7 +24,8 @@ class OtherPhantomImportWidget : public QWidget {
     Q_OBJECT
 public:
     OtherPhantomImportWidget(QWidget* parent = nullptr);
+    void queryHMGUPhantom();
 signals:
     void requestImportPhantom(int, double, double, double, int, int, int);
-
+    void requestImportHMGUPhantom(QString path);
 };

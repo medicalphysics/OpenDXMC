@@ -19,6 +19,11 @@ Copyright 2024 Erlend Andersen
 #include "dxmc/material/nistmaterials.hpp"
 #include <otherphantomimportpipeline.hpp>
 
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <vector>
+
 OtherPhantomImportPipeline::OtherPhantomImportPipeline(QObject* parent)
     : BasePipeline(parent)
 {
@@ -100,15 +105,141 @@ void OtherPhantomImportPipeline::importPhantom(int type, double dx, double dy, d
     emit imageDataChanged(vol);
     emit dataProcessingFinished(ProgressWorkType::Importing);
 }
+
+struct HMGUPhantom {
+    enum class HMGUType {
+        None,
+        Katja,
+        Golem,
+        Helga,
+        Irene,
+        Frank,
+        Child,
+        Jo,
+        Baby,
+        Vishum,
+        Donna
+    };
+
+    HMGUType type = HMGUType::None;
+    std::array<double, 3> spacing = { 1, 1, 1 };
+    std::array<std::size_t, 3> dimensions = { 1, 1, 1 };
+
+    std::string organFile()
+    {
+        switch (type) {
+        case HMGUPhantom::HMGUType::Katja:
+            return "Katja_organs.dat";
+        case HMGUPhantom::HMGUType::Golem:
+            return "Golem_organs.dat";
+        case HMGUPhantom::HMGUType::Helga:
+            return "Helga_organs.dat";
+        case HMGUPhantom::HMGUType::Irene:
+            return "Irene_organs.dat";
+        case HMGUPhantom::HMGUType::Frank:
+            return "Frank_organs.dat";
+        case HMGUPhantom::HMGUType::Child:
+            return "Child_organs.dat";
+        case HMGUPhantom::HMGUType::Jo:
+            return "Jo_organs.dat";
+        case HMGUPhantom::HMGUType::Baby:
+            return "Baby_organs.dat";
+        case HMGUPhantom::HMGUType::Vishum:
+            return "Vishum_organs.dat";
+        case HMGUPhantom::HMGUType::Donna:
+            return "Donna_organs.dat";
+        default:
+            return std::string {};
+        }
+    }
+};
+
+std::vector<char> readHMGUFile(const QString& path)
+{
+    std::filesystem::path filePath = path.toStdString();
+    if (std::filesystem::exists(filePath)) {
+        std::ifstream file(filePath, std::ios::binary);
+        if (file.is_open()) {
+            std::vector<char> data(std::istreambuf_iterator<char>(file), {});
+            file.close();
+            return data;
+        }
+    }
+    return std::vector<char> {};
+}
+
+HMGUPhantom readHMGUheader(const std::vector<char>& data)
+{
+    constexpr int header_size = 4096;
+    HMGUPhantom phantom;
+    if (data.size() < header_size)
+        return phantom;
+
+    std::string header(data.begin(), data.begin() + header_size);
+
+    std::array<std::string, 3> dim_tokens = { " Width=", " Height=", " Depth=" };
+    std::array<std::string, 3> space_tokens = { "VoxelWidth=", "VoxelHeight=", "VoxelDepth=" };
+
+    for (std::size_t i = 0; i < 3; ++i) {
+        // dimensions
+        {
+            auto& token = dim_tokens[i];
+            auto pos = header.find(token);
+            if (pos == std::string::npos)
+                return phantom;
+            if (std::from_chars(header.data() + pos + token.size(), header.data() + header.size(), phantom.dimensions[i]).ec != std::errc {})
+                return phantom;
+        }
+        // spacing
+        {
+            auto& token = space_tokens[i];
+            auto pos = header.find(token);
+            if (pos == std::string::npos)
+                return phantom;
+            if (std::from_chars(header.data() + pos + token.size(), header.data() + header.size(), phantom.spacing[i]).ec != std::errc {})
+                return phantom;
+        }
+    }
+    // assign phantom type
+    if (phantom.dimensions[0] == 299 && phantom.dimensions[1] == 150 && phantom.dimensions[2] == 348) {
+        phantom.type = HMGUPhantom::HMGUType::Katja;
+    } else if (phantom.dimensions[0] == 226 && phantom.dimensions[1] == 118 && phantom.dimensions[2] == 136) {
+        phantom.type = HMGUPhantom::HMGUType::Jo;
+    } else if (phantom.dimensions[0] == 267 && phantom.dimensions[1] == 138 && phantom.dimensions[2] == 142) {
+        phantom.type = HMGUPhantom::HMGUType::Baby;
+    } else if (phantom.dimensions[0] == 256 && phantom.dimensions[1] == 256 && phantom.dimensions[2] == 144) {
+        phantom.type = HMGUPhantom::HMGUType::Child;
+    } else if (phantom.dimensions[0] == 256 && phantom.dimensions[1] == 256 && phantom.dimensions[2] == 179) {
+        phantom.type = HMGUPhantom::HMGUType::Donna;
+    } else if (phantom.dimensions[0] == 512 && phantom.dimensions[1] == 512 && phantom.dimensions[2] == 193) {
+        phantom.type = HMGUPhantom::HMGUType::Frank;
+    } else if (phantom.dimensions[0] == 256 && phantom.dimensions[1] == 256 && phantom.dimensions[2] == 220) {
+        phantom.type = HMGUPhantom::HMGUType::Golem;
+    } else if (phantom.dimensions[0] == 512 && phantom.dimensions[1] == 512 && phantom.dimensions[2] == 114) {
+        phantom.type = HMGUPhantom::HMGUType::Helga;
+    } else if (phantom.dimensions[0] == 262 && phantom.dimensions[1] == 132 && phantom.dimensions[2] == 348) {
+        phantom.type = HMGUPhantom::HMGUType::Irene;
+    } else if (phantom.dimensions[0] == 512 && phantom.dimensions[1] == 512 && phantom.dimensions[2] == 250) {
+        phantom.type = HMGUPhantom::HMGUType::Vishum;
+    }
+    return phantom;
+}
+
 void OtherPhantomImportPipeline::importHMGUPhantom(QString path)
 {
     emit dataProcessingStarted(ProgressWorkType::Importing);
-    // TODO
-    //Identify phantom
-    //import phantom
-    //generate CT image?
-    
-    //emit imageDataChanged(vol);
-    
+    auto data = readHMGUFile(path);
+    auto phantom = readHMGUheader(data);
+    if (phantom.type != HMGUPhantom::HMGUType::None) {
+        // read media
+        // read phantom organs
+        // generate arrays
+        // generate materials
+        // generate organs
+        // generate ct image
+    }
+
+    // emit imageDataChanged(vol);
+
     emit dataProcessingFinished(ProgressWorkType::Importing);
 }

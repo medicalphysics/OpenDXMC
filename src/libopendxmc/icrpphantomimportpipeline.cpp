@@ -38,7 +38,7 @@ void ICRPPhantomImportPipeline::setRemoveArms(bool on)
     m_remove_arms = on;
 }
 
-std::vector<std::uint8_t> readOrganArray(const std::string& path, const std::array<std::size_t, 3>& dim)
+static std::vector<std::uint8_t> readOrganArray(const std::string& path, const std::array<std::size_t, 3>& dim)
 {
     std::ifstream input(path, std::ios::binary | std::ios::in);
     if (!input.is_open())
@@ -57,7 +57,7 @@ struct Organ {
     std::string name;
 };
 
-std::optional<Organ> parseOrganLine(const std::string& line)
+static std::optional<Organ> parseOrganLine(const std::string& line)
 {
     Organ organ;
     // valid line starts with uint8 number
@@ -106,7 +106,7 @@ std::optional<Organ> parseOrganLine(const std::string& line)
     return std::make_optional(organ);
 }
 
-std::vector<Organ> readOrgans(const std::string& path)
+static std::vector<Organ> readOrgans(const std::string& path)
 {
     std::ifstream input(path, std::ios::in);
     if (!input.is_open())
@@ -130,7 +130,7 @@ struct Media {
     std::string name;
 };
 
-std::optional<Media> parseMediaLine(const std::string& line)
+static std::optional<Media> parseMediaLine(const std::string& line)
 {
 
     Media media;
@@ -186,7 +186,7 @@ std::optional<Media> parseMediaLine(const std::string& line)
     return std::make_optional(media);
 }
 
-std::vector<Media> readMedia(const std::string& path)
+static std::vector<Media> readMedia(const std::string& path)
 {
 
     std::ifstream input(path, std::ios::in);
@@ -206,7 +206,7 @@ std::vector<Media> readMedia(const std::string& path)
     return media;
 }
 
-void pruneOrganArray(std::vector<std::uint8_t>& organArray, std::vector<Organ>& organs)
+static void pruneOrganArray(std::vector<std::uint8_t>& organArray, std::vector<Organ>& organs)
 {
     std::sort(organs.begin(), organs.end(), [](const auto& lh, const auto& rh) { return lh.ID < rh.ID; });
     std::uint8_t index = 0;
@@ -230,7 +230,7 @@ void pruneOrganArray(std::vector<std::uint8_t>& organArray, std::vector<Organ>& 
     }
 }
 
-void pruneMedia(std::vector<Organ>& organs, std::vector<Media>& media)
+static void pruneMedia(std::vector<Organ>& organs, std::vector<Media>& media)
 {
     std::sort(media.begin(), media.end(), [](const auto& lh, const auto& rh) { return lh.ID < rh.ID; });
     std::uint8_t index = 0;

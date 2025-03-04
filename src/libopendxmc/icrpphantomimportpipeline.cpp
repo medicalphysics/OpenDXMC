@@ -346,6 +346,11 @@ void ICRPPhantomImportPipeline::importPhantom(QString organArrayPath, QString or
         }
         container->setMaterials(mats);
     }
+    // synthesice ct
+    auto ct = container->generateSyntheticCT();
+    if (ct)
+        container->setImageArray(DataContainer::ImageType::CT, ct.value());
+
     emit imageDataChanged(container);
     emit dataProcessingFinished(ProgressWorkType::Importing);
 }

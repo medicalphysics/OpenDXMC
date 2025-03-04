@@ -27,6 +27,7 @@ Copyright 2024 Erlend Andersen
 
 #include <array>
 #include <map>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -86,6 +87,8 @@ public:
 
     std::string units(ImageType type) const;
     void setDoseUnits(const std::string& unit);
+
+    std::optional<std::vector<double>> generateSyntheticCT(double kvp = 120, double mmAlfiltration = 9);
 
 protected:
     vtkSmartPointer<vtkImageData> generate_vtkImage(ImageType);

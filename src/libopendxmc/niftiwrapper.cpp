@@ -18,6 +18,7 @@ Copyright 2025 Erlend Andersen
 
 #include "niftiwrapper.hpp"
 
+#include "vtkImageShiftScale.h"
 #include "vtkNIFTIWriter.h"
 
 NiftiWrapper::NiftiWrapper()
@@ -29,13 +30,39 @@ bool NiftiWrapper::save(const std::string& filepath, vtkSmartPointer<vtkImageDat
     if (!image) {
         return false;
     }
+
+    // lets correct spacing to millimeters
+    std::array<double, 3> spacing;
+    for (std::size_t i = 0; i < 3; ++i) {
+        spacing[i] = image->GetSpacing()[i] * 10;
+    }
+    image->SetSpacing(spacing.data());
+
     auto writer = vtkSmartPointer<vtkNIFTIWriter>::New();
     writer->SetFileDimensionality(3);
     writer->SetNIFTIVersion(1);
     writer->SetDescription(DataContainer::getImageAsString(type).c_str());
     writer->SetFileName(filepath.c_str());
-    writer->SetInputData(image);
-    writer->Update();
-    writer->Write();
+    if (type == DataContainer::ImageType::CT) {
+        constexpr double intercept = -1024;
+        vtkNew<vtkImageShiftScale> shiftScaleFilter;
+        shiftScaleFilter->SetOutputScalarTypeToUnsignedShort();
+        shiftScaleFilter->SetShift(-intercept);
+        shiftScaleFilter->SetInputData(image);
+
+        writer->SetInputConnection(shiftScaleFilter->GetOutputPort());
+        writer->SetRescaleIntercept(intercept);
+        writer->Update();
+        writer->Write();
+    } else {
+        writer->SetInputData(image);
+        writer->Update();
+        writer->Write();
+    }
+
+    // revert spacing to cm
+    for (std::size_t i = 0; i < 3; ++i)
+        spacing[i] /= 10;
+    image->SetSpacing(spacing.data());
     return true;
 }

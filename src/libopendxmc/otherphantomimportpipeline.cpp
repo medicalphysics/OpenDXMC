@@ -495,17 +495,13 @@ void OtherPhantomImportPipeline::importHMGUPhantom(QString path)
             std::transform(std::execution::par_unseq, organ_array.cbegin(), organ_array.cend(), dens_array.begin(), [&map](const auto o) { return map[o]; });
             container->setImageArray(DataContainer::ImageType::Density, dens_array);
         }
+        // synthezice ct
+        auto ct = container->generateSyntheticCT();
+        if (ct)
+            container->setImageArray(DataContainer::ImageType::CT, ct.value());
+
         emit imageDataChanged(container);
-
-        // read media
-        // read phantom organs
-        // generate arrays
-        // generate materials
-        // generate organs
-        // generate ct image
     }
-
-    // emit imageDataChanged(vol);
 
     emit dataProcessingFinished(ProgressWorkType::Importing);
 }

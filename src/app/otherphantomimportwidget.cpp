@@ -62,7 +62,7 @@ OtherPhantomImportWidget::OtherPhantomImportWidget(QWidget* parent)
     auto hmg_box = new QGroupBox(tr("Select HMGU phantom to import"), this);
     auto hmg_lay = new QVBoxLayout;
     hmg_box->setLayout(hmg_lay);
-    auto hmg_label = new QLabel(tr("HMGU could previously be licensed from Helmholtz-Zentrum. If you have one the phantoms select the raw file here. NOT IMPLEMENTED YET"), hmg_box);
+    auto hmg_label = new QLabel(tr("HMGU could previously be licensed from Helmholtz-Zentrum. If you have one the phantoms select the raw file here."), hmg_box);
     hmg_label->setWordWrap(true);
     hmg_lay->addWidget(hmg_label);
     auto hmg_button = new QPushButton(tr("Browse"), hmg_box);

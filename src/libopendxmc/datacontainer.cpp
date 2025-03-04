@@ -469,3 +469,51 @@ bool DataContainer::hasImage(ImageType type) const
         return false;
     return true;
 }
+
+std::optional<std::vector<double>> DataContainer::generateSyntheticCT(double kvp, double mmAlfiltration)
+{
+    const auto size = m_dimensions[0] * m_dimensions[1] * m_dimensions[2];
+    if (size <= 1)
+        return std::nullopt;
+    if (m_density_array.size() != size)
+        return std::nullopt;
+    if (m_material_array.size() != size)
+        return std::nullopt;
+
+    // test if we have all materials
+    const auto max_mat_ind = std::max_element(std::execution::par_unseq, m_material_array.cbegin(), m_material_array.cend());
+    if (*max_mat_ind >= m_materials.size())
+        return std::nullopt;
+
+    // attenuation
+    Tube tube(kvp);
+    tube.setAlFiltration(mmAlfiltration);
+    const auto specter = tube.getSpecter(true);
+    std::vector<double> attenuation(m_materials.size());
+    for (std::size_t i = 0; i < m_materials.size(); ++i) {
+        auto m = dxmc::Material<5>::byWeight(m_materials[i].Z).value();
+        auto u_weight = std::transform_reduce(std::execution::par_unseq, specter.cbegin(), specter.cend(), 0.0, std::plus {}, [&m](const auto& s) { const auto& [e, I] = s;
+        double att =m.attenuationValues(e).sum();
+        return att*I; });
+        attenuation[i] = u_weight;
+    }
+
+    auto air = dxmc::Material<5>::byNistName("Air, Dry (near sea level)").value();
+    auto water = dxmc::Material<5>::byNistName("Water, Liquid").value();
+    const auto air_density = dxmc::NISTMaterials::density("Air, Dry (near sea level)");
+    constexpr double water_density = 1;
+    const auto attenuation_air = air_density * std::transform_reduce(std::execution::par_unseq, specter.cbegin(), specter.cend(), 0.0, std::plus {}, [&air](const auto& s) { const auto& [e, I] = s;
+        double att =air.attenuationValues(e).sum();
+        return att*I; });
+    const auto attenuation_water = water_density * std::transform_reduce(std::execution::par_unseq, specter.cbegin(), specter.cend(), 0.0, std::plus {}, [&water](const auto& s) { const auto& [e, I] = s;
+        double att =water.attenuationValues(e).sum();
+        return att*I; });
+
+    std::vector<double> ct(size);
+    std::transform(std::execution::par_unseq, m_density_array.cbegin(), m_density_array.cend(), m_material_array.cbegin(), ct.begin(),
+        [&attenuation, attenuation_air, attenuation_water](const auto d, const auto m_idx) {
+            const auto att = d * attenuation[m_idx];
+            return 1000 * (att - attenuation_water) / (attenuation_water - attenuation_air);
+        });
+    return ct;
+}

@@ -199,9 +199,9 @@ HMGUPhantom readHMGUheader(const std::vector<char>& data)
             auto& token = space_tokens[i];
             auto pos = header.find(token);
             if (pos == std::string::npos)
-                return phantom;
+                phantom.spacing[i] = 0;
             if (std::from_chars(header.data() + pos + token.size(), header.data() + header.size(), phantom.spacing[i]).ec != std::errc {})
-                return phantom;
+                phantom.spacing[i] = 0;
         }
     }
     // assign phantom type
@@ -231,6 +231,30 @@ HMGUPhantom readHMGUheader(const std::vector<char>& data)
         const auto size = phantom.dimensions[0] * phantom.dimensions[1] * phantom.dimensions[2];
         if (data.size() == size + header_size) {
             phantom.data.insert(phantom.data.begin(), data.begin() + header_size, data.end());
+        }
+        // test if spacing was specify, else guess
+        if (phantom.spacing[0] <= 1 || phantom.spacing[1] <= 1 || phantom.spacing[2] <= 1) {
+            if (phantom.type == HMGUPhantom::HMGUType::Baby) {
+                phantom.spacing = { .85, .85, 4 };
+            } else if (phantom.type == HMGUPhantom::HMGUType::Child) {
+                phantom.spacing = { 1.54, 1.54, 8 };
+            } else if (phantom.type == HMGUPhantom::HMGUType::Donna) {
+                phantom.spacing = { 1.875, 1.875, 10.0 };
+            } else if (phantom.type == HMGUPhantom::HMGUType::Frank) {
+                phantom.spacing = { 0.742, 0.742, 5.0 };
+            } else if (phantom.type == HMGUPhantom::HMGUType::Golem) {
+                phantom.spacing = { 2.08, 2.08, 8.0 };
+            } else if (phantom.type == HMGUPhantom::HMGUType::Helga) {
+                phantom.spacing = { 0.98, 0.98, 10.0 };
+            } else if (phantom.type == HMGUPhantom::HMGUType::Irene) {
+                phantom.spacing = { 1.875, 1.875, 5.0 };
+            } else if (phantom.type == HMGUPhantom::HMGUType::Jo) {
+                phantom.spacing = { 1.875, 1.875, 10.0 };
+            } else if (phantom.type == HMGUPhantom::HMGUType::Katja) {
+                phantom.spacing = { 1.775, 1.775, 4.84 };
+            } else if (phantom.type == HMGUPhantom::HMGUType::Vishum) {
+                phantom.spacing = { 0.91, 0.94, 5.0 };
+            }
         }
     }
 

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.26)
 
-project(OpenXRayMC VERSION 1.2.8 DESCRIPTION "OpenXRayMC description" LANGUAGES CXX)
+project(OpenXRayMC VERSION 1.2.9 DESCRIPTION "OpenXRayMC description" LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
